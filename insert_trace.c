@@ -95,3 +95,8 @@ void insert_trace_fork_exit(int simgrid, FILE *trace,pid_t pid, char *syscall, i
     fprintf(trace,"%s %52s %10d\n", trace_header(simgrid, pid, " ",syscall)," ",res);
 
 }
+
+void insert_init_trace(pid_t pid)
+{
+  fprintf(process_desc[pid].trace,"%s init\n", process_desc[pid].name);
+}

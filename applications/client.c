@@ -14,7 +14,6 @@
 
 int main(){
 
-  wait(3000);
   int clientSocket;
   u_short port;
   int res;

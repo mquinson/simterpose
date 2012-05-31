@@ -16,4 +16,6 @@ void insert_trace_comm(int simgrid, FILE *trace, pid_t pid, int sockfd, char *sy
 
 void insert_trace_fork_exit(int simgrid, FILE *trace, pid_t pid, char *syscall, int res);
 
+void insert_init_trace(pid_t pid);
+
 #endif

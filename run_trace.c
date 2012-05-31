@@ -170,6 +170,7 @@ int main(int argc, char *argv[]) {
 	  process_desc[new_pid].name = strdup(buff);
 	  strcat(buff, ".txt");
 	  process_desc[new_pid].trace = fopen(buff, "w");
+	  insert_init_trace(new_pid);
 	}
 	
 	
@@ -558,19 +559,19 @@ int main(int argc, char *argv[]) {
 		sockfd=get_args_send_recv(stoppedpid,2,ret_trace,(void *)arg2);
 		break;
 	      case 11:
-		syscall="sendto";
+		syscall="send";
 		sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace,(void *)arg2);
 		break;
 	      case 12:
-		syscall="recvfrom";
+		syscall="recv";
 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,(void *)arg2);
 		break;
 	      case 16:
-		syscall="sendmsg";
+		syscall="send";
 		sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,(void *)arg2);
 		break;
 	      case 17:
-		syscall="recvmsg";
+		syscall="recv";
 		sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,(void *)arg2);
 		break;
 	      }
