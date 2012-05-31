@@ -65,6 +65,19 @@ static void action_recv(const char *const *action)
   asynchronous_cleanup();
 }
 
+static void action_compute(const char *const *action)
+{
+  char *name = NULL;
+  const char *amout = action[2];
+  m_task_t task = MSG_task_create(name, parse_double(amout), 0, NULL);
+  //double clock = MSG_get_clock();
+  
+  MSG_task_execute(task);
+  MSG_task_destroy(task);
+
+  free(name);
+}
+
 static void action_send(const char *const *action)
 {
   char to[250];
@@ -105,6 +118,7 @@ int main (int argc, char** argv)
   MSG_action_register("init", action_init);
   MSG_action_register("recv", action_recv);
   MSG_action_register("send", action_send);
+  MSG_action_register("compute", action_compute);
   MSG_action_register("exit_group", action_finalize);
   
   MSG_action_trace_run(argv[3]);
@@ -112,4 +126,6 @@ int main (int argc, char** argv)
   printf("Simulation time %lf\n", MSG_get_clock());
   
   MSG_clean();
+  
+  return EXIT_SUCCESS;
 }
