@@ -3,6 +3,8 @@ OBJS = args_trace.o syscalls_io.o calc_times_proc.o times_proc.o peek_data.o soc
 CFLAGS = -Wall -g 
 CC=gcc
 
+LDFLAGS= -lsimgrid
+
 all : $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o run_trace
 
@@ -15,6 +17,8 @@ all : $(OBJS)
 launcher: launcher.c
 	$(CC) $(LDFLAGS) $(CFLAGS) -o launcher launcher.c
 
+replay: replay.c
+	$(CC) $(LDFLAGS) $(CFLAGS) -o replay replay.c
 clean:
 	rm -rf run_trace $(OBJS)
 
