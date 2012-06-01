@@ -12,12 +12,14 @@
 
 #define SERV_PORT 2227
 
+#define BUFFER_SIZE 100000
+
 int main(){
 
   int clientSocket;
   u_short port;
   int res;
-  char *buff=malloc(512);
+  char *buff=malloc(BUFFER_SIZE);
   int server_socket;
   long host_addr;
   struct hostent *serverHostEnt;
@@ -44,7 +46,7 @@ int main(){
       printf("Connexion avec le serveur établie\n");
       // while(1){
 	//fgets(buff,512,stdin);
-	res=send(clientSocket,"message envoye par client\n",512,0);
+      res=send(clientSocket,buff,BUFFER_SIZE,0);
 	int i=0;
 	int j;
 	for(i=0; i<2000000 ; ++i)
@@ -56,7 +58,7 @@ int main(){
 	  perror("erreur envoi client");
 	  exit(1);
 	}else{
-	  res=recv(clientSocket,buff,512,0);
+	  res=recv(clientSocket,buff,BUFFER_SIZE,0);
 	  if(res==-1){
 	    perror("erreur reception client");
 	    exit(1);

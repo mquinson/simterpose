@@ -7,14 +7,15 @@
 #include "insert_trace.h"
 #include "syscalls_io.h"
 #include "run_trace.h"
+#include "benchmark.h"
 
-//#define DEBUG
 #define BUFFER_SIZE 512
 
 
 struct time_process all_procs[MAX_PROCS]; 
 int nb_procs = 0;
 process_descriptor process_desc[MAX_PID];
+float flops_per_second;
 
 
 void usage() {
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
     process_desc[i].trace=NULL;
   }
   
-  
+  start_benchmark(&flops_per_second);
   
   struct user_regs_struct regs;
   
@@ -155,6 +156,9 @@ int main(int argc, char *argv[]) {
 	  process_desc[new_pid].name = strdup(buff);
 	  strcat(buff, ".txt");
 	  process_desc[new_pid].trace = fopen(buff, "w");
+#if defined(DEBUG)
+	  print_trace_header(process_desc[new_pid].trace);
+#endif
 	  insert_init_trace(new_pid);
 	}
 	

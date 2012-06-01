@@ -9,12 +9,14 @@
 
 #define SERV_PORT 2227
 
+#define BUFFER_SIZE 100000
+
 int main(){
 
   int serverSocket;
   u_short port;
   int res;
-  char *buff=malloc(512);
+  char *buff=malloc(BUFFER_SIZE);
   int client_socket;
 
   if((serverSocket = socket(AF_INET,SOCK_STREAM,0)) < 0){
@@ -59,14 +61,14 @@ int main(){
 	  exit(1);
 	}else{
 	  printf("Connexion acceptée\n");
-	  res=recv(client_socket,buff,512,0);
+	  res=recv(client_socket,buff,BUFFER_SIZE,0);
 	  if(res==-1){
 	    perror("erreur réception server");
 	    exit(1);
 	  }else{
-	    printf("Message reçu : %s",buff);
+	    //printf("Message reçu : %s",buff);
 	    strcpy(buff,"envoi serveur\n");
-	    res=send(client_socket,buff,512,0);
+	    res=send(client_socket,buff,BUFFER_SIZE,0);
 	    if(res==-1){
 	      perror("erreur envoi server");
 	      exit(1);

@@ -1,4 +1,4 @@
-OBJS = args_trace.o syscalls_io.o calc_times_proc.o times_proc.o peek_data.o sockets.o insert_trace.o run_trace.o
+OBJS = args_trace.o syscalls_io.o calc_times_proc.o times_proc.o peek_data.o sockets.o insert_trace.o run_trace.o benchmark.o
 
 CFLAGS = -Wall -g 
 CC=gcc
@@ -22,3 +22,5 @@ replay: replay.c
 clean:
 	rm -rf run_trace $(OBJS)
 
+benchmark: run_benchmark.c benchmark.c calc_times_proc.o 
+	$(CC) $(CFLAGS) -o benchmark run_benchmark.c benchmark.c calc_times_proc.o
