@@ -176,85 +176,68 @@ int main(int argc, char *argv[]) {
 	nb_procs++;
 	printf("new pid with clone %lu\n",new_pid);
 	insert_trace_fork_exit(stoppedpid, "clone", (int)new_pid);
-      } else if(stoppedpid != launcherpid){
-    
+      } 
+      else if(stoppedpid != launcherpid){
+	
+	/*If this is the interrupt of the syscall and not the return, we print computation time */
+	if (in_syscall(stoppedpid)==0) {
+	  set_in_syscall(stoppedpid);
+	  calculate_computation_time(stoppedpid);
+	}
+	else
+	{
+	 //printf("New syscall return : ");
+	  /* ---- test archi for registers ---- */
 
-	/* ---- test archi for registers ---- */
+	  #if defined(__x86_64) || defined(amd64)
+	    reg_orig=regs.orig_rax;
+	    ret=regs.rax;
+	    arg1=regs.rdi;
+	    arg2=regs.rsi;
+	    arg3=regs.rdx;
+	  #elif defined(i386)
+	    reg_orig=regs.orig_eax;
+	    ret=regs.eax;
+	    arg1=regs.ebx;
+	    arg2=regs.ecx;
+	    arg3=regs.edx;
+	  #endif
 
-        #if defined(__x86_64) || defined(amd64)
-	   reg_orig=regs.orig_rax;
-	   ret=regs.rax;
-	   arg1=regs.rdi;
-	   arg2=regs.rsi;
-	   arg3=regs.rdx;
-        #elif defined(i386)
-           reg_orig=regs.orig_eax;
-	   ret=regs.eax;
-	   arg1=regs.ebx;
-	   arg2=regs.ecx;
-	   arg3=regs.edx;
-        #endif
+	  /*------------------*/
 
-	/*------------------*/
-
-	switch (reg_orig) {
-	case SYS_write:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	    if (socket_registered(stoppedpid,arg1) != -1)
-	      insert_trace_comm(stoppedpid,(int)arg1,"write",TYPE_IN,-1);
-	  } else {
+	  switch (reg_orig) {
+	  case SYS_write:
 	    printf("[%d] write(%ld, ... , %d) = %ld\n",stoppedpid,arg1,(int)arg3, ret);
-	    set_out_syscall(stoppedpid);
 	    if (socket_registered(stoppedpid,arg1) != -1) {
 	      if ((int)ret>0 && socket_incomplete(stoppedpid,arg1)) 
 		update_socket(stoppedpid,(int)arg1);
 	      insert_trace_comm(stoppedpid,(int)arg1,"write",TYPE_OUT,(int)ret);
 	    }
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_read:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	    if (socket_registered(stoppedpid,arg1) != -1) 
-	      insert_trace_comm(stoppedpid,(int)arg1,"read",TYPE_IN, -1);
-	  } else { 
+	  case SYS_read:
 	    printf("[%d] read(%ld, ..., %ld) = %ld\n",stoppedpid, arg1,arg3, ret);
-	    set_out_syscall(stoppedpid);
 	    if (socket_registered(stoppedpid,arg1) != -1) {
 	      if ((int)ret>0 && socket_incomplete(stoppedpid,arg1)) 
 		update_socket(stoppedpid,(int)arg1);
 	      insert_trace_comm(stoppedpid,(int)arg1,"read",TYPE_OUT,(int)ret);
 	    }
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_fork:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	  case SYS_fork: 
 	    printf("[%d] fork = %ld\n", stoppedpid,ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
-	 
-	case SYS_poll:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	    break;
+	  
+	  case SYS_poll:
 	    get_args_poll(stoppedpid,(void *)arg1, (nfds_t)arg2);
 	    printf(" = %d \n",(int)ret);
-	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_open:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	  case SYS_open:
+	  {
 	    char *flags = malloc(9);
 	    switch (arg2) {
 	    case 0: strcpy(flags,"O_RDONLY"); break;
@@ -269,130 +252,86 @@ int main(int argc, char *argv[]) {
 	  }
 	  break;
 
-	case SYS_clone:
-	  printf("[%d] clone() ?= %ld\n",stoppedpid,ret);
-	  break;
+	  case SYS_clone:
+	    printf("[%d] clone() ?= %ld\n",stoppedpid,ret);
+	    set_out_syscall(stoppedpid);
+	    break;
 
-	case SYS_close:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	  case SYS_close: 
 	    printf("[%d] close(%ld) = %ld\n",stoppedpid,arg1,ret);
 	    close_sockfd(stoppedpid,(int)arg1);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_dup:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	  case SYS_dup:
 	    printf("[%d] dup(%ld) = %ld\n",stoppedpid,arg1,ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_dup2:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	  case SYS_dup2:
 	    printf("[%d] dup2(%ld, %ld) = %ld\n",stoppedpid,arg1,arg2,ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_exit_group:
-	  printf("[%d] exit_group(%ld) called \n",stoppedpid,arg1);
-	  insert_trace_fork_exit(stoppedpid,"exit_group",(int)arg1);
-	  break;
+	  case SYS_exit_group:
+	    printf("[%d] exit_group(%ld) called \n",stoppedpid,arg1);
+	    insert_trace_fork_exit(stoppedpid,"exit_group",(int)arg1);
+	    break;
 
-	case SYS_exit:
-	  printf("[%d] exit(%ld) called \n",stoppedpid,arg1);
-	  insert_trace_fork_exit(stoppedpid,"exit",(int)arg1);
-	  break;
+	  case SYS_exit:
+	    printf("[%d] exit(%ld) called \n",stoppedpid,arg1);
+	    insert_trace_fork_exit(stoppedpid,"exit",(int)arg1);
+	    break;
 
-	case SYS_execve:
-	  printf("[%d] execve called\n",stoppedpid);
-	  break;
-	  
-	  
-#if defined(__x86_64)  
+	  case SYS_execve:
+	    printf("[%d] execve called\n",stoppedpid);
+	    set_out_syscall(stoppedpid);
+	    break;
+	    
+	    
+  #if defined(__x86_64)  
 
-	case SYS_select:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	  case SYS_select: 
 	    get_args_select(stoppedpid,&regs);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_socket:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	  case SYS_socket: 
 	    printf("[%d] socket( ",stoppedpid);
 	    get_args_socket(stoppedpid,(int)ret, &regs);
 	    printf(" ) = %ld\n",ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_bind:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else {
+	  case SYS_bind:
 	    printf("[%d] bind( ",stoppedpid);
 	    get_args_bind_connect(stoppedpid,(int)ret,0,&regs);
 	    printf(" ) = %ld\n",ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_connect:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else {
+	  case SYS_connect:
 	    printf("[%d] connect( ",stoppedpid);
 	    get_args_bind_connect(stoppedpid,(int)ret,1,&regs);
 	    printf(" ) = %ld\n",ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_accept:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else {
+	  case SYS_accept:
 	    printf("[%d] accept( ",stoppedpid);
 	    get_args_accept(stoppedpid,(int)ret,&regs);
 	    printf(" ) = %ld\n",ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_listen:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else {
+	  case SYS_listen:
 	    printf("[%d] listen( ", stoppedpid); 
 	    get_args_listen(stoppedpid,&regs);
 	    printf(" ) = %ld\n", ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	 case SYS_sendto:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	    sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace,&regs);
-	    if (socket_registered(stoppedpid,sockfd) != -1) {
-	      if (socket_incomplete(stoppedpid,sockfd)) 
-		update_socket(stoppedpid,sockfd);
-	      if (!socket_netlink(stoppedpid,sockfd))
-		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_IN, -1);
-	    } 
-	  } else {
+	  case SYS_sendto:
 	    printf("[%d] sendto( ",stoppedpid);
 	    sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret);
@@ -403,20 +342,9 @@ int main(int argc, char *argv[]) {
 		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret);   
 	    }
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_recvfrom:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	    sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
-	    if (socket_registered(stoppedpid,sockfd) != -1) {
-	      if (socket_incomplete(stoppedpid,sockfd)) 
-		update_socket(stoppedpid,sockfd);
-	      if (!socket_netlink(stoppedpid,sockfd))
-		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_IN, -1);
-	    } 
-	  } else {
+	  case SYS_recvfrom:
 	    printf("[%d] recvfrom( ",stoppedpid);
 	    sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret);
@@ -427,61 +355,35 @@ int main(int argc, char *argv[]) {
 		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT,(int)ret);   
 	    }
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
-	 
-	case SYS_sendmsg:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
+	    break;
+	  
+	  case SYS_sendmsg:
+	    printf("[%d] sendmsg( ",stoppedpid);
 	    sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,&regs);
+	    printf(" ) = %ld\n",ret);
 	    if (socket_registered(stoppedpid,sockfd) != -1) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
-	      if (!socket_netlink(stoppedpid,sockfd))
-		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_IN, -1);
-	    } 
-	   } else {
-	     printf("[%d] sendmsg( ",stoppedpid);
-	     sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,&regs);
-	     printf(" ) = %ld\n",ret);
-	     if (socket_registered(stoppedpid,sockfd) != -1) {
-	       if (socket_incomplete(stoppedpid,sockfd)) 
-		 update_socket(stoppedpid,sockfd);
-	       if (!socket_netlink(stoppedpid,sockfd)) 
-		 insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret);   
-	     }
-	     set_out_syscall(stoppedpid);
-	   }
-	  break;
+	      if (!socket_netlink(stoppedpid,sockfd)) 
+		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret);   
+	    }
+	    set_out_syscall(stoppedpid);
+	    break;
 
-	case SYS_recvmsg:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
+	  case SYS_recvmsg:
+	    printf("[%d] recvmsg( ",stoppedpid);
 	    sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,&regs);
+	    printf(" ) = %ld\n",ret);
 	    if (socket_registered(stoppedpid,sockfd) != -1) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
-	      if (!socket_netlink(stoppedpid,sockfd))
-		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_IN, -1);
-	    } 
-	   } else {
-	     printf("[%d] recvmsg( ",stoppedpid);
-	     sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,&regs);
-	     printf(" ) = %ld\n",ret);
-	     if (socket_registered(stoppedpid,sockfd) != -1) {
-	       if (socket_incomplete(stoppedpid,sockfd)) 
-		 update_socket(stoppedpid,sockfd);
-	       if (!socket_netlink(stoppedpid,sockfd)) 
-		 insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT,(int)ret);   
-	     }
-	     set_out_syscall(stoppedpid);
-	   }
-	  break;
+	      if (!socket_netlink(stoppedpid,sockfd)) 
+		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT,(int)ret);   
+	    }
+	    set_out_syscall(stoppedpid);
+	    break;
 
-	case SYS_shutdown:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else {
+	  case SYS_shutdown:
 	    printf("[%d] shutdown( %ld, ",stoppedpid, arg1);
 	    char *how=malloc(10);;
 	    switch(arg2){
@@ -491,82 +393,30 @@ int main(int argc, char *argv[]) {
 	    }
 	    printf("%s) = %ld\n",how,ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_getsockopt:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else {
+	  case SYS_getsockopt:
 	    printf("[%d] getsockopt(",stoppedpid);
 	    get_args_get_setsockopt(stoppedpid, 1, &regs);
 	    printf("%d\n",(int)ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_setsockopt:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else {
+	  case SYS_setsockopt:
 	    printf("[%d] setsockopt(",stoppedpid);
 	    get_args_get_setsockopt(stoppedpid, 1, &regs);
 	    printf("%d\n",(int)ret);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-#else
+  #else
 
-	case SYS__newselect:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	  } else { 
+	  case SYS__newselect:
 	    get_args_select(stoppedpid,&regs);
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
+	    break;
 
-	case SYS_socketcall:
-	  if (in_syscall(stoppedpid)==0) {
-	    set_in_syscall(stoppedpid);
-	    if ((arg1 > 8 && arg1 < 13) || arg1 == 16 || arg1 == 17 ) {
-	      char *syscall;
-	      switch (arg1) {
-	      case 9 :
-		syscall="send";
-		sockfd=get_args_send_recv(stoppedpid,1,ret_trace,(void *)arg2);
-		break;
-	      case 10:
-		syscall="recv";
-		sockfd=get_args_send_recv(stoppedpid,2,ret_trace,(void *)arg2);
-		break;
-	      case 11:
-		syscall="send";
-		sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace,(void *)arg2);
-		break;
-	      case 12:
-		syscall="recv";
-		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,(void *)arg2);
-		break;
-	      case 16:
-		syscall="send";
-		sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,(void *)arg2);
-		break;
-	      case 17:
-		syscall="recv";
-		sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,(void *)arg2);
-		break;
-	      }
-	      if (socket_registered(stoppedpid,sockfd) != -1) {
-		if (socket_incomplete(stoppedpid,sockfd)) 
-		  update_socket(stoppedpid,sockfd);
-		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(stoppedpid,sockfd,syscall,TYPE_IN, -1);
-	      } 
-	    }
-	  } else { 
-
+	  case SYS_socketcall:
 	    switch (arg1) {
 	    
 	    case 1:
@@ -608,8 +458,8 @@ int main(int argc, char *argv[]) {
 	      if (socket_registered(stoppedpid,sockfd) != -1) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
-		 if (!socket_netlink(stoppedpid,sockfd))
-		   insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret);   
+		if (!socket_netlink(stoppedpid,sockfd))
+		  insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret);   
 	      }
 	      break;
 
@@ -693,19 +543,20 @@ int main(int argc, char *argv[]) {
 	    }
 	  
 	    set_out_syscall(stoppedpid);
-	  }
-	  break;
-
-#endif
-
-	default :
-	    printf("[%d] Unknown syscall %ld ?= %ld\n", stoppedpid,reg_orig,ret);
 	    break;
 
-	}
+  #endif
 
-      
-      } 
+	  default :
+	      printf("[%d] Unknown syscall %ld ?= %ld\n", stoppedpid,reg_orig,ret);
+	      set_out_syscall(stoppedpid);
+	      break;
+
+	  }
+
+	
+	}
+      }
       if (ptrace(PTRACE_SYSCALL, stoppedpid, NULL, NULL)==-1) {
 	perror("ptrace syscall");
 	exit(1);

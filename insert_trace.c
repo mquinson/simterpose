@@ -37,6 +37,7 @@ char * trace_header(int pid, char * syscall) {
 
 void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int type, int res) {
 
+  //printf(" ___ printing new trace ____");
   if (get_domain_sockfd(pid,sockfd) == 2) { // PF_INET -> local and remote addr:port known
     struct infos_socket is;
     get_infos_socket(pid,sockfd,&is);

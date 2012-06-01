@@ -45,7 +45,7 @@ void delete_socket(pid_t pid, int fd) {
 }
 
 void register_socket(pid_t pid, int sockfd, int domain, int protocol) {
-  
+  //printf("Registering socket %d for processus %d\n", sockfd, pid);
   if (socket_registered(pid,sockfd)) {
     if (socket_closed(pid,sockfd)) {
       delete_socket(pid,sockfd);
@@ -142,7 +142,7 @@ int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, int add
   FILE *file;
   
   
-  printf("Socket number : %d\n", num_sock);
+  //printf("Socket number : %d\n", num_sock);
   if (type == 0) // TCP
     file=fopen("/proc/net/tcp","r");
   else if (type == 1) // UDP
@@ -189,7 +189,7 @@ int get_addr_port_sock(pid_t pid, int fd, int protocol, struct infos_socket *is,
     printf("Failed reading /proc/%d/fd/%d",pid,fd);
     return -1;
   }
-  printf("Reading of fd description : %s\n", dest);
+  //printf("Reading of fd description : %s\n", dest);
   char *token;
   token = strtok(dest,"["); // left part before socket id
   token = strtok(NULL,"]"); // socket id 
@@ -248,6 +248,7 @@ int socket_registered(pid_t pid, int fd) {
       return 1;
     i++;
   }
+  //printf("[IMPORTANT] unknown socket\n");
   return -1;
 }
 
