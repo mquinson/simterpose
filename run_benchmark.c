@@ -6,8 +6,8 @@
 
 int main(int argc, char** argv)
 {
-  float result;
-  start_benchmark(&result);
+  float flops_per_sec, micros_per_flop;
+  start_benchmark(&flops_per_sec, &micros_per_flop);
   
   
   return EXIT_SUCCESS;

@@ -9,7 +9,7 @@
 
 //#define DEBUG
 
-int start_benchmark(float *flop_per_sec)
+int start_benchmark(float *flop_per_sec, float* ms_per_flop)
 {
   init_cputime();
   long long int times[3];
@@ -35,10 +35,10 @@ int start_benchmark(float *flop_per_sec)
 #if defined(DEBUG)
     printf("Duration of benchmark : %lld\n", result);
 #endif
-    float time_for_flop = ((float)result)/(NOMBRE_BOUCLE*OPERATION_PER_LOOP);
-    *flop_per_sec = (1000000.)/time_for_flop;
+    *ms_per_flop = ((float)result)/(NOMBRE_BOUCLE*OPERATION_PER_LOOP);
+    *flop_per_sec = (1000000.)/(*ms_per_flop);
 
-    printf("Result for benchmark : %f -> (%f flops)\n", time_for_flop, *flop_per_sec);
+    printf("Result for benchmark : %f -> (%f flops)\n", *ms_per_flop, *flop_per_sec);
   
   }
   else

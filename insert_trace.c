@@ -5,6 +5,8 @@ long long int times_syscall[3];
 long long int diff_time=0;
 long long int diff_cpu=0;
 
+extern float micro_s_per_flop;
+
 void calculate_computation_time(int pid)
 {
   if (ask_time(pid, times_syscall)) {
@@ -18,8 +20,7 @@ void calculate_computation_time(int pid)
     {
       //update_walltime_procs(pid,times_syscall[0]);
       update_cputime_procs(pid,times_syscall[1]+times_syscall[2]);
-      //FIXME we have to convert cputime in flop
-      fprintf(process_desc[pid].trace,"%s compute %10lld\n", process_desc[pid].name, diff_cpu);
+      fprintf(process_desc[pid].trace,"%s compute %10f\n", process_desc[pid].name, (diff_cpu/micro_s_per_flop));
     }
   }
 }

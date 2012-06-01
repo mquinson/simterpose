@@ -16,6 +16,7 @@ struct time_process all_procs[MAX_PROCS];
 int nb_procs = 0;
 process_descriptor process_desc[MAX_PID];
 float flops_per_second;
+float micro_s_per_flop;
 
 
 void usage() {
@@ -44,7 +45,7 @@ int main(int argc, char *argv[]) {
     process_desc[i].trace=NULL;
   }
   
-  start_benchmark(&flops_per_second);
+  start_benchmark(&flops_per_second, &micro_s_per_flop);
   
   struct user_regs_struct regs;
   
