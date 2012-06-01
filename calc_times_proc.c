@@ -202,7 +202,7 @@ int ask_time(int tid, long long int* times)
 	case TASKSTATS_TYPE_STATS:
 	  /* here we collect info */
 	  stats = (struct taskstats *) NLA_DATA(na);
-	  times[0] = (long long int)stats->ac_etime;
+	  //times[0] = (long long int)stats->ac_etime;
 	  times[1] = (long long int)stats->ac_utime;
 	  times[2] = (long long int)stats->ac_stime;
 	  res = 0;

@@ -16,7 +16,7 @@ void calculate_computation_time(int pid)
 
     if((diff_cpu=(times_syscall[1] + times_syscall[2]) - last_cpu))
     {
-      update_walltime_procs(pid,times_syscall[0]);
+      //update_walltime_procs(pid,times_syscall[0]);
       update_cputime_procs(pid,times_syscall[1]+times_syscall[2]);
       //FIXME we have to convert cputime in flop
       fprintf(process_desc[pid].trace,"%s compute %10lld\n", process_desc[pid].name, diff_cpu);
@@ -53,7 +53,7 @@ void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int res) {
   } 
   else{
     calculate_computation_time(pid);
-    fprintf(process_desc[pid].trace,"%s %10d %52s", trace_header(pid, syscall), res, " ");
+    fprintf(process_desc[pid].trace,"%s %10d", trace_header(pid, syscall), res);
   }
 
 }

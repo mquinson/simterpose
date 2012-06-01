@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
-    insert_walltime_procs(launcherpid);
+    //insert_walltime_procs(launcherpid);
     insert_cputime_procs(launcherpid);
       nb_procs++;
 
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	
-	insert_walltime_procs(new_pid);
+	//insert_walltime_procs(new_pid);
 	insert_cputime_procs(new_pid);
 	nb_procs++;
 	printf("new pid with (v)fork %lu by processus %d\n",new_pid, stoppedpid);
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
 	  perror("ptrace geteventmsg");
 	  exit(1);
 	}
-	insert_walltime_procs(new_pid);
+	//insert_walltime_procs(new_pid);
 	insert_cputime_procs(new_pid);
 	nb_procs++;
 	printf("new pid with clone %lu\n",new_pid);

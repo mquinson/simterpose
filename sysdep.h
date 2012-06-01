@@ -40,7 +40,7 @@
 
 struct time_process{
   pid_t pid;
-  long long int last_walltime;
+  //long long int last_walltime;
   long long int last_cputime;
 };
 
