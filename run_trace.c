@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
 	    if (socket_registered(stoppedpid,arg1) != -1) {
 	      if ((int)ret>0 && socket_incomplete(stoppedpid,arg1)) 
 		update_socket(stoppedpid,(int)arg1);
-	      insert_trace_comm(stoppedpid,(int)arg1,"write",TYPE_OUT,(int)ret);
+	      insert_trace_comm(stoppedpid,(int)arg1,"write",(int)ret);
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
 	    if (socket_registered(stoppedpid,arg1) != -1) {
 	      if ((int)ret>0 && socket_incomplete(stoppedpid,arg1)) 
 		update_socket(stoppedpid,(int)arg1);
-	      insert_trace_comm(stoppedpid,(int)arg1,"read",TYPE_OUT,(int)ret);
+	      insert_trace_comm(stoppedpid,(int)arg1,"read",(int)ret);
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -339,7 +339,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret);   
+		insert_trace_comm(stoppedpid,sockfd,"send",(int)ret);   
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -352,7 +352,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT,(int)ret);   
+		insert_trace_comm(stoppedpid,sockfd,"recv",(int)ret);   
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -365,7 +365,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret);   
+		insert_trace_comm(stoppedpid,sockfd,"send",(int)ret);   
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -378,7 +378,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT,(int)ret);   
+		insert_trace_comm(stoppedpid,sockfd,"recv",(int)ret);   
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -459,7 +459,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd))
-		  insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret);   
+		  insert_trace_comm(stoppedpid,sockfd,"send",(int)ret);   
 	      }
 	      break;
 
@@ -471,7 +471,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT, (int)ret);   
+		  insert_trace_comm(stoppedpid,sockfd,"recv", (int)ret);   
 	      }
 	      break;
 
@@ -483,7 +483,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT, (int)ret);   
+		  insert_trace_comm(stoppedpid,sockfd,"send", (int)ret);   
 	      }
 	      break;
 
@@ -495,7 +495,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT, (int)ret);   
+		  insert_trace_comm(stoppedpid,sockfd,"recv", (int)ret);   
 	      }
 	      break;
 
@@ -523,7 +523,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd))
-		  insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT, (int)ret);  
+		  insert_trace_comm(stoppedpid,sockfd,"send", (int)ret);  
 	      } 
 	      break;
 
@@ -535,7 +535,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd))
-		  insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT, (int)ret); 
+		  insert_trace_comm(stoppedpid,sockfd,"recv", (int)ret); 
 	      }  
 	      break;
 

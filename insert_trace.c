@@ -35,30 +35,25 @@ char * trace_header(int pid, char * syscall) {
     return buftrace;
 }
 
-void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int type, int res) {
+void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int res) {
 
   //printf(" ___ printing new trace ____");
   if (get_domain_sockfd(pid,sockfd) == 2) { // PF_INET -> local and remote addr:port known
     struct infos_socket is;
     get_infos_socket(pid,sockfd,&is);
-      if( type == TYPE_OUT){
-	calculate_computation_time(pid);
-	char* header = trace_header(pid, syscall);
+    calculate_computation_time(pid);
+    char* header = trace_header(pid, syscall);
 #if defined(DEBUG)
-	fprintf(process_desc[pid].trace,"%s %8s %10d", header, process_desc[get_pid_socket_dest(&is)].name, res);
-	fprintf(process_desc[pid].trace," %15s %5d %15s %5d\n", is.ip_local,is.port_local,is.ip_remote,is.port_remote);
+    fprintf(process_desc[pid].trace,"%s %8s %10d", header, process_desc[get_pid_socket_dest(&is)].name, res);
+    fprintf(process_desc[pid].trace," %15s %5d %15s %5d\n", is.ip_local,is.port_local,is.ip_remote,is.port_remote);
 #else
-	fprintf(process_desc[pid].trace,"%s %s %d", header, process_desc[get_pid_socket_dest(&is)].name, res);
-	fprintf(process_desc[pid].trace," %s %d %s %d\n", is.ip_local,is.port_local,is.ip_remote,is.port_remote);
+    fprintf(process_desc[pid].trace,"%s %s %d", header, process_desc[get_pid_socket_dest(&is)].name, res);
+    fprintf(process_desc[pid].trace," %s %d %s %d\n", is.ip_local,is.port_local,is.ip_remote,is.port_remote);
 #endif
-      }
-  } else{
-    if(type == TYPE_OUT)
-      {
-	calculate_computation_time(pid);
-	fprintf(process_desc[pid].trace,"%s %10d %52s", trace_header(pid, syscall), res, " ");
-      }
-      fprintf(process_desc[pid].trace, "\n");
+  } 
+  else{
+    calculate_computation_time(pid);
+    fprintf(process_desc[pid].trace,"%s %10d %52s", trace_header(pid, syscall), res, " ");
   }
 
 }
