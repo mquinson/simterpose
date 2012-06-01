@@ -35,12 +35,7 @@ char * trace_header(int pid, char * syscall) {
     return buftrace;
 }
 
-void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int type, ...) {
- 
-  va_list ap;
-  va_start(ap, type);
-  int res = va_arg(ap,int);
-  
+void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int type, int res) {
 
   if (get_domain_sockfd(pid,sockfd) == 2) { // PF_INET -> local and remote addr:port known
     struct infos_socket is;
@@ -64,9 +59,6 @@ void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int type, ...) {
       }
       fprintf(process_desc[pid].trace, "\n");
   }
-    
-  va_end(ap);
-
 
 }
 
