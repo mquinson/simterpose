@@ -18,16 +18,16 @@ process_descriptor process_desc[MAX_PID];
 
 
 void usage() {
-  printf("usage : ./run_trace [-simgrid] application_test trace_simgrid.txt\n");
+  printf("usage : ./run_trace\n");
+}
+
+void print_trace_header(FILE* trace)
+{
+  fprintf(trace,"%8s %12s %8s %10s %10s %21s %21s\n","pidX", "syscall", "pidY", "return","diff_cpu","local_addr:port", "remote_addr:port");
 }
 
 
 int main(int argc, char *argv[]) { 
-
-  if (argc<3) {
-    usage();
-    exit(1);
-  }
   
   char buff[256];
   pid_t launcherpid;
@@ -35,21 +35,6 @@ int main(int argc, char *argv[]) {
   int stoppedpid;
 
   int sockfd;
-  int simgrid = 0;
-
-  FILE *trace;
-
-  if(argc==3){
-    trace=fopen(argv[2],"w");
-    fprintf(trace,"%15s %8s %10s %10s %10s %10s %5s %12s %21s %21s %8s %10s \t%s\n","Timestamp","pidX","wall_time","cpu_time","diff_wall","diff_cpu","type","syscall","local_addr:port", "remote_addr:port","pidY","return","param");
-  }else{
-    trace=fopen(argv[3],"w");
-    
-#if defined(DEBUG)
-    fprintf(trace,"%8s %12s %8s %10s %10s %21s %21s\n","pidX", "syscall", "pidY", "return","diff_cpu","local_addr:port", "remote_addr:port");
-#endif
-    simgrid=1;
-  }
 
   int i;
   for(i=0; i<MAX_PID; ++i)
@@ -57,7 +42,7 @@ int main(int argc, char *argv[]) {
     process_desc[i].name=NULL;
     process_desc[i].trace=NULL;
   }
-    
+  
   
   
   struct user_regs_struct regs;
@@ -179,7 +164,7 @@ int main(int argc, char *argv[]) {
 	nb_procs++;
 	printf("new pid with (v)fork %lu by processus %d\n",new_pid, stoppedpid);
 	if(stoppedpid != launcherpid)
-	  insert_trace_fork_exit(simgrid, trace, stoppedpid, "(v)fork", (int)new_pid);
+	  insert_trace_fork_exit(stoppedpid, "(v)fork", (int)new_pid);
       } else if (stat16== PTRACE_EVENT_CLONE) {
 	unsigned long new_pid;
 	if (ptrace(PTRACE_GETEVENTMSG, stoppedpid, 0, &new_pid)==-1) {
@@ -190,7 +175,7 @@ int main(int argc, char *argv[]) {
 	insert_cputime_procs(new_pid);
 	nb_procs++;
 	printf("new pid with clone %lu\n",new_pid);
-	insert_trace_fork_exit(simgrid, trace, stoppedpid, "clone", (int)new_pid);
+	insert_trace_fork_exit(stoppedpid, "clone", (int)new_pid);
       } else if(stoppedpid != launcherpid){
     
 
@@ -217,7 +202,7 @@ int main(int argc, char *argv[]) {
 	  if (in_syscall(stoppedpid)==0) {
 	    set_in_syscall(stoppedpid);
 	    if (socket_registered(stoppedpid,arg1) != -1)
-	      insert_trace_comm(simgrid,trace,stoppedpid,(int)arg1,"write","in",-1);
+	      insert_trace_comm(stoppedpid,(int)arg1,"write",TYPE_IN,-1);
 	  } else {
 	    printf("[%d] write(%ld, ... , %d) = %ld\n",stoppedpid,arg1,(int)arg3, ret);
 	    sprintf(ret_trace,"(%ld,\"...\", %d)",arg1,(int)arg3);
@@ -225,7 +210,7 @@ int main(int argc, char *argv[]) {
 	    if (socket_registered(stoppedpid,arg1) != -1) {
 	      if ((int)ret>0 && socket_incomplete(stoppedpid,arg1)) 
 		update_socket(stoppedpid,(int)arg1);
-	      insert_trace_comm(simgrid, trace,stoppedpid,(int)arg1,"write","out",(int)ret, ret_trace);
+	      insert_trace_comm(stoppedpid,(int)arg1,"write",TYPE_OUT,(int)ret, ret_trace);
 	    }
 	    set_out_syscall(stoppedpid);
 	  }
@@ -235,7 +220,7 @@ int main(int argc, char *argv[]) {
 	  if (in_syscall(stoppedpid)==0) {
 	    set_in_syscall(stoppedpid);
 	    if (socket_registered(stoppedpid,arg1) != -1) 
-	      insert_trace_comm(simgrid, trace,stoppedpid,(int)arg1,"read","in", -1);
+	      insert_trace_comm(stoppedpid,(int)arg1,"read",TYPE_IN, -1);
 	  } else { 
 	    printf("[%d] read(%ld, ..., %ld) = %ld\n",stoppedpid, arg1,arg3, ret);
 	    sprintf(ret_trace,"(%ld, ... , %d)",arg1,(int)arg3);
@@ -243,7 +228,7 @@ int main(int argc, char *argv[]) {
 	    if (socket_registered(stoppedpid,arg1) != -1) {
 	      if ((int)ret>0 && socket_incomplete(stoppedpid,arg1)) 
 		update_socket(stoppedpid,(int)arg1);
-	      insert_trace_comm(simgrid, trace,stoppedpid,(int)arg1,"read","out",(int)ret, ret_trace);
+	      insert_trace_comm(stoppedpid,(int)arg1,"read",TYPE_OUT,(int)ret, ret_trace);
 	    }
 	    set_out_syscall(stoppedpid);
 	  }
@@ -320,12 +305,12 @@ int main(int argc, char *argv[]) {
 
 	case SYS_exit_group:
 	  printf("[%d] exit_group(%ld) called \n",stoppedpid,arg1);
-	  insert_trace_fork_exit(simgrid, trace,stoppedpid,"exit_group",(int)arg1);
+	  insert_trace_fork_exit(stoppedpid,"exit_group",(int)arg1);
 	  break;
 
 	case SYS_exit:
 	  printf("[%d] exit(%ld) called \n",stoppedpid,arg1);
-	  insert_trace_fork_exit(simgrid, trace,stoppedpid,"exit",(int)arg1);
+	  insert_trace_fork_exit(stoppedpid,"exit",(int)arg1);
 	  break;
 
 	case SYS_execve:
@@ -407,7 +392,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd))
-		insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"send","in", -1);
+		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_IN, -1);
 	    } 
 	  } else {
 	    printf("[%d] sendto( ",stoppedpid);
@@ -417,7 +402,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"send","out",(int)ret,ret_trace);   
+		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret,ret_trace);   
 	    }
 	    set_out_syscall(stoppedpid);
 	  }
@@ -431,7 +416,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd))
-		insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"recv","in", -1);
+		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_IN, -1);
 	    } 
 	  } else {
 	    printf("[%d] recvfrom( ",stoppedpid);
@@ -441,7 +426,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"recv","out",(int)ret,ret_trace);   
+		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT,(int)ret,ret_trace);   
 	    }
 	    set_out_syscall(stoppedpid);
 	  }
@@ -455,7 +440,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd))
-		insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"send","in", -1);
+		insert_trace_comm(stoppedpid,sockfd,"send",TYPE_IN, -1);
 	    } 
 	   } else {
 	     printf("[%d] sendmsg( ",stoppedpid);
@@ -465,7 +450,7 @@ int main(int argc, char *argv[]) {
 	       if (socket_incomplete(stoppedpid,sockfd)) 
 		 update_socket(stoppedpid,sockfd);
 	       if (!socket_netlink(stoppedpid,sockfd)) 
-		 insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"send","out",(int)ret,ret_trace);   
+		 insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret,ret_trace);   
 	     }
 	     set_out_syscall(stoppedpid);
 	   }
@@ -479,7 +464,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd))
-		insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"recv","in", -1);
+		insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_IN, -1);
 	    } 
 	   } else {
 	     printf("[%d] recvmsg( ",stoppedpid);
@@ -489,7 +474,7 @@ int main(int argc, char *argv[]) {
 	       if (socket_incomplete(stoppedpid,sockfd)) 
 		 update_socket(stoppedpid,sockfd);
 	       if (!socket_netlink(stoppedpid,sockfd)) 
-		 insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"recv","out",(int)ret,ret_trace);   
+		 insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT,(int)ret,ret_trace);   
 	     }
 	     set_out_syscall(stoppedpid);
 	   }
@@ -579,7 +564,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(simgrid,trace,stoppedpid,sockfd,syscall,"in", -1);
+		  insert_trace_comm(stoppedpid,sockfd,syscall,TYPE_IN, -1);
 	      } 
 	    }
 	  } else { 
@@ -626,7 +611,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		 if (!socket_netlink(stoppedpid,sockfd))
-		   insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"send","out",(int)ret,ret_trace);   
+		   insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT,(int)ret,ret_trace);   
 	      }
 	      break;
 
@@ -638,7 +623,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"recv","out", (int)ret, ret_trace);   
+		  insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT, (int)ret, ret_trace);   
 	      }
 	      break;
 
@@ -650,7 +635,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"send","out", (int)ret, ret_trace);   
+		  insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT, (int)ret, ret_trace);   
 	      }
 	      break;
 
@@ -662,7 +647,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"recv","out", (int)ret);   
+		  insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT, (int)ret);   
 	      }
 	      break;
 
@@ -690,7 +675,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd))
-		  insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"send","out", (int)ret);  
+		  insert_trace_comm(stoppedpid,sockfd,"send",TYPE_OUT, (int)ret);  
 	      } 
 	      break;
 
@@ -702,7 +687,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd))
-		  insert_trace_comm(simgrid,trace,stoppedpid,sockfd,"recv","out", (int)ret); 
+		  insert_trace_comm(stoppedpid,sockfd,"recv",TYPE_OUT, (int)ret); 
 	      }  
 	      break;
 
@@ -733,8 +718,6 @@ int main(int argc, char *argv[]) {
     }
 
   }
-
-  fclose(trace);
   return 0;
 
 }
