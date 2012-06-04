@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     process_desc[i].name=NULL;
     process_desc[i].trace=NULL;
   }
-  
+  //Mettre une option pour rentrer le taux de flops à la main 
   benchmark_matrix_product(&flops_per_second, &micro_s_per_flop);
   
   struct user_regs_struct regs;

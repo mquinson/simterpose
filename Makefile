@@ -5,7 +5,7 @@ CC=gcc
 
 LDFLAGS= -lsimgrid
 
-all : run_trace benchmark launcher
+all : run_trace benchmark launcher replay
 
 run_trace: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)

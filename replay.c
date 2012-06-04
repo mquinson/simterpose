@@ -52,13 +52,17 @@ static void action_init(const char *const *action)
 
 static void action_recv(const char *const *action)
 {
-  char *name = "client send server";
-  char mailbox_name[250];
-  m_task_t task = NULL;
-  double clock = MSG_get_clock();
   
-  sprintf(mailbox_name, "%s_%s", action[2],
-	  MSG_process_get_name(MSG_process_self()));
+  printf("Entering receiving\n");
+  char *name = "client recv server";
+  char mailbox_name[250];
+  //const char *size_str = action[3];
+  //double size=parse_double(action[3]);
+  m_task_t task = NULL;//MSG_task_create(name, 0, size, NULL);
+  //double clock = MSG_get_clock();
+  
+  sprintf(mailbox_name, "%s:%s:%s_%s:%s:%s", action[2],action[6], action[7],  MSG_process_get_name(MSG_process_self()), action[4], action[5]);
+  //printf(" recv mailbox : %s\n", mailbox_name);
   
   MSG_error_t res = MSG_task_receive(&task, mailbox_name);
   
@@ -81,13 +85,15 @@ static void action_compute(const char *const *action)
 static void action_send(const char *const *action)
 {
   char to[250];
-  char *name = "server send client";
+  char *name = strdup("server send client");
 //   printf("Entering send\n", action[0], action[1]);
-  sprintf(to, "%s_%s", MSG_process_get_name(MSG_process_self()),action[2]);
+  sprintf(to, "%s:%s:%s_%s:%s:%s", MSG_process_get_name(MSG_process_self()), action[4], action[5] ,action[2],action[6], action[7]);
   
-  const char *size_str = action[3];
+  //printf("sendto mailbox : %s\n", to);
+  
+  //const char *size_str = action[3];
   double size=parse_double(action[3]);
-  double clock = MSG_get_clock(); /* this "call" is free thanks to inlining */
+  //double clock = MSG_get_clock(); /* this "call" is free thanks to inlining */
   
   //   if (XBT_LOG_ISENABLED(actions, xbt_log_priority_verbose))
   //     name = xbt_str_join_array(action, " ");

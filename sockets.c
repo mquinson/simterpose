@@ -20,6 +20,7 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   is.port_remote=0;
   is.incomplete=1;
   is.closed=0;
+  is.recv_arr=xbt_dynar_new(sizeof(recv_information), free);
 
   all_sockets[nb_sockets]=is;
   nb_sockets++;
@@ -342,3 +343,16 @@ int socket_netlink(pid_t pid, int fd) {
   }
   return -1;
 }
+
+
+struct infos_socket* getSocketInfoFromRemote(int sockfd, char* ip_remote, int port_remote, char* ip_local, int port_local)
+{
+  int i=0;
+  while (i<nb_sockets) {
+    if ((all_sockets[i].port_remote == port_remote) && (all_sockets[i].port_local == port_local) && !strcmp(all_sockets[i].ip_remote, ip_remote) && !strcmp(all_sockets[i].ip_local, ip_local))
+      return  &(all_sockets[i]);
+    i++;
+  }
+  return NULL;
+}
+

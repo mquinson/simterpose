@@ -2,10 +2,18 @@
 #define __SOCKETS_H
 
 #include "sysdep.h"
+#include "xbt.h"
 
 #define MAX_SOCKETS 512
 
+typedef struct {
+  int port_remote;
+  char *ip_remote;
+  int length;
+}recv_information;
+
 struct infos_socket{
+  xbt_dynar_t recv_arr;
   pid_t pid;
   int sockfd;
   int domain;
@@ -46,5 +54,7 @@ int socket_incomplete(pid_t pid, int fd);
 int socket_closed(pid_t pid, int fd);
 
 int socket_netlink(pid_t pid, int fd);
+
+struct infos_socket* getSocketInfoFromRemote(int sockfd, char* remote_ip, int remote_port, char* locale_ip, int locale_port);
 
 #endif

@@ -61,18 +61,24 @@ int main(){
 	  exit(1);
 	}else{
 	  printf("Connexion acceptée\n");
-	  res=recv(client_socket,buff,BUFFER_SIZE,0);
-	  if(res==-1){
-	    perror("erreur réception server");
-	    exit(1);
-	  }else{
-	    //printf("Message reçu : %s",buff);
-	    strcpy(buff,"envoi serveur\n");
-	    res=send(client_socket,buff,BUFFER_SIZE,0);
+	  int length = BUFFER_SIZE;
+	  while(length !=0)
+	  {
+	    res = recv(client_socket,buff,length,0);
 	    if(res==-1){
-	      perror("erreur envoi server");
+	      perror("erreur réception server");
 	      exit(1);
 	    }
+	    length -= res;
+	    printf("Server : recv %d (left %d)\n", res, length);
+	  }
+	    //printf("Message reçu : %s",buff);
+	  strcpy(buff,"envoi serveur\n");
+	  printf("Server envoie au client\n");
+	  res=send(client_socket,buff,BUFFER_SIZE,0);
+	  if(res==-1){
+	    perror("erreur envoi server");
+	    exit(1);
 	  }
 	  shutdown(client_socket,2);
 	  close(client_socket);
