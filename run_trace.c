@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
   int status;
   int stoppedpid;
 
-  int sockfd;
+  int sockfd; 
 
   int i;
   for(i=0; i<MAX_PID; ++i)
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     process_desc[i].trace=NULL;
   }
   
-  start_benchmark(&flops_per_second, &micro_s_per_flop);
+  benchmark_matrix_product(&flops_per_second, &micro_s_per_flop);
   
   struct user_regs_struct regs;
   
