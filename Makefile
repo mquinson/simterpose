@@ -1,4 +1,4 @@
-OBJS = args_trace.o syscalls_io.o calc_times_proc.o times_proc.o peek_data.o sockets.o insert_trace.o run_trace.o benchmark.o
+OBJS = args_trace.o syscalls_io.o calc_times_proc.o times_proc.o peek_data.o sockets.o insert_trace.o run_trace.o benchmark.o syscall_process.o
 
 CFLAGS = -Wall -g 
 CC=gcc
@@ -10,7 +10,7 @@ all : run_trace benchmark launcher replay
 run_trace: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
-run_trace.o: run_trace.c run_trace.h insert_trace.h sysdep.h sockets.h syscalls_io.h calc_times_proc.h times_proc.h benchmark.h args_trace.h peek_data.h
+run_trace.o: run_trace.c run_trace.h insert_trace.h sysdep.h sockets.h syscalls_io.h calc_times_proc.h times_proc.h benchmark.h args_trace.h peek_data.h syscall_process.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 args_trace.o: args_trace.c args_trace.h peek_data.h sysdep.h sockets.h
@@ -35,6 +35,9 @@ syscalls_io.o: syscalls_io.c syscalls_io.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 times_proc.o: times_proc.c times_proc.h sysdep.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+syscall_process.o: syscall_process.c syscall_process.h insert_trace.h 
 	$(CC) $(CFLAGS) -c $< -o $@
 
 

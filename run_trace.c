@@ -8,6 +8,7 @@
 #include "syscalls_io.h"
 #include "run_trace.h"
 #include "benchmark.h"
+#include "syscall_process.h"
 
 #define BUFFER_SIZE 512
 
@@ -344,7 +345,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(stoppedpid,sockfd,"send",(int)ret);   
+		process_send_call(stoppedpid,sockfd,(int)ret);   
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -464,7 +465,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd))
-		  insert_trace_comm(stoppedpid,sockfd,"send",(int)ret);   
+		  process_send_call(stoppedpid,sockfd,(int)ret);
 	      }
 	      break;
 

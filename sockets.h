@@ -26,6 +26,7 @@ struct infos_socket{
   int closed;
 };
 
+void add_new_transmission(struct infos_socket* is, int length, char* ip_remote, int port_remote);
 
 void register_socket(pid_t pid, int sockfd, int domain, int protocol);
 
@@ -55,6 +56,6 @@ int socket_closed(pid_t pid, int fd);
 
 int socket_netlink(pid_t pid, int fd);
 
-struct infos_socket* getSocketInfoFromRemote(int sockfd, char* remote_ip, int remote_port, char* locale_ip, int locale_port);
+struct infos_socket* getSocketInfoFromContext(char* remote_ip, int remote_port, char* locale_ip, int locale_port);
 
 #endif

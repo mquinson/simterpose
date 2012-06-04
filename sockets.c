@@ -345,7 +345,7 @@ int socket_netlink(pid_t pid, int fd) {
 }
 
 
-struct infos_socket* getSocketInfoFromRemote(int sockfd, char* ip_remote, int port_remote, char* ip_local, int port_local)
+struct infos_socket* getSocketInfoFromContext(char* ip_remote, int port_remote, char* ip_local, int port_local)
 {
   int i=0;
   while (i<nb_sockets) {
@@ -354,5 +354,16 @@ struct infos_socket* getSocketInfoFromRemote(int sockfd, char* ip_remote, int po
     i++;
   }
   return NULL;
+}
+
+void add_new_transmission(struct infos_socket* is, int length, char* ip_remote, int port_remote)
+{
+  recv_information* recv = malloc(sizeof(recv_information));
+  recv->ip_remote = strdup(ip_remote);
+  recv->port_remote = port_remote;
+  recv->length = length;
+  
+  xbt_dynar_insert_at(is->recv_arr, xbt_dynar_length(is->recv_arr), recv);
+  
 }
 
