@@ -191,6 +191,7 @@ int main(int argc, char *argv[]) {
 
       if (WIFEXITED(status)) {
         printf("[%d] Child is dead\n",stoppedpid);
+	finish_all_communication(stoppedpid);
 	--child_amount;
 	printf("Left %d child\n", child_amount);
 	continue;

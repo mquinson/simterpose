@@ -178,7 +178,8 @@ int ask_time(int tid, long long int* times)
   if (msg.n.nlmsg_type == NLMSG_ERROR ||
       !NLMSG_OK((&msg.n), rep_len)) {
     struct nlmsgerr *err = NLMSG_DATA(&msg);
-  fprintf(stderr, "fatal reply error,  errno %d %d %d\n", err->error, msg.n.nlmsg_type == NLMSG_ERROR, rep_len);
+  fprintf(stderr, "fatal reply error,  errno\n");
+  *(int*)0=0;
     return -1;
   }
 

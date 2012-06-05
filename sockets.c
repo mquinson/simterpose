@@ -426,3 +426,20 @@ int handle_new_send(struct infos_socket *is,  int length)
   return 0;
 }
 
+void finish_all_communication(int pid){
+  int i=0;
+  while (i<nb_sockets) {
+    if (all_sockets[i].pid == pid)
+    {
+      int *size = (int*)xbt_fifo_shift(all_sockets[i].recv_info->send_fifo);
+      while(size != NULL)
+      {
+	insert_trace_comm(all_sockets[i].pid, all_sockets[i].sockfd, "recv(l)", 0);
+	//free(size);
+	size = (int*)xbt_fifo_shift(all_sockets[i].recv_info->send_fifo);
+      }
+    }
+    i++;
+  }
+}
+

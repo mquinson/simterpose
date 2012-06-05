@@ -43,7 +43,6 @@ void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int res) {
   if (get_domain_sockfd(pid,sockfd) == 2) { // PF_INET -> local and remote addr:port known
     struct infos_socket is;
     get_infos_socket(pid,sockfd,&is);
-    calculate_computation_time(pid);
     char* header = trace_header(pid, syscall);
 #if defined(DEBUG)
     fprintf(process_desc[pid].trace,"%s %8s %10d", header, process_desc[get_pid_socket_dest(&is)].name, res);

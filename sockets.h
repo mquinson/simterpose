@@ -38,6 +38,8 @@ void handle_new_receive(int pid, int sockfd, int length);
 
 int handle_new_send(struct infos_socket *is,  int length);
 
+void finish_all_communication(int pid);
+
 void handle_communication_stat(struct infos_socket* is);
 
 void register_socket(pid_t pid, int sockfd, int domain, int protocol);
