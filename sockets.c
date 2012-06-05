@@ -358,12 +358,54 @@ struct infos_socket* getSocketInfoFromContext(char* ip_remote, int port_remote, 
 
 void add_new_transmission(struct infos_socket* is, int length, char* ip_remote, int port_remote)
 {
+  printf("Entering add_new_transmission\n");
   recv_information* recv = malloc(sizeof(recv_information));
   recv->ip_remote = strdup(ip_remote);
   recv->port_remote = port_remote;
   recv->length = length;
   
-  xbt_dynar_insert_at(is->recv_arr, xbt_dynar_length(is->recv_arr), recv);
+  xbt_dynar_push(is->recv_arr, recv);
+}
+
+//return the number of transmission complete
+int handle_new_reception(struct infos_socket* is, int length, char* ip_remote, int port_remote)
+{
+  printf("Entering handle_new_reception %p %lud \n",is->recv_arr);
+  recv_information* recv=NULL;
+  int i, element_indice;
   
+  for(i=0; i< xbt_dynar_length(is->recv_arr); ++i)
+  {
+    recv_information* temp = (recv_information*)xbt_dynar_get_ptr(is->recv_arr,  i);
+    if(!strcmp(ip_remote,temp->ip_remote) && port_remote == temp->port_remote)
+    {
+      recv = temp;
+      element_indice = i;
+      break;
+    }
+  }
+  printf("Found the reception : %p\n", recv);
+  if(recv == NULL)
+    THROW_IMPOSSIBLE;
+  
+  recv->length -= length;
+  //fi transmission isn't complete we return 0
+  if(recv->length > 0)
+  {
+    return 0; 
+  }
+  //If we just received the end of transmission we remove it from transmission list and return 1
+  else if(recv->length == 0)
+  {
+    xbt_dynar_remove_at(is->recv_arr, element_indice, NULL);
+    return 1;
+  }
+  //If we received more than the tramission, we have to found the next transmission to process it, so do recursive job
+  else
+  {
+    length = -recv->length;
+    xbt_dynar_remove_at(is->recv_arr, element_indice, NULL);
+    return 1+ handle_new_reception(is, length, ip_remote, port_remote);
+  }
 }
 

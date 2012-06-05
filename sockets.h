@@ -5,6 +5,14 @@
 #include "xbt.h"
 
 #define MAX_SOCKETS 512
+/*
+ * Sendto prio dès qu'on en trouve un on le met dnas la trace
+ * pour les recv on les stacks dans un accu par couple ip-port
+ * send => stack d'une longueur dans le recv.
+ * Consomation de la pile
+ * 	->voir handle_new_reception
+ * A chaque recv et send on effectue le traitement
+ */
 
 typedef struct {
   int port_remote;
@@ -27,6 +35,8 @@ struct infos_socket{
 };
 
 void add_new_transmission(struct infos_socket* is, int length, char* ip_remote, int port_remote);
+
+int handle_new_reception(struct infos_socket* is, int length, char* ip_remote, int port_remote);
 
 void register_socket(pid_t pid, int sockfd, int domain, int protocol);
 

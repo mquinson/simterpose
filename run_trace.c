@@ -9,6 +9,7 @@
 #include "run_trace.h"
 #include "benchmark.h"
 #include "syscall_process.h"
+#include "xbt/fifo.h"
 
 #define BUFFER_SIZE 512
 
@@ -18,6 +19,12 @@ int nb_procs = 0;
 process_descriptor process_desc[MAX_PID];
 float flops_per_second;
 float micro_s_per_flop;
+xbt_fifo_t sig_info_fifo;
+
+void sig_child(int sig, siginfo_t* info, void* context)
+{
+  xbt_fifo_push(sig_info_fifo, info);
+}
 
 
 void usage() {
@@ -32,6 +39,14 @@ void print_trace_header(FILE* trace)
 
 int main(int argc, char *argv[]) { 
   
+  sig_info_fifo = xbt_fifo_new();
+  
+  struct sigaction nvt, old;
+  memset(&nvt, 0, sizeof(nvt));
+  nvt.sa_sigaction = &sig_child;
+  nvt.sa_flags = SA_SIGINFO;
+  
+  
   char buff[256];
   pid_t launcherpid;
   int status;
@@ -45,7 +60,7 @@ int main(int argc, char *argv[]) {
     process_desc[i].name=NULL;
     process_desc[i].trace=NULL;
   }
-  //Mettre une option pour rentrer le taux de flops à la main 
+  //TODO Mettre une option pour rentrer le taux de flops à la main 
   benchmark_matrix_product(&flops_per_second, &micro_s_per_flop);
   
   struct user_regs_struct regs;
@@ -93,6 +108,9 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
+    //We set the signal handler here.
+    sigaction(SIGCHLD, &nvt, &old);
+    
     // Resume the child
     if (ptrace(PTRACE_SYSCALL, launcherpid, 0, 0)==-1) {
       perror("ptrace syscall 1");
@@ -109,9 +127,11 @@ int main(int argc, char *argv[]) {
       perror("Error init cputime");
       exit(1);
     }
+    
 	  
     while(1) {
       // __WALL to follow all children
+      //TODO parcour de tous les pid dans l'ordre en traitant l'appel système s'il y en a ou en passant à un autre sinon option WNOHANG
       stoppedpid = waitpid(-1, &status, __WALL);
       if (stoppedpid == -1) {
 	perror("wait");
@@ -358,7 +378,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(stoppedpid,sockfd,"recv",(int)ret);   
+		process_recv_call(stoppedpid,sockfd, ret);
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -371,7 +391,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(stoppedpid,sockfd,"send",(int)ret);   
+		process_send_call(stoppedpid,sockfd,(int)ret);
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -384,7 +404,7 @@ int main(int argc, char *argv[]) {
 	      if (socket_incomplete(stoppedpid,sockfd)) 
 		update_socket(stoppedpid,sockfd);
 	      if (!socket_netlink(stoppedpid,sockfd)) 
-		insert_trace_comm(stoppedpid,sockfd,"recv",(int)ret);   
+		process_recv_call(stoppedpid,sockfd, ret);   
 	    }
 	    set_out_syscall(stoppedpid);
 	    break;
@@ -476,8 +496,8 @@ int main(int argc, char *argv[]) {
 	      if (socket_registered(stoppedpid,sockfd) != -1) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
-		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(stoppedpid,sockfd,"recv", (int)ret);   
+		if (!socket_netlink(stoppedpid,sockfd))
+		  process_recv_call(stoppedpid,sockfd, ret);
 	      }
 	      break;
 
@@ -489,7 +509,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(stoppedpid,sockfd,"send", (int)ret);   
+		  process_send_call(stoppedpid,sockfd,(int)ret);
 	      }
 	      break;
 
@@ -541,7 +561,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd))
-		  insert_trace_comm(stoppedpid,sockfd,"recv", (int)ret); 
+		  process_send_call(stoppedpid,sockfd,(int)ret);
 	      }  
 	      break;
 
