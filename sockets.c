@@ -1,4 +1,5 @@
 #include "sockets.h"
+#include "insert_trace.h"
 
 struct infos_socket all_sockets[MAX_SOCKETS];
 int nb_sockets = 0;
@@ -20,9 +21,15 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   is.port_remote=0;
   is.incomplete=1;
   is.closed=0;
-  is.recv_arr=xbt_dynar_new(sizeof(recv_information), free);
+  recv_information* recv = malloc(sizeof(recv_information));
+
+  recv->quantity_recv=0;
+  recv->send_fifo= xbt_fifo_new();
+  printf("\t\t\t\t\t\t\t%p %p\n", recv, recv->send_fifo);
+  is.recv_info = recv;
 
   all_sockets[nb_sockets]=is;
+  printf("%p %p\n", all_sockets[nb_sockets].recv_info, all_sockets[nb_sockets].recv_info->send_fifo);
   nb_sockets++;
   
   print_infos_socket();
@@ -253,6 +260,7 @@ int socket_registered(pid_t pid, int fd) {
   return -1;
 }
 
+//TODO remplacer par un renvoie de pointeur
 void get_infos_socket(pid_t pid, int fd, struct infos_socket *res) {
 
   int i=0;
@@ -350,62 +358,71 @@ struct infos_socket* getSocketInfoFromContext(char* ip_remote, int port_remote, 
   int i=0;
   while (i<nb_sockets) {
     if ((all_sockets[i].port_remote == port_remote) && (all_sockets[i].port_local == port_local) && !strcmp(all_sockets[i].ip_remote, ip_remote) && !strcmp(all_sockets[i].ip_local, ip_local))
+    {
+      printf("Socket found : %p\n", &(all_sockets[i]));
       return  &(all_sockets[i]);
+    }
     i++;
   }
   return NULL;
 }
 
-void add_new_transmission(struct infos_socket* is, int length, char* ip_remote, int port_remote)
+void handle_communication_stat(struct infos_socket* is)
 {
-  printf("Entering add_new_transmission\n");
-  recv_information* recv = malloc(sizeof(recv_information));
-  recv->ip_remote = strdup(ip_remote);
-  recv->port_remote = port_remote;
-  recv->length = length;
+  int *size = (int*)xbt_fifo_shift(is->recv_info->send_fifo);
+  if(size==NULL)
+    return;
   
-  xbt_dynar_push(is->recv_arr, recv);
-}
-
-//return the number of transmission complete
-int handle_new_reception(struct infos_socket* is, int length, char* ip_remote, int port_remote)
-{
-  printf("Entering handle_new_reception %p %lud \n",is->recv_arr);
-  recv_information* recv=NULL;
-  int i, element_indice;
-  
-  for(i=0; i< xbt_dynar_length(is->recv_arr); ++i)
+  if(is->recv_info->quantity_recv < *size)
   {
-    recv_information* temp = (recv_information*)xbt_dynar_get_ptr(is->recv_arr,  i);
-    if(!strcmp(ip_remote,temp->ip_remote) && port_remote == temp->port_remote)
-    {
-      recv = temp;
-      element_indice = i;
-      break;
-    }
+    xbt_fifo_unshift(is->recv_info->send_fifo, size);
+    return;
   }
-  printf("Found the reception : %p\n", recv);
-  if(recv == NULL)
-    THROW_IMPOSSIBLE;
-  
-  recv->length -= length;
-  //fi transmission isn't complete we return 0
-  if(recv->length > 0)
-  {
-    return 0; 
-  }
-  //If we just received the end of transmission we remove it from transmission list and return 1
-  else if(recv->length == 0)
-  {
-    xbt_dynar_remove_at(is->recv_arr, element_indice, NULL);
-    return 1;
-  }
-  //If we received more than the tramission, we have to found the next transmission to process it, so do recursive job
   else
   {
-    length = -recv->length;
-    xbt_dynar_remove_at(is->recv_arr, element_indice, NULL);
-    return 1+ handle_new_reception(is, length, ip_remote, port_remote);
+    printf("\t\tNew transmission complete %d %d\n", is->recv_info->quantity_recv, *size);
+    insert_trace_comm(is->pid, is->sockfd, "recv", 0);
+    is->recv_info->quantity_recv -= *size;
+    free(size);
   }
+  if(is->recv_info->quantity_recv >0)
+  {
+    handle_communication_stat(is);
+  }
+}
+
+//TODO renommer les fonctions
+void handle_new_receive(int pid, int sockfd, int length)
+{
+  printf("Entering handle_new_receive\n");
+  int i=0;
+  while (i<nb_sockets) {
+    if (all_sockets[i].sockfd == sockfd && all_sockets[i].pid == pid ) {
+      break;
+    }
+    i++;
+  }
+  
+  recv_information* recv = all_sockets[i].recv_info;
+  
+  recv->quantity_recv += length;
+  
+  handle_communication_stat(&(all_sockets[i]));
+  printf("Leaving handle_new_receive\n");
+}
+
+
+int handle_new_send(struct infos_socket *is,  int length)
+{
+  printf("Entering handle_new_reception\n");
+
+  recv_information* recv = is->recv_info;
+  int *size = malloc(sizeof(int));
+  *size=length;
+
+  xbt_fifo_push(recv->send_fifo, size);
+  handle_communication_stat(is);
+  printf("Leaving handle_new_reception\n");
+  return 0;
 }
 

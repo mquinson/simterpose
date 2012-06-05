@@ -37,7 +37,7 @@ syscalls_io.o: syscalls_io.c syscalls_io.h sysdep.h
 times_proc.o: times_proc.c times_proc.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-syscall_process.o: syscall_process.c syscall_process.h insert_trace.h 
+syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 

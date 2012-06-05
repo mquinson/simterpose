@@ -3,6 +3,7 @@
 
 #include "sysdep.h"
 #include "xbt.h"
+#include "xbt/fifo.h"
 
 #define MAX_SOCKETS 512
 /*
@@ -15,13 +16,12 @@
  */
 
 typedef struct {
-  int port_remote;
-  char *ip_remote;
-  int length;
+  xbt_fifo_t send_fifo;
+  int quantity_recv;
 }recv_information;
 
 struct infos_socket{
-  xbt_dynar_t recv_arr;
+  recv_information *recv_info;
   pid_t pid;
   int sockfd;
   int domain;
@@ -34,9 +34,11 @@ struct infos_socket{
   int closed;
 };
 
-void add_new_transmission(struct infos_socket* is, int length, char* ip_remote, int port_remote);
+void handle_new_receive(int pid, int sockfd, int length);
 
-int handle_new_reception(struct infos_socket* is, int length, char* ip_remote, int port_remote);
+int handle_new_send(struct infos_socket *is,  int length);
+
+void handle_communication_stat(struct infos_socket* is);
 
 void register_socket(pid_t pid, int sockfd, int domain, int protocol);
 

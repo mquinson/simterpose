@@ -28,9 +28,11 @@ int main (int argc, char** argv)
       exit(1);
     }
   }
+  //printf("lala!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
   
   
-  sleep(3);
+  int t = sleep(3);
+  //printf("%d\n", t);
   
   
   cmd("client\n");

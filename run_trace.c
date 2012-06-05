@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "args_trace.h"
 #include "peek_data.h"
 #include "sysdep.h"
@@ -12,6 +14,8 @@
 #include "xbt/fifo.h"
 
 #define BUFFER_SIZE 512
+#define ROUND_ARRAY_SIZE 1024
+#define ROUND_ARRAY_MASK 1023
 
 
 struct time_process all_procs[MAX_PROCS]; 
@@ -21,9 +25,28 @@ float flops_per_second;
 float micro_s_per_flop;
 xbt_fifo_t sig_info_fifo;
 
+
+pid_t round_pid_array[ROUND_ARRAY_SIZE];
+pid_t round_status_array[ROUND_ARRAY_SIZE];
+
+struct info_child{
+  pid_t pid;
+  int status;
+};
+
 void sig_child(int sig, siginfo_t* info, void* context)
 {
-  xbt_fifo_push(sig_info_fifo, info);
+  static int indice =0;
+  printf("New sigchild receive %d .... ", info->si_pid);
+  round_pid_array[indice]=info->si_pid;
+  waitpid(info->si_pid, &(round_status_array[indice]), 0);
+  //round_status_array[indice]=info->si_status;
+  ++indice;
+  //TODO do something more performant than comparison to 1024
+  if(indice > ROUND_ARRAY_SIZE)
+    indice = 0;
+  printf("Process done %d\n", indice-1);
+  
 }
 
 
@@ -40,7 +63,7 @@ void print_trace_header(FILE* trace)
 int main(int argc, char *argv[]) { 
   
   sig_info_fifo = xbt_fifo_new();
-  
+ 
   struct sigaction nvt, old;
   memset(&nvt, 0, sizeof(nvt));
   nvt.sa_sigaction = &sig_child;
@@ -51,10 +74,17 @@ int main(int argc, char *argv[]) {
   pid_t launcherpid;
   int status;
   int stoppedpid;
+  int child_amount=0;
+  
+  int indice_pid_array = 0;
 
   int sockfd; 
 
   int i;
+  for(i=0; i<ROUND_ARRAY_SIZE ; ++i)
+  {
+    round_pid_array[i]=-1; 
+  }
   for(i=0; i<MAX_PID; ++i)
   {
     process_desc[i].name=NULL;
@@ -101,7 +131,7 @@ int main(int argc, char *argv[]) {
     
     // We wait for the child to be blocked by ptrace in the first exec()
     wait(&status);
-
+    
     printf("Starting following of %d\n", launcherpid);
     if (ptrace(PTRACE_SETOPTIONS,launcherpid,NULL,PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE)==-1) {
       perror("Error setoptions 1");
@@ -109,8 +139,8 @@ int main(int argc, char *argv[]) {
     }
 
     //We set the signal handler here.
-    sigaction(SIGCHLD, &nvt, &old);
-    
+    //sigaction(SIGCHLD, &nvt, &old);
+    ++child_amount;
     // Resume the child
     if (ptrace(PTRACE_SYSCALL, launcherpid, 0, 0)==-1) {
       perror("ptrace syscall 1");
@@ -129,17 +159,40 @@ int main(int argc, char *argv[]) {
     }
     
 	  
-    while(1) {
+    while(child_amount) {
+//       printf("[START LOOP] child_amount %d\n", child_amount);
+//       printf("\n");
       // __WALL to follow all children
       //TODO parcour de tous les pid dans l'ordre en traitant l'appel système s'il y en a ou en passant à un autre sinon option WNOHANG
+      
+//       while(round_pid_array[indice_pid_array] == -1)
+//       {
+// 	usleep(1);
+//       }
+//       if(in_syscall(stoppedpid))
+// 	printf("processus -> noyau : ");
+//       else
+// 	printf("noyau -> processus : ");
+//       
+//       stoppedpid = round_pid_array[indice_pid_array];
+//       status = round_status_array[indice_pid_array];
+//      // stoppedpid = waitpid(stoppedpid, &status, 0);
+//       printf("New pid found %d (%d) (%d %d)\n", round_pid_array[indice_pid_array], indice_pid_array, status>>16, round_status_array[indice_pid_array]);
       stoppedpid = waitpid(-1, &status, __WALL);
-      if (stoppedpid == -1) {
-	perror("wait");
-	exit(1);
-      }
+//       if (stoppedpid == -1) {
+// 	perror("wait");
+// 	exit(1);
+//       }
+//       round_pid_array[indice_pid_array]=-1;
+//       
+//       ++indice_pid_array;
+//       if(indice_pid_array > ROUND_ARRAY_SIZE)
+// 	indice_pid_array=0;
 
       if (WIFEXITED(status)) {
         printf("[%d] Child is dead\n",stoppedpid);
+	--child_amount;
+	printf("Left %d child\n", child_amount);
 	continue;
       }
       
@@ -150,8 +203,9 @@ int main(int argc, char *argv[]) {
       }
 
       int stat16=status >> 16;
-      
+//       printf("Handling signal %d\n", stat16);
       if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK) {
+// 	printf("Fork found\n");
 	unsigned long new_pid;
 	if (ptrace(PTRACE_GETEVENTMSG, stoppedpid, 0, &new_pid)==-1) {
 	  perror("ptrace geteventmsg");
@@ -181,6 +235,7 @@ int main(int argc, char *argv[]) {
 #if defined(DEBUG)
 	  print_trace_header(process_desc[new_pid].trace);
 #endif
+	  printf("New application launch\n");
 	  insert_init_trace(new_pid);
 	}
 	
@@ -191,6 +246,7 @@ int main(int argc, char *argv[]) {
 	printf("new pid with (v)fork %lu by processus %d\n",new_pid, stoppedpid);
 	if(stoppedpid != launcherpid)
 	  insert_trace_fork_exit(stoppedpid, "(v)fork", (int)new_pid);
+	++child_amount;
       } else if (stat16== PTRACE_EVENT_CLONE) {
 	unsigned long new_pid;
 	if (ptrace(PTRACE_GETEVENTMSG, stoppedpid, 0, &new_pid)==-1) {
@@ -202,13 +258,14 @@ int main(int argc, char *argv[]) {
 	nb_procs++;
 	printf("new pid with clone %lu\n",new_pid);
 	insert_trace_fork_exit(stoppedpid, "clone", (int)new_pid);
+	++child_amount;
       } 
       else if(stoppedpid != launcherpid){
 	
 	/*If this is the interrupt of the syscall and not the return, we print computation time */
 	if (in_syscall(stoppedpid)==0) {
 	  set_in_syscall(stoppedpid);
-	  calculate_computation_time(stoppedpid);
+	  //calculate_computation_time(stoppedpid);
 	}
 	else
 	{
@@ -497,7 +554,7 @@ int main(int argc, char *argv[]) {
 		if (socket_incomplete(stoppedpid,sockfd)) 
 		  update_socket(stoppedpid,sockfd);
 		if (!socket_netlink(stoppedpid,sockfd))
-		  process_recv_call(stoppedpid,sockfd, ret);
+		  process_recv_call(stoppedpid,sockfd, (int)ret);
 	      }
 	      break;
 
@@ -583,6 +640,17 @@ int main(int argc, char *argv[]) {
 	
 	}
       }
+      else
+      {
+	if(in_syscall(stoppedpid))
+	  set_out_syscall(stoppedpid);
+	else
+	  set_in_syscall(stoppedpid);
+// 	printf("\t\t\t\t launcher syscall\n");
+      }
+      
+      
+//       printf("Resume child %d\n", stoppedpid);
       if (ptrace(PTRACE_SYSCALL, stoppedpid, NULL, NULL)==-1) {
 	perror("ptrace syscall");
 	exit(1);
