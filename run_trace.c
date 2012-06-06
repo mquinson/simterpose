@@ -208,6 +208,8 @@ int main(int argc, char *argv[]) {
 	exit(1);
       }
 
+      //TODO simplify handling of syscall sens
+      
       int stat16=status >> 16;
 //       printf("Handling signal %d\n", stat16);
       if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK) {
