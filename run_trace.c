@@ -51,7 +51,7 @@ xbt_fifo_t sig_info_fifo;
 
 
 void usage() {
-  printf("usage : ./run_trace\n");
+  printf("usage : ./run_trace [-fp flops_power]\n");
 }
 
 void print_trace_header(FILE* trace)
@@ -75,6 +75,7 @@ int main(int argc, char *argv[]) {
   int status;
   int stoppedpid;
   int child_amount=0;
+  int manual_flop =0;
   
 //   int indice_pid_array = 0;
 
@@ -90,8 +91,36 @@ int main(int argc, char *argv[]) {
     process_desc[i].name=NULL;
     process_desc[i].trace=NULL;
   }
-  //TODO Mettre une option pour rentrer le taux de flops à la main 
-  benchmark_matrix_product(&flops_per_second, &micro_s_per_flop);
+  
+  //TODO mettre un vrai gestionnaire d'option
+  if(argc>1)
+  {
+    for(i=1; i<argc; ++i)
+    {
+      if(!strcmp(argv[i], "-fp"))
+      {
+	if(argv[i+1] == NULL)
+	{
+	  usage(); 
+	}
+	else
+	{
+	  char* endptr = argv[i+1]+strlen(argv[i+1])-1;
+	  flops_per_second = strtod(argv[i+1], &endptr);
+	  if(endptr == argv[i+1])
+	    usage();
+	  else
+	  {
+	    micro_s_per_flop  = 1000000/flops_per_second;
+	    manual_flop = 1;
+	  }
+	}
+      }
+    }
+  }
+  
+  if(!manual_flop)
+    benchmark_matrix_product(&flops_per_second, &micro_s_per_flop);
   
   struct user_regs_struct regs;
   
