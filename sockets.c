@@ -25,11 +25,9 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
 
   recv->quantity_recv=0;
   recv->send_fifo= xbt_fifo_new();
-  printf("\t\t\t\t\t\t\t%p %p\n", recv, recv->send_fifo);
   is.recv_info = recv;
 
   all_sockets[nb_sockets]=is;
-  printf("%p %p\n", all_sockets[nb_sockets].recv_info, all_sockets[nb_sockets].recv_info->send_fifo);
   nb_sockets++;
   
   print_infos_socket();
@@ -359,7 +357,7 @@ struct infos_socket* getSocketInfoFromContext(char* ip_remote, int port_remote, 
   while (i<nb_sockets) {
     if ((all_sockets[i].port_remote == port_remote) && (all_sockets[i].port_local == port_local) && !strcmp(all_sockets[i].ip_remote, ip_remote) && !strcmp(all_sockets[i].ip_local, ip_local))
     {
-      printf("Socket found : %p\n", &(all_sockets[i]));
+//       printf("Socket found : %p\n", &(all_sockets[i]));
       return  &(all_sockets[i]);
     }
     i++;
@@ -391,10 +389,10 @@ void handle_communication_stat(struct infos_socket* is)
   }
 }
 
-//TODO renommer les fonctions
+
 void handle_new_receive(int pid, int sockfd, int length)
 {
-  printf("Entering handle_new_receive\n");
+//   printf("Entering handle_new_receive\n");
   int i=0;
   while (i<nb_sockets) {
     if (all_sockets[i].sockfd == sockfd && all_sockets[i].pid == pid ) {
@@ -408,13 +406,13 @@ void handle_new_receive(int pid, int sockfd, int length)
   recv->quantity_recv += length;
   
   handle_communication_stat(&(all_sockets[i]));
-  printf("Leaving handle_new_receive\n");
+//   printf("Leaving handle_new_receive\n");
 }
 
 
 int handle_new_send(struct infos_socket *is,  int length)
 {
-  printf("Entering handle_new_reception\n");
+//   printf("Entering handle_new_reception\n");
 
   recv_information* recv = is->recv_info;
   int *size = malloc(sizeof(int));
@@ -422,7 +420,7 @@ int handle_new_send(struct infos_socket *is,  int length)
 
   xbt_fifo_push(recv->send_fifo, size);
   handle_communication_stat(is);
-  printf("Leaving handle_new_reception\n");
+//   printf("Leaving handle_new_reception\n");
   return 0;
 }
 
@@ -435,7 +433,7 @@ void finish_all_communication(int pid){
       while(size != NULL)
       {
 	insert_trace_comm(all_sockets[i].pid, all_sockets[i].sockfd, "recv", 0);
-	//free(size);
+	free(size);
 	size = (int*)xbt_fifo_shift(all_sockets[i].recv_info->send_fifo);
       }
     }

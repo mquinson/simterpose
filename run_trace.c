@@ -26,28 +26,28 @@ float micro_s_per_flop;
 xbt_fifo_t sig_info_fifo;
 
 
-pid_t round_pid_array[ROUND_ARRAY_SIZE];
-pid_t round_status_array[ROUND_ARRAY_SIZE];
+// pid_t round_pid_array[ROUND_ARRAY_SIZE];
+// pid_t round_status_array[ROUND_ARRAY_SIZE];
 
-struct info_child{
-  pid_t pid;
-  int status;
-};
+// struct info_child{
+//   pid_t pid;
+//   int status;
+// };
 
-void sig_child(int sig, siginfo_t* info, void* context)
-{
-  static int indice =0;
-  printf("New sigchild receive %d .... ", info->si_pid);
-  round_pid_array[indice]=info->si_pid;
-  waitpid(info->si_pid, &(round_status_array[indice]), 0);
-  //round_status_array[indice]=info->si_status;
-  ++indice;
-  //TODO do something more performant than comparison to 1024
-  if(indice > ROUND_ARRAY_SIZE)
-    indice = 0;
-  printf("Process done %d\n", indice-1);
-  
-}
+// void sig_child(int sig, siginfo_t* info, void* context)
+// {
+//   static int indice =0;
+//   printf("New sigchild receive %d .... ", info->si_pid);
+//   round_pid_array[indice]=info->si_pid;
+//   waitpid(info->si_pid, &(round_status_array[indice]), 0);
+//   //round_status_array[indice]=info->si_status;
+//   ++indice;
+//   //TODO do something more performant than comparison to 1024
+//   if(indice > ROUND_ARRAY_SIZE)
+//     indice = 0;
+//   printf("Process done %d\n", indice-1);
+//   
+// }
 
 
 void usage() {
@@ -62,12 +62,12 @@ void print_trace_header(FILE* trace)
 
 int main(int argc, char *argv[]) { 
   
-  sig_info_fifo = xbt_fifo_new();
+//   sig_info_fifo = xbt_fifo_new();
  
-  struct sigaction nvt, old;
-  memset(&nvt, 0, sizeof(nvt));
-  nvt.sa_sigaction = &sig_child;
-  nvt.sa_flags = SA_SIGINFO;
+//   struct sigaction nvt, old;
+//   memset(&nvt, 0, sizeof(nvt));
+//   nvt.sa_sigaction = &sig_child;
+//   nvt.sa_flags = SA_SIGINFO;
   
   
   char buff[256];
@@ -76,15 +76,15 @@ int main(int argc, char *argv[]) {
   int stoppedpid;
   int child_amount=0;
   
-  int indice_pid_array = 0;
+//   int indice_pid_array = 0;
 
   int sockfd; 
 
   int i;
-  for(i=0; i<ROUND_ARRAY_SIZE ; ++i)
-  {
-    round_pid_array[i]=-1; 
-  }
+//   for(i=0; i<ROUND_ARRAY_SIZE ; ++i)
+//   {
+//     round_pid_array[i]=-1; 
+//   }
   for(i=0; i<MAX_PID; ++i)
   {
     process_desc[i].name=NULL;
@@ -160,34 +160,10 @@ int main(int argc, char *argv[]) {
     
 	  
     while(child_amount) {
-//       printf("[START LOOP] child_amount %d\n", child_amount);
-//       printf("\n");
       // __WALL to follow all children
       //TODO parcour de tous les pid dans l'ordre en traitant l'appel système s'il y en a ou en passant à un autre sinon option WNOHANG
       
-//       while(round_pid_array[indice_pid_array] == -1)
-//       {
-// 	usleep(1);
-//       }
-//       if(in_syscall(stoppedpid))
-// 	printf("processus -> noyau : ");
-//       else
-// 	printf("noyau -> processus : ");
-//       
-//       stoppedpid = round_pid_array[indice_pid_array];
-//       status = round_status_array[indice_pid_array];
-//      // stoppedpid = waitpid(stoppedpid, &status, 0);
-//       printf("New pid found %d (%d) (%d %d)\n", round_pid_array[indice_pid_array], indice_pid_array, status>>16, round_status_array[indice_pid_array]);
       stoppedpid = waitpid(-1, &status, __WALL);
-//       if (stoppedpid == -1) {
-// 	perror("wait");
-// 	exit(1);
-//       }
-//       round_pid_array[indice_pid_array]=-1;
-//       
-//       ++indice_pid_array;
-//       if(indice_pid_array > ROUND_ARRAY_SIZE)
-// 	indice_pid_array=0;
 
       if (WIFEXITED(status)) {
         printf("[%d] Child is dead\n",stoppedpid);
@@ -297,7 +273,6 @@ int main(int argc, char *argv[]) {
 		update_socket(stoppedpid,(int)arg1);
 	      insert_trace_comm(stoppedpid,(int)arg1,"write",(int)ret);
 	    }
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_read:
@@ -307,12 +282,10 @@ int main(int argc, char *argv[]) {
 		update_socket(stoppedpid,(int)arg1);
 	      insert_trace_comm(stoppedpid,(int)arg1,"read",(int)ret);
 	    }
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_fork: 
 	    printf("[%d] fork = %ld\n", stoppedpid,ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 	  
 	  case SYS_poll:
@@ -332,29 +305,24 @@ int main(int argc, char *argv[]) {
 	      printf("[%d] open(\"...\", %s) = %ld\n",stoppedpid,flags, ret);
 	    else
 	      printf("[%d] open(\"...\", no_flags) = %ld\n",stoppedpid, ret);
-	    set_out_syscall(stoppedpid);
 	  }
 	  break;
 
 	  case SYS_clone:
 	    printf("[%d] clone() ?= %ld\n",stoppedpid,ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_close: 
 	    printf("[%d] close(%ld) = %ld\n",stoppedpid,arg1,ret);
 	    close_sockfd(stoppedpid,(int)arg1);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_dup:
 	    printf("[%d] dup(%ld) = %ld\n",stoppedpid,arg1,ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_dup2:
 	    printf("[%d] dup2(%ld, %ld) = %ld\n",stoppedpid,arg1,arg2,ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_exit_group:
@@ -369,7 +337,6 @@ int main(int argc, char *argv[]) {
 
 	  case SYS_execve:
 	    printf("[%d] execve called\n",stoppedpid);
-	    set_out_syscall(stoppedpid);
 	    break;
 	    
 	    
@@ -377,42 +344,36 @@ int main(int argc, char *argv[]) {
 
 	  case SYS_select: 
 	    get_args_select(stoppedpid,&regs);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_socket: 
 	    printf("[%d] socket( ",stoppedpid);
 	    get_args_socket(stoppedpid,(int)ret, &regs);
 	    printf(" ) = %ld\n",ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_bind:
 	    printf("[%d] bind( ",stoppedpid);
 	    get_args_bind_connect(stoppedpid,(int)ret,0,&regs);
 	    printf(" ) = %ld\n",ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_connect:
 	    printf("[%d] connect( ",stoppedpid);
 	    get_args_bind_connect(stoppedpid,(int)ret,1,&regs);
 	    printf(" ) = %ld\n",ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_accept:
 	    printf("[%d] accept( ",stoppedpid);
 	    get_args_accept(stoppedpid,(int)ret,&regs);
 	    printf(" ) = %ld\n",ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_listen:
 	    printf("[%d] listen( ", stoppedpid); 
 	    get_args_listen(stoppedpid,&regs);
 	    printf(" ) = %ld\n", ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_sendto:
@@ -420,7 +381,6 @@ int main(int argc, char *argv[]) {
 	    sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret);
 	    process_send_call(stoppedpid,sockfd,(int)ret);   
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_recvfrom:
@@ -428,7 +388,6 @@ int main(int argc, char *argv[]) {
 	    sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret);
 	    process_recv_call(stoppedpid,sockfd,(int)ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 	  
 	  case SYS_sendmsg:
@@ -436,7 +395,6 @@ int main(int argc, char *argv[]) {
 	    sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret); 
 	    process_send_call(stoppedpid,sockfd,(int)ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_recvmsg:
@@ -444,7 +402,6 @@ int main(int argc, char *argv[]) {
 	    sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret);
 	    process_recv_call(stoppedpid,sockfd,(int)ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_shutdown:
@@ -455,29 +412,25 @@ int main(int argc, char *argv[]) {
 	    case 1: strcpy(how,"SHUT_WR"); break;
 	    case 2: strcpy(how,"SHUT_RDWR"); break;
 	    }
-	    printf("%s) = %ld\n",how,ret);
-	    set_out_syscall(stoppedpid);
+	    printf("%s) = %ld\n",how,ret);;
 	    break;
 
 	  case SYS_getsockopt:
 	    printf("[%d] getsockopt(",stoppedpid);
 	    get_args_get_setsockopt(stoppedpid, 1, &regs);
 	    printf("%d\n",(int)ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_setsockopt:
 	    printf("[%d] setsockopt(",stoppedpid);
 	    get_args_get_setsockopt(stoppedpid, 1, &regs);
 	    printf("%d\n",(int)ret);
-	    set_out_syscall(stoppedpid);
 	    break;
 
   #else
 
 	  case SYS__newselect:
 	    get_args_select(stoppedpid,&regs);
-	    set_out_syscall(stoppedpid);
 	    break;
 
 	  case SYS_socketcall:
@@ -575,19 +528,16 @@ int main(int argc, char *argv[]) {
 
 	  
 	    }
-	  
-	    set_out_syscall(stoppedpid);
 	    break;
 
   #endif
 
 	  default :
 	      printf("[%d] Unknown syscall %ld ?= %ld\n", stoppedpid,reg_orig,ret);
-	      set_out_syscall(stoppedpid);
 	      break;
 
 	  }
-
+	  set_out_syscall(stoppedpid);
 	
 	}
       }

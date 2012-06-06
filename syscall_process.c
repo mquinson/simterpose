@@ -2,6 +2,7 @@
 #include "insert_trace.h"
 #include "sockets.h"
 
+//TODO test the possibility to remove incomplete checking
 int process_send_call(int pid, int sockfd, int ret)
 {
   if (socket_registered(pid,sockfd) != -1) {
