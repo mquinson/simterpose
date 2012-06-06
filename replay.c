@@ -115,7 +115,7 @@ static void action_finalize(const char *const *action)
   }
 }
 
-int main (int argc, char** argv)
+void init_replay (int argc, char** argv)
 {
   MSG_global_init(&argc, argv);
   MSG_create_environment(argv[1]);
@@ -126,12 +126,4 @@ int main (int argc, char** argv)
   MSG_action_register("send", action_send);
   MSG_action_register("compute", action_compute);
   MSG_action_register("exit_group", action_finalize);
-  
-  MSG_action_trace_run(argv[3]);
-  
-  printf("Simulation time %lf\n", MSG_get_clock());
-  
-  MSG_clean();
-  
-  return EXIT_SUCCESS;
 }

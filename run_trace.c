@@ -12,6 +12,7 @@
 #include "benchmark.h"
 #include "syscall_process.h"
 #include "xbt/fifo.h"
+#include "replay.h"
 
 #define BUFFER_SIZE 512
 #define ROUND_ARRAY_SIZE 1024
