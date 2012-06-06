@@ -419,12 +419,7 @@ int main(int argc, char *argv[]) {
 	    printf("[%d] sendto( ",stoppedpid);
 	    sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret);
-	    if (socket_registered(stoppedpid,sockfd) != -1) {
-	      if (socket_incomplete(stoppedpid,sockfd)) 
-		update_socket(stoppedpid,sockfd);
-	      if (!socket_netlink(stoppedpid,sockfd)) 
-		process_send_call(stoppedpid,sockfd,(int)ret);   
-	    }
+	    process_send_call(stoppedpid,sockfd,(int)ret);   
 	    set_out_syscall(stoppedpid);
 	    break;
 
@@ -432,25 +427,15 @@ int main(int argc, char *argv[]) {
 	    printf("[%d] recvfrom( ",stoppedpid);
 	    sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret);
-	    if (socket_registered(stoppedpid,sockfd) != -1) {
-	      if (socket_incomplete(stoppedpid,sockfd)) 
-		update_socket(stoppedpid,sockfd);
-	      if (!socket_netlink(stoppedpid,sockfd)) 
-		process_recv_call(stoppedpid,sockfd, ret);
-	    }
+	    process_recv_call(stoppedpid,sockfd,(int)ret);
 	    set_out_syscall(stoppedpid);
 	    break;
 	  
 	  case SYS_sendmsg:
 	    printf("[%d] sendmsg( ",stoppedpid);
 	    sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,&regs);
-	    printf(" ) = %ld\n",ret);
-	    if (socket_registered(stoppedpid,sockfd) != -1) {
-	      if (socket_incomplete(stoppedpid,sockfd)) 
-		update_socket(stoppedpid,sockfd);
-	      if (!socket_netlink(stoppedpid,sockfd)) 
-		process_send_call(stoppedpid,sockfd,(int)ret);
-	    }
+	    printf(" ) = %ld\n",ret); 
+	    process_send_call(stoppedpid,sockfd,(int)ret);
 	    set_out_syscall(stoppedpid);
 	    break;
 
@@ -458,12 +443,7 @@ int main(int argc, char *argv[]) {
 	    printf("[%d] recvmsg( ",stoppedpid);
 	    sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,&regs);
 	    printf(" ) = %ld\n",ret);
-	    if (socket_registered(stoppedpid,sockfd) != -1) {
-	      if (socket_incomplete(stoppedpid,sockfd)) 
-		update_socket(stoppedpid,sockfd);
-	      if (!socket_netlink(stoppedpid,sockfd)) 
-		process_recv_call(stoppedpid,sockfd, ret);   
-	    }
+	    process_recv_call(stoppedpid,sockfd,(int)ret);
 	    set_out_syscall(stoppedpid);
 	    break;
 
@@ -539,48 +519,28 @@ int main(int argc, char *argv[]) {
 	      printf("[%d] send( ",stoppedpid);
 	      sockfd=get_args_send_recv(stoppedpid,1,ret_trace,(void *)arg2);
 	      printf(" ) = %ld\n",ret);
-	      if (socket_registered(stoppedpid,sockfd) != -1) {
-		if (socket_incomplete(stoppedpid,sockfd)) 
-		  update_socket(stoppedpid,sockfd);
-		if (!socket_netlink(stoppedpid,sockfd))
-		  process_send_call(stoppedpid,sockfd,(int)ret);
-	      }
+	      process_send_call(stoppedpid,sockfd,(int)ret);
 	      break;
 
 	    case 10:
 	      printf("[%d] recv( ",stoppedpid);
 	      sockfd=get_args_send_recv(stoppedpid,2,ret_trace,(void *)arg2);
 	      printf(" ) = %ld\n",ret);
-	      if (socket_registered(stoppedpid,sockfd) != -1) {
-		if (socket_incomplete(stoppedpid,sockfd)) 
-		  update_socket(stoppedpid,sockfd);
-		if (!socket_netlink(stoppedpid,sockfd))
-		  process_recv_call(stoppedpid,sockfd, (int)ret);
-	      }
+	      process_recv_call(stoppedpid,sockfd,(int)ret);
 	      break;
 
 	    case 11:
 	      printf("[%d] sendto(",stoppedpid);
 	      sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace, (void *)arg2);
-	      printf(" ) = %ld\n", ret);
-	      if (socket_registered(stoppedpid,sockfd) != -1) {
-		if (socket_incomplete(stoppedpid,sockfd)) 
-		  update_socket(stoppedpid,sockfd);
-		if (!socket_netlink(stoppedpid,sockfd)) 
-		  process_send_call(stoppedpid,sockfd,(int)ret);
-	      }
+	      printf(" ) = %ld\n", ret); 
+	      process_send_call(stoppedpid,sockfd,(int)ret);
 	      break;
 
 	    case 12:
 	      printf("[%d] recvfrom(",stoppedpid);
 	      sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,(void *)arg2);
 	      printf(" ) = %ld\n", ret);
-	      if (socket_registered(stoppedpid,sockfd) != -1) {
-		if (socket_incomplete(stoppedpid,sockfd)) 
-		  update_socket(stoppedpid,sockfd);
-		if (!socket_netlink(stoppedpid,sockfd)) 
-		  insert_trace_comm(stoppedpid,sockfd,"recv", (int)ret);   
-	      }
+	      process_recv_call(stoppedpid,sockfd,(int)ret);
 	      break;
 
 	    case 13:
@@ -603,24 +563,14 @@ int main(int argc, char *argv[]) {
 	      printf("[%d] sendmsg(",stoppedpid);
 	      sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,(void *)arg2);
 	      printf(" ) = %ld\n", ret);
-	      if (socket_registered(stoppedpid,sockfd) != -1) {
-		if (socket_incomplete(stoppedpid,sockfd)) 
-		  update_socket(stoppedpid,sockfd);
-		if (!socket_netlink(stoppedpid,sockfd))
-		  insert_trace_comm(stoppedpid,sockfd,"send", (int)ret);  
-	      } 
+	      process_send_call(stoppedpid,sockfd,(int)ret);
 	      break;
 
 	    case 17:
 	      printf("[%d] recvmsg(",stoppedpid);
 	      sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,(void *)arg2);
 	      printf(" ) = %ld\n", ret);
-	      if (socket_registered(stoppedpid,sockfd) != -1) {
-		if (socket_incomplete(stoppedpid,sockfd)) 
-		  update_socket(stoppedpid,sockfd);
-		if (!socket_netlink(stoppedpid,sockfd))
-		  process_send_call(stoppedpid,sockfd,(int)ret);
-	      }  
+	      process_recv_call(stoppedpid,sockfd,(int)ret);
 	      break;
 
 	  
