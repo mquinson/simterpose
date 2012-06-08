@@ -51,8 +51,8 @@ xbt_fifo_t sig_info_fifo;
 // }
 
 
-void usage() {
-  printf("usage : ./run_trace [-fp flops_power]\n");
+void usage(char* progName) {
+  printf("usage : %s platform_file.xml [-fp flops_power]\n", progName);
 }
 
 void print_trace_header(FILE* trace)
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
     process_desc[i].trace=NULL;
   }
   
-  //TODO mettre un vrai gestionnaire d'option
+  //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre
   if(argc>1)
   {
     for(i=1; i<argc; ++i)
@@ -102,14 +102,14 @@ int main(int argc, char *argv[]) {
       {
 	if(argv[i+1] == NULL)
 	{
-	  usage(); 
+	  usage(argv[0]); 
 	}
 	else
 	{
 	  char* endptr = argv[i+1]+strlen(argv[i+1])-1;
 	  flops_per_second = strtod(argv[i+1], &endptr);
 	  if(endptr == argv[i+1])
-	    usage();
+	    usage(argv[0]);
 	  else
 	  {
 	    micro_s_per_flop  = 1000000/flops_per_second;
