@@ -1,7 +1,7 @@
 Simterpose is a tool which trapped all systems calls made by a set of application to simulate them in various architecture independantly of where you ran them.
 
 Requirement:
-	-simgrid v.3.7 ( no test proceed with previous version)
+	-simgrid > v.6.2 ( no test proceed with previous version)
 
 To compil program
 	make

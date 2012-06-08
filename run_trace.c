@@ -52,7 +52,7 @@ xbt_fifo_t sig_info_fifo;
 
 
 void usage(char* progName) {
-  printf("usage : %s platform_file.xml [-fp flops_power]\n", progName);
+  printf("usage : %s platform_file.xml deployment_file.xml [-fp flops_power]\n", progName);
 }
 
 void print_trace_header(FILE* trace)
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
       perror("ptrace traceme");
       exit(1);
     }
-    if (execl("launcher", "launcher", NULL)==-1) {
+    if (execl("launcher", "launcher", argv[2], NULL)==-1) {
       perror("execl 1");
       exit(1);
     }
