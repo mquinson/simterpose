@@ -6,14 +6,15 @@
 int process_send_call(int pid, int sockfd, int ret)
 {
   if (socket_registered(pid,sockfd) != -1) {
-    if (socket_incomplete(pid,sockfd)) 
+    if (socket_incomplete(pid,sockfd))
+    {
       update_socket(pid,sockfd);
+    }
     if (!socket_netlink(pid,sockfd))
     {
       calculate_computation_time(pid);
-      struct infos_socket is;
-      get_infos_socket(pid,sockfd,&is);
-      struct infos_socket *s = getSocketInfoFromContext(is.ip_local, is.port_local, is.ip_remote, is.port_remote);
+      struct infos_socket *is = get_infos_socket(pid,sockfd);
+      struct infos_socket *s = getSocketInfoFromContext(is->ip_local, is->port_local, is->ip_remote, is->port_remote);
       if(s!=NULL)
 	handle_new_send(s,  ret);
       else

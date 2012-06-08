@@ -79,11 +79,11 @@ void get_args_socket(pid_t child, int sockfd, ...) {
   default :
     printf("DOMAIN UNKNOWN (%d), ",domain); break;
   }
-
+//   printf("finish parsing argument of socket\n");
   if (sockfd>0) 
     register_socket(child,sockfd,domain,protocol);
 
-
+//   printf("Leaving parsing argument socket\n");
 }
 
 void get_args_bind_connect(pid_t child, int ret, int syscall, ...) {
@@ -228,7 +228,6 @@ void get_args_accept(pid_t child, int ret, ...) {
   }
 
   int protocol=get_protocol_socket(child,sockfd);
-
   if (ret>=0 ) {
     register_socket(child,ret,domain,protocol);
     update_socket(child,ret);

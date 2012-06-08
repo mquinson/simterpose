@@ -4,16 +4,11 @@
 #include "sysdep.h"
 #include "xbt.h"
 #include "xbt/fifo.h"
+#include "run_trace.h"
+#include "syscalls_io.h"
 
 #define MAX_SOCKETS 512
-/*
- * Sendto prio dès qu'on en trouve un on le met dnas la trace
- * pour les recv on les stacks dans un accu par couple ip-port
- * send => stack d'une longueur dans le recv.
- * Consomation de la pile
- * 	->voir handle_new_reception
- * A chaque recv et send on effectue le traitement
- */
+
 
 typedef struct {
   xbt_fifo_t send_fifo;
@@ -22,8 +17,8 @@ typedef struct {
 
 struct infos_socket{
   recv_information *recv_info;
-  pid_t pid;
-  int sockfd;
+  process_descriptor* proc;//contain information of proc which handle the socket
+  int fd;
   int domain;
   int protocol;
   char *ip_local;
@@ -33,6 +28,10 @@ struct infos_socket{
   int incomplete;
   int closed;
 };
+
+extern process_descriptor process_desc[MAX_PID];
+
+void init_socket_gestion();
 
 void handle_new_receive(int pid, int sockfd, int length);
 
@@ -46,11 +45,9 @@ void register_socket(pid_t pid, int sockfd, int domain, int protocol);
 
 void update_socket(pid_t pid, int fd);
 
-int get_domain_sockfd(pid_t pid, int fd);
-
 int socket_registered(pid_t pid, int fd);
 
-void get_infos_socket(pid_t pid, int fd, struct infos_socket *res);
+struct infos_socket* get_infos_socket(pid_t pid, int fd);
 
 void get_localaddr_port_socket(pid_t pid, int fd);
 

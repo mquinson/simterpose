@@ -138,6 +138,7 @@ int main(int argc, char *argv[]) {
   pipe(comm_launcher);
 
   init_syscalls_in();
+  init_socket_gestion();
   launcherpid = fork();
   
   if (launcherpid == 0) {
@@ -195,26 +196,27 @@ int main(int argc, char *argv[]) {
       
       stoppedpid = waitpid(-1, &status, __WALL);
 
+      
       if (WIFEXITED(status)) {
         printf("[%d] Child is dead\n",stoppedpid);
-	finish_all_communication(stoppedpid);
+	if(stoppedpid != launcherpid)	
+	  finish_all_communication(stoppedpid);
 	--child_amount;
 	printf("Left %d child\n", child_amount);
 	continue;
       }
       
-
+      
       if (ptrace(PTRACE_GETREGS, stoppedpid,NULL, &regs)==-1) {
 	perror("ptrace getregs");
 	exit(1);
       }
-
       //TODO simplify handling of syscall sens
       
       int stat16=status >> 16;
 //       printf("Handling signal %d\n", stat16);
       if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK) {
-// 	printf("Fork found\n");
+ 	printf("Fork found\n");
 	unsigned long new_pid;
 	if (ptrace(PTRACE_GETEVENTMSG, stoppedpid, 0, &new_pid)==-1) {
 	  perror("ptrace geteventmsg");
@@ -241,6 +243,11 @@ int main(int argc, char *argv[]) {
 	  process_desc[new_pid].name = strdup(buff);
 	  strcat(buff, ".txt");
 	  process_desc[new_pid].trace = fopen(buff, "w");
+	  process_desc[new_pid].fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
+	  process_desc[new_pid].pid=new_pid;
+	  int i=0;
+	  for(i=0; i<MAX_FD ; ++i)
+	    process_desc[new_pid].fd_list[i]=NULL;
 #if defined(DEBUG)
 	  print_trace_header(process_desc[new_pid].trace);
 #endif
@@ -270,7 +277,6 @@ int main(int argc, char *argv[]) {
 	++child_amount;
       } 
       else if(stoppedpid != launcherpid){
-	
 	/*If this is the interrupt of the syscall and not the return, we print computation time */
 	if (in_syscall(stoppedpid)==0) {
 	  set_in_syscall(stoppedpid);
@@ -278,7 +284,6 @@ int main(int argc, char *argv[]) {
 	}
 	else
 	{
-	 //printf("New syscall return : ");
 	  /* ---- test archi for registers ---- */
 
 	  #if defined(__x86_64) || defined(amd64)
