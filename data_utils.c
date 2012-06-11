@@ -26,3 +26,8 @@ process_descriptor *process_descriptor_get(pid_t pid)
 {
   return global_data->process_desc[pid];
 }
+
+void process_descriptor_set(pid_t pid, process_descriptor* proc)
+{
+  global_data->process_desc[pid]=proc;
+}

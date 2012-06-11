@@ -27,6 +27,7 @@ typedef struct{
 
 
 struct simterpose_data{
+  int launcher_com;
   process_descriptor *process_desc[MAX_PID];
   int child_amount;
   pid_t launcherpid;

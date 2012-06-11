@@ -69,7 +69,6 @@ int main(int argc, char *argv[]) {
 //   nvt.sa_flags = SA_SIGINFO;
   
   global_data = malloc(sizeof(simterpose_data_t));
-  char buff[256];
 
   int status;
   int stoppedpid;
@@ -154,6 +153,9 @@ int main(int argc, char *argv[]) {
     }
   
   } else {
+    close(comm_launcher[1]);
+    global_data->launcher_com = comm_launcher[0];
+    
     //We enter name of processus in array
     printf("launcher pid %d\n", global_data->launcherpid);
     global_data->process_desc[global_data->launcherpid]= process_descriptor_new("launcher", global_data->launcherpid);
@@ -188,7 +190,7 @@ int main(int argc, char *argv[]) {
     }
     
 	  
-	  while(global_data->child_amount) {
+      while(global_data->child_amount) {
       // __WALL to follow all children
       //TODO parcour de tous les pid dans l'ordre en traitant l'appel système s'il y en a ou en passant à un autre sinon option WNOHANG
       
@@ -212,53 +214,14 @@ int main(int argc, char *argv[]) {
       //TODO simplify handling of syscall sens
       
       int stat16=status >> 16;
-//       printf("Handling signal %d\n", stat16);
-      if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
-	unsigned long new_pid;
-	if (ptrace(PTRACE_GETEVENTMSG, stoppedpid, 0, &new_pid)==-1) {
-	  perror("ptrace geteventmsg");
-	  exit(1);
-	}
-	if(stoppedpid == global_data->launcherpid)
-	{
-	  char* tmp= buff;
-	  int got;
-	  while ((got = read(comm_launcher[0],tmp,1))>0) {
-	    if(*tmp=='\n')
-	    {
-	      *tmp='\0';
-	      break;
-	    }
-	    else
-	      ++tmp;
-	  }
-	  if(got <0)
-	  {
-	    perror("read");
-	    exit(1);
-	  }
-	  char name[256];
-	  int time_before_next;
-	  sscanf(buff, "%s %d", name, &time_before_next);
-	  global_data->process_desc[new_pid] = process_descriptor_new(name, new_pid);
 
-#if defined(DEBUG)
-	  print_trace_header(global_data->process_desc[new_pid]->trace);
-#endif
-	  printf("New application launch\n");
-	  insert_init_trace(new_pid);
-	}
-	
-	
-	//insert_walltime_procs(new_pid);
-	insert_cputime_procs(new_pid);
-	nb_procs++;
-	printf("new pid with (v)fork %lu by processus %d\n",new_pid, stoppedpid);
-	if(stoppedpid != global_data->launcherpid)
-	  insert_trace_fork_exit(stoppedpid, "(v)fork", (int)new_pid);
-	++global_data->child_amount;
+      
+      if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
+	process_fork_call(stoppedpid);
       } 
+      
       else if(stoppedpid != global_data->launcherpid){
+	
 	/*If this is the interrupt of the syscall and not the return, we print computation time */
 	if (in_syscall(stoppedpid)==0) {
 	  set_in_syscall(stoppedpid);
