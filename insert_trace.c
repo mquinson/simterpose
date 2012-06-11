@@ -5,7 +5,6 @@ long long int times_syscall[3];
 long long int diff_time=0;
 long long int diff_cpu=0;
 
-extern float micro_s_per_flop;
 
 void calculate_computation_time(int pid)
 {
@@ -21,7 +20,7 @@ void calculate_computation_time(int pid)
       //update_walltime_procs(pid,times_syscall[0]);
       update_cputime_procs(pid,times_syscall[1]+times_syscall[2]);
       printf("%p %p\n", process_desc[pid]->trace, process_desc[pid]->name);
-      fprintf(process_desc[pid]->trace,"%s compute %10f\n", process_desc[pid]->name, (diff_cpu/micro_s_per_flop));
+      fprintf(process_desc[pid]->trace,"%s compute %10f\n", process_desc[pid]->name, (diff_cpu/global_data->micro_s_per_flop));
     }
   }
 }

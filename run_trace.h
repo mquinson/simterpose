@@ -25,5 +25,7 @@ typedef struct{
 struct simterpose_data{
   int child_amount;
   pid_t launcherpid;
+  float flops_per_second;
+  float micro_s_per_flop;
 };
 #endif

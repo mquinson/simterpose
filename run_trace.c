@@ -13,6 +13,7 @@
 #include "syscall_process.h"
 #include "xbt/fifo.h"
 #include "replay.h"
+#include "data_utils.h"
 
 #define BUFFER_SIZE 512
 #define ROUND_ARRAY_SIZE 1024
@@ -22,8 +23,6 @@
 struct time_process all_procs[MAX_PROCS]; 
 int nb_procs = 0;
 process_descriptor *process_desc[MAX_PID];
-float flops_per_second;
-float micro_s_per_flop;
 xbt_fifo_t sig_info_fifo;
 
 
@@ -107,12 +106,12 @@ int main(int argc, char *argv[]) {
 	else
 	{
 	  char* endptr = argv[i+1]+strlen(argv[i+1])-1;
-	  flops_per_second = strtod(argv[i+1], &endptr);
+	  global_data->flops_per_second = strtod(argv[i+1], &endptr);
 	  if(endptr == argv[i+1])
 	    usage(argv[0]);
 	  else
 	  {
-	    micro_s_per_flop  = 1000000/flops_per_second;
+	    global_data->micro_s_per_flop  = 1000000/global_data->flops_per_second;
 	    manual_flop = 1;
 	  }
 	}
@@ -121,7 +120,7 @@ int main(int argc, char *argv[]) {
   }
   
   if(!manual_flop)
-    benchmark_matrix_product(&flops_per_second, &micro_s_per_flop);
+    benchmark_matrix_product(&(global_data->flops_per_second), &(global_data->micro_s_per_flop));
   
   struct user_regs_struct regs;
   

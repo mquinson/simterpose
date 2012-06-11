@@ -10,7 +10,8 @@ all : run_trace benchmark launcher
 run_trace: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
-run_trace.o: run_trace.c run_trace.h insert_trace.h sysdep.h sockets.h syscalls_io.h calc_times_proc.h times_proc.h benchmark.h args_trace.h peek_data.h syscall_process.h replay.h
+run_trace.o: run_trace.c run_trace.h insert_trace.h sysdep.h sockets.h syscalls_io.h calc_times_proc.h times_proc.h benchmark.h args_trace.h peek_data.h syscall_process.h replay.h\
+		data_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 args_trace.o: args_trace.c args_trace.h peek_data.h sysdep.h sockets.h
