@@ -38,3 +38,8 @@ int process_recv_call(int pid, int sockfd, int ret)
   }
   return 0;
 }
+
+void process_fork_call(int pid)
+{
+  
+}

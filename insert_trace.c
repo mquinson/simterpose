@@ -3,7 +3,7 @@
 char buftrace[512];
 long long int times_syscall[3];
 long long int diff_time=0;
-long long int diff_cpu=0;
+
 
 
 void calculate_computation_time(int pid)
@@ -13,12 +13,11 @@ void calculate_computation_time(int pid)
     exit(1);
   } else {
     
-    long long int last_cpu = get_last_cputime(pid);
+    long long int diff_cpu=0;
 
-    if((diff_cpu=(times_syscall[1] + times_syscall[2]) - last_cpu))
+    if((diff_cpu=update_cputime_procs(pid,times_syscall[1]+times_syscall[2])) > 0)
     {
       //update_walltime_procs(pid,times_syscall[0]);
-      update_cputime_procs(pid,times_syscall[1]+times_syscall[2]);
       printf("%p %p\n", process_desc[pid]->trace, process_desc[pid]->name);
       fprintf(process_desc[pid]->trace,"%s compute %10f\n", process_desc[pid]->name, (diff_cpu/global_data->micro_s_per_flop));
     }

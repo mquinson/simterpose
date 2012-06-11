@@ -14,18 +14,19 @@
 // 
 // }
 
-void update_cputime_procs(pid_t pid, long long int new_cputime) {
+int update_cputime_procs(pid_t pid, long long int new_cputime) {
 
   int i=0;
-  int update=0;
-  while (i<nb_procs && !update) {
+  int result=0;
+  while (i<nb_procs) {
     if (all_procs[i].pid==pid) {
+      result = new_cputime-all_procs[i].last_cputime;
       all_procs[i].last_cputime=new_cputime;
-      update=1;
+      return result;
     }
     i++;
   }
-
+  return -1;
 }
 
 // void insert_walltime_procs(pid_t pid) {
