@@ -12,7 +12,7 @@ simterpose_data_t* global_data;
 
 
 typedef struct{
-  int pid;
+  pid_t pid;
   char* name;
   FILE* trace;
   SD_workstation_t station;
@@ -22,6 +22,6 @@ typedef struct{
 
 struct simterpose_data{
   int child_amount;
-  int launcherpid;
+  pid_t launcherpid;
 };
 #endif
