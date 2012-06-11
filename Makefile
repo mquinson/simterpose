@@ -32,7 +32,7 @@ peek_data.o: peek_data.c peek_data.h sysdep.h
 sockets.o: sockets.c sockets.h sysdep.h run_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-syscalls_io.o: syscalls_io.c syscalls_io.h sysdep.h run_trace.h
+syscalls_io.o: syscalls_io.c syscalls_io.h run_trace.h data_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 times_proc.o: times_proc.c times_proc.h sysdep.h

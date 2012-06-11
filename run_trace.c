@@ -131,7 +131,6 @@ int main(int argc, char *argv[]) {
   int comm_launcher[2];
   pipe(comm_launcher);
 
-  init_syscalls_in();
   init_socket_gestion();
   global_data->launcherpid = fork();
   

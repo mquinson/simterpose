@@ -18,6 +18,7 @@ simterpose_data_t* global_data;
 
 typedef struct{
   pid_t pid;
+  int syscall_in;
   long long int cpu_time;
   char* name;
   FILE* trace;

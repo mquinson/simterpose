@@ -1,24 +1,22 @@
 #include "syscalls_io.h"
 #include "run_trace.h"
+#include "data_utils.h"
 
-int syscalls_in[MAX_PID];
+#include <stdlib.h>
 
-void init_syscalls_in() {
-  int i;
-  for(i=0;i<MAX_PID;i++)
-    syscalls_in[i]=0;
+int in_syscall(pid_t pid) {
+  process_descriptor *proc = process_descriptor_get(pid);
+  return proc->syscall_in;
 }
 
-int in_syscall(int pid) {
-  return syscalls_in[pid];
+void set_in_syscall(pid_t pid) {
+  process_descriptor *proc = process_descriptor_get(pid);
+  proc->syscall_in=1;
 }
 
-void set_in_syscall(int pid) {
-  syscalls_in[pid]=1;
-}
-
-void set_out_syscall(int pid) {
-  syscalls_in[pid]=0;
+void set_out_syscall(pid_t pid) {
+  process_descriptor *proc = process_descriptor_get(pid);
+  proc->syscall_in=0;
 }
 
 
