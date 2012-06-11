@@ -16,34 +16,6 @@
 #include "data_utils.h"
 
 #define BUFFER_SIZE 512
-#define ROUND_ARRAY_SIZE 1024
-#define ROUND_ARRAY_MASK 1023
-
-xbt_fifo_t sig_info_fifo;
-
-
-// pid_t round_pid_array[ROUND_ARRAY_SIZE];
-// pid_t round_status_array[ROUND_ARRAY_SIZE];
-
-// struct info_child{
-//   pid_t pid;
-//   int status;
-// };
-
-// void sig_child(int sig, siginfo_t* info, void* context)
-// {
-//   static int indice =0;
-//   printf("New sigchild receive %d .... ", info->si_pid);
-//   round_pid_array[indice]=info->si_pid;
-//   waitpid(info->si_pid, &(round_status_array[indice]), 0);
-//   //round_status_array[indice]=info->si_status;
-//   ++indice;
-//   //TODO do something more performant than comparison to 1024
-//   if(indice > ROUND_ARRAY_SIZE)
-//     indice = 0;
-//   printf("Process done %d\n", indice-1);
-//   
-// }
 
 
 void usage(char* progName) {
@@ -58,13 +30,6 @@ void print_trace_header(FILE* trace)
 
 int main(int argc, char *argv[]) { 
   
-//   sig_info_fifo = xbt_fifo_new();
- 
-//   struct sigaction nvt, old;
-//   memset(&nvt, 0, sizeof(nvt));
-//   nvt.sa_sigaction = &sig_child;
-//   nvt.sa_flags = SA_SIGINFO;
-  
   global_data = malloc(sizeof(simterpose_data_t));
 
   int status;
@@ -72,16 +37,11 @@ int main(int argc, char *argv[]) {
   global_data->launcherpid=0;
   global_data->child_amount=0;
   int manual_flop =0;
-  
-//   int indice_pid_array = 0;
 
   int sockfd; 
 
   int i;
-//   for(i=0; i<ROUND_ARRAY_SIZE ; ++i)
-//   {
-//     round_pid_array[i]=-1; 
-//   }
+
   for(i=0; i<MAX_PID; ++i)
   {
     global_data->process_desc[i]=NULL;
@@ -117,6 +77,9 @@ int main(int argc, char *argv[]) {
   if(!manual_flop)
     benchmark_matrix_product(&(global_data->flops_per_second), &(global_data->micro_s_per_flop));
   
+  
+  init_replay (argc, argv);
+  
   struct user_regs_struct regs;
   
 
@@ -149,6 +112,8 @@ int main(int argc, char *argv[]) {
     }
   
   } else {
+    
+    
     close(comm_launcher[1]);
     global_data->launcher_com = comm_launcher[0];
     
@@ -159,14 +124,11 @@ int main(int argc, char *argv[]) {
     // We wait for the child to be blocked by ptrace in the first exec()
     wait(&status);
     
-    printf("Starting following of %d\n", global_data->launcherpid);
     if (ptrace(PTRACE_SETOPTIONS,global_data->launcherpid,NULL,PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE)==-1) {
       perror("Error setoptions 1");
       exit(1);
     }
 
-    //We set the signal handler here.
-    //sigaction(SIGCHLD, &nvt, &old);
     ++global_data->child_amount;
     // Resume the child
     if (ptrace(PTRACE_SYSCALL, global_data->launcherpid, 0, 0)==-1) {
@@ -198,15 +160,10 @@ int main(int argc, char *argv[]) {
 	continue;
       }
       
-      
-      if (ptrace(PTRACE_GETREGS, stoppedpid,NULL, &regs)==-1) {
-	perror("ptrace getregs");
-	exit(1);
-      }
       //TODO simplify handling of syscall sens
       
+      
       int stat16=status >> 16;
-
 
       if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
 	process_fork_call(stoppedpid);
@@ -217,10 +174,14 @@ int main(int argc, char *argv[]) {
 	/*If this is the interrupt of the syscall and not the return, we print computation time */
 	if (in_syscall(stoppedpid)==0) {
 	  set_in_syscall(stoppedpid);
-	  //calculate_computation_time(stoppedpid);
 	}
 	else
 	{
+	  
+	  if (ptrace(PTRACE_GETREGS, stoppedpid,NULL, &regs)==-1) {
+	    perror("ptrace getregs");
+	    exit(1);
+	  }
 	  /* ---- test archi for registers ---- */
 
 	  #if defined(__x86_64) || defined(amd64)

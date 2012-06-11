@@ -1,5 +1,6 @@
 #include "run_trace.h"
 #include "data_utils.h"
+#include "simdag/simdag.h"
 
 #include <string.h>
 
@@ -19,10 +20,12 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   for(i=0; i<MAX_FD ; ++i)
     result->fd_list[i]=NULL;
   
+  result->station = SD_workstation_get_by_name(result->name);
+  
   return result;
 }
 
-//TODO regarder l'inline pour inliner la fonction
+//TODO regarder l'inline pour cette fonction
 process_descriptor *process_descriptor_get(pid_t pid)
 {
   return global_data->process_desc[pid];
