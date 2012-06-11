@@ -5,4 +5,6 @@
 
 process_descriptor *process_descriptor_new(char* name, pid_t pid);
 
+process_descriptor *process_descriptor_get(pid_t pid);
+
 #endif

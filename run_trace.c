@@ -22,7 +22,6 @@
 
 struct time_process all_procs[MAX_PROCS]; 
 int nb_procs = 0;
-process_descriptor *process_desc[MAX_PID];
 xbt_fifo_t sig_info_fifo;
 
 
@@ -89,7 +88,7 @@ int main(int argc, char *argv[]) {
 //   }
   for(i=0; i<MAX_PID; ++i)
   {
-    process_desc[i]=NULL;
+    global_data->process_desc[i]=NULL;
   }
   
   //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre
@@ -157,7 +156,7 @@ int main(int argc, char *argv[]) {
   } else {
     //We enter name of processus in array
     printf("launcher pid %d\n", global_data->launcherpid);
-    process_desc[global_data->launcherpid]= process_descriptor_new("launcher", global_data->launcherpid);
+    global_data->process_desc[global_data->launcherpid]= process_descriptor_new("launcher", global_data->launcherpid);
     
     // We wait for the child to be blocked by ptrace in the first exec()
     wait(&status);
@@ -241,10 +240,10 @@ int main(int argc, char *argv[]) {
 	  char name[256];
 	  int time_before_next;
 	  sscanf(buff, "%s %d", name, &time_before_next);
-	  process_desc[new_pid] = process_descriptor_new(name, new_pid);
+	  global_data->process_desc[new_pid] = process_descriptor_new(name, new_pid);
 
 #if defined(DEBUG)
-	  print_trace_header(process_desc[new_pid]->trace);
+	  print_trace_header(global_data->process_desc[new_pid]->trace);
 #endif
 	  printf("New application launch\n");
 	  insert_init_trace(new_pid);

@@ -4,8 +4,11 @@
 #include <stdlib.h>
 
 #define MAX_FD 1024
+#define MAX_PID 32768  
 
 #include "simdag/simdag.h"
+
+
 
 //#define DEBUG
 
@@ -15,6 +18,7 @@ simterpose_data_t* global_data;
 
 typedef struct{
   pid_t pid;
+  long long int cpu_time;
   char* name;
   FILE* trace;
   SD_workstation_t station;
@@ -23,6 +27,7 @@ typedef struct{
 
 
 struct simterpose_data{
+  process_descriptor *process_desc[MAX_PID];
   int child_amount;
   pid_t launcherpid;
   float flops_per_second;

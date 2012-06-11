@@ -13,9 +13,16 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->trace = fopen(buff, "w");
   result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
   result->pid=pid;
+  result->cpu_time=0;
   int i;
   for(i=0; i<MAX_FD ; ++i)
     result->fd_list[i]=NULL;
   
   return result;
+}
+
+//TODO regarder l'inline pour inliner la fonction
+process_descriptor *process_descriptor_get(pid_t pid)
+{
+  return global_data->process_desc[pid];
 }

@@ -3,7 +3,7 @@
 
 #include "sysdep.h"
 
-#define MAX_PID 32768  
+
 
 
 int in_syscall(int pid);

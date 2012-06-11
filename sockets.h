@@ -29,8 +29,6 @@ struct infos_socket{
   int closed;
 };
 
-extern process_descriptor *process_desc[MAX_PID];
-
 void init_socket_gestion();
 
 void handle_new_receive(int pid, int sockfd, int length);

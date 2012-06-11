@@ -1,4 +1,5 @@
 #include "syscalls_io.h"
+#include "run_trace.h"
 
 int syscalls_in[MAX_PID];
 

@@ -29,16 +29,16 @@ insert_trace.o: insert_trace.c insert_trace.h sysdep.h sockets.h syscalls_io.h c
 peek_data.o: peek_data.c peek_data.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-sockets.o: sockets.c sockets.h sysdep.h
+sockets.o: sockets.c sockets.h sysdep.h run_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-syscalls_io.o: syscalls_io.c syscalls_io.h sysdep.h
+syscalls_io.o: syscalls_io.c syscalls_io.h sysdep.h run_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 times_proc.o: times_proc.c times_proc.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h
+syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h run_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 replay.o : replay.c replay.h
