@@ -70,12 +70,13 @@ int main(int argc, char *argv[]) {
 //   nvt.sa_sigaction = &sig_child;
 //   nvt.sa_flags = SA_SIGINFO;
   
-  
+  global_data = malloc(sizeof(simterpose_data_t));
   char buff[256];
-  pid_t launcherpid;
+
   int status;
   int stoppedpid;
-  int child_amount=0;
+  global_data->launcherpid=0;
+  global_data->child_amount=0;
   int manual_flop =0;
   
 //   int indice_pid_array = 0;
@@ -139,9 +140,9 @@ int main(int argc, char *argv[]) {
 
   init_syscalls_in();
   init_socket_gestion();
-  launcherpid = fork();
+  global_data->launcherpid = fork();
   
-  if (launcherpid == 0) {
+  if (global_data->launcherpid == 0) {
     
     close(comm_launcher[0]);
     dup2(comm_launcher[1],3);
@@ -157,29 +158,29 @@ int main(int argc, char *argv[]) {
   
   } else {
     //We enter name of processus in array
-    printf("launcher pid %d\n", launcherpid);
-    process_desc[launcherpid].name=strdup("launcher");
+    printf("launcher pid %d\n", global_data->launcherpid);
+    process_desc[global_data->launcherpid].name=strdup("launcher");
     
     // We wait for the child to be blocked by ptrace in the first exec()
     wait(&status);
     
-    printf("Starting following of %d\n", launcherpid);
-    if (ptrace(PTRACE_SETOPTIONS,launcherpid,NULL,PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE)==-1) {
+    printf("Starting following of %d\n", global_data->launcherpid);
+    if (ptrace(PTRACE_SETOPTIONS,global_data->launcherpid,NULL,PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE)==-1) {
       perror("Error setoptions 1");
       exit(1);
     }
 
     //We set the signal handler here.
     //sigaction(SIGCHLD, &nvt, &old);
-    ++child_amount;
+    ++global_data->child_amount;
     // Resume the child
-    if (ptrace(PTRACE_SYSCALL, launcherpid, 0, 0)==-1) {
+    if (ptrace(PTRACE_SYSCALL, global_data->launcherpid, 0, 0)==-1) {
       perror("ptrace syscall 1");
       exit(1);
     }
 
     //insert_walltime_procs(launcherpid);
-    insert_cputime_procs(launcherpid);
+    insert_cputime_procs(global_data->launcherpid);
       nb_procs++;
 
    
@@ -190,7 +191,7 @@ int main(int argc, char *argv[]) {
     }
     
 	  
-    while(child_amount) {
+	  while(global_data->child_amount) {
       // __WALL to follow all children
       //TODO parcour de tous les pid dans l'ordre en traitant l'appel système s'il y en a ou en passant à un autre sinon option WNOHANG
       
@@ -199,10 +200,10 @@ int main(int argc, char *argv[]) {
       
       if (WIFEXITED(status)) {
         printf("[%d] Child is dead\n",stoppedpid);
-	if(stoppedpid != launcherpid)	
+	if(stoppedpid != global_data->launcherpid)	
 	  finish_all_communication(stoppedpid);
-	--child_amount;
-	printf("Left %d child\n", child_amount);
+	--global_data->child_amount;
+	printf("Left %d child\n", global_data->child_amount);
 	continue;
       }
       
@@ -215,14 +216,13 @@ int main(int argc, char *argv[]) {
       
       int stat16=status >> 16;
 //       printf("Handling signal %d\n", stat16);
-      if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK) {
- 	printf("Fork found\n");
+      if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
 	unsigned long new_pid;
 	if (ptrace(PTRACE_GETEVENTMSG, stoppedpid, 0, &new_pid)==-1) {
 	  perror("ptrace geteventmsg");
 	  exit(1);
 	}
-	if(stoppedpid == launcherpid)
+	if(stoppedpid == global_data->launcherpid)
 	{
 	  char* tmp= buff;
 	  int got;
@@ -263,23 +263,11 @@ int main(int argc, char *argv[]) {
 	insert_cputime_procs(new_pid);
 	nb_procs++;
 	printf("new pid with (v)fork %lu by processus %d\n",new_pid, stoppedpid);
-	if(stoppedpid != launcherpid)
+	if(stoppedpid != global_data->launcherpid)
 	  insert_trace_fork_exit(stoppedpid, "(v)fork", (int)new_pid);
-	++child_amount;
-      } else if (stat16== PTRACE_EVENT_CLONE) {
-	unsigned long new_pid;
-	if (ptrace(PTRACE_GETEVENTMSG, stoppedpid, 0, &new_pid)==-1) {
-	  perror("ptrace geteventmsg");
-	  exit(1);
-	}
-	//insert_walltime_procs(new_pid);
-	insert_cputime_procs(new_pid);
-	nb_procs++;
-	printf("new pid with clone %lu\n",new_pid);
-	insert_trace_fork_exit(stoppedpid, "clone", (int)new_pid);
-	++child_amount;
+	++global_data->child_amount;
       } 
-      else if(stoppedpid != launcherpid){
+      else if(stoppedpid != global_data->launcherpid){
 	/*If this is the interrupt of the syscall and not the return, we print computation time */
 	if (in_syscall(stoppedpid)==0) {
 	  set_in_syscall(stoppedpid);

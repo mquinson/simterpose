@@ -7,6 +7,10 @@
 
 //#define DEBUG
 
+typedef struct simterpose_data simterpose_data_t;
+simterpose_data_t* global_data;
+
+
 typedef struct{
   int pid;
   char* name;
@@ -16,4 +20,8 @@ typedef struct{
 }process_descriptor;
 
 
+struct simterpose_data{
+  int child_amount;
+  int launcherpid;
+};
 #endif
