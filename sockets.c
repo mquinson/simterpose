@@ -24,7 +24,7 @@ void init_socket_gestion()
 
 void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
 
-  process_descriptor* proc = &process_desc[pid];
+  process_descriptor* proc = process_desc[pid];
   
   struct infos_socket *is = malloc(sizeof(struct infos_socket));
   proc->fd_list[sockfd]=is;
@@ -258,7 +258,7 @@ int socket_registered(pid_t pid, int fd) {
 
 
 struct infos_socket* get_infos_socket(pid_t pid, int fd) {
-  return process_desc[pid].fd_list[fd];
+  return process_desc[pid]->fd_list[fd];
 }
 
 //TODO faire en sortes que la structure socket soit un lien entre les deux processus qui parle et que l'on puisse les récupérer sans faire des foreach
@@ -392,7 +392,7 @@ int handle_new_send(struct infos_socket *is,  int length)
 
 void finish_all_communication(int pid){
   
-  process_descriptor* proc = &process_desc[pid];
+  process_descriptor* proc = process_desc[pid];
   int i=0;
   for(i=0; i<MAX_FD ; ++i)
   {

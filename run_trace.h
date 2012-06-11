@@ -1,6 +1,8 @@
 #ifndef INCLUDE_RUN_TRACE_H
 #define INCLUDE_RUN_TRACE_H
 
+#include <stdlib.h>
+
 #define MAX_FD 1024
 
 #include "simdag/simdag.h"

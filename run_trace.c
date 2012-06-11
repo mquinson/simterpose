@@ -21,7 +21,7 @@
 
 struct time_process all_procs[MAX_PROCS]; 
 int nb_procs = 0;
-process_descriptor process_desc[MAX_PID];
+process_descriptor *process_desc[MAX_PID];
 float flops_per_second;
 float micro_s_per_flop;
 xbt_fifo_t sig_info_fifo;
@@ -90,8 +90,7 @@ int main(int argc, char *argv[]) {
 //   }
   for(i=0; i<MAX_PID; ++i)
   {
-    process_desc[i].name=NULL;
-    process_desc[i].trace=NULL;
+    process_desc[i]=NULL;
   }
   
   //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre
@@ -159,7 +158,7 @@ int main(int argc, char *argv[]) {
   } else {
     //We enter name of processus in array
     printf("launcher pid %d\n", global_data->launcherpid);
-    process_desc[global_data->launcherpid].name=strdup("launcher");
+    process_desc[global_data->launcherpid]= process_descriptor_new("launcher", global_data->launcherpid);
     
     // We wait for the child to be blocked by ptrace in the first exec()
     wait(&status);
@@ -243,16 +242,10 @@ int main(int argc, char *argv[]) {
 	  char name[256];
 	  int time_before_next;
 	  sscanf(buff, "%s %d", name, &time_before_next);
-	  process_desc[new_pid].name = strdup(name);
-	  strcat(name, ".txt");
-	  process_desc[new_pid].trace = fopen(name, "w");
-	  process_desc[new_pid].fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
-	  process_desc[new_pid].pid=new_pid;
-	  int i=0;
-	  for(i=0; i<MAX_FD ; ++i)
-	    process_desc[new_pid].fd_list[i]=NULL;
+	  process_desc[new_pid] = process_descriptor_new(name, new_pid);
+
 #if defined(DEBUG)
-	  print_trace_header(process_desc[new_pid].trace);
+	  print_trace_header(process_desc[new_pid]->trace);
 #endif
 	  printf("New application launch\n");
 	  insert_init_trace(new_pid);

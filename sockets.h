@@ -29,7 +29,7 @@ struct infos_socket{
   int closed;
 };
 
-extern process_descriptor process_desc[MAX_PID];
+extern process_descriptor *process_desc[MAX_PID];
 
 void init_socket_gestion();
 

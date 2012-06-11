@@ -13,7 +13,7 @@
 
 extern struct time_process all_procs[MAX_PROCS]; 
 extern int nb_procs;
-extern process_descriptor process_desc[MAX_PID];
+extern process_descriptor *process_desc[MAX_PID];
 
 void insert_trace_comm(pid_t pid, int sockfd, char *syscall, int res);
 
