@@ -80,8 +80,6 @@ void process_fork_call(int pid)
     insert_init_trace(new_pid);
   }
 
-  insert_cputime_procs(new_pid);
-  nb_procs++;
   printf("new pid with (v)fork %lu by processus %d\n",new_pid, pid);
   if(pid != global_data->launcherpid)
     insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);

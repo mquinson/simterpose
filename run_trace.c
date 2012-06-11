@@ -19,9 +19,6 @@
 #define ROUND_ARRAY_SIZE 1024
 #define ROUND_ARRAY_MASK 1023
 
-
-struct time_process all_procs[MAX_PROCS]; 
-int nb_procs = 0;
 xbt_fifo_t sig_info_fifo;
 
 
@@ -178,10 +175,6 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
 
-    //insert_walltime_procs(launcherpid);
-    insert_cputime_procs(global_data->launcherpid);
-      nb_procs++;
-
    
 
     if (init_cputime()) {
@@ -215,7 +208,7 @@ int main(int argc, char *argv[]) {
       
       int stat16=status >> 16;
 
-      
+
       if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
 	process_fork_call(stoppedpid);
       } 
