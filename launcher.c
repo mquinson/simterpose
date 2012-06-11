@@ -19,7 +19,7 @@ int main (int argc, char** argv)
   
   comm_sim = fdopen(3, "w");
   
-  cmd("server\n");
+  cmd("server 3\n");
   int pid = fork();
   if(pid==0)
   {
@@ -35,7 +35,7 @@ int main (int argc, char** argv)
   //printf("%d\n", t);
   
   
-  cmd("client\n");
+  cmd("client -1\n");
   pid = fork();
   
   if(pid==0)

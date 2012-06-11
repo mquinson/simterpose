@@ -240,9 +240,12 @@ int main(int argc, char *argv[]) {
 	    perror("read");
 	    exit(1);
 	  }
-	  process_desc[new_pid].name = strdup(buff);
-	  strcat(buff, ".txt");
-	  process_desc[new_pid].trace = fopen(buff, "w");
+	  char name[256];
+	  int time_before_next;
+	  sscanf(buff, "%s %d", name, &time_before_next);
+	  process_desc[new_pid].name = strdup(name);
+	  strcat(name, ".txt");
+	  process_desc[new_pid].trace = fopen(name, "w");
 	  process_desc[new_pid].fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
 	  process_desc[new_pid].pid=new_pid;
 	  int i=0;
