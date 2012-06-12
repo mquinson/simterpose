@@ -4,6 +4,7 @@
 #include "sockets.h"
 #include "run_trace.h"
 #include "data_utils.h"
+#include "task.h"
 
 //TODO test the possibility to remove incomplete checking
 int process_send_call(int pid, int sockfd, int ret)
@@ -22,7 +23,8 @@ int process_send_call(int pid, int sockfd, int ret)
 	handle_new_send(s,  ret);
       else
 	THROW_IMPOSSIBLE;
-      insert_trace_comm(pid,sockfd,"send",(int)ret);  
+      insert_trace_comm(pid,sockfd,"send",ret);
+      create_send_communication_task(pid, ret);
     }
   }
   return 0;

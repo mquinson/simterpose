@@ -2,6 +2,7 @@
 #include "insert_trace.h"
 #include "xbt.h"
 #include "syscalls_io.h"
+#include "task.h"
 
 #define LOCAL 1
 #define REMOTE 2
@@ -353,6 +354,7 @@ void handle_communication_stat(struct infos_socket* is)
     printf("\t\tNew transmission complete %d %d\n", is->recv_info->quantity_recv, *size);
     insert_trace_comm(is->proc->pid, is->fd, "recv", 0);
     is->recv_info->quantity_recv -= *size;
+    create_recv_communication_task(is->proc->pid, *size);
     free(size);
   }
   if(is->recv_info->quantity_recv >0)
@@ -402,6 +404,7 @@ void finish_all_communication(int pid){
       while(size != NULL)
       {
 	insert_trace_comm(pid, i, "recv", 0);
+	create_recv_communication_task(pid, *size);
 	free(size);
 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
       }

@@ -1,5 +1,6 @@
 #include "insert_trace.h"
 #include "data_utils.h"
+#include "task.h"
 
 char buftrace[512];
 long long int times_syscall[3];
@@ -19,9 +20,10 @@ void calculate_computation_time(int pid)
     if((diff_cpu=update_cputime_procs(pid,times_syscall[1]+times_syscall[2])) > 0)
     {
       //update_walltime_procs(pid,times_syscall[0]);
-      
       process_descriptor* proc = process_descriptor_get(pid);
-      fprintf(proc->trace,"%s compute %10f\n", proc->name, (diff_cpu/global_data->micro_s_per_flop));
+      double amount = (diff_cpu/global_data->micro_s_per_flop);
+      fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
+      create_computation_task(pid, amount);
     }
   }
 }

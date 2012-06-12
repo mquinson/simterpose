@@ -1,4 +1,4 @@
-OBJS = args_trace.o syscalls_io.o calc_times_proc.o times_proc.o peek_data.o sockets.o insert_trace.o run_trace.o benchmark.o syscall_process.o replay.o data_utils.o
+OBJS = args_trace.o syscalls_io.o calc_times_proc.o times_proc.o peek_data.o sockets.o insert_trace.o run_trace.o benchmark.o syscall_process.o replay.o data_utils.o task.o
 
 CFLAGS = -Wall -g 
 CC=gcc
@@ -23,13 +23,13 @@ benchmark.o: benchmark.c benchmark.h sysdep.h calc_times_proc.h
 calc_times_proc.o: calc_times_proc.c calc_times_proc.h sysdep.h sockets.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-insert_trace.o: insert_trace.c insert_trace.h sysdep.h sockets.h syscalls_io.h calc_times_proc.h times_proc.h run_trace.h
+insert_trace.o: insert_trace.c insert_trace.h sysdep.h sockets.h syscalls_io.h calc_times_proc.h times_proc.h run_trace.h task.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 peek_data.o: peek_data.c peek_data.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-sockets.o: sockets.c sockets.h sysdep.h run_trace.h
+sockets.o: sockets.c sockets.h sysdep.h run_trace.h task.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 syscalls_io.o: syscalls_io.c syscalls_io.h run_trace.h data_utils.h
@@ -45,6 +45,9 @@ replay.o : replay.c replay.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 data_utils.o : data_utils.c data_utils.h run_trace.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+task.o: task.c task.h run_trace.h data_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
