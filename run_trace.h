@@ -28,6 +28,7 @@ typedef struct{
 
 
 struct simterpose_data{
+  int not_assigned;
   int launcher_com;
   process_descriptor *process_desc[MAX_PID];
   int child_amount;

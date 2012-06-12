@@ -5,6 +5,7 @@
 #include "run_trace.h"
 #include "data_utils.h"
 #include "task.h"
+#include "xbt.h"
 
 //TODO test the possibility to remove incomplete checking
 int process_send_call(int pid, int sockfd, int ret)
@@ -16,15 +17,17 @@ int process_send_call(int pid, int sockfd, int ret)
     }
     if (!socket_netlink(pid,sockfd))
     {
+      int result=0;;
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = getSocketInfoFromContext(is->ip_local, is->port_local, is->ip_remote, is->port_remote);
       if(s!=NULL)
-	handle_new_send(s,  ret);
+	result = handle_new_send(s,  ret);
       else
 	THROW_IMPOSSIBLE;
       insert_trace_comm(pid,sockfd,"send",ret);
       create_send_communication_task(pid, s, ret);
+      return result;
     }
   }
   return 0;
@@ -38,13 +41,13 @@ int process_recv_call(int pid, int sockfd, int ret)
     if (!socket_netlink(pid,sockfd))
     {
       calculate_computation_time(pid);
-      handle_new_receive(pid, sockfd, ret);
+      return handle_new_receive(pid, sockfd, ret);
     }
   }
   return 0;
 }
 
-void process_fork_call(int pid)
+int process_fork_call(int pid)
 {
   unsigned long new_pid;
   if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &new_pid)==-1) {
@@ -80,10 +83,14 @@ void process_fork_call(int pid)
     #endif
     printf("New application launch\n");
     insert_init_trace(new_pid);
-  }
+
 
   printf("new pid with (v)fork %lu by processus %d\n",new_pid, pid);
   if(pid != global_data->launcherpid)
     insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
   ++global_data->child_amount;
+  return 1;
+  }
+  else
+    THROW_UNIMPLEMENTED;
 }

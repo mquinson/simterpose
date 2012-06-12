@@ -47,7 +47,7 @@ replay.o : replay.c replay.h
 data_utils.o : data_utils.c data_utils.h run_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-task.o: task.c task.h run_trace.h data_utils.h
+task.o: task.c task.h run_trace.h data_utils.h sockets.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 

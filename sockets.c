@@ -339,16 +339,16 @@ struct infos_socket* getSocketInfoFromContext(char* ip_remote, int port_remote, 
   return NULL;
 }
 
-void handle_communication_stat(struct infos_socket* is)
+int handle_communication_stat(struct infos_socket* is)
 {
   int *size = (int*)xbt_fifo_shift(is->recv_info->send_fifo);
   if(size==NULL)
-    return;
+    return 0;
   
   if(is->recv_info->quantity_recv < *size)
   {
     xbt_fifo_unshift(is->recv_info->send_fifo, size);
-    return;
+    return 0;
   }
   else
   {
@@ -357,15 +357,17 @@ void handle_communication_stat(struct infos_socket* is)
     is->recv_info->quantity_recv -= *size;
     create_recv_communication_task(is);
     free(size);
+    return 1;
   }
   if(is->recv_info->quantity_recv >0)
   {
     handle_communication_stat(is);
+    return 1;
   }
 }
 
 
-void handle_new_receive(int pid, int sockfd, int length)
+int handle_new_receive(int pid, int sockfd, int length)
 {
 //   printf("Entering handle_new_receive\n");
   struct infos_socket* is = get_infos_socket(pid, sockfd);
@@ -374,11 +376,11 @@ void handle_new_receive(int pid, int sockfd, int length)
   
   recv->quantity_recv += length;
   
-  handle_communication_stat(is);
+  return handle_communication_stat(is);
 //   printf("Leaving handle_new_receive\n");
 }
 
-
+//if we return 1, this significate that the handler of the task have one now.
 int handle_new_send(struct infos_socket *is,  int length)
 {
 //   printf("Entering handle_new_reception\n");
@@ -388,9 +390,8 @@ int handle_new_send(struct infos_socket *is,  int length)
   *size=length;
 
   xbt_fifo_push(recv->send_fifo, size);
-  handle_communication_stat(is);
+  return handle_communication_stat(is);
 //   printf("Leaving handle_new_reception\n");
-  return 0;
 }
 
 void finish_all_communication(int pid){
