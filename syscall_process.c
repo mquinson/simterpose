@@ -27,7 +27,13 @@ int process_send_call(int pid, int sockfd, int ret)
 	THROW_IMPOSSIBLE;
       insert_trace_comm(pid,sockfd,"send",ret);
       create_send_communication_task(pid, s, ret);
-      return result;
+      --(global_data->not_assigned);
+      //if result is not null, we have give a task to another processus so one more are assigned
+      if(result)
+      {
+	--(global_data->not_assigned);
+	return 1;
+      }
     }
   }
   return 0;
@@ -41,7 +47,12 @@ int process_recv_call(int pid, int sockfd, int ret)
     if (!socket_netlink(pid,sockfd))
     {
       calculate_computation_time(pid);
-      return handle_new_receive(pid, sockfd, ret);
+      //if handle_new_receive return 1, we have assigned a new task so one processus are assigned
+      if(handle_new_receive(pid, sockfd, ret))
+      {
+	--(global_data->not_assigned);
+	return 1;
+      }
     }
   }
   return 0;
@@ -89,6 +100,7 @@ int process_fork_call(int pid)
   if(pid != global_data->launcherpid)
     insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
   ++global_data->child_amount;
+  --(global_data->not_assigned);
   return 1;
   }
   else
