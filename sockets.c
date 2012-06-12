@@ -44,7 +44,8 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   
   recv_information* recv = malloc(sizeof(recv_information));
   recv->quantity_recv=0;
-  recv->send_fifo= xbt_fifo_new();
+  recv->send_fifo = xbt_fifo_new();
+  recv->recv_task = xbt_fifo_new();
   is->recv_info = recv;
 
   xbt_dynar_push(all_sockets, &is);
@@ -354,7 +355,7 @@ void handle_communication_stat(struct infos_socket* is)
     printf("\t\tNew transmission complete %d %d\n", is->recv_info->quantity_recv, *size);
     insert_trace_comm(is->proc->pid, is->fd, "recv", 0);
     is->recv_info->quantity_recv -= *size;
-    create_recv_communication_task(is->proc->pid, *size);
+    create_recv_communication_task(is);
     free(size);
   }
   if(is->recv_info->quantity_recv >0)
@@ -404,7 +405,7 @@ void finish_all_communication(int pid){
       while(size != NULL)
       {
 	insert_trace_comm(pid, i, "recv", 0);
-	create_recv_communication_task(pid, *size);
+	create_recv_communication_task(proc->fd_list[i]);
 	free(size);
 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
       }

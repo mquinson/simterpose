@@ -24,7 +24,7 @@ int process_send_call(int pid, int sockfd, int ret)
       else
 	THROW_IMPOSSIBLE;
       insert_trace_comm(pid,sockfd,"send",ret);
-      create_send_communication_task(pid, ret);
+      create_send_communication_task(pid, s, ret);
     }
   }
   return 0;

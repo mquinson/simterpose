@@ -12,6 +12,7 @@
 
 typedef struct {
   xbt_fifo_t send_fifo;
+  xbt_fifo_t recv_task;
   int quantity_recv;
 }recv_information;
 
