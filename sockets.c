@@ -406,7 +406,7 @@ void finish_all_communication(int pid){
       while(size != NULL)
       {
 	insert_trace_comm(pid, i, "recv", 0);
-	create_recv_communication_task(proc->fd_list[i]);
+	//create_recv_communication_task(proc->fd_list[i]);
 	free(size);
 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
       }

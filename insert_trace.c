@@ -8,7 +8,7 @@ long long int diff_time=0;
 
 
 
-void calculate_computation_time(int pid)
+int calculate_computation_time(int pid)
 {
   if (ask_time(pid, times_syscall)) {
     perror("Error ask_time");
@@ -24,8 +24,10 @@ void calculate_computation_time(int pid)
       double amount = (diff_cpu/global_data->micro_s_per_flop);
       fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
       create_computation_task(pid, amount);
+      return 1;
     }
   }
+  return 0;
 }
 
 

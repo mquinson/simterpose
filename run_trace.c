@@ -36,8 +36,9 @@ int main(int argc, char *argv[]) {
   int stoppedpid;
   global_data->launcherpid=0;
   global_data->child_amount=0;
-  global_data->time_to_next=0;
+  global_data->time_to_next= xbt_fifo_new();
   global_data->last_clock=0;
+  global_data->process_launch=0;
   int manual_flop =0;
 
   int sockfd; 
@@ -153,7 +154,7 @@ int main(int argc, char *argv[]) {
 	//The first loop consist on advance each processus until found task for each
 	while(global_data->not_assigned)
 	{
-	  //printf("New tour\n");
+	  printf("New tour : left %d not assigned\n", global_data->not_assigned);
 	  int task_found = 0;
 	  // __WALL to follow all children
 	  //TODO parcour de tous les pid dans l'ordre en traitant l'appel système s'il y en a ou en passant à un autre sinon option WNOHANG
@@ -164,7 +165,10 @@ int main(int argc, char *argv[]) {
 	    printf("[%d] Child is dead\n",stoppedpid);
 	    if(stoppedpid != global_data->launcherpid)	
 	      finish_all_communication(stoppedpid);
+	    else
+	      global_data->launcherpid=0;
 	    --global_data->child_amount;
+	    --global_data->not_assigned;
 	    printf("Left %d child\n", global_data->child_amount);
 	    continue;
 	  }
@@ -175,7 +179,18 @@ int main(int argc, char *argv[]) {
 	  int stat16=status >> 16;
 
 	  if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
-	    task_found = process_fork_call(stoppedpid);
+	    if(!global_data->process_launch)
+	    {
+	      process_fork_call(stoppedpid);
+	      global_data->process_launch = global_data->last_pid_create;
+	      ++global_data->not_assigned;
+	    }
+	    else
+	    {
+	      task_found = process_fork_call(stoppedpid);
+	      if(task_found)
+		++global_data->not_assigned;
+	    }
 	  } 
 	  
 	  else if(stoppedpid != global_data->launcherpid){
@@ -183,9 +198,46 @@ int main(int argc, char *argv[]) {
 	    /*If this is the interrupt of the syscall and not the return, we print computation time */
 	    if (in_syscall(stoppedpid)==0) {
 	      set_in_syscall(stoppedpid);
+	      if (ptrace(PTRACE_GETREGS, stoppedpid,NULL, &regs)==-1) {
+		perror("ptrace getregs");
+		exit(1);
+	      }
+	      /* ---- test archi for registers ---- */
+	      
+	      #if defined(__x86_64) || defined(amd64)
+	      reg_orig=regs.orig_rax;
+	      ret=regs.rax;
+	      arg1=regs.rdi;
+	      arg2=regs.rsi;
+	      arg3=regs.rdx;
+	      #elif defined(i386)
+	      reg_orig=regs.orig_eax;
+	      ret=regs.eax;
+	      arg1=regs.ebx;
+	      arg2=regs.ecx;
+	      arg3=regs.edx;
+	      #endif
+	      
+	      if(reg_orig == SYS_accept)
+	      {
+		printf("[%d] accept_in( ",stoppedpid);
+		get_args_accept(stoppedpid,(int)ret,&regs);
+		--global_data->not_assigned;
+		process_descriptor_set_idle(stoppedpid, 1);
+		printf(" ) = %ld\n",ret);
+	      }
+	      
+	      if(reg_orig == SYS_recvfrom)
+	      {
+		printf("[%d] recvfrom_in",stoppedpid);
+		--global_data->not_assigned;
+		process_descriptor_set_idle(stoppedpid, 1);
+	      }
 	    }
 	    else
 	    {
+	      //if the process was in idle state, we need to increment not_assigned
+	      
 	      
 	      if (ptrace(PTRACE_GETREGS, stoppedpid,NULL, &regs)==-1) {
 		perror("ptrace getregs");
@@ -282,12 +334,21 @@ int main(int argc, char *argv[]) {
 	      case SYS_execve:
 		printf("[%d] execve called\n",stoppedpid);
 		process_descriptor* proc = process_descriptor_get(stoppedpid);
-		if(proc->execve_call_before_start)
-		  --proc->execve_call_before_start;
+		if(global_data->process_launch != stoppedpid)
+		{
+		  printf("%p %d \n", proc,proc->execve_call_before_start);
+		  if(!proc->execve_call_before_start)
+		    task_found=1;
+		  else
+		    --proc->execve_call_before_start;
+		}
 		else
 		{
-		  task_found=1;
-		  --global_data->not_assigned;
+		  printf("First process launch call execve %d\n", proc->execve_call_before_start);
+		  if(!proc->execve_call_before_start)
+		    global_data->process_launch = 1;//Normally, we have no chance to see an exec of init
+		  else
+		    --proc->execve_call_before_start;
 		}
 		break;
 		
@@ -319,6 +380,8 @@ int main(int argc, char *argv[]) {
 	      case SYS_accept:
 		printf("[%d] accept( ",stoppedpid);
 		get_args_accept(stoppedpid,(int)ret,&regs);
+		++global_data->not_assigned;
+		process_descriptor_set_idle(stoppedpid, 0);
 		printf(" ) = %ld\n",ret);
 		break;
 
@@ -338,6 +401,8 @@ int main(int argc, char *argv[]) {
 	      case SYS_recvfrom:
 		printf("[%d] recvfrom( ",stoppedpid);
 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
+		++global_data->not_assigned;
+		process_descriptor_set_idle(stoppedpid, 0);
 		printf(" ) = %ld\n",ret);
 		task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		break;
@@ -509,24 +574,50 @@ int main(int argc, char *argv[]) {
 	      perror("ptrace syscall");
 	      exit(1);
 	    }
+	    
 	  }
 	  else
-	    printf("New task found for pid %d", stoppedpid);
+	  {
+	    --(global_data->not_assigned);
+	    printf("New task found for pid %d\n", stoppedpid);
+	  }
+	}
+	if(!global_data->child_amount)
+	  break;
+	
+	double* next_time = xbt_fifo_shift(global_data->time_to_next);
+	
+	xbt_dynar_t arr;
+	if(next_time==NULL)
+	{
+	  printf("\t\t\t\t\t NEW SIMULATION TURN with time %lf\n", -1.);
+	  arr = SD_simulate(-1);
+	}
+	else
+	{
+	  printf("Process to simulation\n");
+	  printf("\t\t\t\t\t NEW SIMULATION TURN with time %lf\n", *next_time);
+	  arr = SD_simulate(*next_time);
 	}
 	//now all processus have got a task to execute we can run simulation.
-	xbt_dynar_t arr = SD_simulate(global_data->time_to_next);
+	
+	printf("End of Simulation\n");
 	//Now there is two case.
 	//	1: there no processus in arr and we have to launch the next processus.
 	//	2: there's processus and we have to substract time and resume these processus.
 	if(xbt_dynar_is_empty(arr))
 	{
 	  printf("New simulation time %lf\n", update_simulation_clock());
-	  if (ptrace(PTRACE_SYSCALL, global_data->launcherpid, NULL, NULL)==-1) {
-	    perror("ptrace syscall");
-	    exit(1);
+	  if(global_data->launcherpid)
+	  {
+	    if (ptrace(PTRACE_SYSCALL, global_data->launcherpid, NULL, NULL)==-1) {
+	      printf("%d\n", global_data->launcherpid);
+	      perror("ptrace syscall");
+	      exit(1);
+	    }
 	  }
 	  if (ptrace(PTRACE_SYSCALL, global_data->last_pid_create, NULL, NULL)==-1) {
-	    printf("%d\n", global_data->last_pid_create);
+	    printf("%d\n", global_data->launcherpid);
 	    perror("ptrace syscall");
 	    exit(1);
 	  }
@@ -534,13 +625,18 @@ int main(int argc, char *argv[]) {
 	}
 	else
 	{
-	  global_data->time_to_next -= update_simulation_clock();
+	  if(next_time != NULL)
+	  {
+	    *next_time -= update_simulation_clock();
+	    xbt_fifo_unshift(global_data->time_to_next, next_time);
+	  }
 	  SD_task_t temp_task;
 	  unsigned int cpt;
 	  xbt_dynar_foreach(arr, cpt, temp_task){
 	    if(SD_task_get_state(temp_task) == SD_DONE)
 	    {
 	      int* data = (int *)SD_task_get_data(temp_task);
+	      printf("Simulation task ending for process %d \n", *data);
 	      if (ptrace(PTRACE_SYSCALL, *data, NULL, NULL)==-1) {
 		perror("ptrace syscall");
 		exit(1);

@@ -17,6 +17,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->cpu_time=0;
   result->syscall_in = 0;
   result->execve_call_before_start=1;
+  result->idle=0;
   int i;
   for(i=0; i<MAX_FD ; ++i)
     result->fd_list[i]=NULL;
@@ -43,4 +44,14 @@ double update_simulation_clock()
   double result = new_clock - global_data->last_clock;
   global_data->last_clock = new_clock;
   return result;
+}
+
+void process_descriptor_set_idle(int pid, int idle_state)
+{
+  global_data->process_desc[pid]->idle = idle_state;
+}
+
+int process_descriptor_get_idle(int pid)
+{
+  return global_data->process_desc[pid]->idle;
 }

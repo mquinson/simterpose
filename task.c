@@ -17,6 +17,7 @@ typedef struct{
 
 void create_computation_task(pid_t pid, double amount)
 {
+  printf("ENTERING create_computation_task\n");
   process_descriptor *proc = process_descriptor_get(pid);
   
   int* data = malloc(sizeof(int));
@@ -25,8 +26,12 @@ void create_computation_task(pid_t pid, double amount)
   SD_task_t task = SD_task_create("computation", data, amount);
   SD_task_watch(task, SD_DONE);
   double* comp_size = malloc(sizeof(double));
+  double* comm_amount = malloc(sizeof(double));
+  SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
+  work_list[0] = proc->station;
+  *comm_amount=0;
   *comp_size = amount;
-  SD_task_schedule(task,1,&(proc->station),comp_size,NULL,-1);
+  SD_task_schedule(task,1,work_list,comp_size,comm_amount,-1);
   
 }
 
@@ -57,28 +62,43 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
   double* comm_amount = malloc(sizeof(double)*4);
   comm_amount[1]=amount;
   comm_amount[2]=0.0;
+  comm_amount[3]=0.0;
+  comm_amount[0]=0.0;
+  
+  double* comp_size = malloc(sizeof(double)*2);
+  comp_size[0]=0;
+  comp_size[1]=0;
   
   SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t)*2);
   work_list[0] = proc_sender->station;
   work_list[1] = proc_receiver->station;
   
-  SD_task_schedule(task_sending, 2, work_list, NULL, comm_amount, -1);
+  SD_task_schedule(task_sending, 2, work_list, comp_size, comm_amount, -1);
 }
 
 void create_recv_communication_task(struct infos_socket* recv)
 {
+  
+  printf("ENTERING create_recv_communication_task\n");
   task_comm_info* tci = xbt_fifo_shift(recv->recv_info->recv_task);
+  
   
   process_descriptor *proc_sender = process_descriptor_get(tci->sender_pid);
   process_descriptor *proc_receiver = recv->proc;
   
   double* comm_amount = malloc(sizeof(double)*4);
-  comm_amount[2]=0.0;
+  comm_amount[2]=SD_task_get_amount(tci->task);
   comm_amount[1]=0.0;
+  comm_amount[3]=0.0;
+  comm_amount[0]=0.0;
+  
+  double* comp_size = malloc(sizeof(double)*2);
+  comp_size[0]=0;
+  comp_size[1]=0;
   
   SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t)*2);
   work_list[0] = proc_sender->station;
   work_list[1] = proc_receiver->station;
   
-  SD_task_schedule(tci->task, 2, work_list, NULL, comm_amount, -1);
+  SD_task_schedule(tci->task, 2, work_list, comp_size, comm_amount, -1);
 }

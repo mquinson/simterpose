@@ -18,6 +18,6 @@ void insert_trace_fork_exit(pid_t pid, char *syscall, int res);
 
 void insert_init_trace(pid_t pid);
 
-void calculate_computation_time(int pid);
+int calculate_computation_time(int pid);
 
 #endif

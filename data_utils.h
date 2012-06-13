@@ -12,4 +12,8 @@ void process_descriptor_set(pid_t pid, process_descriptor* proc);
 
 double update_simulation_clock();
 
+void process_descriptor_set_idle(int pid, int idle_state);
+
+int process_descriptor_get_idle(int pid);
+
 #endif

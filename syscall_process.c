@@ -10,6 +10,7 @@
 //TODO test the possibility to remove incomplete checking
 int process_send_call(int pid, int sockfd, int ret)
 {
+  printf("Entering process_send_call\n");
   if (socket_registered(pid,sockfd) != -1) {
     if (socket_incomplete(pid,sockfd))
     {
@@ -17,8 +18,8 @@ int process_send_call(int pid, int sockfd, int ret)
     }
     if (!socket_netlink(pid,sockfd))
     {
-      int result=0;;
-      calculate_computation_time(pid);
+      int result;
+      //result = calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = getSocketInfoFromContext(is->ip_local, is->port_local, is->ip_remote, is->port_remote);
       if(s!=NULL)
@@ -27,30 +28,31 @@ int process_send_call(int pid, int sockfd, int ret)
 	THROW_IMPOSSIBLE;
       insert_trace_comm(pid,sockfd,"send",ret);
       create_send_communication_task(pid, s, ret);
-      --(global_data->not_assigned);
+	
       //if result is not null, we have give a task to another processus so one more are assigned
       if(result)
       {
-	--(global_data->not_assigned);
+	//--(global_data->not_assigned);
 	return 1;
       }
     }
   }
-  return 0;
+  return 1;
 }
 
 int process_recv_call(int pid, int sockfd, int ret)
 {
+  printf("Entering process_recv_call\n");
   if (socket_registered(pid,sockfd) != -1) {
     if (socket_incomplete(pid,sockfd)) 
       update_socket(pid,sockfd);
     if (!socket_netlink(pid,sockfd))
     {
-      calculate_computation_time(pid);
+      //calculate_computation_time(pid);
       //if handle_new_receive return 1, we have assigned a new task so one processus are assigned
       if(handle_new_receive(pid, sockfd, ret))
       {
-	--(global_data->not_assigned);
+// 	if(!process_descriptor_get_idle(pid))
 	return 1;
       }
     }
@@ -88,7 +90,10 @@ int process_fork_call(int pid)
       exit(1);
     }
     char name[256];
-    sscanf(buff, "%s %lf", name, &global_data->time_to_next);
+    double *next = malloc(sizeof(double));
+    sscanf(buff, "%s %lf", name, next);
+//     printf("\t\t\t\t\t\t %p
+    xbt_fifo_push(global_data->time_to_next, next);
     global_data->process_desc[new_pid] = process_descriptor_new(name, new_pid);
     
     #if defined(DEBUG)
@@ -102,7 +107,6 @@ int process_fork_call(int pid)
   if(pid != global_data->launcherpid)
     insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
   ++global_data->child_amount;
-//   --(global_data->not_assigned);
   return 1;
   }
   else
