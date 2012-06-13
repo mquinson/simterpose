@@ -36,6 +36,8 @@ int main(int argc, char *argv[]) {
   int stoppedpid;
   global_data->launcherpid=0;
   global_data->child_amount=0;
+  global_data->time_to_next=0;
+  global_data->last_clock=0;
   int manual_flop =0;
 
   int sockfd; 
@@ -130,6 +132,7 @@ int main(int argc, char *argv[]) {
     }
 
     ++global_data->child_amount;
+    ++global_data->not_assigned;
     // Resume the child
     if (ptrace(PTRACE_SYSCALL, global_data->launcherpid, 0, 0)==-1) {
       perror("ptrace syscall 1");
@@ -148,8 +151,9 @@ int main(int argc, char *argv[]) {
 	
 	
 	//The first loop consist on advance each processus until found task for each
-// 	while(global_data->not_assigned)
-// 	{
+	while(global_data->not_assigned)
+	{
+	  //printf("New tour\n");
 	  int task_found = 0;
 	  // __WALL to follow all children
 	  //TODO parcour de tous les pid dans l'ordre en traitant l'appel système s'il y en a ou en passant à un autre sinon option WNOHANG
@@ -171,7 +175,7 @@ int main(int argc, char *argv[]) {
 	  int stat16=status >> 16;
 
 	  if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
-	    process_fork_call(stoppedpid);
+	    task_found = process_fork_call(stoppedpid);
 	  } 
 	  
 	  else if(stoppedpid != global_data->launcherpid){
@@ -277,6 +281,14 @@ int main(int argc, char *argv[]) {
 
 	      case SYS_execve:
 		printf("[%d] execve called\n",stoppedpid);
+		process_descriptor* proc = process_descriptor_get(stoppedpid);
+		if(proc->execve_call_before_start)
+		  --proc->execve_call_before_start;
+		else
+		{
+		  task_found=1;
+		  --global_data->not_assigned;
+		}
 		break;
 		
 		
@@ -320,28 +332,28 @@ int main(int argc, char *argv[]) {
 		printf("[%d] sendto( ",stoppedpid);
 		sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace,&regs);
 		printf(" ) = %ld\n",ret);
-		process_send_call(stoppedpid,sockfd,(int)ret);   
+		task_found = process_send_call(stoppedpid,sockfd,(int)ret);   
 		break;
 
 	      case SYS_recvfrom:
 		printf("[%d] recvfrom( ",stoppedpid);
 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
 		printf(" ) = %ld\n",ret);
-		process_recv_call(stoppedpid,sockfd,(int)ret);
+		task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		break;
 	      
 	      case SYS_sendmsg:
 		printf("[%d] sendmsg( ",stoppedpid);
 		sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,&regs);
 		printf(" ) = %ld\n",ret); 
-		process_send_call(stoppedpid,sockfd,(int)ret);
+		task_found = process_send_call(stoppedpid,sockfd,(int)ret);
 		break;
 
 	      case SYS_recvmsg:
 		printf("[%d] recvmsg( ",stoppedpid);
 		sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,&regs);
 		printf(" ) = %ld\n",ret);
-		process_recv_call(stoppedpid,sockfd,(int)ret);
+		task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		break;
 
 	      case SYS_shutdown:
@@ -412,28 +424,28 @@ int main(int argc, char *argv[]) {
 		  printf("[%d] send( ",stoppedpid);
 		  sockfd=get_args_send_recv(stoppedpid,1,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n",ret);
-		  process_send_call(stoppedpid,sockfd,(int)ret);
+		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
 		case 10:
 		  printf("[%d] recv( ",stoppedpid);
 		  sockfd=get_args_send_recv(stoppedpid,2,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n",ret);
-		  process_recv_call(stoppedpid,sockfd,(int)ret);
+		  task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
 		case 11:
 		  printf("[%d] sendto(",stoppedpid);
 		  sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace, (void *)arg2);
 		  printf(" ) = %ld\n", ret); 
-		  process_send_call(stoppedpid,sockfd,(int)ret);
+		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
 		case 12:
 		  printf("[%d] recvfrom(",stoppedpid);
 		  sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n", ret);
-		  process_recv_call(stoppedpid,sockfd,(int)ret);
+		  task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
 		case 13:
@@ -456,14 +468,14 @@ int main(int argc, char *argv[]) {
 		  printf("[%d] sendmsg(",stoppedpid);
 		  sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n", ret);
-		  process_send_call(stoppedpid,sockfd,(int)ret);
+		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
 		case 17:
 		  printf("[%d] recvmsg(",stoppedpid);
 		  sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n", ret);
-		  process_recv_call(stoppedpid,sockfd,(int)ret);
+		  task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
 	      
@@ -498,10 +510,46 @@ int main(int argc, char *argv[]) {
 	      exit(1);
 	    }
 	  }
-
-      
-      
-// 	}
+	  else
+	    printf("New task found for pid %d", stoppedpid);
+	}
+	//now all processus have got a task to execute we can run simulation.
+	xbt_dynar_t arr = SD_simulate(global_data->time_to_next);
+	//Now there is two case.
+	//	1: there no processus in arr and we have to launch the next processus.
+	//	2: there's processus and we have to substract time and resume these processus.
+	if(xbt_dynar_is_empty(arr))
+	{
+	  printf("New simulation time %lf\n", update_simulation_clock());
+	  if (ptrace(PTRACE_SYSCALL, global_data->launcherpid, NULL, NULL)==-1) {
+	    perror("ptrace syscall");
+	    exit(1);
+	  }
+	  if (ptrace(PTRACE_SYSCALL, global_data->last_pid_create, NULL, NULL)==-1) {
+	    printf("%d\n", global_data->last_pid_create);
+	    perror("ptrace syscall");
+	    exit(1);
+	  }
+	  global_data->not_assigned +=2;
+	}
+	else
+	{
+	  global_data->time_to_next -= update_simulation_clock();
+	  SD_task_t temp_task;
+	  unsigned int cpt;
+	  xbt_dynar_foreach(arr, cpt, temp_task){
+	    if(SD_task_get_state(temp_task) == SD_DONE)
+	    {
+	      int* data = (int *)SD_task_get_data(temp_task);
+	      if (ptrace(PTRACE_SYSCALL, *data, NULL, NULL)==-1) {
+		perror("ptrace syscall");
+		exit(1);
+	      }
+	      ++global_data->not_assigned;
+	    }
+	  }
+	  //TODO continue here
+	}
       }
 
   }

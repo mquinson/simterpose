@@ -19,7 +19,10 @@ void create_computation_task(pid_t pid, double amount)
 {
   process_descriptor *proc = process_descriptor_get(pid);
   
-  SD_task_t task = SD_task_create("computation", NULL, amount);
+  int* data = malloc(sizeof(int));
+  *data=pid;
+  
+  SD_task_t task = SD_task_create("computation", data, amount);
   SD_task_watch(task, SD_DONE);
   double* comp_size = malloc(sizeof(double));
   *comp_size = amount;
@@ -32,9 +35,15 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
   process_descriptor *proc_sender = process_descriptor_get(pid_sender);
   process_descriptor *proc_receiver = recv->proc;
   
-  SD_task_t task_sending = SD_task_create("communication send", NULL, amount);
+  int* data_sender = malloc(sizeof(int));
+  *data_sender=pid_sender;
+  
+  int* data_receiver = malloc(sizeof(int));
+  *data_receiver=proc_receiver->pid;
+  
+  SD_task_t task_sending = SD_task_create("communication send", data_sender, amount);
   SD_task_watch(task_sending, SD_DONE);
-  SD_task_t task_receiving = SD_task_create("communication recv", NULL, amount);
+  SD_task_t task_receiving = SD_task_create("communication recv", data_receiver, amount);
   SD_task_watch(task_receiving, SD_DONE);
   
   task_comm_info* temp = malloc(sizeof(task_comm_info));

@@ -60,6 +60,7 @@ int process_recv_call(int pid, int sockfd, int ret)
 
 int process_fork_call(int pid)
 {
+  printf("New fork\n");
   unsigned long new_pid;
   if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &new_pid)==-1) {
     perror("ptrace geteventmsg");
@@ -67,6 +68,8 @@ int process_fork_call(int pid)
   }
   if(pid == global_data->launcherpid)
   {
+    global_data->last_pid_create = new_pid;
+    printf("Creation of pid %ud\n", new_pid);
     char buff[256];
     char* tmp= buff;
     int got;
@@ -85,8 +88,7 @@ int process_fork_call(int pid)
       exit(1);
     }
     char name[256];
-    int time_before_next;
-    sscanf(buff, "%s %d", name, &time_before_next);
+    sscanf(buff, "%s %lf", name, &global_data->time_to_next);
     global_data->process_desc[new_pid] = process_descriptor_new(name, new_pid);
     
     #if defined(DEBUG)
@@ -100,7 +102,7 @@ int process_fork_call(int pid)
   if(pid != global_data->launcherpid)
     insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
   ++global_data->child_amount;
-  --(global_data->not_assigned);
+//   --(global_data->not_assigned);
   return 1;
   }
   else

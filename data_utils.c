@@ -16,6 +16,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->pid=pid;
   result->cpu_time=0;
   result->syscall_in = 0;
+  result->execve_call_before_start=1;
   int i;
   for(i=0; i<MAX_FD ; ++i)
     result->fd_list[i]=NULL;
@@ -34,4 +35,12 @@ process_descriptor *process_descriptor_get(pid_t pid)
 void process_descriptor_set(pid_t pid, process_descriptor* proc)
 {
   global_data->process_desc[pid]=proc;
+}
+
+double update_simulation_clock()
+{
+  double new_clock = SD_get_clock();
+  double result = new_clock - global_data->last_clock;
+  global_data->last_clock = new_clock;
+  return result;
 }

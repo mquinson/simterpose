@@ -18,6 +18,7 @@ simterpose_data_t* global_data;
 
 typedef struct{
   pid_t pid;
+  int execve_call_before_start;
   int syscall_in;
   long long int cpu_time;
   char* name;
@@ -28,8 +29,11 @@ typedef struct{
 
 
 struct simterpose_data{
+  double last_clock;
   int not_assigned;
   int launcher_com;
+  double time_to_next;
+  pid_t last_pid_create;
   process_descriptor *process_desc[MAX_PID];
   int child_amount;
   pid_t launcherpid;
