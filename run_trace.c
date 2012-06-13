@@ -150,8 +150,8 @@ int main(int argc, char *argv[]) {
 	  
       while(global_data->child_amount) {
 	
-	
 	//The first loop consist on advance each processus until found task for each
+	//TODO metttre un place un sstème pour ne pas casser la boucle si les seuls fils restant sont idle.
 	while(global_data->not_assigned)
 	{
 	  printf("New tour : left %d not assigned\n", global_data->not_assigned);
@@ -172,8 +172,6 @@ int main(int argc, char *argv[]) {
 	    printf("Left %d child\n", global_data->child_amount);
 	    continue;
 	  }
-	  
-	  //TODO simplify handling of syscall sens
 	  
 	  
 	  int stat16=status >> 16;
@@ -636,12 +634,15 @@ int main(int argc, char *argv[]) {
 	    if(SD_task_get_state(temp_task) == SD_DONE)
 	    {
 	      int* data = (int *)SD_task_get_data(temp_task);
-	      printf("Simulation task ending for process %d \n", *data);
-	      if (ptrace(PTRACE_SYSCALL, *data, NULL, NULL)==-1) {
-		perror("ptrace syscall");
-		exit(1);
+	      if(data!=NULL)
+	      {
+		printf("Simulation task ending for process %d \n", *data);
+		if (ptrace(PTRACE_SYSCALL, *data, NULL, NULL)==-1) {
+		  perror("ptrace syscall");
+		  exit(1);
+		}
+		++global_data->not_assigned;
 	      }
-	      ++global_data->not_assigned;
 	    }
 	  }
 	  //TODO continue here

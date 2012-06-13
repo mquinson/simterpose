@@ -75,6 +75,13 @@ int main(){
 	    //printf("Message reçu : %s",buff);
 	  strcpy(buff,"envoi serveur\n");
 	  printf("Server envoie au client\n");
+	  int i=0;
+	  int j;
+	  for(i=0; i<2000000 ; ++i)
+	  {
+	    j=i*(i%14);
+	    --j;
+	  }
 	  res=send(client_socket,buff,BUFFER_SIZE,0);
 	  if(res==-1){
 	    perror("erreur envoi server");

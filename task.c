@@ -20,18 +20,9 @@ void create_computation_task(pid_t pid, double amount)
   printf("ENTERING create_computation_task\n");
   process_descriptor *proc = process_descriptor_get(pid);
   
-  int* data = malloc(sizeof(int));
-  *data=pid;
-  
-  SD_task_t task = SD_task_create("computation", data, amount);
-  SD_task_watch(task, SD_DONE);
-  double* comp_size = malloc(sizeof(double));
-  double* comm_amount = malloc(sizeof(double));
-  SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
-  work_list[0] = proc->station;
-  *comm_amount=0;
-  *comp_size = amount;
-  SD_task_schedule(task,1,work_list,comp_size,comm_amount,-1);
+  //We don't watch computation task
+  SD_task_t task = SD_task_create("computation", NULL, amount);
+  proc->last_computation_task=task;
   
 }
 
@@ -57,6 +48,22 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
   
   xbt_fifo_push(recv->recv_info->recv_task, temp);
   
+  //if last_computation_task is not NULL, that means that we have to do some computation before process syscall
+  if(proc_sender->last_computation_task)
+  {
+    printf("Computation task found\n");
+    double* comp_size = malloc(sizeof(double));
+    double* comm_amount = malloc(sizeof(double));
+    SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
+    work_list[0] = proc_sender->station;
+    *comm_amount=0;
+    *comp_size =SD_task_get_amount(proc_sender->last_computation_task);
+
+    SD_task_dependency_add("calculation", NULL, proc_sender->last_computation_task, task_sending);
+    SD_task_schedule(proc_sender->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
+    proc_sender->last_computation_task=NULL;
+  }
+  
   SD_task_dependency_add("communication", NULL, task_sending, task_receiving);
   
   double* comm_amount = malloc(sizeof(double)*4);
@@ -72,6 +79,7 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
   SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t)*2);
   work_list[0] = proc_sender->station;
   work_list[1] = proc_receiver->station;
+  
   
   SD_task_schedule(task_sending, 2, work_list, comp_size, comm_amount, -1);
 }
@@ -99,6 +107,22 @@ void create_recv_communication_task(struct infos_socket* recv)
   SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t)*2);
   work_list[0] = proc_sender->station;
   work_list[1] = proc_receiver->station;
+  
+  if(proc_receiver->last_computation_task)
+  {
+    printf("Computation task found\n");
+    double* comp_size = malloc(sizeof(double));
+    double* comm_amount = malloc(sizeof(double));
+    SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
+    work_list[0] = proc_receiver->station;
+    *comm_amount=0;
+    *comp_size = SD_task_get_amount(proc_receiver->last_computation_task);
+
+    //SD_task_dependency_add("calculation", NULL, proc_receiver->last_computation_task, tci->task);
+    //SD_task_schedule(proc_sender->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
+    proc_sender->last_computation_task=NULL;
+  
+  }
   
   SD_task_schedule(tci->task, 2, work_list, comp_size, comm_amount, -1);
 }

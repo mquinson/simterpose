@@ -19,7 +19,7 @@ int process_send_call(int pid, int sockfd, int ret)
     if (!socket_netlink(pid,sockfd))
     {
       int result;
-      //result = calculate_computation_time(pid);
+      calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = getSocketInfoFromContext(is->ip_local, is->port_local, is->ip_remote, is->port_remote);
       if(s!=NULL)
@@ -48,7 +48,7 @@ int process_recv_call(int pid, int sockfd, int ret)
       update_socket(pid,sockfd);
     if (!socket_netlink(pid,sockfd))
     {
-      //calculate_computation_time(pid);
+      calculate_computation_time(pid);
       //if handle_new_receive return 1, we have assigned a new task so one processus are assigned
       if(handle_new_receive(pid, sockfd, ret))
       {

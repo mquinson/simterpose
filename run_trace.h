@@ -26,6 +26,7 @@ typedef struct{
   char* name;
   FILE* trace;
   SD_workstation_t station;
+  SD_task_t last_computation_task;
   struct infos_socket** fd_list;
 }process_descriptor;
 
