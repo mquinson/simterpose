@@ -94,6 +94,25 @@ void create_recv_communication_task(struct infos_socket* recv)
   process_descriptor *proc_sender = process_descriptor_get(tci->sender_pid);
   process_descriptor *proc_receiver = recv->proc;
   
+  if(proc_receiver->last_computation_task)
+  {
+    printf("Computation task found %lf\n", SD_task_get_amount(proc_receiver->last_computation_task));
+    double* comp_size = malloc(sizeof(double));
+    double* comm_amount = malloc(sizeof(double));
+    SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
+    work_list[0] = proc_receiver->station;
+    *comm_amount=0;
+    *comp_size = SD_task_get_amount(proc_receiver->last_computation_task);
+    
+    //FIXME reprendre ici demain
+    SD_task_dependency_add("calculation", NULL, proc_receiver->last_computation_task, tci->task);
+    SD_task_schedule(proc_receiver->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
+    proc_receiver->last_computation_task=NULL;
+    printf("End gestion of computation task\n");
+  }
+  
+  
+  
   double* comm_amount = malloc(sizeof(double)*4);
   comm_amount[2]=SD_task_get_amount(tci->task);
   comm_amount[1]=0.0;
@@ -108,21 +127,7 @@ void create_recv_communication_task(struct infos_socket* recv)
   work_list[0] = proc_sender->station;
   work_list[1] = proc_receiver->station;
   
-  if(proc_receiver->last_computation_task)
-  {
-    printf("Computation task found\n");
-    double* comp_size = malloc(sizeof(double));
-    double* comm_amount = malloc(sizeof(double));
-    SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
-    work_list[0] = proc_receiver->station;
-    *comm_amount=0;
-    *comp_size = SD_task_get_amount(proc_receiver->last_computation_task);
-
-    //SD_task_dependency_add("calculation", NULL, proc_receiver->last_computation_task, tci->task);
-    //SD_task_schedule(proc_sender->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
-    proc_sender->last_computation_task=NULL;
   
-  }
   
   SD_task_schedule(tci->task, 2, work_list, comp_size, comm_amount, -1);
 }
