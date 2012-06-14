@@ -44,7 +44,7 @@ syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h 
 replay.o : replay.c replay.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-data_utils.o : data_utils.c data_utils.h run_trace.h
+data_utils.o : data_utils.c data_utils.h run_trace.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 task.o: task.c task.h run_trace.h data_utils.h sockets.h

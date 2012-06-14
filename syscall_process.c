@@ -22,6 +22,12 @@ int process_send_call(int pid, int sockfd, int ret)
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = getSocketInfoFromContext(is->ip_local, is->port_local, is->ip_remote, is->port_remote);
+      if(s->communication_receive == -1)
+      {
+	launch_process_idling(s->proc->pid);
+	socket_communication_receive(s);
+      }
+      socket_communication_receive(s);
       if(s!=NULL)
 	result = handle_new_send(s,  ret);
       else
@@ -42,7 +48,7 @@ int process_send_call(int pid, int sockfd, int ret)
 
 int process_recv_call(int pid, int sockfd, int ret)
 {
-  printf("Entering process_recv_call\n");
+  printf("Entering process_recv_call %d\n", global_data->not_assigned);
   if (socket_registered(pid,sockfd) != -1) {
     if (socket_incomplete(pid,sockfd)) 
       update_socket(pid,sockfd);
@@ -71,7 +77,7 @@ int process_fork_call(int pid)
   if(pid == global_data->launcherpid)
   {
     global_data->last_pid_create = new_pid;
-    printf("Creation of pid %ud\n", new_pid);
+    printf("Creation of pid %lud\n", new_pid);
     char buff[256];
     char* tmp= buff;
     int got;

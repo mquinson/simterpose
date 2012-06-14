@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
   global_data->time_to_next= xbt_fifo_new();
   global_data->last_clock=0;
   global_data->process_launch=0;
+  global_data->idle_amount=0;
   int manual_flop =0;
 
   int sockfd; 
@@ -163,9 +164,7 @@ int main(int argc, char *argv[]) {
 	  
 	  if (WIFEXITED(status)) {
 	    printf("[%d] Child is dead\n",stoppedpid);
-	    if(stoppedpid != global_data->launcherpid)	
-	      finish_all_communication(stoppedpid);
-	    else
+	    if (stoppedpid != global_data->launcherpid)
 	      global_data->launcherpid=0;
 	    --global_data->child_amount;
 	    --global_data->not_assigned;
@@ -218,18 +217,23 @@ int main(int argc, char *argv[]) {
 	      
 	      if(reg_orig == SYS_accept)
 	      {
-		printf("[%d] accept_in( ",stoppedpid);
-		get_args_accept(stoppedpid,(int)ret,&regs);
+		printf("[%d] accept_in( ");
 		--global_data->not_assigned;
 		process_descriptor_set_idle(stoppedpid, 1);
-		printf(" ) = %ld\n",ret);
 	      }
 	      
 	      if(reg_orig == SYS_recvfrom)
 	      {
 		printf("[%d] recvfrom_in",stoppedpid);
-		--global_data->not_assigned;
+		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
 		process_descriptor_set_idle(stoppedpid, 1);
+		if(!is_communication_received(stoppedpid, sockfd))
+		{
+		  task_found=1;
+		  socket_wait_for_sending(stoppedpid, sockfd);
+		}
+		else
+		  --global_data->not_assigned;
 	      }
 	    }
 	    else
@@ -342,7 +346,6 @@ int main(int argc, char *argv[]) {
 		}
 		else
 		{
-		  printf("First process launch call execve %d\n", proc->execve_call_before_start);
 		  if(!proc->execve_call_before_start)
 		    global_data->process_launch = 1;//Normally, we have no chance to see an exec of init
 		  else
@@ -399,7 +402,8 @@ int main(int argc, char *argv[]) {
 	      case SYS_recvfrom:
 		printf("[%d] recvfrom( ",stoppedpid);
 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
-		++global_data->not_assigned;
+		if(process_descriptor_get_idle(stoppedpid))
+		  ++global_data->not_assigned;
 		process_descriptor_set_idle(stoppedpid, 0);
 		printf(" ) = %ld\n",ret);
 		task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
@@ -577,7 +581,7 @@ int main(int argc, char *argv[]) {
 	  else
 	  {
 	    --(global_data->not_assigned);
-	    printf("New task found for pid %d\n", stoppedpid);
+	    printf("(left %d) New task found for pid %d\n",global_data->not_assigned, stoppedpid);
 	  }
 	}
 	if(!global_data->child_amount)
@@ -645,7 +649,6 @@ int main(int argc, char *argv[]) {
 	      }
 	    }
 	  }
-	  //TODO continue here
 	}
       }
 

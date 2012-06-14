@@ -17,7 +17,7 @@ typedef struct{
 
 void create_computation_task(pid_t pid, double amount)
 {
-  printf("ENTERING create_computation_task\n");
+  printf("ENTERING create_computation_task %d\n", global_data->not_assigned);
   process_descriptor *proc = process_descriptor_get(pid);
   
   //We don't watch computation task
@@ -87,13 +87,16 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
 void create_recv_communication_task(struct infos_socket* recv)
 {
   
-  printf("ENTERING create_recv_communication_task\n");
+  printf("ENTERING create_recv_communication_task %d\n", global_data->not_assigned);
   task_comm_info* tci = xbt_fifo_shift(recv->recv_info->recv_task);
   
   
   process_descriptor *proc_sender = process_descriptor_get(tci->sender_pid);
   process_descriptor *proc_receiver = recv->proc;
   
+  --recv->communication_receive;
+  
+  //If we have a computation task in queue, we have to scedule it before doing the other operation
   if(proc_receiver->last_computation_task)
   {
     printf("Computation task found %lf\n", SD_task_get_amount(proc_receiver->last_computation_task));
@@ -104,7 +107,6 @@ void create_recv_communication_task(struct infos_socket* recv)
     *comm_amount=0;
     *comp_size = SD_task_get_amount(proc_receiver->last_computation_task);
     
-    //FIXME reprendre ici demain
     SD_task_dependency_add("calculation", NULL, proc_receiver->last_computation_task, tci->task);
     SD_task_schedule(proc_receiver->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
     proc_receiver->last_computation_task=NULL;
@@ -126,7 +128,6 @@ void create_recv_communication_task(struct infos_socket* recv)
   SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t)*2);
   work_list[0] = proc_sender->station;
   work_list[1] = proc_receiver->station;
-  
   
   
   SD_task_schedule(tci->task, 2, work_list, comp_size, comm_amount, -1);

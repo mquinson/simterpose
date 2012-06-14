@@ -1,6 +1,7 @@
 #include "run_trace.h"
 #include "data_utils.h"
 #include "simdag/simdag.h"
+#include "sysdep.h"
 
 #include <string.h>
 
@@ -48,10 +49,24 @@ double update_simulation_clock()
 
 void process_descriptor_set_idle(int pid, int idle_state)
 {
+  if(idle_state && !global_data->process_desc[pid]->idle)
+    ++global_data->idle_amount;
+  else if (!idle_state && global_data->process_desc[pid]->idle)
+    --global_data->idle_amount;
   global_data->process_desc[pid]->idle = idle_state;
 }
 
 int process_descriptor_get_idle(int pid)
 {
   return global_data->process_desc[pid]->idle;
+}
+
+void launch_process_idling(pid_t pid)
+{
+  ++global_data->not_assigned;
+  process_descriptor_set_idle(pid, 0);
+  if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
+    perror("ptrace syscall");
+    exit(1);
+  }
 }

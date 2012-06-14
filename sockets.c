@@ -41,6 +41,7 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   is->port_remote=0;
   is->incomplete=1;
   is->closed=0;
+  is->communication_receive=0;
   
   recv_information* recv = malloc(sizeof(recv_information));
   recv->quantity_recv=0;
@@ -352,7 +353,7 @@ int handle_communication_stat(struct infos_socket* is)
   }
   else
   {
-    printf("\t\tNew transmission complete %d %d\n", is->recv_info->quantity_recv, *size);
+    printf("\t\tNew transmission complete %d\n", global_data->not_assigned);
     insert_trace_comm(is->proc->pid, is->fd, "recv", 0);
     is->recv_info->quantity_recv -= *size;
     create_recv_communication_task(is);
@@ -394,10 +395,11 @@ int handle_new_send(struct infos_socket *is,  int length)
 //   printf("Leaving handle_new_reception\n");
 }
 
-void finish_all_communication(int pid){
+int finish_all_communication(int pid){
   
   process_descriptor* proc = global_data->process_desc[pid];
   int i=0;
+  int result=0;
   for(i=0; i<MAX_FD ; ++i)
   {
     if (proc->fd_list[i]!=NULL)
@@ -406,13 +408,34 @@ void finish_all_communication(int pid){
       while(size != NULL)
       {
 	insert_trace_comm(pid, i, "recv", 0);
-	//create_recv_communication_task(proc->fd_list[i]);
+	create_recv_communication_task(proc->fd_list[i]);
 	free(size);
 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
+	result=1;
       }
       delete_socket(pid, i);
       proc->fd_list[i]=NULL;
     }
   }
+  return result;
+}
+
+int is_communication_received(pid_t pid, int sockfd)
+{
+  struct infos_socket* is = get_infos_socket(pid, sockfd);
+  printf("is_communication_received %d\n",is->communication_receive);
+  return (is->communication_receive > 0);
+}
+
+void socket_communication_receive(struct infos_socket *is)
+{
+  ++is->communication_receive;
+ // printf("Entering socket_communication_receive %d    %d\n", is->proc->pid, is->communication_receive);
+}
+
+void socket_wait_for_sending(pid_t pid, int sockfd)
+{
+  struct infos_socket* is = get_infos_socket(pid, sockfd);
+  is->communication_receive = -1;
 }
 

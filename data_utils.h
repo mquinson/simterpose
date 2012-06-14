@@ -16,4 +16,6 @@ void process_descriptor_set_idle(int pid, int idle_state);
 
 int process_descriptor_get_idle(int pid);
 
+void launch_process_idling(pid_t pid);
+
 #endif
