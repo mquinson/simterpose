@@ -59,14 +59,12 @@ void insert_trace_comm(pid_t pid, int sockfd , char *syscall, int res) {
 #endif
   } 
   else{
-    calculate_computation_time(pid);
     fprintf(proc->trace,"%s %10d", trace_header(pid, syscall), res);
   }
 
 }
 
 void insert_trace_fork_exit(pid_t pid, char *syscall, int res) {
-  calculate_computation_time(pid);
   process_descriptor* proc = process_descriptor_get(pid);
   fprintf(proc->trace,"%s %10s %8d\n", trace_header(pid,syscall), " ", res);
 

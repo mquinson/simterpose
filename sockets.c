@@ -20,7 +20,6 @@ void print_infos_socket(struct infos_socket *is);
 void init_socket_gestion()
 {
    all_sockets = xbt_dynar_new(sizeof(struct infos_socket*), NULL);
-//      all_sockets = malloc(sizeof(struct infos_socket)*20);
 }
 
 void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
@@ -50,7 +49,6 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   is->recv_info = recv;
 
   xbt_dynar_push(all_sockets, &is);
-//     printf("Leaving confirm_register_socket\n");  
 }
 
 void delete_socket(pid_t pid, int fd) {

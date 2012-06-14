@@ -27,6 +27,36 @@ void print_trace_header(FILE* trace)
   fprintf(trace,"%8s %12s %8s %10s %10s %21s %21s\n","pidX", "syscall", "pidY", "return","diff_cpu","local_addr:port", "remote_addr:port");
 }
 
+unsigned long reg_orig;
+unsigned long ret;
+unsigned long arg1;
+unsigned long arg2;
+unsigned long arg3;
+struct user_regs_struct regs;
+
+void get_register(pid_t pid)
+{
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+  /* ---- test archi for registers ---- */
+  
+  #if defined(__x86_64) || defined(amd64)
+  reg_orig=regs.orig_rax;
+  ret=regs.rax;
+  arg1=regs.rdi;
+  arg2=regs.rsi;
+  arg3=regs.rdx;
+  #elif defined(i386)
+  reg_orig=regs.orig_eax;
+  ret=regs.eax;
+  arg1=regs.ebx;
+  arg2=regs.ecx;
+  arg3=regs.edx;
+  #endif
+}
+
 
 int main(int argc, char *argv[]) { 
   
@@ -84,16 +114,12 @@ int main(int argc, char *argv[]) {
   
   init_replay (argc, argv);
   
-  struct user_regs_struct regs;
+
   
 
   char ret_trace[SIZE_PARAM_TRACE];
 
-  unsigned long reg_orig;
-  unsigned long ret;
-  unsigned long arg1;
-  unsigned long arg2;
-  unsigned long arg3;
+  
   
   int comm_launcher[2];
   pipe(comm_launcher);
@@ -196,34 +222,18 @@ int main(int argc, char *argv[]) {
 	    /*If this is the interrupt of the syscall and not the return, we print computation time */
 	    if (in_syscall(stoppedpid)==0) {
 	      set_in_syscall(stoppedpid);
-	      if (ptrace(PTRACE_GETREGS, stoppedpid,NULL, &regs)==-1) {
-		perror("ptrace getregs");
-		exit(1);
-	      }
-	      /* ---- test archi for registers ---- */
 	      
-	      #if defined(__x86_64) || defined(amd64)
-	      reg_orig=regs.orig_rax;
-	      ret=regs.rax;
-	      arg1=regs.rdi;
-	      arg2=regs.rsi;
-	      arg3=regs.rdx;
-	      #elif defined(i386)
-	      reg_orig=regs.orig_eax;
-	      ret=regs.eax;
-	      arg1=regs.ebx;
-	      arg2=regs.ecx;
-	      arg3=regs.edx;
-	      #endif
+	      get_register(stoppedpid);
 	      
+	      #if defined(__x86_64)
 	      if(reg_orig == SYS_accept)
 	      {
 		printf("[%d] accept_in( ");
 		--global_data->not_assigned;
 		process_descriptor_set_idle(stoppedpid, 1);
 	      }
-	      
-	      if(reg_orig == SYS_recvfrom)
+
+	      else if(reg_orig == SYS_recvfrom || reg_orig == SYS_recvmsg)
 	      {
 		printf("[%d] recvfrom_in",stoppedpid);
 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
@@ -233,33 +243,35 @@ int main(int argc, char *argv[]) {
 		  socket_wait_for_sending(stoppedpid, sockfd);
 		}
 	      }
+	      
+	      #else
+	      
+	      if(reg_orig == SYS_socketcall)
+	      {
+		if(arg1 == 5)
+		{
+		  printf("[%d] accept_in( ");
+		  --global_data->not_assigned;
+		  process_descriptor_set_idle(stoppedpid, 1);
+		}
+		
+		else if(arg1 == 10 || arg1 == 12 || arg1 == 17)
+		{
+		  printf("[%d] recvfrom_in",stoppedpid);
+		  sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
+		  if(!is_communication_received(stoppedpid, sockfd))
+		  {
+		    task_found=1;
+		    socket_wait_for_sending(stoppedpid, sockfd);
+		  }
+		}
+	      }
+	      
+	      #endif
 	    }
 	    else
 	    {
-	      //if the process was in idle state, we need to increment not_assigned
-	      
-	      
-	      if (ptrace(PTRACE_GETREGS, stoppedpid,NULL, &regs)==-1) {
-		perror("ptrace getregs");
-		exit(1);
-	      }
-	      /* ---- test archi for registers ---- */
-
-	      #if defined(__x86_64) || defined(amd64)
-		reg_orig=regs.orig_rax;
-		ret=regs.rax;
-		arg1=regs.rdi;
-		arg2=regs.rsi;
-		arg3=regs.rdx;
-	      #elif defined(i386)
-		reg_orig=regs.orig_eax;
-		ret=regs.eax;
-		arg1=regs.ebx;
-		arg2=regs.ecx;
-		arg3=regs.edx;
-	      #endif
-
-	      /*------------------*/
+	      get_register(stoppedpid);
 
 	      switch (reg_orig) {
 	      case SYS_write:
