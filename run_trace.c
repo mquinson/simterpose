@@ -34,7 +34,7 @@ unsigned long arg2;
 unsigned long arg3;
 struct user_regs_struct regs;
 
-void get_register(pid_t pid)
+void get_register(const pid_t pid)
 {
   if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
     perror("ptrace getregs");
@@ -55,6 +55,15 @@ void get_register(pid_t pid)
   arg2=regs.ecx;
   arg3=regs.edx;
   #endif
+}
+
+void resume_process(const pid_t pid)
+{
+  if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
+    printf("%d\n", global_data->launcherpid);
+    perror("ptrace syscall");
+    exit(1);
+  }
 }
 
 
@@ -161,11 +170,8 @@ int main(int argc, char *argv[]) {
 
     ++global_data->child_amount;
     ++global_data->not_assigned;
-    // Resume the child
-    if (ptrace(PTRACE_SYSCALL, global_data->launcherpid, 0, 0)==-1) {
-      perror("ptrace syscall 1");
-      exit(1);
-    }
+    // Resume the launcher
+    resume_process(global_data->launcherpid);
 
    
 
@@ -579,11 +585,7 @@ int main(int argc, char *argv[]) {
 	  //if the syscalls we trap doesn't lead to a task we resume child to found the next one
 	  if(!task_found)
 	  {
-	    if (ptrace(PTRACE_SYSCALL, stoppedpid, NULL, NULL)==-1) {
-	      perror("ptrace syscall");
-	      exit(1);
-	    }
-	    
+	    resume_process(stoppedpid);
 	  }
 	  else
 	  {
@@ -610,23 +612,16 @@ int main(int argc, char *argv[]) {
 	  printf("New simulation time %lf\n", update_simulation_clock());
 	  if(global_data->launcherpid)
 	  {
-	    if (ptrace(PTRACE_SYSCALL, global_data->launcherpid, NULL, NULL)==-1) {
-	      printf("%d\n", global_data->launcherpid);
-	      perror("ptrace syscall");
-	      exit(1);
-	    }
+	    resume_process(global_data->launcherpid);
 	  }
-	  if (ptrace(PTRACE_SYSCALL, global_data->last_pid_create, NULL, NULL)==-1) {
-	    printf("%d\n", global_data->launcherpid);
-	    perror("ptrace syscall");
-	    exit(1);
-	  }
+	  resume_process(global_data->last_pid_create);
+	  
 	  global_data->not_assigned +=2;
 	}
 	else
 	{
 	  //We update time only if there are always process to launch
-	  if(next_time != -1)
+	  if(*next_time != -1)
 	    *next_time -= update_simulation_clock();
 	  
 	  SD_task_t temp_task;
@@ -635,9 +630,9 @@ int main(int argc, char *argv[]) {
 	    if(SD_task_get_state(temp_task) == SD_DONE)
 	    {
 	      int* data = (int *)SD_task_get_data(temp_task);
+	      //if data is null, that significate that is a task we don't watch
 	      if(data!=NULL)
 	      {
-		printf("Simulation task ending for process %d \n", *data);
 		if (ptrace(PTRACE_SYSCALL, *data, NULL, NULL)==-1) {
 		  perror("ptrace syscall");
 		  exit(1);
