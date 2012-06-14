@@ -15,15 +15,29 @@ typedef struct{
   pid_t sender_pid;
 }task_comm_info;
 
+
+//TODO better add a new task and schedule the older instead of just add computation amount?
 void create_computation_task(pid_t pid, double amount)
 {
-  printf("ENTERING create_computation_task %d\n", global_data->not_assigned);
+  printf("ENTERING create_computation_task\n");
   process_descriptor *proc = process_descriptor_get(pid);
-  
-  //We don't watch computation task
+
   SD_task_t task = SD_task_create("computation", NULL, amount);
-  proc->last_computation_task=task;
   
+  if(proc->last_computation_task != NULL)
+  {
+    double* comp_size = malloc(sizeof(double));
+    double* comm_amount = malloc(sizeof(double));
+    SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
+    work_list[0] = proc->station;
+    *comm_amount=0;
+    *comp_size =SD_task_get_amount(proc->last_computation_task);
+    
+    SD_task_dependency_add("calculation sequence", NULL, proc->last_computation_task, task);
+    SD_task_schedule(proc->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
+    proc->last_computation_task=NULL;
+  }
+  proc->last_computation_task=task;
 }
 
 void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv, double amount)
@@ -51,7 +65,6 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
   //if last_computation_task is not NULL, that means that we have to do some computation before process syscall
   if(proc_sender->last_computation_task)
   {
-    printf("Computation task found\n");
     double* comp_size = malloc(sizeof(double));
     double* comm_amount = malloc(sizeof(double));
     SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
@@ -87,7 +100,7 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
 void create_recv_communication_task(struct infos_socket* recv)
 {
   
-  printf("ENTERING create_recv_communication_task %d\n", global_data->not_assigned);
+  printf("ENTERING create_recv_communication_task\n");
   task_comm_info* tci = xbt_fifo_shift(recv->recv_info->recv_task);
   
   
@@ -99,7 +112,6 @@ void create_recv_communication_task(struct infos_socket* recv)
   //If we have a computation task in queue, we have to scedule it before doing the other operation
   if(proc_receiver->last_computation_task)
   {
-    printf("Computation task found %lf\n", SD_task_get_amount(proc_receiver->last_computation_task));
     double* comp_size = malloc(sizeof(double));
     double* comm_amount = malloc(sizeof(double));
     SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
@@ -110,7 +122,6 @@ void create_recv_communication_task(struct infos_socket* recv)
     SD_task_dependency_add("calculation", NULL, proc_receiver->last_computation_task, tci->task);
     SD_task_schedule(proc_receiver->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
     proc_receiver->last_computation_task=NULL;
-    printf("End gestion of computation task\n");
   }
   
   

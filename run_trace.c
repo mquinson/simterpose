@@ -254,14 +254,14 @@ int main(int argc, char *argv[]) {
 	      
 	      if(reg_orig == SYS_socketcall)
 	      {
-		if(arg1 == 5)
+		if(arg1 == SYS_accept_32)
 		{
 		  printf("[%d] accept_in( ");
 		  --global_data->not_assigned;
 		  process_descriptor_set_idle(stoppedpid, 1);
 		}
 		
-		else if(arg1 == 10 || arg1 == 12 || arg1 == 17)
+		else if(arg1 == SYS_recv_32 || arg1 == SYS_recvfrom_32 || arg1 == SYS_recvmsg_32)
 		{
 		  printf("[%d] recvfrom_in",stoppedpid);
 		  sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
@@ -468,19 +468,19 @@ int main(int argc, char *argv[]) {
 	      case SYS_socketcall:
 		switch (arg1) {
 		
-		case 1:
+		  case SYS_socket_32:
 		  printf("[%d] socket( ",stoppedpid);
 		  get_args_socket(stoppedpid, (int)ret, (void *)arg2,NULL);
 		  printf(" ) = %ld\n",ret);
 		  break;
 
-		case 2:
+		  case SYS_bind_32:
 		  printf("[%d] bind( ",stoppedpid);
 		  get_args_bind_connect(stoppedpid,(int)ret,0,(void *)arg2);
 		  printf(" ) = %ld\n",ret);
 		  break;
 
-		case 3:
+		  case SYS_connect_32:
 		  printf("[%d] connect( ",stoppedpid);
 		  get_args_bind_connect(stoppedpid,(int)ret,1,(void *)arg2);
 		  printf(" ) = %ld\n",ret);
@@ -488,70 +488,70 @@ int main(int argc, char *argv[]) {
 		    printf("%s\n",strerror(-ret));
 		  break;
 
-		case 4: 
+		  case SYS_listen_32: 
 		  printf("[%d] listen( ", stoppedpid); 
 		  get_args_listen(stoppedpid,(void *)arg2);
 		  printf(" ) = %ld\n", ret);
 		  break;
 
-		case 5:
+		  case SYS_accept_32:
 		  printf("[%d] accept( ",stoppedpid);
 		  get_args_accept(stoppedpid,(int)ret, (void *)arg2);
 		  printf(" ) = %ld\n",ret);
 		  break;
 
-		case 9:
+		  case SYS_send_32:
 		  printf("[%d] send( ",stoppedpid);
 		  sockfd=get_args_send_recv(stoppedpid,1,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n",ret);
 		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
-		case 10:
+		  case SYS_recv_32:
 		  printf("[%d] recv( ",stoppedpid);
 		  sockfd=get_args_send_recv(stoppedpid,2,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n",ret);
 		  task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
-		case 11:
+		  case SYS_sendto_32:
 		  printf("[%d] sendto(",stoppedpid);
 		  sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace, (void *)arg2);
 		  printf(" ) = %ld\n", ret); 
 		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
-		case 12:
+		  case SYS_recvfrom_32:
 		  printf("[%d] recvfrom(",stoppedpid);
 		  sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n", ret);
 		  task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
-		case 13:
+		  case SYS_shutdown_32:
 		  printf("shutdown\n");
 		  break;
 
-		case 14:
+		  case SYS_setsockopt_32:
 		  printf("[%d] setsockopt(",stoppedpid);
 		  get_args_get_setsockopt(stoppedpid, 2, (void *)arg2);
 		  printf("%d\n",(int)ret);
 		  break;
 
-		case 15:
+		  case SYS_getsockopt_32:
 		  printf("[%d] getsockopt(",stoppedpid);
 		  get_args_get_setsockopt(stoppedpid, 1, (void *)arg2);
 		  printf("%d\n",(int)ret);
 		  break;
 
-		case 16:
+		  case SYS_sendmsg_32:
 		  printf("[%d] sendmsg(",stoppedpid);
 		  sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n", ret);
 		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
 		  break;
 
-		case 17:
+		  case SYS_recvmsg_32:
 		  printf("[%d] recvmsg(",stoppedpid);
 		  sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,(void *)arg2);
 		  printf(" ) = %ld\n", ret);
@@ -573,14 +573,6 @@ int main(int argc, char *argv[]) {
 	    
 	    }
 	  }
-	  else
-	  {
-	    if(in_syscall(stoppedpid))
-	      set_out_syscall(stoppedpid);
-	    else
-	      set_in_syscall(stoppedpid);
-    // 	printf("\t\t\t\t launcher syscall\n");
-	  }
 	  
 	  //if the syscalls we trap doesn't lead to a task we resume child to found the next one
 	  if(!task_found)
@@ -592,7 +584,8 @@ int main(int argc, char *argv[]) {
 	    --(global_data->not_assigned);
 	    printf("(left %d) New task found for pid %d\n",global_data->not_assigned, stoppedpid);
 	  }
-	}
+	}//End of task reserach loop
+	
 	if(!global_data->child_amount)
 	  break;
 	
