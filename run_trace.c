@@ -152,7 +152,6 @@ int main(int argc, char *argv[]) {
       while(global_data->child_amount) {
 	
 	//The first loop consist on advance each processus until found task for each
-	//TODO metttre un place un sstème pour ne pas casser la boucle si les seuls fils restant sont idle.
 	while(global_data->not_assigned)
 	{
 	  printf("New tour : left %d not assigned\n", global_data->not_assigned);
@@ -164,8 +163,10 @@ int main(int argc, char *argv[]) {
 	  
 	  if (WIFEXITED(status)) {
 	    printf("[%d] Child is dead\n",stoppedpid);
-	    if (stoppedpid != global_data->launcherpid)
+	    if (stoppedpid == global_data->launcherpid)
 	      global_data->launcherpid=0;
+	    else
+	      finish_all_communication(stoppedpid);
 	    --global_data->child_amount;
 	    --global_data->not_assigned;
 	    printf("Left %d child\n", global_data->child_amount);
@@ -651,7 +652,19 @@ int main(int argc, char *argv[]) {
 	  }
 	}
       }
+      
+      
+  //Now we have to run simulation until the end
 
+  xbt_dynar_t arr;
+  do{
+    arr = SD_simulate(-1);
+  }while(!xbt_dynar_is_empty(arr));
+
+  
+  
+  
+  printf("Result of simulation -> %lf s\n", SD_get_clock());
   }
   return 0;
 
