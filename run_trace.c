@@ -594,28 +594,19 @@ int main(int argc, char *argv[]) {
 	if(!global_data->child_amount)
 	  break;
 	
-	double* next_time = xbt_fifo_shift(global_data->time_to_next);
 	
-	xbt_dynar_t arr;
-	if(next_time==NULL)
-	{
-	  printf("\t\t\t\t\t NEW SIMULATION TURN with time %lf\n", -1.);
-	  arr = SD_simulate(-1);
-	}
-	else
-	{
-	  printf("Process to simulation\n");
-	  printf("\t\t\t\t\t NEW SIMULATION TURN with time %lf\n", *next_time);
-	  arr = SD_simulate(*next_time);
-	}
-	//now all processus have got a task to execute we can run simulation.
+	//Here, all process have there own task to execute (or there are idle) so we can start simulation
+	double* next_time = xbt_fifo_get_item_content(xbt_fifo_get_first_item(global_data->time_to_next));
 	
-	printf("End of Simulation\n");
+	printf("\t\t\t\t\t NEW SIMULATION TURN with time %lf\n", *next_time);
+	xbt_dynar_t arr = SD_simulate(*next_time);
+	
 	//Now there is two case.
 	//	1: there no processus in arr and we have to launch the next processus.
 	//	2: there's processus and we have to substract time and resume these processus.
 	if(xbt_dynar_is_empty(arr))
 	{
+	  xbt_fifo_shift(global_data->time_to_next);
 	  printf("New simulation time %lf\n", update_simulation_clock());
 	  if(global_data->launcherpid)
 	  {
@@ -634,11 +625,10 @@ int main(int argc, char *argv[]) {
 	}
 	else
 	{
-	  if(next_time != NULL)
-	  {
+	  //We update time only if there are always process to launch
+	  if(next_time != -1)
 	    *next_time -= update_simulation_clock();
-	    xbt_fifo_unshift(global_data->time_to_next, next_time);
-	  }
+	  
 	  SD_task_t temp_task;
 	  unsigned int cpt;
 	  xbt_dynar_foreach(arr, cpt, temp_task){
