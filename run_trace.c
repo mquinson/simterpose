@@ -227,14 +227,11 @@ int main(int argc, char *argv[]) {
 	      {
 		printf("[%d] recvfrom_in",stoppedpid);
 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
-		process_descriptor_set_idle(stoppedpid, 1);
 		if(!is_communication_received(stoppedpid, sockfd))
 		{
 		  task_found=1;
 		  socket_wait_for_sending(stoppedpid, sockfd);
 		}
-		else
-		  --global_data->not_assigned;
 	      }
 	    }
 	    else
@@ -403,9 +400,6 @@ int main(int argc, char *argv[]) {
 	      case SYS_recvfrom:
 		printf("[%d] recvfrom( ",stoppedpid);
 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
-		if(process_descriptor_get_idle(stoppedpid))
-		  ++global_data->not_assigned;
-		process_descriptor_set_idle(stoppedpid, 0);
 		printf(" ) = %ld\n",ret);
 		task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
 		break;
