@@ -58,28 +58,30 @@ static void cmd(char *fmt, ...) {
 
 static void parse_process_init(void)
 {
-  printf("Entering parse_process_init %s %s\n", A_surfxml_process_host, A_surfxml_process_function);
   proc = malloc(sizeof(process_descriptor));
   proc->process_name = strdup(A_surfxml_process_host);
   proc->executable = strdup(A_surfxml_process_function);
   proc->launching_time=-1;
-  proc->argument_nbr=0;
-  proc->command_line_argument=NULL;
+  proc->argument_nbr=1;
+  proc->command_line_argument=malloc(sizeof(char*));
+  proc->command_line_argument[0] = proc->executable;
 }
 
 static void parse_process_finalize(void)
 {
-  printf("Entering parse_process_finalize");
+  //Starting with add NULL termination to command line
+  ++(proc->argument_nbr);
+  proc->command_line_argument = realloc(proc->command_line_argument, proc->argument_nbr*sizeof(char*));
+  proc->command_line_argument[proc->argument_nbr-1] = NULL;
+  
+  
   ++proc_amount;
   proc_list = realloc(proc_list, sizeof(process_descriptor*)*proc_amount);
   proc_list[proc_amount-1]=proc;
-  
-  printf(" %d process create\n", proc_amount);
 }
 
 static void parse_argument(void)
 {
-  printf("Entering parse_argument %s\n", A_surfxml_argument_value);
   if(proc->launching_time == -1)
     proc->launching_time = parse_double(A_surfxml_argument_value);
   else
@@ -113,31 +115,31 @@ int main (int argc, char** argv)
   }
   
   qsort(proc_list, proc_amount, sizeof(process_descriptor*), compare_time);
-//   printf("%s %s\n", proc_list[0]->process_name, proc_list[1]->process_name);
   
   comm_sim = fdopen(3, "w");
+  double time_before_next=0.0;
+  int numero=0;
   
-  cmd("Tremblay 3\n");
-  int pid = fork();
-  if(pid==0)
+  while(numero < proc_amount)
   {
-    if (execl("applications/server", "applications/server", NULL)==-1) {
-      perror("execl server");
-      exit(1);
+    if(numero == proc_amount-1)
+      time_before_next=-1;
+    else
+      time_before_next = proc_list[numero+1]->launching_time;
+  
+    cmd("%s %lf\n", proc_list[numero]->process_name, time_before_next);
+    int pid = fork();
+    if(pid==0)
+    {
+      if (execv(proc_list[numero]->executable, proc_list[numero]->command_line_argument)==-1) {
+	perror("execl server");
+	exit(1);
+      }
     }
+    
+    ++numero;
   }
   
-  
-  cmd("Jupiter -1\n");
-  pid = fork(); 
-  if(pid==0)
-  {
-    if (execl("applications/client", "applications/client", NULL)==-1) {
-      perror("execl client");
-      exit(1);
-    }
-  }
-  
-  
+  close(comm_sim);
   return EXIT_SUCCESS;
 }
