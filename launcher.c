@@ -92,6 +92,18 @@ static void parse_argument(void)
   }
 }
 
+void destruct_process_descriptor(process_descriptor* proc)
+{
+  free(proc->process_name);
+  int i;
+  for(i=0; i< proc->argument_nbr-1; ++i)
+    free(proc->command_line_argument[i]);
+  free(proc->command_line_argument);
+  
+  //We don't free executable because it is already free when freeing command_line member
+  
+}
+
 int main (int argc, char** argv)
 {
   
@@ -137,9 +149,10 @@ int main (int argc, char** argv)
       }
     }
     
+    destruct_process_descriptor(proc_list[numero]);
     ++numero;
   }
   
-  close(comm_sim);
+  fclose(comm_sim);
   return EXIT_SUCCESS;
 }

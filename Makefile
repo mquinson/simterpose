@@ -54,7 +54,7 @@ task.o: task.c task.h run_trace.h data_utils.h sockets.h
 #################################################
 # launcher section
 launcher: launcher.o
-	$(CC) $(LDFLAGS) $(CFLAGS) -o launcher launcher.c
+	$(CC) $(LDFLAGS) $(CFLAGS) -o launcher launcher.o
 
 launcher.o: launcher.c
 	$(CC) $(CFLAGS) -c $< -o $@
