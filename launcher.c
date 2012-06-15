@@ -137,7 +137,7 @@ int main (int argc, char** argv)
     if(numero == proc_amount-1)
       time_before_next=-1;
     else
-      time_before_next = proc_list[numero+1]->launching_time;
+      time_before_next = proc_list[numero+1]->launching_time - proc_list[numero]->launching_time;
   
     cmd("%s %lf\n", proc_list[numero]->process_name, time_before_next);
     int pid = fork();
