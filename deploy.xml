@@ -1,10 +1,11 @@
 <?xml version='1.0'?>
 <!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid.dtd">
 <platform version ="3">
-  <process host="Tremblay" function="server">
-    <argument value="server.txt"/>
+  <process host="Tremblay" function="applications/server">
+    <argument value="0.0"/><!--  First argument is the time offset -->
+    <argument value="2227"/><!--  Other argument are recognized as command line argument -->
   </process>
-  <process host="Jupiter" function="client">
-    <argument value="client.txt"/>
+  <process host="Jupiter" function="applications/client">
+    <argument value="3.0"/>
   </process>
 </platform>
