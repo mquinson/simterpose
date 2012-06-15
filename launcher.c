@@ -23,6 +23,21 @@ int proc_amount = 0;
 
 FILE* comm_sim;
 
+
+static int compare_time(const void* proc1, const void* proc2)
+{
+  int time1 = (*((process_descriptor**)proc1))->launching_time;
+  int time2 = (*((process_descriptor**)proc2))->launching_time;
+  
+  if (time1 < time2)
+    return -1;
+  else if ( time1 == time2 )
+    return 0;
+  else
+    return 1;
+}
+
+
 static double parse_double(const char *string)
 {
   double value;
@@ -96,6 +111,9 @@ int main (int argc, char** argv)
     xbt_assert(!parse_status, "Parse error at %s", argv[1]);
   } CATCH(e) {
   }
+  
+  qsort(proc_list, proc_amount, sizeof(process_descriptor*), compare_time);
+//   printf("%s %s\n", proc_list[0]->process_name, proc_list[1]->process_name);
   
   comm_sim = fdopen(3, "w");
   
