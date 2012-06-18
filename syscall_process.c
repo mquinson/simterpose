@@ -98,7 +98,7 @@ int process_fork_call(int pid)
     char name[256];
     double *next = malloc(sizeof(double));
     sscanf(buff, "%s %lf", name, next);
-//     printf("\t\t\t\t\t\t %p
+
     xbt_fifo_push(global_data->time_to_next, next);
     global_data->process_desc[new_pid] = process_descriptor_new(name, new_pid);
     
@@ -109,12 +109,17 @@ int process_fork_call(int pid)
     insert_init_trace(new_pid);
 
 
-  printf("new pid with (v)fork %lu by processus %d\n",new_pid, pid);
-  if(pid != global_data->launcherpid)
-    insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
-  ++global_data->child_amount;
-  return 1;
+    printf("new pid with (v)fork %lu by processus %d\n",new_pid, pid);
+    if(pid != global_data->launcherpid)
+      insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
+    ++global_data->child_amount;
+    return 1;
   }
-  else
-    THROW_UNIMPLEMENTED;
+  else//This is an application which fork
+  {
+    global_data->process_desc[new_pid] = process_descriptor_fork(nex_pid, pid);
+    insert_trace_fork_exit(pid, "fork", (int)new_pid);
+    ++global_data->child_amount;
+    return 1;
+  }
 }

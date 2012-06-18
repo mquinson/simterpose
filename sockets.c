@@ -411,7 +411,8 @@ int finish_all_communication(int pid){
 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
 	result=1;
       }
-      delete_socket(pid, i);
+      //FIXME add reference counter to see if this is the last process to use the socket
+      //delete_socket(pid, i);
       proc->fd_list[i]=NULL;
     }
   }
