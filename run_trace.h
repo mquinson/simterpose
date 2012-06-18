@@ -57,7 +57,6 @@ struct simterpose_data{
   double last_clock;
   int not_assigned;
   int launcher_com;
-  int process_launch;
   xbt_fifo_t time_to_next;
   pid_t last_pid_create;
   process_descriptor *process_desc[MAX_PID];

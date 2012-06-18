@@ -78,7 +78,6 @@ int main(int argc, char *argv[]) {
   global_data->child_amount=0;
   global_data->time_to_next= xbt_fifo_new();
   global_data->last_clock=0;
-  global_data->process_launch=0;
   global_data->idle_amount=0;
   int manual_flop =0;
 
