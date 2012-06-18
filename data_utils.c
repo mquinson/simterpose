@@ -14,6 +14,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   strcat(buff, ".txt");
   result->trace = fopen(buff, "w");
   result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
+  result->launch_by_launcher=0;
   result->pid=pid;
   result->cpu_time=0;
   result->syscall_in = 0;
@@ -71,7 +72,7 @@ void launch_process_idling(pid_t pid)
   }
 }
 
-
+//Create and set a new file descriptor
 void process_descriptor_fork(pid_t new_pid, pid_t pid_fork)
 {
   process_descriptor* result = malloc(sizeof(process_descriptor));
@@ -85,13 +86,14 @@ void process_descriptor_fork(pid_t new_pid, pid_t pid_fork)
   result->syscall_in = 0;
   result->execve_call_before_start=1;
   result->idle=0;
+  result->launch_by_launcher=0;
   int i;
   for(i=0; i<MAX_FD ; ++i)
     result->fd_list[i]=forked->fd_list[i];
   
   result->station = forked->station;
   
-  return result;
+  global_data->process_desc[new_pid] = result;
 }
 
 

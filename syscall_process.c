@@ -101,6 +101,7 @@ int process_fork_call(int pid)
 
     xbt_fifo_push(global_data->time_to_next, next);
     global_data->process_desc[new_pid] = process_descriptor_new(name, new_pid);
+    global_data->process_desc[new_pid]->launch_by_launcher = 1;
     
     #if defined(DEBUG)
     print_trace_header(global_data->process_desc[new_pid]->trace);
@@ -117,7 +118,6 @@ int process_fork_call(int pid)
   }
   else//This is an application which fork
   {
-    global_data->process_desc[new_pid] = process_descriptor_fork(nex_pid, pid);
     insert_trace_fork_exit(pid, "fork", (int)new_pid);
     ++global_data->child_amount;
     return 1;

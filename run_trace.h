@@ -13,20 +13,20 @@
 /***********************************************
  * Define various constant for 32 bits syscalls
  * ********************************************/
-#define SYS_socket_32 1
-#define SYS_bind_32 2
-#define SYS_connect_32 3
-#define SYS_listen_32 4
-#define SYS_accept_32 5
-#define SYS_send_32 9
-#define SYS_recv_32 10
-#define SYS_sendto_32 11
-#define SYS_recvfrom_32 12
-#define SYS_shutdown_32 13
-#define SYS_setsockopt_32 14
-#define SYS_getsockopt_32 15
-#define SYS_sendmsg_32 16
-#define SYS_recvmsg_32 17
+#define SYS_socket_32 		1
+#define SYS_bind_32 		2
+#define SYS_connect_32 		3
+#define SYS_listen_32 		4
+#define SYS_accept_32 		5
+#define SYS_send_32 		9
+#define SYS_recv_32 		10
+#define SYS_sendto_32 		11
+#define SYS_recvfrom_32 	12
+#define SYS_shutdown_32		13
+#define SYS_setsockopt_32 	14
+#define SYS_getsockopt_32 	15
+#define SYS_sendmsg_32 		16
+#define SYS_recvmsg_32 		17
 
 
 /*********************************************/
@@ -40,6 +40,7 @@ simterpose_data_t* global_data;
 
 typedef struct{
   pid_t pid;
+  int launch_by_launcher;
   int execve_call_before_start;
   int idle;
   int syscall_in;
