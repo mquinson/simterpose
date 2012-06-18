@@ -59,6 +59,7 @@ void get_register(const pid_t pid)
 
 void resume_process(const pid_t pid)
 {
+//   printf("Resuming %d\n", pid);
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
     printf("%d\n", global_data->launcherpid);
     perror("ptrace syscall");
@@ -83,8 +84,12 @@ int main(int argc, char *argv[]) {
 
   int sockfd; 
 
-  int i;
 
+  double *first_time = malloc(sizeof(double)); 
+  *first_time = 0;
+  xbt_fifo_push(global_data->time_to_next, first_time);
+  
+  int i;
   for(i=0; i<MAX_PID; ++i)
   {
     global_data->process_desc[i]=NULL;
@@ -172,7 +177,6 @@ int main(int argc, char *argv[]) {
     ++global_data->not_assigned;
     // Resume the launcher
     resume_process(global_data->launcherpid);
-
    
 
     if (init_cputime()) {
@@ -209,18 +213,8 @@ int main(int argc, char *argv[]) {
 	  int stat16=status >> 16;
 
 	  if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
-	    if(!global_data->process_launch)
-	    {
-	      process_fork_call(stoppedpid);
-	      global_data->process_launch = global_data->last_pid_create;
-	      ++global_data->not_assigned;
-	    }
-	    else
-	    {
-	      task_found = process_fork_call(stoppedpid);
-	      if(task_found)
-		++global_data->not_assigned;
-	    }
+	    ++global_data->not_assigned;
+	    task_found = process_fork_call(stoppedpid);
 	  } 
 	  
 	  else if(stoppedpid != global_data->launcherpid){
@@ -352,20 +346,14 @@ int main(int argc, char *argv[]) {
 	      case SYS_execve:
 		printf("[%d] execve called\n",stoppedpid);
 		process_descriptor* proc = process_descriptor_get(stoppedpid);
-		if(global_data->process_launch != stoppedpid)
+		if(proc->execve_call_before_start)
 		{
-		  printf("%p %d \n", proc,proc->execve_call_before_start);
-		  if(!proc->execve_call_before_start)
-		    task_found=1;
-		  else
-		    --proc->execve_call_before_start;
+		  --proc->execve_call_before_start;
 		}
 		else
 		{
-		  if(!proc->execve_call_before_start)
-		    global_data->process_launch = 1;//Normally, we have no chance to see an exec of init
-		  else
-		    --proc->execve_call_before_start;
+		  if(proc->launch_by_launcher)
+		    task_found=1;
 		}
 		break;
 		

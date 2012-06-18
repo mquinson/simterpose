@@ -20,4 +20,6 @@ void launch_process_idling(pid_t pid);
 
 void process_descriptor_fork(pid_t new_pid, pid_t pid_fork);
 
+void process_descriptor_exec(pid_t pid);
+
 #endif

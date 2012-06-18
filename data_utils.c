@@ -20,6 +20,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->syscall_in = 0;
   result->execve_call_before_start=1;
   result->idle=0;
+  result->last_computation_task = NULL;
   int i;
   for(i=0; i<MAX_FD ; ++i)
     result->fd_list[i]=NULL;
@@ -87,6 +88,7 @@ void process_descriptor_fork(pid_t new_pid, pid_t pid_fork)
   result->execve_call_before_start=1;
   result->idle=0;
   result->launch_by_launcher=0;
+  result->last_computation_task = NULL;
   int i;
   for(i=0; i<MAX_FD ; ++i)
     result->fd_list[i]=forked->fd_list[i];
@@ -94,6 +96,14 @@ void process_descriptor_fork(pid_t new_pid, pid_t pid_fork)
   result->station = forked->station;
   
   global_data->process_desc[new_pid] = result;
+}
+
+
+void process_descriptor_exec(pid_t pid)
+{
+  //TODO add mecanism to socket to know when close them on exec (witho SOCK_CLOEXEC on type)
+//   for(i=0; i<MAX_FD ; ++i)
+//     result->fd_list[i]=NULL;
 }
 
 

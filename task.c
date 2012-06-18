@@ -52,6 +52,7 @@ void create_computation_task(pid_t pid, double amount)
 
 void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv, double amount)
 {
+  printf("Entering create_send_communication_task\n");
   process_descriptor *proc_sender = process_descriptor_get(pid_sender);
   process_descriptor *proc_receiver = recv->proc;
   
@@ -72,12 +73,16 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
   
   xbt_fifo_push(recv->recv_info->recv_task, temp);
   
+  printf("End creation task\n");
   //if last_computation_task is not NULL, that means that we have to do some computation before process syscall
   if(proc_sender->last_computation_task)
     schedule_last_computation_task(pid_sender, task_sending, "calculation");
 
+  printf("End scheduling computqtion task\n");
   
   SD_task_dependency_add("communication", NULL, task_sending, task_receiving);
+  
+  printf("End dependance task\n");
   
   double* comm_amount = malloc(sizeof(double)*4);
   comm_amount[1]=amount;

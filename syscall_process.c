@@ -10,7 +10,7 @@
 //TODO test the possibility to remove incomplete checking
 int process_send_call(int pid, int sockfd, int ret)
 {
-  printf("Entering process_send_call\n");
+
   if (socket_registered(pid,sockfd) != -1) {
     if (socket_incomplete(pid,sockfd))
     {
@@ -27,11 +27,13 @@ int process_send_call(int pid, int sockfd, int ret)
 	launch_process_idling(s->proc->pid);
 	socket_communication_receive(s);
       }
+
       socket_communication_receive(s);
       if(s!=NULL)
 	result = handle_new_send(s,  ret);
       else
 	THROW_IMPOSSIBLE;
+
       insert_trace_comm(pid,sockfd,"send",ret);
       create_send_communication_task(pid, s, ret);
 	
@@ -120,6 +122,6 @@ int process_fork_call(int pid)
   {
     insert_trace_fork_exit(pid, "fork", (int)new_pid);
     ++global_data->child_amount;
-    return 1;
+    return 0;
   }
 }
