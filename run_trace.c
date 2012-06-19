@@ -27,46 +27,6 @@ void print_trace_header(FILE* trace)
   fprintf(trace,"%8s %12s %8s %10s %10s %21s %21s\n","pidX", "syscall", "pidY", "return","diff_cpu","local_addr:port", "remote_addr:port");
 }
 
-unsigned long reg_orig;
-unsigned long ret;
-unsigned long arg1;
-unsigned long arg2;
-unsigned long arg3;
-struct user_regs_struct regs;
-
-void get_register(const pid_t pid)
-{
-  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
-  }
-  /* ---- test archi for registers ---- */
-  
-  #if defined(__x86_64) || defined(amd64)
-  reg_orig=regs.orig_rax;
-  ret=regs.rax;
-  arg1=regs.rdi;
-  arg2=regs.rsi;
-  arg3=regs.rdx;
-  #elif defined(i386)
-  reg_orig=regs.orig_eax;
-  ret=regs.eax;
-  arg1=regs.ebx;
-  arg2=regs.ecx;
-  arg3=regs.edx;
-  #endif
-}
-
-void resume_process(const pid_t pid)
-{
-//   printf("Resuming %d\n", pid);
-  if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
-    printf("%d\n", global_data->launcherpid);
-    perror("ptrace syscall");
-    exit(1);
-  }
-}
-
 
 int main(int argc, char *argv[]) { 
   

@@ -17,3 +17,36 @@ void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) 
     i++;
   }
 }
+
+void ptrace_resume_process(const pid_t pid)
+{
+  if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
+    perror("ptrace syscall");
+    exit(1);
+  }
+}
+
+
+void ptrace_get_register(const pid_t pid, syscall_arg* arg)
+{
+  struct user_regs_struct regs;
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+  /* ---- test archi for registers ---- */
+  #if defined(__x86_64) || defined(amd64)
+  arg->reg_orig=regs.orig_rax;
+  arg->ret=regs.rax;
+  arg->arg1=regs.rdi;
+  arg->arg2=regs.rsi;
+  arg->arg3=regs.rdx;
+  #elif defined(i386)
+  arg->reg_orig=regs.orig_eax;
+  arg->ret=regs.eax;
+  arg->arg1=regs.ebx;
+  arg->arg2=regs.ecx;
+  arg->arg3=regs.edx;
+  #endif
+}
