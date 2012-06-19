@@ -30,55 +30,41 @@ void print_trace_header(FILE* trace)
 int main(int argc, char *argv[]) { 
   
   global_data = malloc(sizeof(simterpose_data_t));
+  init_global_data();
 
   int status;
   int stoppedpid;
-  global_data->launcherpid=0;
-  global_data->child_amount=0;
-  global_data->time_to_next= xbt_fifo_new();
-  global_data->last_clock=0;
-  global_data->idle_amount=0;
-  int manual_flop =0;
 
   int sockfd; 
 
-
-//   double *first_time = malloc(sizeof(double)); 
-//   *first_time = 0;
-//   xbt_fifo_push(global_data->time_to_next, first_time);
-//   
-//   int i;
-//   for(i=0; i<MAX_PID; ++i)
-//   {
-//     global_data->process_desc[i]=NULL;
-//   }
-//   
-//   //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre
-//   if(argc>1)
-//   {
-//     for(i=1; i<argc; ++i)
-//     {
-//       if(!strcmp(argv[i], "-fp"))
-//       {
-// 	if(argv[i+1] == NULL)
-// 	{
-// 	  usage(argv[0]); 
-// 	}
-// 	else
-// 	{
-// 	  char* endptr = argv[i+1]+strlen(argv[i+1])-1;
-// 	  global_data->flops_per_second = strtod(argv[i+1], &endptr);
-// 	  if(endptr == argv[i+1])
-// 	    usage(argv[0]);
-// 	  else
-// 	  {
-// 	    global_data->micro_s_per_flop  = 1000000/global_data->flops_per_second;
-// 	    manual_flop = 1;
-// 	  }
-// 	}
-//       }
-//     }
-//   }
+  
+  //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre
+  int i, manual_flop=0;
+  if(argc>1)
+  {
+    for(i=1; i<argc; ++i)
+    {
+      if(!strcmp(argv[i], "-fp"))
+      {
+	if(argv[i+1] == NULL)
+	{
+	  usage(argv[0]); 
+	}
+	else
+	{
+	  char* endptr = argv[i+1]+strlen(argv[i+1])-1;
+	  global_data->flops_per_second = strtod(argv[i+1], &endptr);
+	  if(endptr == argv[i+1])
+	    usage(argv[0]);
+	  else
+	  {
+	    global_data->micro_s_per_flop  = 1000000/global_data->flops_per_second;
+	    manual_flop = 1;
+	  }
+	}
+      }
+    }
+  }
 //   
 //   if(!manual_flop)
 //     benchmark_matrix_product(&(global_data->flops_per_second), &(global_data->micro_s_per_flop));
