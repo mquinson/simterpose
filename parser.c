@@ -11,9 +11,9 @@
 #include "surf/surfxml_parse.h"
 
 
-process_descriptor* proc;
+launcher_procdesc* proc;
 
-void destruct_process_descriptor(process_descriptor* proc)
+void destruct_process_descriptor(launcher_procdesc* proc)
 {
   free(proc->process_name);
   int i;
@@ -25,8 +25,8 @@ void destruct_process_descriptor(process_descriptor* proc)
 
 static int compare_time(const void* proc1, const void* proc2)
 {
-  int time1 = (*((process_descriptor**)proc1))->launching_time;
-  int time2 = (*((process_descriptor**)proc2))->launching_time;
+  int time1 = (*((launcher_procdesc**)proc1))->launching_time;
+  int time2 = (*((launcher_procdesc**)proc2))->launching_time;
   
   if (time1 < time2)
     return -1;
@@ -50,7 +50,7 @@ static double parse_double(const char *string)
 
 static void parse_process_init(void)
 {
-  proc = malloc(sizeof(process_descriptor));
+  proc = malloc(sizeof(launcher_procdesc));
   proc->process_name = strdup(A_surfxml_process_host);
   proc->executable = strdup(A_surfxml_process_function);
   proc->launching_time=parse_double(A_surfxml_process_start_time);
@@ -68,7 +68,7 @@ static void parse_process_finalize(void)
   
   
   ++proc_amount;
-  proc_list = realloc(proc_list, sizeof(process_descriptor*)*proc_amount);
+  proc_list = realloc(proc_list, sizeof(launcher_procdesc*)*proc_amount);
   proc_list[proc_amount-1]=proc;
 }
 
@@ -97,6 +97,6 @@ void parse_deployment_file(const char* filename)
   } CATCH(e) {
   }
   
-  qsort(proc_list, proc_amount, sizeof(process_descriptor*), compare_time);
+  qsort(proc_list, proc_amount, sizeof(launcher_procdesc*), compare_time);
 }
 

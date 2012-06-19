@@ -40,9 +40,9 @@ int main(int argc, char *argv[]) {
   
   //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre
   int i, manual_flop=0;
-  if(argc>1)
+  if(argc>2)
   {
-    for(i=1; i<argc; ++i)
+    for(i=3; i<argc; ++i)
     {
       if(!strcmp(argv[i], "-fp"))
       {
@@ -65,15 +65,17 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-//   
-//   if(!manual_flop)
-//     benchmark_matrix_product(&(global_data->flops_per_second), &(global_data->micro_s_per_flop));
-//   
-//   
-//   init_replay (argc, argv);
-//   
-// 
-//   
+  else
+  {
+    usage(argv[0]);
+    exit(1);
+  }
+  
+  if(!manual_flop)
+    benchmark_matrix_product(&(global_data->flops_per_second), &(global_data->micro_s_per_flop));
+  
+  SD_init(&argc, argv);
+  SD_create_environment(argv[1]);
 // 
 //   char ret_trace[SIZE_PARAM_TRACE];
 // 

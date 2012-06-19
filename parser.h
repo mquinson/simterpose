@@ -7,15 +7,15 @@ typedef struct {
   double launching_time;
   char** command_line_argument;
   int argument_nbr;
-}process_descriptor;
+}launcher_procdesc;
 
-process_descriptor** proc_list;
+launcher_procdesc** proc_list;
 int proc_amount;
 
 
 void parse_deployment_file(const char* filename);
 
-void destruct_process_descriptor(process_descriptor* proc);
+void destruct_process_descriptor(launcher_procdesc* proc);
 
 
 #endif
