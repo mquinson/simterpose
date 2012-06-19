@@ -15,5 +15,7 @@ int proc_amount;
 
 void parse_deployment_file(const char* filename);
 
+void destruct_process_descriptor(process_descriptor* proc);
+
 
 #endif

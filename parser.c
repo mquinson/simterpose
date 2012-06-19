@@ -13,6 +13,16 @@
 
 process_descriptor* proc;
 
+void destruct_process_descriptor(process_descriptor* proc)
+{
+  free(proc->process_name);
+  int i;
+  for(i=0; i< proc->argument_nbr-1; ++i)
+    free(proc->command_line_argument[i]);
+  free(proc->command_line_argument);
+  //We don't free executable because it is already free when freeing command_line member
+}
+
 static int compare_time(const void* proc1, const void* proc2)
 {
   int time1 = (*((process_descriptor**)proc1))->launching_time;
@@ -86,5 +96,7 @@ void parse_deployment_file(const char* filename)
     xbt_assert(!parse_status, "Parse error at %s", filename);
   } CATCH(e) {
   }
+  
+  qsort(proc_list, proc_amount, sizeof(process_descriptor*), compare_time);
 }
 
