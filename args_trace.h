@@ -5,8 +5,7 @@
 #include "sockets.h"
 #include "sysdep.h"
 
-
-extern struct time_process all_procs[MAX_PROCS]; 
+ 
 extern int nb_procs;
 
 void get_args_socket(pid_t child, int sockfd, ...);

@@ -38,9 +38,4 @@
 #define MAX_PROCS 512
 
 
-struct time_process{
-  pid_t pid;
-  long long int last_cputime;
-};
-
 #endif

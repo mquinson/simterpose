@@ -1,6 +1,7 @@
 #include "task.h"
 #include "run_trace.h"
 #include "data_utils.h"
+#include "process_descriptor.h"
 #include "sockets.h"
 
 #include "simdag/simdag.h"

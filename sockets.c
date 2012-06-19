@@ -1,7 +1,6 @@
 #include "sockets.h"
 #include "insert_trace.h"
 #include "xbt.h"
-#include "syscalls_io.h"
 #include "task.h"
 
 #define LOCAL 1

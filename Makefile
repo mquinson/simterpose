@@ -30,10 +30,7 @@ insert_trace.o: insert_trace.c insert_trace.h sysdep.h sockets.h calc_times_proc
 ptrace_utils.o: ptrace_utils.c ptrace_utils.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-syscalls_io.o: syscalls_io.c syscalls_io.h run_trace.h data_utils.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
-process_descriptor.o: process_descriptor.c process_descriptor.h sysdep.h
+process_descriptor.o: process_descriptor.c process_descriptor.h sysdep.h run_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h run_trace.h
@@ -45,7 +42,7 @@ replay.o : replay.c replay.h
 data_utils.o : data_utils.c data_utils.h run_trace.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-task.o: task.c task.h run_trace.h data_utils.h sockets.h
+task.o: task.c task.h run_trace.h data_utils.h sockets.h process_descriptor.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 parser.o: parser.c parser.h

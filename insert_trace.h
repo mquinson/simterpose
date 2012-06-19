@@ -8,7 +8,6 @@
 #include "run_trace.h"
 
 
-extern struct time_process all_procs[MAX_PROCS]; 
 extern int nb_procs;
 
 void insert_trace_comm(pid_t pid, int sockfd, char *syscall, int res);

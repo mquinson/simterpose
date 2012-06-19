@@ -5,7 +5,6 @@
 #include "xbt.h"
 #include "xbt/fifo.h"
 #include "run_trace.h"
-#include "syscalls_io.h"
 
 #define MAX_SOCKETS 512
 
