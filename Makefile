@@ -50,13 +50,16 @@ data_utils.o : data_utils.c data_utils.h run_trace.h sysdep.h
 task.o: task.c task.h run_trace.h data_utils.h sockets.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+parser.o: parser.c parser.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 
 #################################################
 # launcher section
-launcher: launcher.o
-	$(CC) $(LDFLAGS) $(CFLAGS) -o launcher launcher.o
+launcher: launcher.o parser.o
+	$(CC) $(LDFLAGS) $(CFLAGS) -o launcher launcher.o parser.o
 
-launcher.o: launcher.c
+launcher.o: launcher.c parser.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 #################################################
