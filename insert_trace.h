@@ -3,7 +3,6 @@
 
 #include "sysdep.h"
 #include "sockets.h"
-#include "syscalls_io.h"
 #include "calc_times_proc.h"
 #include "process_descriptor.h"
 #include "run_trace.h"

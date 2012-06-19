@@ -7,7 +7,6 @@
 #include "process_descriptor.h"
 #include "sockets.h"
 #include "insert_trace.h"
-#include "syscalls_io.h"
 #include "run_trace.h"
 #include "benchmark.h"
 #include "syscall_process.h"
