@@ -1,8 +1,25 @@
 #ifndef __TIME_PROC_H_ 
 #define __TIME_PROC_H_
 
+typedef struct process_descriptor process_descriptor;
+
 #include "sysdep.h"
 #include "run_trace.h"
+
+struct process_descriptor{
+  pid_t pid;
+  int launch_by_launcher;
+  int execve_call_before_start;
+  int idle;
+  int syscall_in;
+  long long int cpu_time;
+  char* name;
+  FILE* trace;
+  SD_workstation_t station;
+  SD_task_t last_computation_task;
+  struct infos_socket** fd_list;
+};
+
 
 process_descriptor *process_descriptor_new(char* name, pid_t pid);
 

@@ -8,6 +8,7 @@
 
 #include "simdag/simdag.h"
 #include "xbt/fifo.h"
+#include "process_descriptor.h"
 
 
 /***********************************************
@@ -36,21 +37,6 @@
 
 typedef struct simterpose_data simterpose_data_t;
 simterpose_data_t* global_data;
-
-
-typedef struct{
-  pid_t pid;
-  int launch_by_launcher;
-  int execve_call_before_start;
-  int idle;
-  int syscall_in;
-  long long int cpu_time;
-  char* name;
-  FILE* trace;
-  SD_workstation_t station;
-  SD_task_t last_computation_task;
-  struct infos_socket** fd_list;
-}process_descriptor;
 
 
 struct simterpose_data{
