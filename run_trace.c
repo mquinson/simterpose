@@ -13,6 +13,8 @@
 #include "xbt/fifo.h"
 #include "replay.h"
 #include "data_utils.h"
+#include "parser.h"
+#include "init.h"
 
 #define BUFFER_SIZE 512
 
@@ -76,6 +78,10 @@ int main(int argc, char *argv[]) {
   
   SD_init(&argc, argv);
   SD_create_environment(argv[1]);
+  
+  parse_deployment_file(argv[2]);
+  
+  init_all_process();
 // 
 //   char ret_trace[SIZE_PARAM_TRACE];
 // 

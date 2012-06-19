@@ -1,5 +1,5 @@
 OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o run_trace.o benchmark.o syscall_process.o replay.o\
-	data_utils.o task.o parser.o
+	data_utils.o task.o parser.o init.o
 
 CFLAGS = -Wall -g 
 CC=gcc
@@ -12,7 +12,7 @@ run_trace: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
 run_trace.o: run_trace.c run_trace.h insert_trace.h sysdep.h sockets.h calc_times_proc.h process_descriptor.h \
-		benchmark.h args_trace.h ptrace_utils.h syscall_process.h replay.h data_utils.h
+		benchmark.h args_trace.h ptrace_utils.h syscall_process.h replay.h data_utils.h parser.h init.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h
@@ -46,6 +46,9 @@ task.o: task.c task.h run_trace.h data_utils.h sockets.h process_descriptor.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 parser.o: parser.c parser.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+init.o: init.c init.h parser.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 
