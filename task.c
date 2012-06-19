@@ -19,7 +19,7 @@ typedef struct{
 
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* name)
 {
-  process_descriptor *proc = process_descriptor_get(pid);
+  process_descriptor *proc = process_get_descriptor(pid);
   
   double* comp_size = malloc(sizeof(double));
   double* comm_amount = malloc(sizeof(double));
@@ -39,7 +39,7 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 void create_computation_task(pid_t pid, double amount)
 {
   printf("ENTERING create_computation_task\n");
-  process_descriptor *proc = process_descriptor_get(pid);
+  process_descriptor *proc = process_get_descriptor(pid);
 
   SD_task_t task = SD_task_create("computation", NULL, amount);
   
@@ -54,7 +54,7 @@ void create_computation_task(pid_t pid, double amount)
 void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv, double amount)
 {
   printf("Entering create_send_communication_task\n");
-  process_descriptor *proc_sender = process_descriptor_get(pid_sender);
+  process_descriptor *proc_sender = process_get_descriptor(pid_sender);
   process_descriptor *proc_receiver = recv->proc;
   
   int* data_sender = malloc(sizeof(int));
@@ -110,7 +110,7 @@ void create_recv_communication_task(struct infos_socket* recv)
   task_comm_info* tci = xbt_fifo_shift(recv->recv_info->recv_task);
   
   
-  process_descriptor *proc_sender = process_descriptor_get(tci->sender_pid);
+  process_descriptor *proc_sender = process_get_descriptor(tci->sender_pid);
   process_descriptor *proc_receiver = recv->proc;
   
   --recv->communication_receive;
