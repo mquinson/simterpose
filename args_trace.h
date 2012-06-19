@@ -1,7 +1,7 @@
 #ifndef __ARGS_TRACE_H 
 #define __ARGS_TRACE_H
 
-#include "peek_data.h"
+#include "ptrace_utils.h"
 #include "sockets.h"
 #include "sysdep.h"
 
