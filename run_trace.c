@@ -353,6 +353,8 @@ int main(int argc, char *argv[]) {
 		{
 		  if(proc->launch_by_launcher)
 		    task_found=1;
+		  else
+		    THROW_UNIMPLEMENTED; //this is not the direct son
 		}
 		break;
 		

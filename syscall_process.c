@@ -22,6 +22,10 @@ int process_send_call(int pid, int sockfd, int ret)
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = getSocketInfoFromContext(is->ip_local, is->port_local, is->ip_remote, is->port_remote);
+      if(s!=NULL)
+	result = handle_new_send(s,  ret);
+      else
+	THROW_IMPOSSIBLE;
       if(s->communication_receive == -1)
       {
 	launch_process_idling(s->proc->pid);
@@ -29,11 +33,6 @@ int process_send_call(int pid, int sockfd, int ret)
       }
 
       socket_communication_receive(s);
-      if(s!=NULL)
-	result = handle_new_send(s,  ret);
-      else
-	THROW_IMPOSSIBLE;
-
       insert_trace_comm(pid,sockfd,"send",ret);
       create_send_communication_task(pid, s, ret);
 	
@@ -45,6 +44,8 @@ int process_send_call(int pid, int sockfd, int ret)
       }
     }
   }
+  else 
+    THROW_IMPOSSIBLE;
   return 1;
 }
 

@@ -30,6 +30,11 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   proc->fd_list[sockfd]=is;
   is->fd= sockfd;
   
+  is->proc_infos = xbt_dynar_new(sizeof(process_info*), NULL);
+  
+  process_info* proc_info  = malloc(sizeof(process_info));
+  proc_info->proc = proc;
+  proc_info->fd = sockfd;
   
   is->proc=proc;
   is->domain=domain;
@@ -380,6 +385,7 @@ int handle_new_receive(int pid, int sockfd, int length)
 }
 
 //if we return 1, this significate that the handler of the task have one now.
+//TODO simplify handling 
 int handle_new_send(struct infos_socket *is,  int length)
 {
 //   printf("Entering handle_new_reception\n");

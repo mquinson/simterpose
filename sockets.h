@@ -16,8 +16,14 @@ typedef struct {
   int quantity_recv;
 }recv_information;
 
+typedef struct{
+  process_descriptor* proc;
+  int fd;
+}process_info;
+
 struct infos_socket{
   recv_information *recv_info;
+  xbt_dynar_t proc_infos;
   process_descriptor* proc;//contain information of proc which handle the socket
   int fd;
   int domain;

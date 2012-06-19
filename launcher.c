@@ -61,7 +61,7 @@ static void parse_process_init(void)
   proc = malloc(sizeof(process_descriptor));
   proc->process_name = strdup(A_surfxml_process_host);
   proc->executable = strdup(A_surfxml_process_function);
-  proc->launching_time=-1;
+  proc->launching_time=parse_double(A_surfxml_process_start_time);
   proc->argument_nbr=1;
   proc->command_line_argument=malloc(sizeof(char*));
   proc->command_line_argument[0] = proc->executable;
@@ -82,14 +82,9 @@ static void parse_process_finalize(void)
 
 static void parse_argument(void)
 {
-  if(proc->launching_time == -1)
-    proc->launching_time = parse_double(A_surfxml_argument_value);
-  else
-  {
-    ++(proc->argument_nbr);
-    proc->command_line_argument = realloc(proc->command_line_argument, proc->argument_nbr*sizeof(char*));
-    proc->command_line_argument[proc->argument_nbr-1] = strdup(A_surfxml_argument_value);
-  }
+  ++(proc->argument_nbr);
+  proc->command_line_argument = realloc(proc->command_line_argument, proc->argument_nbr*sizeof(char*));
+  proc->command_line_argument[proc->argument_nbr-1] = strdup(A_surfxml_argument_value);
 }
 
 void destruct_process_descriptor(process_descriptor* proc)
@@ -99,7 +94,6 @@ void destruct_process_descriptor(process_descriptor* proc)
   for(i=0; i< proc->argument_nbr-1; ++i)
     free(proc->command_line_argument[i]);
   free(proc->command_line_argument);
-  
   //We don't free executable because it is already free when freeing command_line member
   
 }
