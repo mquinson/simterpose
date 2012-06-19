@@ -4,7 +4,7 @@
 #include "ptrace_utils.h"
 #include "sysdep.h"
 #include "calc_times_proc.h"
-#include "times_proc.h"
+#include "process_descriptor.h"
 #include "sockets.h"
 #include "insert_trace.h"
 #include "syscalls_io.h"
