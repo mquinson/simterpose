@@ -26,6 +26,14 @@ void ptrace_resume_process(const pid_t pid)
   }
 }
 
+void ptrace_detach_process(const pid_t pid)
+{
+  if (ptrace(PTRACE_DETACH, pid, NULL, NULL)==-1) {
+    perror("ptrace detach");
+    exit(1);
+  }
+}
+
 
 void ptrace_get_register(const pid_t pid, syscall_arg* arg)
 {

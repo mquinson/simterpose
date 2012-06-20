@@ -8,7 +8,6 @@
 
 void init_global_data()
 {
-  global_data->launcherpid=0;
   global_data->child_amount=0;
   global_data->last_clock=0;
   global_data->idle_amount=0;

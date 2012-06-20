@@ -76,8 +76,8 @@ int process_fork_call(int pid)
     perror("ptrace geteventmsg");
     exit(1);
   }
-  if(pid == global_data->launcherpid)
-  {
+//   if(pid == global_data->launcherpid)
+//   {
     global_data->last_pid_create = new_pid;
     printf("Creation of pid %lud\n", new_pid);
     char buff[256];
@@ -113,15 +113,15 @@ int process_fork_call(int pid)
 
 
     printf("new pid with (v)fork %lu by processus %d\n",new_pid, pid);
-    if(pid != global_data->launcherpid)
-      insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
+//     if(pid != global_data->launcherpid)
+//       insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
     ++global_data->child_amount;
     return 1;
-  }
-  else//This is an application which fork
-  {
+//   }
+//   else//This is an application which fork
+//   {
     insert_trace_fork_exit(pid, "fork", (int)new_pid);
     ++global_data->child_amount;
     return 0;
-  }
+//   }
 }

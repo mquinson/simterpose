@@ -49,7 +49,6 @@ struct simterpose_data{
   process_descriptor *process_desc[MAX_PID];
   int child_amount;
   int idle_amount;
-  pid_t launcherpid;
   float flops_per_second;
   float micro_s_per_flop;
 };

@@ -20,7 +20,6 @@ char** get_command_line()
   getline(&buff, &length, comm_sim);
   xbt_dynar_t cmd_array = xbt_str_split(buff, NULL);
   char** result = (char**)xbt_dynar_to_array(cmd_array);
-  printf("Result %s\n", result[1]);
   return result;
 }
 
@@ -28,13 +27,14 @@ int main (int argc, char** argv)
 { 
   comm_sim = fdopen(3, "r");
 
-  int numero;
+  int numero=2;
   char* buff = NULL;
   size_t length=0;
 //   printf("Getting line argument\n");
   getline(&buff, &length, comm_sim);
-//   printf("%s\n", buff);
+  printf("%s\n", buff);
   sscanf(buff, "%d", &numero);
+  //numero =2;
   
 //   printf("Process to launch : %d \n", numero);
   
