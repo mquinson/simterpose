@@ -14,11 +14,14 @@ FILE* comm_sim;
 
 char** get_command_line()
 {
+//   printf("Entering get Commandline\n");
   char* buff = NULL;
   size_t length;
   getline(&buff, &length, comm_sim);
   xbt_dynar_t cmd_array = xbt_str_split(buff, NULL);
-  return (char**)xbt_dynar_to_array(cmd_array);
+  char** result = (char**)xbt_dynar_to_array(cmd_array);
+  printf("Result %s\n", result[1]);
+  return result;
 }
 
 int main (int argc, char** argv)
@@ -27,16 +30,22 @@ int main (int argc, char** argv)
 
   int numero;
   char* buff = NULL;
-  size_t length;
+  size_t length=0;
+//   printf("Getting line argument\n");
   getline(&buff, &length, comm_sim);
+//   printf("%s\n", buff);
   sscanf(buff, "%d", &numero);
+  
+//   printf("Process to launch : %d \n", numero);
   
   while(numero)
   {
     char** cmd_line = get_command_line();
-    if(fork() != 0)
+//     printf("End get_command_line\n");
+    if(fork() == 0)
     {
       fclose(comm_sim);
+      printf("Commandline %s\n", cmd_line[0]);
       if (execv(cmd_line[0], cmd_line)==-1) {
 	perror("execl server");
 	exit(1);

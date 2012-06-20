@@ -10,12 +10,18 @@ typedef struct {
 }launcher_procdesc;
 
 launcher_procdesc** proc_list;
-int proc_amount;
+
 
 
 void parse_deployment_file(const char* filename);
 
 void destruct_process_descriptor(launcher_procdesc* proc);
+
+char** parser_get_commandline(int numero);
+
+char* parser_get_workstation(int numero);
+
+int parser_get_amount();
 
 
 #endif

@@ -48,7 +48,7 @@ task.o: task.c task.h run_trace.h data_utils.h sockets.h process_descriptor.h
 parser.o: parser.c parser.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-init.o: init.c init.h parser.h
+init.o: init.c init.h parser.h  sysdep.h process_descriptor.h run_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 

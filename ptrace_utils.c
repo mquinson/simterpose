@@ -50,3 +50,13 @@ void ptrace_get_register(const pid_t pid, syscall_arg* arg)
   arg->arg3=regs.edx;
   #endif
 }
+
+unsigned long ptrace_get_pid_fork(const pid_t pid)
+{
+  unsigned long new_pid;
+  if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &new_pid)==-1) {
+    perror("ptrace geteventmsg");
+    exit(1);
+  }
+  return new_pid;
+}

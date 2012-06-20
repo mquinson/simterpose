@@ -12,6 +12,7 @@
 
 
 launcher_procdesc* proc;
+int proc_amount = 0;
 
 void destruct_process_descriptor(launcher_procdesc* proc)
 {
@@ -100,3 +101,17 @@ void parse_deployment_file(const char* filename)
   qsort(proc_list, proc_amount, sizeof(launcher_procdesc*), compare_time);
 }
 
+char** parser_get_commandline(int numero)
+{
+  return proc_list[numero]->command_line_argument; 
+}
+
+char* parser_get_workstation(int numero)
+{
+  return proc_list[numero]->process_name; 
+}
+
+int parser_get_amount()
+{
+  return proc_amount;
+}

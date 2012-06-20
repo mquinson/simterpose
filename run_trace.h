@@ -10,7 +10,8 @@
 #include "xbt/fifo.h"
 #include "process_descriptor.h"
 
-
+//For num syscall see 
+//file:///usr/share/gdb/syscalls/amd64-linux.xml
 /***********************************************
  * Define various constant for 32 bits syscalls
  * ********************************************/

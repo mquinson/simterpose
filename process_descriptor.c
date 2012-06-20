@@ -10,10 +10,10 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
 {
   process_descriptor* result = malloc(sizeof(process_descriptor));
   result->name = strdup(name);
-  char buff[256];
-  strcpy(buff, name);
-  strcat(buff, ".txt");
-  result->trace = fopen(buff, "w");
+//   char buff[256];
+//   strcpy(buff, name);
+//   strcat(buff, ".txt");
+//   result->trace = fopen(buff, "w");
   result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
   result->launch_by_launcher=0;
   result->pid=pid;
