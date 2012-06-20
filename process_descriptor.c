@@ -72,17 +72,17 @@ long long int process_get_last_cputime(pid_t pid) {
   return proc->cpu_time;
 }
 
-int in_syscall(pid_t pid) {
+int process_in_syscall(pid_t pid) {
   process_descriptor *proc = process_get_descriptor(pid);
   return proc->syscall_in;
 }
 
-void set_in_syscall(pid_t pid) {
+void process_set_in_syscall(pid_t pid) {
   process_descriptor *proc = process_get_descriptor(pid);
   proc->syscall_in=1;
 }
 
-void set_out_syscall(pid_t pid) {
+void process_set_out_syscall(pid_t pid) {
   process_descriptor *proc = process_get_descriptor(pid);
   proc->syscall_in=0;
 }
