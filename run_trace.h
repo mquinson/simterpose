@@ -40,11 +40,17 @@ typedef struct simterpose_data simterpose_data_t;
 simterpose_data_t* global_data;
 
 
+typedef struct{
+  pid_t pid;
+  double start_time;
+}time_desc;
+
+
 struct simterpose_data{
   double last_clock;
   int not_assigned;
   int launcher_com;
-  xbt_fifo_t time_to_next;
+  time_desc** launching_time;
   pid_t last_pid_create;
   process_descriptor *process_desc[MAX_PID];
   int child_amount;

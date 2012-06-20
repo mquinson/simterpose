@@ -115,3 +115,8 @@ int parser_get_amount()
 {
   return proc_amount;
 }
+
+double parser_get_start_time(int numero)
+{
+  return proc_list[numero]->launching_time; 
+}

@@ -8,14 +8,15 @@
 
 void init_global_data()
 {
-  global_data->child_amount=0;
-  global_data->last_clock=0;
-  global_data->idle_amount=0;
-  global_data->not_assigned=0;
-  global_data->launcher_com=-1;
-  global_data->last_pid_create=0;
-  global_data->flops_per_second=0.0;
-  global_data->micro_s_per_flop=0.0;
+  global_data->child_amount = 0;
+  global_data->last_clock = 0;
+  global_data->idle_amount = 0;
+  global_data->not_assigned = 0;
+  global_data->launcher_com = -1;
+  global_data->last_pid_create = 0;
+  global_data->flops_per_second = 0.0;
+  global_data->micro_s_per_flop = 0.0;
+  global_data->launching_time = NULL;
   
   int i;
   for(i=0; i<MAX_PID; ++i)

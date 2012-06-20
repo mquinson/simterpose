@@ -101,7 +101,6 @@ int process_fork_call(int pid)
     double *next = malloc(sizeof(double));
     sscanf(buff, "%s %lf", name, next);
 
-    xbt_fifo_push(global_data->time_to_next, next);
     global_data->process_desc[new_pid] = process_descriptor_new(name, new_pid);
     global_data->process_desc[new_pid]->launch_by_launcher = 1;
     

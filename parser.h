@@ -21,6 +21,8 @@ char** parser_get_commandline(int numero);
 
 char* parser_get_workstation(int numero);
 
+double parser_get_start_time(int numero);
+
 int parser_get_amount();
 
 

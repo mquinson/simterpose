@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "sysdep.h"
 
+
 void fprint_array(FILE* file, char** array)
 {
   int i=0;
@@ -18,6 +19,7 @@ void fprint_array(FILE* file, char** array)
   fprintf(file, "\n");
   fflush(file);
 }
+
 
 void run_until_exec(pid_t pid)
 {
@@ -67,6 +69,7 @@ void init_all_process()
   if (launcherpid == 0) {
       
     close(comm_launcher[1]);
+    //Here to avoid non desire closing
     if(comm_launcher[0] != 3)
     {
       dup2(comm_launcher[0],3);
@@ -77,7 +80,7 @@ void init_all_process()
       exit(1);
     }
     if (execl("launcher", "launcher", NULL)==-1) {
-	perror("execl 1");
+	perror("execl");
       exit(1);
     }
   
@@ -103,7 +106,10 @@ void init_all_process()
     int amount_process_launch = 0;
     int amount = parser_get_amount();
     
-    //on écrit ensuite sur le file le nombre de process à lancer
+    //We initialise launching time array
+    global_data->launching_time = malloc(sizeof(time_desc*)*amount);
+    
+    //We write the amount of process to launch for the launcher
     fprintf(launcher_pipe, "%d\n", amount);
     fflush(launcher_pipe);
     
@@ -135,7 +141,11 @@ void init_all_process()
       
       run_until_exec(new_pid);
       
-      //Faire l'association start_time pid ici
+      time_desc* t = malloc(sizeof(time_desc));
+      t->pid = new_pid;
+      t->start_time = parser_get_start_time(amount_process_launch);
+      
+      global_data->launching_time[amount_process_launch] = t;
       
       ++amount_process_launch;
     }
@@ -144,7 +154,4 @@ void init_all_process()
   
   //Now we detach launcher because we don't need it anymore
   ptrace_detach_process(launcherpid);
-  
-  sleep(5);
-  
 }
