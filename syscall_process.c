@@ -81,8 +81,11 @@ int process_handle(pid_t pid, SD_task_t task)
   syscall_arg arg;
   while(1)
   {
+    printf("New loop ");
     //waitpid sur le fils
     waitpid(pid, &status, 0);
+    
+    printf("%d \n", pid);
     
     if (WIFEXITED(status)) {
       printf("[%d] Child is dead\n",pid);
@@ -136,6 +139,7 @@ int process_handle(pid_t pid, SD_task_t task)
     }
     else
     {
+      printf("New syscall out\n");
       ptrace_get_register(pid, &arg);
 
       switch (arg.reg_orig) {
@@ -411,8 +415,6 @@ int process_handle(pid_t pid, SD_task_t task)
               if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
                 return PROCESS_TASK_FOUND;
               break;
-              
-              
           }
         break;
                 
@@ -425,11 +427,11 @@ int process_handle(pid_t pid, SD_task_t task)
       }
       process_set_out_syscall(pid);
     }
-    
-    
-    //analyse du syscall
-    //débloquer le fils
+    ptrace_resume_process(pid);
   }
+  
+  THROW_IMPOSSIBLE; //There's no way to quit the loop
+  
   return 0;
 }
 

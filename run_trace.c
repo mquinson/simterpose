@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
   
   init_global_data();
   init_socket_gestion();
+  init_cputime();
 
   
   //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre
@@ -80,441 +81,60 @@ int main(int argc, char *argv[]) {
   
   init_all_process();
   
-  
-  
-  
-  //Tant qu'il reste un processus en vie
-    //on simule avec le prochain temps de lancement
+  int amount_process_launch=0;
+  int time_to_simulate=0;
+  do{
+    //We calculate the time of simulation.
+    if(amount_process_launch < parser_get_amount())
+      time_to_simulate = global_data->launching_time[amount_process_launch]->start_time - SD_get_clock();
+    else
+      time_to_simulate=-1;
     
-    //Pour toute les taches que l'on a eu
-      //on simule le fils jusqu'à ce qu'il obtienne une tâche
+    xbt_dynar_t arr = SD_simulate(time_to_simulate);
+    
+    
+    //Now we gonna handle each son for which a watching task is over
+    SD_task_t task_over = NULL;
+    printf("Starting handling simulation return\n");
+    while(!xbt_dynar_is_empty(arr))
+    {
+      xbt_dynar_shift(arr, task_over);
+      int* data = (int *)SD_task_get_data(task_over);
+      //If data is null, we are in presence of a non watch task
+      if(data != NULL)
+      {
+        //TODO put idle state handling
+        process_handle(*data, NULL);
+      }
+    }
+    
+    //Make idle handling here
+    
+    
+    //Now we the next process if the time is come
+    if(amount_process_launch < parser_get_amount())
+    {
+      printf("Checking for new launch\n");
+      if(SD_get_clock() == global_data->launching_time[amount_process_launch]->start_time)
+      {
+        printf("Launch processus %d\n", global_data->launching_time[amount_process_launch]->pid);
+        ptrace_resume_process(global_data->launching_time[amount_process_launch]->pid);
+        process_handle(global_data->launching_time[amount_process_launch]->pid, NULL);
+        ++global_data->child_amount;
+        ++amount_process_launch;
+      }
+    }
+    printf("End of loop\n");
+    
+  }while(global_data->child_amount);
   
-    //On gère les fils qui était dans son dans un état d'attente (NOHANG)
-      //si au on a un retour positif du waitpid, on gère le fils jusqu'à ce qu'il obtienne une tâche
-  
-    //On lance ensuite les fils qui sont a lancer par le clock
-      //on les gère jusqu'à ce qu'ils obtiennent une tâche
   
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-// 
-//   char ret_trace[SIZE_PARAM_TRACE]; 
-//        
-// 	  
+
+
 //       while(global_data->child_amount) {
-// 	
-// 	//The first loop consist on advance each processus until found task for each
-// 	while(global_data->not_assigned)
-// 	{
-// 	  printf("New tour : left %d not assigned\n", global_data->not_assigned);
-// 	  int task_found = 0;
-// 	  // __WALL to follow all children
-// 	  //TODO parcour de tous les pid dans l'ordre en traitant l'appel système s'il y en a ou en passant à un autre sinon option WNOHANG
-// 	  stoppedpid = waitpid(-1, &status, __WALL);
-// 
-// 	  
-// 	  if (WIFEXITED(status)) {
-// 	    printf("[%d] Child is dead\n",stoppedpid);
-// 	    if (stoppedpid == global_data->launcherpid)
-// 	      global_data->launcherpid=0;
-// 	    else
-// 	      finish_all_communication(stoppedpid);
-// 	    --global_data->child_amount;
-// 	    --global_data->not_assigned;
-// 	    printf("Left %d child\n", global_data->child_amount);
-// 	    continue;
-// 	  }
-// 	  
-// 	  
-// 	  int stat16=status >> 16;
-// 
-// 	  if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
-// 	    ++global_data->not_assigned;
-// 	    task_found = process_fork_call(stoppedpid);
-// 	  } 
-// 	  
-// 	  else if(stoppedpid != global_data->launcherpid){
-// 	    
-// 	    /*If this is the interrupt of the syscall and not the return, we print computation time */
-// 	    if (in_syscall(stoppedpid)==0) {
-// 	      set_in_syscall(stoppedpid);
-// 	      
-// 	      get_register(stoppedpid);
-// 	      
-// 	      #if defined(__x86_64)
-// 	      if(reg_orig == SYS_accept)
-// 	      {
-// 		printf("[%d] accept_in( ");
-// 		--global_data->not_assigned;
-// 		process_descriptor_set_idle(stoppedpid, 1);
-// 	      }
-// 
-// 	      else if(reg_orig == SYS_recvfrom || reg_orig == SYS_recvmsg)
-// 	      {
-// 		printf("[%d] recvfrom_in",stoppedpid);
-// 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
-// 		if(!is_communication_received(stoppedpid, sockfd))
-// 		{
-// 		  task_found=1;
-// 		  socket_wait_for_sending(stoppedpid, sockfd);
-// 		}
-// 	      }
-// 	      
-// 	      #else
-// 	      
-// 	      if(reg_orig == SYS_socketcall)
-// 	      {
-// 		if(arg1 == SYS_accept_32)
-// 		{
-// 		  printf("[%d] accept_in( ");
-// 		  --global_data->not_assigned;
-// 		  process_descriptor_set_idle(stoppedpid, 1);
-// 		}
-// 		
-// 		else if(arg1 == SYS_recv_32 || arg1 == SYS_recvfrom_32 || arg1 == SYS_recvmsg_32)
-// 		{
-// 		  printf("[%d] recvfrom_in",stoppedpid);
-// 		  sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
-// 		  if(!is_communication_received(stoppedpid, sockfd))
-// 		  {
-// 		    task_found=1;
-// 		    socket_wait_for_sending(stoppedpid, sockfd);
-// 		  }
-// 		}
-// 	      }
-// 	      
-// 	      #endif
-// 	    }
-// 	    else
-// 	    {
-// 	      get_register(stoppedpid);
-// 
-// 	      switch (reg_orig) {
-// 	      case SYS_write:
-// 		printf("[%d] write(%ld, ... , %d) = %ld\n",stoppedpid,arg1,(int)arg3, ret);
-// 		if (socket_registered(stoppedpid,arg1) != -1) {
-// 		  if ((int)ret>0 && socket_incomplete(stoppedpid,arg1)) 
-// 		    update_socket(stoppedpid,(int)arg1);
-// 		  insert_trace_comm(stoppedpid,(int)arg1,"write",(int)ret);
-// 		}
-// 		break;
-// 
-// 	      case SYS_read:
-// 		printf("[%d] read(%ld, ..., %ld) = %ld\n",stoppedpid, arg1,arg3, ret);
-// 		if (socket_registered(stoppedpid,arg1) != -1) {
-// 		  if ((int)ret>0 && socket_incomplete(stoppedpid,arg1)) 
-// 		    update_socket(stoppedpid,(int)arg1);
-// 		  insert_trace_comm(stoppedpid,(int)arg1,"read",(int)ret);
-// 		}
-// 		break;
-// 
-// 	      case SYS_fork: 
-// 		printf("[%d] fork = %ld\n", stoppedpid,ret);
-// 		break;
-// 	      
-// 	      case SYS_poll:
-// 		get_args_poll(stoppedpid,(void *)arg1, (nfds_t)arg2);
-// 		printf(" = %d \n",(int)ret);
-// 		break;
-// 
-// 	      case SYS_open:
-// 	      {
-// 		char *flags = malloc(9);
-// 		switch (arg2) {
-// 		case 0: strcpy(flags,"O_RDONLY"); break;
-// 		case 1: strcpy(flags,"O_WRONLY"); break;
-// 		case 2: strcpy(flags,"O_RDWR"); break;
-// 		}
-// 		if (strlen(flags)>0)
-// 		  printf("[%d] open(\"...\", %s) = %ld\n",stoppedpid,flags, ret);
-// 		else
-// 		  printf("[%d] open(\"...\", no_flags) = %ld\n",stoppedpid, ret);
-// 	      }
-// 	      break;
-// 
-// 	      case SYS_clone:
-// 		printf("[%d] clone() ?= %ld\n",stoppedpid,ret);
-// 		break;
-// 
-// 	      case SYS_close: 
-// 		printf("[%d] close(%ld) = %ld\n",stoppedpid,arg1,ret);
-// 		close_sockfd(stoppedpid,(int)arg1);
-// 		break;
-// 
-// 	      case SYS_dup:
-// 		printf("[%d] dup(%ld) = %ld\n",stoppedpid,arg1,ret);
-// 		break;
-// 
-// 	      case SYS_dup2:
-// 		printf("[%d] dup2(%ld, %ld) = %ld\n",stoppedpid,arg1,arg2,ret);
-// 		break;
-// 
-// 	      case SYS_exit_group:
-// 		printf("[%d] exit_group(%ld) called \n",stoppedpid,arg1);
-// 		insert_trace_fork_exit(stoppedpid,"exit_group",(int)arg1);
-// 		break;
-// 
-// 	      case SYS_exit:
-// 		printf("[%d] exit(%ld) called \n",stoppedpid,arg1);
-// 		insert_trace_fork_exit(stoppedpid,"exit",(int)arg1);
-// 		break;
-// 
-// 	      case SYS_execve:
-// 		printf("[%d] execve called\n",stoppedpid);
-// 		process_descriptor* proc = process_descriptor_get(stoppedpid);
-// 		if(proc->execve_call_before_start)
-// 		{
-// 		  --proc->execve_call_before_start;
-// 		}
-// 		else
-// 		{
-// 		  if(proc->launch_by_launcher)
-// 		    task_found=1;
-// 		  else
-// 		    THROW_UNIMPLEMENTED; //this is not the direct son
-// 		}
-// 		break;
-// 		
-// 		
-//       #if defined(__x86_64)  
-// 
-// 	      case SYS_select: 
-// 		get_args_select(stoppedpid,&regs);
-// 		break;
-// 
-// 	      case SYS_socket: 
-// 		printf("[%d] socket( ",stoppedpid);
-// 		get_args_socket(stoppedpid,(int)ret, &regs);
-// 		printf(" ) = %ld\n",ret);
-// 		break;
-// 
-// 	      case SYS_bind:
-// 		printf("[%d] bind( ",stoppedpid);
-// 		get_args_bind_connect(stoppedpid,(int)ret,0,&regs);
-// 		printf(" ) = %ld\n",ret);
-// 		break;
-// 
-// 	      case SYS_connect:
-// 		printf("[%d] connect( ",stoppedpid);
-// 		get_args_bind_connect(stoppedpid,(int)ret,1,&regs);
-// 		printf(" ) = %ld\n",ret);
-// 		break;
-// 
-// 	      case SYS_accept:
-// 		printf("[%d] accept( ",stoppedpid);
-// 		get_args_accept(stoppedpid,(int)ret,&regs);
-// 		++global_data->not_assigned;
-// 		process_descriptor_set_idle(stoppedpid, 0);
-// 		printf(" ) = %ld\n",ret);
-// 		break;
-// 
-// 	      case SYS_listen:
-// 		printf("[%d] listen( ", stoppedpid); 
-// 		get_args_listen(stoppedpid,&regs);
-// 		printf(" ) = %ld\n", ret);
-// 		break;
-// 
-// 	      case SYS_sendto:
-// 		printf("[%d] sendto( ",stoppedpid);
-// 		sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace,&regs);
-// 		printf(" ) = %ld\n",ret);
-// 		task_found = process_send_call(stoppedpid,sockfd,(int)ret);   
-// 		break;
-// 
-// 	      case SYS_recvfrom:
-// 		printf("[%d] recvfrom( ",stoppedpid);
-// 		sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,&regs);
-// 		printf(" ) = %ld\n",ret);
-// 		task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
-// 		break;
-// 	      
-// 	      case SYS_sendmsg:
-// 		printf("[%d] sendmsg( ",stoppedpid);
-// 		sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,&regs);
-// 		printf(" ) = %ld\n",ret); 
-// 		task_found = process_send_call(stoppedpid,sockfd,(int)ret);
-// 		break;
-// 
-// 	      case SYS_recvmsg:
-// 		printf("[%d] recvmsg( ",stoppedpid);
-// 		sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,&regs);
-// 		printf(" ) = %ld\n",ret);
-// 		task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
-// 		break;
-// 
-// 	      case SYS_shutdown:
-// 		printf("[%d] shutdown( %ld, ",stoppedpid, arg1);
-// 		char *how=malloc(10);;
-// 		switch(arg2){
-// 		case 0: strcpy(how,"SHUT_RD"); break;
-// 		case 1: strcpy(how,"SHUT_WR"); break;
-// 		case 2: strcpy(how,"SHUT_RDWR"); break;
-// 		}
-// 		printf("%s) = %ld\n",how,ret);;
-// 		break;
-// 
-// 	      case SYS_getsockopt:
-// 		printf("[%d] getsockopt(",stoppedpid);
-// 		get_args_get_setsockopt(stoppedpid, 1, &regs);
-// 		printf("%d\n",(int)ret);
-// 		break;
-// 
-// 	      case SYS_setsockopt:
-// 		printf("[%d] setsockopt(",stoppedpid);
-// 		get_args_get_setsockopt(stoppedpid, 1, &regs);
-// 		printf("%d\n",(int)ret);
-// 		break;
-// 
-//       #else
-// 
-// 	      case SYS__newselect:
-// 		get_args_select(stoppedpid,&regs);
-// 		break;
-// 
-// 	      case SYS_socketcall:
-// 		switch (arg1) {
-// 		
-// 		  case SYS_socket_32:
-// 		  printf("[%d] socket( ",stoppedpid);
-// 		  get_args_socket(stoppedpid, (int)ret, (void *)arg2,NULL);
-// 		  printf(" ) = %ld\n",ret);
-// 		  break;
-// 
-// 		  case SYS_bind_32:
-// 		  printf("[%d] bind( ",stoppedpid);
-// 		  get_args_bind_connect(stoppedpid,(int)ret,0,(void *)arg2);
-// 		  printf(" ) = %ld\n",ret);
-// 		  break;
-// 
-// 		  case SYS_connect_32:
-// 		  printf("[%d] connect( ",stoppedpid);
-// 		  get_args_bind_connect(stoppedpid,(int)ret,1,(void *)arg2);
-// 		  printf(" ) = %ld\n",ret);
-// 		  if (ret<0)
-// 		    printf("%s\n",strerror(-ret));
-// 		  break;
-// 
-// 		  case SYS_listen_32: 
-// 		  printf("[%d] listen( ", stoppedpid); 
-// 		  get_args_listen(stoppedpid,(void *)arg2);
-// 		  printf(" ) = %ld\n", ret);
-// 		  break;
-// 
-// 		  case SYS_accept_32:
-// 		  printf("[%d] accept( ",stoppedpid);
-// 		  get_args_accept(stoppedpid,(int)ret, (void *)arg2);
-// 		  printf(" ) = %ld\n",ret);
-// 		  break;
-// 
-// 		  case SYS_send_32:
-// 		  printf("[%d] send( ",stoppedpid);
-// 		  sockfd=get_args_send_recv(stoppedpid,1,ret_trace,(void *)arg2);
-// 		  printf(" ) = %ld\n",ret);
-// 		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
-// 		  break;
-// 
-// 		  case SYS_recv_32:
-// 		  printf("[%d] recv( ",stoppedpid);
-// 		  sockfd=get_args_send_recv(stoppedpid,2,ret_trace,(void *)arg2);
-// 		  printf(" ) = %ld\n",ret);
-// 		  task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
-// 		  break;
-// 
-// 		  case SYS_sendto_32:
-// 		  printf("[%d] sendto(",stoppedpid);
-// 		  sockfd=get_args_sendto_recvfrom(stoppedpid,1,ret_trace, (void *)arg2);
-// 		  printf(" ) = %ld\n", ret); 
-// 		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
-// 		  break;
-// 
-// 		  case SYS_recvfrom_32:
-// 		  printf("[%d] recvfrom(",stoppedpid);
-// 		  sockfd=get_args_sendto_recvfrom(stoppedpid,2,ret_trace,(void *)arg2);
-// 		  printf(" ) = %ld\n", ret);
-// 		  task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
-// 		  break;
-// 
-// 		  case SYS_shutdown_32:
-// 		  printf("shutdown\n");
-// 		  break;
-// 
-// 		  case SYS_setsockopt_32:
-// 		  printf("[%d] setsockopt(",stoppedpid);
-// 		  get_args_get_setsockopt(stoppedpid, 2, (void *)arg2);
-// 		  printf("%d\n",(int)ret);
-// 		  break;
-// 
-// 		  case SYS_getsockopt_32:
-// 		  printf("[%d] getsockopt(",stoppedpid);
-// 		  get_args_get_setsockopt(stoppedpid, 1, (void *)arg2);
-// 		  printf("%d\n",(int)ret);
-// 		  break;
-// 
-// 		  case SYS_sendmsg_32:
-// 		  printf("[%d] sendmsg(",stoppedpid);
-// 		  sockfd=get_args_send_recvmsg(stoppedpid,1,ret_trace,(void *)arg2);
-// 		  printf(" ) = %ld\n", ret);
-// 		  task_found = process_send_call(stoppedpid,sockfd,(int)ret);
-// 		  break;
-// 
-// 		  case SYS_recvmsg_32:
-// 		  printf("[%d] recvmsg(",stoppedpid);
-// 		  sockfd=get_args_send_recvmsg(stoppedpid,2,ret_trace,(void *)arg2);
-// 		  printf(" ) = %ld\n", ret);
-// 		  task_found = process_recv_call(stoppedpid,sockfd,(int)ret);
-// 		  break;
-// 
-// 	      
-// 		}
-// 		break;
-// 
-//       #endif
-// 
-// 	      default :
-// 		  printf("[%d] Unknown syscall %ld ?= %ld\n", stoppedpid,reg_orig,ret);
-// 		  break;
-// 
-// 	      }
-// 	      set_out_syscall(stoppedpid);
-// 	    
-// 	    }
-// 	  }
-// 	  
-// 	  //if the syscalls we trap doesn't lead to a task we resume child to found the next one
-// 	  if(!task_found)
-// 	  {
-// 	    resume_process(stoppedpid);
-// 	  }
-// 	  else
-// 	  {
-// 	    --(global_data->not_assigned);
-// 	    printf("(left %d) New task found for pid %d\n",global_data->not_assigned, stoppedpid);
-// 	  }
-// 	}//End of task reserach loop
-// 	
+
 // 	if(!global_data->child_amount)
 // 	  break;
 // 	
@@ -579,6 +199,7 @@ int main(int argc, char *argv[]) {
 //   
 //   printf("Result of simulation -> %lf s\n", SD_get_clock());
 //   }
+  finish_cputime();
   return 0;
 
 }
