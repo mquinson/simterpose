@@ -83,6 +83,9 @@ int main(int argc, char *argv[]) {
   
   int amount_process_launch=0;
   int time_to_simulate=0;
+  
+  xbt_dynar_t idle_process = xbt_dynar_new(sizeof(int*), NULL);
+  
   do{
     //We calculate the time of simulation.
     if(amount_process_launch < parser_get_amount())
@@ -95,7 +98,6 @@ int main(int argc, char *argv[]) {
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
-    printf("Starting handling simulation return\n");
     while(!xbt_dynar_is_empty(arr))
     {
       xbt_dynar_shift(arr, task_over);
@@ -103,10 +105,27 @@ int main(int argc, char *argv[]) {
       //If data is null, we are in presence of a non watch task
       if(data != NULL)
       {
-        //TODO put idle state handling
-        process_handle(*data, NULL);
+        int status = process_handle(*data, NULL);
+        if(status == PROCESS_DEAD) //TODO add real gestion of process death
+          --global_data->child_amount;
+        else if(status == PROCESS_IDLE_STATE)
+        {
+          int *temp = malloc(sizeof(int));
+          *temp = *data;
+          xbt_dynar_push(idle_process, temp);
+        }
       }
     }
+    
+    //Now we will run all idle process store in 
+    unsigned int cpt=0;
+    int* idle_pid;
+    xbt_dynar_foreach(idle_process, cpt, idle_pid)
+    {
+      //Do handling of idle process here.
+      //use void        xbt_dynar_cursor_rm (xbt_dynar_t dynar, unsigned int *const cursor) for remove
+    }
+    
     
     //Make idle handling here
     
@@ -114,91 +133,18 @@ int main(int argc, char *argv[]) {
     //Now we the next process if the time is come
     if(amount_process_launch < parser_get_amount())
     {
-      printf("Checking for new launch\n");
       if(SD_get_clock() == global_data->launching_time[amount_process_launch]->start_time)
       {
-        printf("Launch processus %d\n", global_data->launching_time[amount_process_launch]->pid);
         ptrace_resume_process(global_data->launching_time[amount_process_launch]->pid);
         process_handle(global_data->launching_time[amount_process_launch]->pid, NULL);
         ++global_data->child_amount;
         ++amount_process_launch;
       }
     }
-    printf("End of loop\n");
     
   }while(global_data->child_amount);
   
-  
-  
-  
 
-
-//       while(global_data->child_amount) {
-
-// 	if(!global_data->child_amount)
-// 	  break;
-// 	
-// 	
-// 	//Here, all process have there own task to execute (or there are idle) so we can start simulation
-// 	double* next_time = xbt_fifo_get_item_content(xbt_fifo_get_first_item(global_data->time_to_next));
-// 	
-// 	printf("\t\t\t\t\t NEW SIMULATION TURN with time %lf\n", *next_time);
-// 	xbt_dynar_t arr = SD_simulate(*next_time);
-// 	
-// 	//Now there is two case.
-// 	//	1: there no processus in arr and we have to launch the next processus.
-// 	//	2: there's processus and we have to substract time and resume these processus.
-// 	if(xbt_dynar_is_empty(arr))
-// 	{
-// 	  xbt_fifo_shift(global_data->time_to_next);
-// 	  printf("New simulation time %lf\n", update_simulation_clock());
-// 	  if(global_data->launcherpid)
-// 	  {
-// 	    resume_process(global_data->launcherpid);
-// 	  }
-// 	  resume_process(global_data->last_pid_create);
-// 	  
-// 	  global_data->not_assigned +=2;
-// 	}
-// 	else
-// 	{
-// 	  //We update time only if there are always process to launch
-// 	  if(*next_time != -1)
-// 	    *next_time -= update_simulation_clock();
-// 	  
-// 	  SD_task_t temp_task;
-// 	  unsigned int cpt;
-// 	  xbt_dynar_foreach(arr, cpt, temp_task){
-// 	    if(SD_task_get_state(temp_task) == SD_DONE)
-// 	    {
-// 	      int* data = (int *)SD_task_get_data(temp_task);
-// 	      //if data is null, that significate that is a task we don't watch
-// 	      if(data!=NULL)
-// 	      {
-// 		if (ptrace(PTRACE_SYSCALL, *data, NULL, NULL)==-1) {
-// 		  perror("ptrace syscall");
-// 		  exit(1);
-// 		}
-// 		++global_data->not_assigned;
-// 	      }
-// 	    }
-// 	  }
-// 	}
-//       }
-//       
-//       
-//   //Now we have to run simulation until the end
-// 
-//   xbt_dynar_t arr;
-//   do{
-//     arr = SD_simulate(-1);
-//   }while(!xbt_dynar_is_empty(arr));
-// 
-//   
-//   
-//   
-//   printf("Result of simulation -> %lf s\n", SD_get_clock());
-//   }
   finish_cputime();
   return 0;
 
