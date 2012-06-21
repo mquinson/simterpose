@@ -15,7 +15,7 @@ run_trace.o: run_trace.c run_trace.h insert_trace.h sysdep.h sockets.h calc_time
 		benchmark.h args_trace.h ptrace_utils.h syscall_process.h replay.h data_utils.h parser.h init.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h
+args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h ptrace_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 benchmark.o: benchmark.c benchmark.h sysdep.h calc_times_proc.h 
@@ -33,7 +33,8 @@ ptrace_utils.o: ptrace_utils.c ptrace_utils.h sysdep.h
 process_descriptor.o: process_descriptor.c process_descriptor.h sysdep.h run_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h run_trace.h
+syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h run_trace.h ptrace_utils.h \
+		process_descriptor.h args_trace.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 replay.o : replay.c replay.h

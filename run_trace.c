@@ -85,60 +85,50 @@ int main(int argc, char *argv[]) {
   parse_deployment_file(argv[2]);
   
   init_all_process();
+  
+  
+  
+  
+  //Tant qu'il reste un processus en vie
+    //on simule avec le prochain temps de lancement
+    
+    //Pour toute les taches que l'on a eu
+      //on simule le fils jusqu'à ce qu'il obtienne une tâche
+  
+    //On gère les fils qui était dans son dans un état d'attente (NOHANG)
+      //si au on a un retour positif du waitpid, on gère le fils jusqu'à ce qu'il obtienne une tâche
+  
+    //On lance ensuite les fils qui sont a lancer par le clock
+      //on les gère jusqu'à ce qu'ils obtiennent une tâche
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 // 
-//   char ret_trace[SIZE_PARAM_TRACE];
-// 
-//   
-//   
-//   int comm_launcher[2];
-//   pipe(comm_launcher);
-// 
-//   init_socket_gestion();
-//   global_data->launcherpid = fork();
-//   
-//   if (global_data->launcherpid == 0) {
-//     
-//     close(comm_launcher[0]);
-//     dup2(comm_launcher[1],3);
-//     close(comm_launcher[1]);
-//     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL)==-1) {
-//       perror("ptrace traceme");
-//       exit(1);
-//     }
-//     if (execl("launcher", "launcher", argv[2], NULL)==-1) {
-//       perror("execl 1");
-//       exit(1);
-//     }
-//   
-//   } else {
-//     
-//     
-//     close(comm_launcher[1]);
-//     global_data->launcher_com = comm_launcher[0];
-//     
-//     //We enter name of processus in array
-//     printf("launcher pid %d\n", global_data->launcherpid);
-//     global_data->process_desc[global_data->launcherpid]= process_descriptor_new("launcher", global_data->launcherpid);
-//     
-//     // We wait for the child to be blocked by ptrace in the first exec()
-//     wait(&status);
-//     
-//     if (ptrace(PTRACE_SETOPTIONS,global_data->launcherpid,NULL,PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE)==-1) {
-//       perror("Error setoptions 1");
-//       exit(1);
-//     }
-// 
-//     ++global_data->child_amount;
-//     ++global_data->not_assigned;
-//     // Resume the launcher
-//     resume_process(global_data->launcherpid);
-//    
-// 
-//     if (init_cputime()) {
-//       perror("Error init cputime");
-//       exit(1);
-//     }
-//     
+//   char ret_trace[SIZE_PARAM_TRACE]; 
+//        
 // 	  
 //       while(global_data->child_amount) {
 // 	
