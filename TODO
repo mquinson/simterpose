@@ -1,0 +1,9 @@
+Repenser le mécanisme connect/accept pour modéliser au mieux les connections
+
+Concentré tous les print des syscall en un seul endroit pour pouvoir commenter.
+
+Faire le tri des arguments que je parse qui me serve vraiment
+
+Agrandir la structure registre pour inclure les arguments dont j'ai besoin pour certain syscall (intéret?)
+
+Utilisé des int plutot que des char* pour retenir les ip.
