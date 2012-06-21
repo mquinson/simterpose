@@ -49,11 +49,30 @@ void create_computation_task(pid_t pid, double amount)
   proc->last_computation_task=task;
 }
 
-
-
-void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv, double amount)
+//We can factorize because receiver task are only here for scheduling
+void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_task_t task)
 {
-  printf("Entering create_send_communication_task\n");
+  double* comm_amount = malloc(sizeof(double)*4);
+  comm_amount[1]=SD_task_get_amount(task);
+  comm_amount[2]=0.0;
+  comm_amount[3]=0.0;
+  comm_amount[0]=0.0;
+  
+  double* comp_size = malloc(sizeof(double)*2);
+  comp_size[0]=0;
+  comp_size[1]=0;
+  
+  SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t)*2);
+  work_list[0] = sender;
+  work_list[1] = receiver;
+  
+  SD_task_schedule(task, 2, work_list, comp_size, comm_amount, -1);
+}
+
+
+
+SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *recv, double amount)
+{
   process_descriptor *proc_sender = process_get_descriptor(pid_sender);
   process_descriptor *proc_receiver = recv->proc;
   
@@ -65,7 +84,7 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
   
   SD_task_t task_sending = SD_task_create("communication send", data_sender, amount);
   SD_task_watch(task_sending, SD_DONE);
-  SD_task_t task_receiving = SD_task_create("communication recv", data_receiver, amount);
+  SD_task_t task_receiving = SD_task_create("communication recv", data_receiver, 0);
   SD_task_watch(task_receiving, SD_DONE);
   
   task_comm_info* temp = malloc(sizeof(task_comm_info));
@@ -74,33 +93,14 @@ void create_send_communication_task(pid_t pid_sender, struct infos_socket *recv,
   
   xbt_fifo_push(recv->recv_info->recv_task, temp);
   
-  printf("End creation task\n");
   //if last_computation_task is not NULL, that means that we have to do some computation before process syscall
   if(proc_sender->last_computation_task)
     schedule_last_computation_task(pid_sender, task_sending, "calculation");
 
-  printf("End scheduling computqtion task\n");
   
   SD_task_dependency_add("communication", NULL, task_sending, task_receiving);
   
-  printf("End dependance task\n");
-  
-  double* comm_amount = malloc(sizeof(double)*4);
-  comm_amount[1]=amount;
-  comm_amount[2]=0.0;
-  comm_amount[3]=0.0;
-  comm_amount[0]=0.0;
-  
-  double* comp_size = malloc(sizeof(double)*2);
-  comp_size[0]=0;
-  comp_size[1]=0;
-  
-  SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t)*2);
-  work_list[0] = proc_sender->station;
-  work_list[1] = proc_receiver->station;
-  
-  
-  SD_task_schedule(task_sending, 2, work_list, comp_size, comm_amount, -1);
+  return task_sending;
 }
 
 void create_recv_communication_task(struct infos_socket* recv)

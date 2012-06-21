@@ -9,7 +9,7 @@
 #define PROCESS_IDLE_STATE 1
 #define PROCESS_TASK_FOUND 2
 
-int process_send_call(pid_t pid, int sockfd, int ret);
+void process_send_call(pid_t pid, int sockfd, int ret);
 
 int process_recv_call(pid_t pid, int sockfd, int ret);
 

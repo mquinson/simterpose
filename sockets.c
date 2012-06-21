@@ -385,17 +385,14 @@ int handle_new_receive(int pid, int sockfd, int length)
 
 //if we return 1, this significate that the handler of the task have one now.
 //TODO simplify handling 
-int handle_new_send(struct infos_socket *is,  int length)
+void handle_new_send(struct infos_socket *is,  int length)
 {
-//   printf("Entering handle_new_reception\n");
-
   recv_information* recv = is->recv_info;
   int *size = malloc(sizeof(int));
   *size=length;
 
   xbt_fifo_push(recv->send_fifo, size);
-  return handle_communication_stat(is);
-//   printf("Leaving handle_new_reception\n");
+  //handle_communication_stat(is);
 }
 
 int finish_all_communication(int pid){

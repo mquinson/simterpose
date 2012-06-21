@@ -11,7 +11,8 @@
 #include "simdag/simdag.h"
 
 //TODO test the possibility to remove incomplete checking
-int process_send_call(int pid, int sockfd, int ret)
+//There is no need to return value because send always bring a task
+void process_send_call(int pid, int sockfd, int ret)
 {
 
   if (socket_registered(pid,sockfd) != -1) {
@@ -21,36 +22,24 @@ int process_send_call(int pid, int sockfd, int ret)
     }
     if (!socket_netlink(pid,sockfd))
     {
-      int result;
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = getSocketInfoFromContext(is->ip_local, is->port_local, is->ip_remote, is->port_remote);
+      
       if(s!=NULL)
-	result = handle_new_send(s,  ret);
+        handle_new_send(s,  ret);
       else
-	THROW_IMPOSSIBLE;
-      if(s->communication_receive == -1)
-      {
-	launch_process_idling(s->proc->pid);
-	socket_communication_receive(s);
-      }
+        THROW_IMPOSSIBLE;
 
-      socket_communication_receive(s);
-      insert_trace_comm(pid,sockfd,"send",ret);
-      create_send_communication_task(pid, s, ret);
-	
-      //if result is not null, we have give a task to another processus so one more are assigned
-      if(result)
-      {
-	//--(global_data->not_assigned);
-	return 1;
-      }
+      SD_task_t task = create_send_communication_task(pid, s, ret);
+
+      schedule_comm_task(is->proc->station, s->proc->station, task);
     }
   }
   else 
     THROW_IMPOSSIBLE;
-  return 1;
 }
+
 
 int process_recv_call(int pid, int sockfd, int ret)
 {
@@ -65,7 +54,7 @@ int process_recv_call(int pid, int sockfd, int ret)
       if(handle_new_receive(pid, sockfd, ret))
       {
 // 	if(!process_descriptor_get_idle(pid))
-	return 1;
+        return 1;
       }
     }
   }

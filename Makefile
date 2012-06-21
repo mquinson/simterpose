@@ -34,7 +34,7 @@ process_descriptor.o: process_descriptor.c process_descriptor.h sysdep.h run_tra
 	$(CC) $(CFLAGS) -c $< -o $@
 
 syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h run_trace.h ptrace_utils.h \
-		process_descriptor.h args_trace.h
+		process_descriptor.h args_trace.h task.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 replay.o : replay.c replay.h
