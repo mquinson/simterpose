@@ -302,7 +302,8 @@ int process_handle(pid_t pid, SD_task_t task)
           printf("[%d] sendto( ", pid);
           sockfd=get_args_sendto_recvfrom(pid, 1, ret_trace, &arg);
           printf(" ) = %ld\n", arg.ret);
-          //FIXME   
+          process_send_call(pid, sockfd, arg.ret);
+          return PROCESS_TASK_FOUND;
           break;
           
         case SYS_recvfrom:
@@ -316,7 +317,8 @@ int process_handle(pid_t pid, SD_task_t task)
           printf("[%d] sendmsg( ", pid);
           sockfd=get_args_send_recvmsg(pid, 1, ret_trace, &arg);
           printf(" ) = %ld\n", arg.ret); 
-          //FIXME
+          process_send_call(pid, sockfd, arg.ret);
+          return PROCESS_TASK_FOUND;
           break;
           
         case SYS_recvmsg:
@@ -397,7 +399,8 @@ int process_handle(pid_t pid, SD_task_t task)
               printf("[%d] send( ", pid);
               sockfd=get_args_send_recv(pid, 1, ret_trace, (void *)arg.arg2);
               printf(" ) = %ld\n", arg.ret);
-              //FIXME
+              process_send_call(pid, sockfd, arg.ret);
+              return PROCESS_TASK_FOUND;
               break;
               
             case SYS_recv_32:
@@ -411,7 +414,8 @@ int process_handle(pid_t pid, SD_task_t task)
               printf("[%d] sendto(", pid);
               sockfd=get_args_sendto_recvfrom(pid, 1, ret_trace, (void *)arg.arg2);
               printf(" ) = %ld\n", arg.ret); 
-              //FIXME
+              process_send_call(pid, sockfd, arg.ret);
+              return PROCESS_TASK_FOUND;
               break;
                     
             case SYS_recvfrom_32:
@@ -441,7 +445,8 @@ int process_handle(pid_t pid, SD_task_t task)
               printf("[%d] sendmsg(", pid);
               sockfd=get_args_send_recvmsg(pid, 1, ret_trace, (void *)arg.arg2);
               printf(" ) = %ld\n", ret);
-              //FIXME
+              process_send_call(pid, sockfd, arg.ret);
+              return PROCESS_TASK_FOUND;
               break;
               
             case SYS_recvmsg_32:
