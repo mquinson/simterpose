@@ -34,13 +34,7 @@ int main(int argc, char *argv[]) {
   global_data = malloc(sizeof(simterpose_data_t));
   
   init_global_data();
-  
   init_socket_gestion();
-
-  int status;
-  int stoppedpid;
-
-  int sockfd; 
 
   
   //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre

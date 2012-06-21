@@ -43,79 +43,30 @@ void process_send_call(int pid, int sockfd, int ret)
 
 int process_recv_call(int pid, int sockfd, int ret)
 {
-  printf("Entering process_recv_call %d\n", global_data->not_assigned);
   if (socket_registered(pid,sockfd) != -1) {
     if (socket_incomplete(pid,sockfd)) 
       update_socket(pid,sockfd);
     if (!socket_netlink(pid,sockfd))
     {
       calculate_computation_time(pid);
-      //if handle_new_receive return 1, we have assigned a new task so one processus are assigned
+      
+      //if handle_new_receive return 1, there is a task found
       if(handle_new_receive(pid, sockfd, ret))
-      {
-// 	if(!process_descriptor_get_idle(pid))
-        return 1;
-      }
+        return PROCESS_TASK_FOUND;
+      else
+        return PROCESS_NO_TASK_FOUND;
     }
   }
+  else
+    THROW_IMPOSSIBLE;
+  
   return 0;
 }
 
 int process_fork_call(int pid)
 {
-  printf("New fork\n");
-  unsigned long new_pid;
-  if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &new_pid)==-1) {
-    perror("ptrace geteventmsg");
-    exit(1);
-  }
-//   if(pid == global_data->launcherpid)
-//   {
-    global_data->last_pid_create = new_pid;
-    printf("Creation of pid %lud\n", new_pid);
-    char buff[256];
-    char* tmp= buff;
-    int got;
-    while ((got = read(global_data->launcher_com,tmp,1))>0) {
-      if(*tmp=='\n')
-      {
-	*tmp='\0';
-	break;
-      }
-      else
-	++tmp;
-    }
-    if(got <0)
-    {
-      perror("read");
-      exit(1);
-    }
-    char name[256];
-    double *next = malloc(sizeof(double));
-    sscanf(buff, "%s %lf", name, next);
-
-    global_data->process_desc[new_pid] = process_descriptor_new(name, new_pid);
-    global_data->process_desc[new_pid]->launch_by_launcher = 1;
-    
-    #if defined(DEBUG)
-    print_trace_header(global_data->process_desc[new_pid]->trace);
-    #endif
-    printf("New application launch\n");
-    insert_init_trace(new_pid);
-
-
-    printf("new pid with (v)fork %lu by processus %d\n",new_pid, pid);
-//     if(pid != global_data->launcherpid)
-//       insert_trace_fork_exit(pid, "(v)fork", (int)new_pid);
-    ++global_data->child_amount;
-    return 1;
-//   }
-//   else//This is an application which fork
-//   {
-    insert_trace_fork_exit(pid, "fork", (int)new_pid);
-    ++global_data->child_amount;
-    return 0;
-//   }
+  THROW_UNIMPLEMENTED;
+  return 1;
 }
 
 
@@ -310,7 +261,8 @@ int process_handle(pid_t pid, SD_task_t task)
           printf("[%d] recvfrom( ", pid);
           sockfd=get_args_sendto_recvfrom(pid, 2, ret_trace, &arg);
           printf(" ) = %ld\n",arg.ret);
-          //FIXME
+          if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
+            return PROCESS_TASK_FOUND;
           break;
           
         case SYS_sendmsg:
@@ -325,7 +277,8 @@ int process_handle(pid_t pid, SD_task_t task)
           printf("[%d] recvmsg( ", pid);
           sockfd=get_args_send_recvmsg(pid, 2, ret_trace, &arg);
           printf(" ) = %ld\n",arg.ret);
-          //FIXME
+          if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
+            return PROCESS_TASK_FOUND;
           break;
           
         case SYS_shutdown:
@@ -407,7 +360,8 @@ int process_handle(pid_t pid, SD_task_t task)
               printf("[%d] recv( ", pid);
               sockfd=get_args_send_recv(pid, 2, ret_trace, (void *)arg.arg2);
               printf(" ) = %ld\n", arg.ret);
-              //FIXME
+              if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
+                return PROCESS_TASK_FOUND;
               break;
               
             case SYS_sendto_32:
@@ -422,7 +376,8 @@ int process_handle(pid_t pid, SD_task_t task)
               printf("[%d] recvfrom(", pid);
               sockfd=get_args_sendto_recvfrom(pid, 2, ret_trace, (void *)arg.arg2);
               printf(" ) = %ld\n", arg.ret);
-              //FIXME
+              if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
+                return PROCESS_TASK_FOUND;
               break;
               
             case SYS_shutdown_32:
@@ -453,7 +408,8 @@ int process_handle(pid_t pid, SD_task_t task)
               printf("[%d] recvmsg(", pid);
               sockfd=get_args_send_recvmsg(pid, 2, ret_trace, (void *)arg.arg2);
               printf(" ) = %ld\n", ret);
-              //FIXME
+              if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
+                return PROCESS_TASK_FOUND;
               break;
               
               

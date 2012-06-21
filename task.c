@@ -103,7 +103,7 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   return task_sending;
 }
 
-void create_recv_communication_task(struct infos_socket* recv)
+void task_schedule_receive(struct infos_socket* recv)
 {
   
   printf("ENTERING create_recv_communication_task\n");
@@ -119,22 +119,5 @@ void create_recv_communication_task(struct infos_socket* recv)
   if(proc_receiver->last_computation_task)
     schedule_last_computation_task(proc_receiver->pid, tci->task, "calculation");
 
-  
-  
-  double* comm_amount = malloc(sizeof(double)*4);
-  comm_amount[2]=SD_task_get_amount(tci->task);
-  comm_amount[1]=0.0;
-  comm_amount[3]=0.0;
-  comm_amount[0]=0.0;
-  
-  double* comp_size = malloc(sizeof(double)*2);
-  comp_size[0]=0;
-  comp_size[1]=0;
-  
-  SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t)*2);
-  work_list[0] = proc_sender->station;
-  work_list[1] = proc_receiver->station;
-  
-  
-  SD_task_schedule(tci->task, 2, work_list, comp_size, comm_amount, -1);
+  schedule_comm_task(proc_sender->station, proc_receiver->station, tci->task);
 }

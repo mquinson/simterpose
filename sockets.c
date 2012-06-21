@@ -123,9 +123,6 @@ void get_localaddr_port_socket(pid_t pid, int fd) {
 
 
 void print_infos_socket(struct infos_socket *is) {
-  unsigned int cpt;
-  
- 
   fprintf(stdout,"\n%5s %5s %10s %10s %21s %21s %12s %10s\n","pid","fd","domain","protocol","locale_ip:port","remote_ip:port","incomplete", "closed");
     if(is->proc != NULL){
 
@@ -342,58 +339,70 @@ struct infos_socket* getSocketInfoFromContext(char* ip_remote, int port_remote, 
   return NULL;
 }
 
+//FIXME what happen when there's to sending akwnowledgement in the same turn
+//maybe use an global ghost task which have every recv task in dependencies and use last_computation task mecanism
 int handle_communication_stat(struct infos_socket* is)
 {
+  int result=0;
   int *size = (int*)xbt_fifo_shift(is->recv_info->send_fifo);
   if(size==NULL)
     return 0;
   
+  //if size == -1 , that mean that we start a new recv and we have to make a new task
+  if(*size == -1)
+  {
+//     insert_trace_comm(is->proc->pid, is->fd, "recv", 0);
+    task_schedule_receive(is);
+    free(size);
+    result = 1;
+    size = (int*)xbt_fifo_shift(is->recv_info->send_fifo);
+  }
+  
   if(is->recv_info->quantity_recv < *size)
   {
     xbt_fifo_unshift(is->recv_info->send_fifo, size);
-    return 0;
   }
   else
   {
-    printf("\t\tNew transmission complete %d\n", global_data->not_assigned);
-    insert_trace_comm(is->proc->pid, is->fd, "recv", 0);
     is->recv_info->quantity_recv -= *size;
-    create_recv_communication_task(is);
     free(size);
-    return 1;
+    //til we acknowledge sending, we continue
+    if(is->recv_info->quantity_recv > 0)
+    {
+      result = 1;
+      handle_communication_stat(is);
+    }
   }
-  if(is->recv_info->quantity_recv >0)
-  {
-    handle_communication_stat(is);
-    return 1;
-  }
+  
+  return result;
 }
 
 
 int handle_new_receive(int pid, int sockfd, int length)
 {
-//   printf("Entering handle_new_receive\n");
   struct infos_socket* is = get_infos_socket(pid, sockfd);
 
   recv_information* recv = is->recv_info;
-  
   recv->quantity_recv += length;
   
   return handle_communication_stat(is);
-//   printf("Leaving handle_new_receive\n");
 }
 
-//if we return 1, this significate that the handler of the task have one now.
+
 //TODO simplify handling 
 void handle_new_send(struct infos_socket *is,  int length)
 {
   recv_information* recv = is->recv_info;
   int *size = malloc(sizeof(int));
   *size=length;
+  
+  int *buf = malloc(sizeof(int));
+  *buf=-1;
 
+  xbt_fifo_push(recv->send_fifo, buf);
   xbt_fifo_push(recv->send_fifo, size);
-  //handle_communication_stat(is);
 }
+
 
 int finish_all_communication(int pid){
   
@@ -408,7 +417,7 @@ int finish_all_communication(int pid){
       while(size != NULL)
       {
 	insert_trace_comm(pid, i, "recv", 0);
-	create_recv_communication_task(proc->fd_list[i]);
+	//create_recv_communication_task(proc->fd_list[i]);
 	free(size);
 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
 	result=1;

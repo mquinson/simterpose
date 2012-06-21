@@ -8,6 +8,7 @@
 #define PROCESS_DEAD 0
 #define PROCESS_IDLE_STATE 1
 #define PROCESS_TASK_FOUND 2
+#define PROCESS_NO_TASK_FOUND 3
 
 void process_send_call(pid_t pid, int sockfd, int ret);
 
