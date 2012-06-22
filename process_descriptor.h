@@ -3,8 +3,8 @@
 
 typedef struct process_descriptor process_descriptor;
 
-#include "sysdep.h"
-#include "run_trace.h"
+#include "simdag/simdag.h"
+#include "sockets.h"
 
 struct process_descriptor{
   pid_t pid;

@@ -17,7 +17,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
   result->launch_by_launcher=0;
   result->pid=pid;
-  result->cpu_time=0;
+  result->cpu_time=0; 
   result->syscall_in = 0;
   result->execve_call_before_start=1;
   result->idle=0;
@@ -39,10 +39,6 @@ process_descriptor *process_get_descriptor(pid_t pid)
 
 void process_set_idle(int pid, int idle_state)
 {
-  if(idle_state && !global_data->process_desc[pid]->idle)
-    ++global_data->idle_amount;
-  else if (!idle_state && global_data->process_desc[pid]->idle)
-    --global_data->idle_amount;
   global_data->process_desc[pid]->idle = idle_state;
 }
 

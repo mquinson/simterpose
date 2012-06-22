@@ -15,30 +15,31 @@ run_trace.o: run_trace.c run_trace.h insert_trace.h sysdep.h sockets.h calc_time
 		benchmark.h args_trace.h ptrace_utils.h syscall_process.h replay.h data_utils.h parser.h init.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h ptrace_utils.h
+args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-benchmark.o: benchmark.c benchmark.h sysdep.h calc_times_proc.h 
+benchmark.o: benchmark.c benchmark.h calc_times_proc.h 
 	$(CC) $(CFLAGS) -c $< -o $@
 
-calc_times_proc.o: calc_times_proc.c calc_times_proc.h sysdep.h sockets.h
+calc_times_proc.o: calc_times_proc.c calc_times_proc.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-insert_trace.o: insert_trace.c insert_trace.h sysdep.h sockets.h calc_times_proc.h process_descriptor.h run_trace.h task.h
+insert_trace.o: insert_trace.c insert_trace.h sockets.h calc_times_proc.h process_descriptor.h run_trace.h \
+		task.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 ptrace_utils.o: ptrace_utils.c ptrace_utils.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-process_descriptor.o: process_descriptor.c process_descriptor.h sysdep.h run_trace.h
+process_descriptor.o: process_descriptor.c process_descriptor.h run_trace.h sockets.h data_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h run_trace.h ptrace_utils.h \
 		process_descriptor.h args_trace.h task.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-replay.o : replay.c replay.h
-	$(CC) $(CFLAGS) -c $< -o $@
+#replay.o : replay.c replay.h
+#	$(CC) $(CFLAGS) -c $< -o $@
 
 data_utils.o : data_utils.c data_utils.h run_trace.h sysdep.h process_descriptor.h
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -49,9 +50,11 @@ task.o: task.c task.h run_trace.h data_utils.h sockets.h process_descriptor.h
 parser.o: parser.c parser.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-init.o: init.c init.h parser.h  sysdep.h process_descriptor.h run_trace.h
+init.o: init.c init.h parser.h process_descriptor.h run_trace.h ptrace_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+sockets.o: sockets.c sockets.h run_trace.h sysdep.h task.h insert_trace.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 #################################################
 # launcher section

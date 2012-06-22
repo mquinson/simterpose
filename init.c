@@ -4,7 +4,6 @@
 #include "ptrace_utils.h"
 
 #include <stdio.h>
-#include "sysdep.h"
 
 
 void fprint_array(FILE* file, char** array)
@@ -12,7 +11,6 @@ void fprint_array(FILE* file, char** array)
   int i=0;
   while(array[i]!= NULL)
   {
-    printf("%s ", array[i]);
     fprintf(file, "%s ", array[i]);
     ++i;
   }

@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "sysdep.h"
 #include "calc_times_proc.h"
 
 #define NOMBRE_BOUCLE 10000000
@@ -12,6 +11,7 @@
 
 int start_benchmark(float *flop_per_sec, float* ms_per_flop)
 {
+  srand(time(NULL));
   init_cputime();
   long long int times[3];
   long long int result;
@@ -23,12 +23,14 @@ int start_benchmark(float *flop_per_sec, float* ms_per_flop)
   {
     long long int initialTime = times[1]+times[2];
     int i;
-    float a, b, c;
+    float a = rand()%20;
+    float b = rand()%40;
+    float c = rand()%47;
     for(i=NOMBRE_BOUCLE; i>=0; --i)
     {
       b=(float)(a*c);
       b=(float)(a+c);
-      b=(float)(a-c);
+      b=(float)(a-b);
       b=(float)(a/c);
     }
     ask_time(pid, times);

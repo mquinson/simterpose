@@ -2,7 +2,6 @@
 #define __CALC_TIMES_PROC_H_
 
 #include "sysdep.h"
-#include "sockets.h"
 
 /* gettime.c
  *

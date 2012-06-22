@@ -1,10 +1,7 @@
-#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 
 #include "parser.h"
 #include "xbt.h"

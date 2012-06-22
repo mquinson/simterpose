@@ -117,18 +117,15 @@ int main(int argc, char *argv[]) {
       }
     }
     
-    //printf("Now deal with idle process\n");
-    
     //Now we will run all idle process store in 
     unsigned int cpt=0;
     int* idle_pid = NULL;
     xbt_dynar_foreach(idle_process, cpt, idle_pid)
     {
       int status = process_handle_idle(*idle_pid);
-      if(status != PROCESS_IDLE_STATE) //TODO add real gestion of process death
-      {
+      if(status != PROCESS_IDLE_STATE)
           xbt_dynar_cursor_rm (idle_process, &cpt);
-      }
+
     }
     
     //Now we the next process if the time is come
@@ -137,9 +134,7 @@ int main(int argc, char *argv[]) {
       if(SD_get_clock() == global_data->launching_time[amount_process_launch]->start_time)
       {
         int status = process_handle_active(global_data->launching_time[amount_process_launch]->pid);
-        if(status == PROCESS_DEAD) //TODO add real gestion of process death
-          --global_data->child_amount;
-        else if(status == PROCESS_IDLE_STATE)
+        if(status == PROCESS_IDLE_STATE)
         {
           int *temp = malloc(sizeof(int));
           *temp = global_data->launching_time[amount_process_launch]->pid;

@@ -3,8 +3,6 @@
 
 #include <sys/types.h> //for pid_t
 
-#include "simdag/simdag.h"
-
 #define PROCESS_DEAD 0
 #define PROCESS_IDLE_STATE 1
 #define PROCESS_TASK_FOUND 2

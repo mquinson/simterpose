@@ -1,12 +1,7 @@
 #ifndef __INSERT_TRACE_H_ 
 #define __INSERT_TRACE_H_
 
-#include "sysdep.h"
-#include "sockets.h"
-#include "calc_times_proc.h"
-#include "process_descriptor.h"
-#include "run_trace.h"
-
+#include <sys/types.h>
 
 extern int nb_procs;
 

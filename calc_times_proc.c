@@ -104,13 +104,13 @@ int get_family_id(int sd)
     char buf[256];
   } ans;
 
-  int id = 0, rc;
+  int id = 0/*, rc*/;
   struct nlattr *na;
   int rep_len;
   char name[100];
 
   strcpy(name, TASKSTATS_GENL_NAME);
-  rc = send_cmd(sd, GENL_ID_CTRL, getpid(), CTRL_CMD_GETFAMILY,
+  /*rc = */send_cmd(sd, GENL_ID_CTRL, getpid(), CTRL_CMD_GETFAMILY,
 		CTRL_ATTR_FAMILY_NAME, (void *)name,
 		strlen(TASKSTATS_GENL_NAME)+1);
 
@@ -177,7 +177,7 @@ int ask_time(int tid, long long int* times)
 
   if (msg.n.nlmsg_type == NLMSG_ERROR ||
       !NLMSG_OK((&msg.n), rep_len)) {
-    struct nlmsgerr *err = NLMSG_DATA(&msg);
+//     struct nlmsgerr *err = NLMSG_DATA(&msg);
   fprintf(stderr, "fatal reply error,  errno\n");
   *(int*)0=0;
     return -1;

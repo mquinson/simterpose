@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "sockets.h"
+#include "simdag/simdag.h"
 
 void create_computation_task(pid_t pid, double amount);
 

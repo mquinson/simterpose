@@ -1,7 +1,7 @@
 #ifndef INCLUDE_DATA_UTILS_H
 #define INCLUDE_DATA_UTILS_H
 
-#include "run_trace.h"
+#include <sys/types.h>
 
 void init_global_data();
 

@@ -140,14 +140,14 @@ int process_handle(pid_t pid, int stat)
       {
         if(arg.arg1 == SYS_accept_32)
         {
-          printf("[%d] accept_in( ");
+          printf("[%d] accept_in\n");
           ptrace_resume_process(pid);
           return PROCESS_IDLE_STATE;
         }
 
         else if(arg.arg1 == SYS_recv_32 || arg.arg1 == SYS_recvfrom_32 || arg.arg1 == SYS_recvmsg_32)
         {
-          printf("[%d] recvfrom_in",pid);
+          printf("[%d] recvfrom_in\n",pid);
           ptrace_resume_process(pid);
           return PROCESS_IDLE_STATE;
         }

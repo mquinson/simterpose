@@ -1,7 +1,7 @@
 #ifndef __PEEK_DATA_H 
 #define __PEEK_DATA_H
 
-#include "sysdep.h"
+#include <sys/types.h>
 
 typedef struct{
   unsigned long reg_orig;

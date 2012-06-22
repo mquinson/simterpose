@@ -1,4 +1,5 @@
 #include "ptrace_utils.h"
+#include "sysdep.h"
 
 
 void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) {   

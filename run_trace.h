@@ -1,13 +1,11 @@
 #ifndef INCLUDE_RUN_TRACE_H
 #define INCLUDE_RUN_TRACE_H
 
-#include <stdlib.h>
+#include <sys/types.h>
 
 #define MAX_FD 1024
 #define MAX_PID 32768  
 
-#include "simdag/simdag.h"
-#include "xbt/fifo.h"
 #include "process_descriptor.h"
 
 //For num syscall see 
@@ -47,14 +45,9 @@ typedef struct{
 
 
 struct simterpose_data{
-  double last_clock;
-  int not_assigned;
-  int launcher_com;
   time_desc** launching_time;
-  pid_t last_pid_create;
   process_descriptor *process_desc[MAX_PID];
   int child_amount;
-  int idle_amount;
   float flops_per_second;
   float micro_s_per_flop;
 };
