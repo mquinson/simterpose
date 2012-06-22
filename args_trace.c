@@ -2,32 +2,28 @@
 #include "ptrace_utils.h"
 
 
-void get_args_socket(pid_t child, int sockfd, ...) { 
+void get_args_socket(pid_t child, syscall_arg *arg) { 
 
   //printf("Entering get_args_socket : %d __", sockfd);
+  int sockfd = arg->ret;
   int domain;
   int type;
   int protocol;
-  va_list ap;
-  va_start(ap, sockfd);
 
 #if defined(__x86_64)
 
-  syscall_arg *res = va_arg(ap, syscall_arg *);
-  domain = (int)res->arg1;
-  type = (int)res->arg2;
-  protocol = (int)res->arg3;
+  domain = (int)arg->arg1;
+  type = (int)arg->arg2;
+  protocol = (int)arg->arg3;
 
 #else
 
-  void *addr = va_arg(ap,void*);
+  void *addr = (void *)arg->arg2;
   ptrace_cpy(child,&domain, addr, sizeof(int),"socket");  
   ptrace_cpy(child,&type, addr + sizeof(long), sizeof(int),"socket");  
   ptrace_cpy(child,&protocol, addr + 2* sizeof(long), sizeof(int),"socket");  
 
 #endif
-
-  va_end(ap);
 
   switch (domain) {
   case 0: printf("PF_UNSPEC, "); break;
@@ -87,33 +83,31 @@ void get_args_socket(pid_t child, int sockfd, ...) {
 //   printf("Leaving parsing argument socket\n");
 }
 
-void get_args_bind_connect(pid_t child, int ret, int syscall, ...) {
+void get_args_bind_connect(pid_t child, int syscall, syscall_arg *arg) {
   
   int sockfd;
+  int ret = arg->ret;
   socklen_t addrlen;
   struct sockaddr_in * psai;
   struct sockaddr_un * psau;
   struct sockaddr_nl * psnl;
-  va_list ap;
-  va_start(ap, syscall);
 
 #if defined(__x86_64)
 
-  syscall_arg *res = va_arg(ap, syscall_arg *);
-  sockfd=(int)res->arg1;
+  sockfd=(int)arg->arg1;
   int domain = get_domain_socket(child,sockfd);
   printf("%d, ",sockfd);
-  addrlen=(socklen_t)res->arg3;
+  addrlen=(socklen_t)arg->arg3;
   if (domain == 2) // PF_INET
-    psai=(void *)res->arg2;
+    psai=(void *)arg->arg2;
   if (domain == 1) // PF_UNIX
-    psau=(void *)res->arg2;
+    psau=(void *)arg->arg2;
   if (domain == 16) // PF_NETLINK
-    psnl=(void *)res->arg2;
+    psnl=(void *)arg->arg2;
 
 #else
 
-  void *addr=va_arg(ap,void *);
+  void *addr=(void *)arg.arg2;
   ptrace_cpy(child, &sockfd, addr, sizeof(int),"bind ou connect");
   printf("%d, ",sockfd);
   int domain = get_domain_socket(child,sockfd);
@@ -127,8 +121,6 @@ void get_args_bind_connect(pid_t child, int ret, int syscall, ...) {
   ptrace_cpy(child,&addrlen, addr + 2 * sizeof(long), sizeof(socklen_t),"bind ou connect");
  
 #endif
-
-  va_end(ap);
 
   if (domain == 2 ) {
     struct sockaddr_in sai;
@@ -160,34 +152,32 @@ void get_args_bind_connect(pid_t child, int ret, int syscall, ...) {
 
 }
 
-void get_args_accept(pid_t child, int ret, ...) {
+void get_args_accept(pid_t child, syscall_arg *arg) {
   
   int sockfd;
+  int ret = arg->ret;
   socklen_t addrlen;
   struct sockaddr_in * psai;
   struct sockaddr_un * psau;
   struct sockaddr_nl * psnl;
-  va_list ap;
-  va_start(ap, ret);
 
 #if defined(__x86_64)
 
-  syscall_arg *res = va_arg(ap, syscall_arg *);
-  sockfd=(int)res->arg1;
+  sockfd=(int)arg->arg1;
 
   int domain = get_domain_socket(child,sockfd);
   if (domain == 2) // PF_INET
-    psai=(void *)res->arg2;
+    psai = (void*)arg->arg2;
   if (domain == 1) // PF_UINX
-    psau=(void *)res->arg2;
+    psau = (void*)arg->arg2;
   if (domain == 16) // PF_NETLINK
-    psnl=(void *)res->arg2;
+    psnl = (void*)arg->arg2;
 
-  ptrace_cpy(child,&addrlen,(void *)res->arg3,sizeof(socklen_t),"accept");
+  ptrace_cpy(child,&addrlen, (void*)arg->arg3,sizeof(socklen_t),"accept");
 
 #else
 
-  void *addr=va_arg(ap,void *);
+  void *addr = (void*)arg->arg2;
   ptrace_cpy(child, &sockfd, addr, sizeof(int),"accept");
 
   int domain = get_domain_socket(child,sockfd);
@@ -204,7 +194,6 @@ void get_args_accept(pid_t child, int ret, ...) {
  
 #endif
 
-  va_end(ap);
 
   printf("%d, ",sockfd);
 
@@ -239,22 +228,19 @@ void get_args_accept(pid_t child, int ret, ...) {
   
 }
 
-void get_args_listen(pid_t child, ...) {
+void get_args_listen(pid_t child, syscall_arg *arg) {
   
   int sockfd;
   int backlog;
-  va_list ap;
-  va_start(ap, child);
 
 #if defined(__x86_64)
 
-  syscall_arg *res = va_arg(ap, syscall_arg *);
-  sockfd=(int)res->arg1;
-  backlog=(int)res->arg2;
+  sockfd=(int)arg->arg1;
+  backlog=(int)arg->arg2;
 
 #else
 
-  void *addr= va_arg(ap, void*);
+  void *addr= (void*) arg->arg2;
   ptrace_cpy(child, &sockfd, addr, sizeof(int),"listen");
   ptrace_cpy(child, &backlog, addr + sizeof(long), sizeof(int),"listen");
   
@@ -263,8 +249,6 @@ void get_args_listen(pid_t child, ...) {
   printf("%d, ",sockfd);
   printf("%d ",backlog);
 
-  va_end(ap);
-  
 }
 
 
@@ -302,31 +286,26 @@ void get_flags_recv(int flags) {
   printf(", ");
 }
 
-int get_args_send_recv(pid_t child, int syscall, ...) {
+int get_args_send_recv(pid_t child, int syscall, syscall_arg *arg) {
  
   int sockfd;
   size_t len;
   //int flags;
-  va_list ap;
-  va_start(ap, syscall);
 
 #if defined(__x86_64)
 
-  syscall_arg *res = va_arg(ap, syscall_arg *);
-  sockfd = (int)res->arg1;
-  len = (size_t)res->arg3;
+  sockfd = (int)arg->arg1;
+  len = (size_t)arg->arg3;
   //flags=(int)res->r10;
 
 #else
 
-  void *addr= va_arg(ap,void*);
+  void *addr= (void*)arg->arg2;
   ptrace_cpy(child,&sockfd, addr, sizeof(int),"send ou recv");   
   ptrace_cpy(child,&len, addr + 2 *sizeof(long), sizeof(size_t),"send ou recv");
 //   ptrace_cpy(child,&flags, addr + 3 * sizeof(long), sizeof(int),"send ou recv");
 
 #endif
-
-  va_end(ap);
 
   printf("%d, ",sockfd);
   printf("%d ",(int)len);
@@ -413,15 +392,13 @@ void get_args_select(pid_t child, syscall_arg *r) {
 	 
 }
 
-void get_args_get_setsockopt(pid_t child, int syscall, ...) {
+void get_args_get_setsockopt(pid_t child, int syscall, syscall_arg* arg) {
 
   int sockfd;
   int level;
   int optname;
   //void *optval;
   socklen_t optlen;
-  va_list ap;
-  va_start(ap, syscall);
 
 #if defined(__x86_64)
 
@@ -445,7 +422,7 @@ void get_args_get_setsockopt(pid_t child, int syscall, ...) {
   
 #else
 
-  void *src = va_arg(ap,void *);
+  void *src = (void*)arg->arg2;
   socklen_t *addr_optlen;
   ptrace_cpy(child,&sockfd,src,sizeof(int),"getsockopt ou setsockopt");
   ptrace_cpy(child,&level,src + sizeof(long),sizeof(int),"getsockopt ou setsockopt");
@@ -460,8 +437,6 @@ void get_args_get_setsockopt(pid_t child, int syscall, ...) {
   
 
 #endif
-
-  va_end(ap);
 
   printf("%d, ",sockfd);
 
@@ -509,7 +484,7 @@ void get_args_get_setsockopt(pid_t child, int syscall, ...) {
 
 
 
-int get_args_sendto_recvfrom(pid_t child, int syscall, ...) {
+int get_args_sendto_recvfrom(pid_t child, int syscall, syscall_arg* arg) {
 
   int sockfd;
   int len;
@@ -518,8 +493,6 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, ...) {
   struct sockaddr_in *psai=NULL; 
   struct sockaddr_un *psau=NULL;
   struct sockaddr_nl *psnl=NULL;
-  va_list ap;
-  va_start(ap, syscall);
 
 #if defined(__x86_64)
 
@@ -554,7 +527,7 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, ...) {
 
 #else
   
-  void *src=va_arg(ap,void *);
+  void *src= (void*)arg->arg2;
   ptrace_cpy(child,&sockfd,src,sizeof(int),"sendto ou recvfrom");
   ptrace_cpy(child,&len,src + 2 * sizeof(long), sizeof(size_t),"sendto ou recvfrom");  
   ptrace_cpy(child,&flags,src + 3 * sizeof(long), sizeof(int),"sendto ou recvfrom");
@@ -587,8 +560,6 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, ...) {
       get_flags_recv(flags); 
   } else
     printf("0, ");
-  
-  va_end(ap);
   
   if (domain == 2 ) { // PF_INET
     if (psai != NULL) {
@@ -626,27 +597,24 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, ...) {
  
 }
 
-int get_args_send_recvmsg(pid_t child, int syscall, ...) {
+int get_args_send_recvmsg(pid_t child, int syscall, syscall_arg* arg) {
 
   int sockfd;
   int flags;
   struct msghdr *pmsg;
   struct msghdr msg;
-  
-  va_list ap;
-  va_start(ap, syscall);
+
 
 #if defined(__x86_64)
 
-  syscall_arg *res = va_arg(ap, syscall_arg *);
-  sockfd=(int)res->arg1;
-  flags=(int)res->arg3;
+  sockfd=(int)arg->arg1;
+  flags=(int)arg->arg3;
   pmsg=malloc(sizeof(struct msghdr *));
-  pmsg=(struct msghdr *)res->arg2;
+  pmsg=(struct msghdr *)arg->arg2;
 
 #else
 
-  void *src=va_arg(ap,void *);
+  void *src= (void*)arg->arg2;
   ptrace_cpy(child,&sockfd,src,sizeof(int),"sendmsg ou recvmsg");
 
   memset(ret_trace,0,SIZE_PARAM_TRACE);
@@ -655,8 +623,6 @@ int get_args_send_recvmsg(pid_t child, int syscall, ...) {
   ptrace_cpy(child,&flags,src + 2 * sizeof(long), sizeof(int),"sendmsg ou recvmsg");
  
 #endif
-
-  va_end(ap);
 
   printf("%d, ",sockfd);
 

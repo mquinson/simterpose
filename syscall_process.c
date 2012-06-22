@@ -241,25 +241,25 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_socket: 
           printf("[%d] socket( ",pid);
-          get_args_socket(pid, (int)arg.ret, &arg);
+          get_args_socket(pid, &arg);
           printf(" ) = %ld\n", arg.ret);
           break;
           
         case SYS_bind:
           printf("[%d] bind( ", pid);
-          get_args_bind_connect(pid,(int)arg.ret, 0, &arg);
+          get_args_bind_connect(pid, 0, &arg);
           printf(" ) = %ld\n", arg.ret);
           break;
           
         case SYS_connect:
           printf("[%d] connect( ", pid);
-          get_args_bind_connect(pid, (int)arg.ret, 1, &arg);
+          get_args_bind_connect(pid, 1, &arg);
           printf(" ) = %ld\n", arg.ret);
           break;
           
         case SYS_accept:
           printf("[%d] accept( ", pid);
-          get_args_accept(pid, (int)arg.ret, &arg);
+          get_args_accept(pid, &arg);
           printf(" ) = %ld\n", arg.ret);
           break;
           
@@ -338,19 +338,19 @@ int process_handle(pid_t pid, int stat)
             
             case SYS_socket_32:
               printf("[%d] socket( ", pid);
-              get_args_socket(pid, (int)arg.ret, (void *)arg.arg2, NULL);
+              get_args_socket(pid, &arg);
               printf(" ) = %ld\n", arg.ret);
               break;
               
             case SYS_bind_32:
               printf("[%d] bind( ", pid);
-              get_args_bind_connect(pid, (int)arg.ret, 0, (void *)arg.arg2);
+              get_args_bind_connect(pid, 0, &arg);
               printf(" ) = %ld\n",arg.ret);
               break;
               
             case SYS_connect_32:
               printf("[%d] connect( ", pid);
-              get_args_bind_connect(pid, (int)arg.ret, 1, (void *)arg.arg2);
+              get_args_bind_connect(pid, 1, &arg);
               printf(" ) = %ld\n", arg.ret);
               if (ret<0)
                 printf("%s\n",strerror(-arg.ret));
@@ -358,19 +358,19 @@ int process_handle(pid_t pid, int stat)
                     
             case SYS_listen_32: 
               printf("[%d] listen( ", pid); 
-              get_args_listen(pid, (void *)arg.arg2);
+              get_args_listen(pid, &arg;
               printf(" ) = %ld\n", arg.ret);
               break;
               
             case SYS_accept_32:
               printf("[%d] accept( ", pid);
-              get_args_accept(pid, (int)arg.ret, (void *)arg.arg2);
+              get_args_accept(pid, &arg);
               printf(" ) = %ld\n", arg.ret);
               break;
               
             case SYS_send_32:
               printf("[%d] send( ", pid);
-              sockfd=get_args_send_recv(pid, 1, (void *)arg.arg2);
+              sockfd=get_args_send_recv(pid, 1, &arg);
               printf(" ) = %ld\n", arg.ret);
               process_send_call(pid, sockfd, arg.ret);
               return PROCESS_TASK_FOUND;
@@ -378,7 +378,7 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_recv_32:
               printf("[%d] recv( ", pid);
-              sockfd=get_args_send_recv(pid, 2, (void *)arg.arg2);
+              sockfd=get_args_send_recv(pid, 2, &arg);
               printf(" ) = %ld\n", arg.ret);
               if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
                 return PROCESS_TASK_FOUND;
@@ -386,7 +386,7 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_sendto_32:
               printf("[%d] sendto(", pid);
-              sockfd=get_args_sendto_recvfrom(pid, 1, (void *)arg.arg2);
+              sockfd=get_args_sendto_recvfrom(pid, 1, &arg);
               printf(" ) = %ld\n", arg.ret); 
               process_send_call(pid, sockfd, arg.ret);
               return PROCESS_TASK_FOUND;
@@ -394,7 +394,7 @@ int process_handle(pid_t pid, int stat)
                     
             case SYS_recvfrom_32:
               printf("[%d] recvfrom(", pid);
-              sockfd=get_args_sendto_recvfrom(pid, 2, (void *)arg.arg2);
+              sockfd=get_args_sendto_recvfrom(pid, 2, &arg);
               printf(" ) = %ld\n", arg.ret);
               if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
                 return PROCESS_TASK_FOUND;
@@ -406,19 +406,19 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_setsockopt_32:
               printf("[%d] setsockopt(", pid);
-              get_args_get_setsockopt(pid, 2, (void *)arg.arg2);
+              get_args_get_setsockopt(pid, 2, &arg;
               printf("%d\n", (int)arg.ret);
               break;
               
             case SYS_getsockopt_32:
               printf("[%d] getsockopt(", pid);
-              get_args_get_setsockopt(pid, 1, (void *)arg.arg2);
+              get_args_get_setsockopt(pid, 1, &arg);
               printf("%d\n", (int)arg.ret);
               break;
                     
             case SYS_sendmsg_32:
               printf("[%d] sendmsg(", pid);
-              sockfd=get_args_send_recvmsg(pid, 1, (void *)arg.arg2);
+              sockfd=get_args_send_recvmsg(pid, 1, &arg);
               printf(" ) = %ld\n", ret);
               process_send_call(pid, sockfd, arg.ret);
               return PROCESS_TASK_FOUND;
@@ -426,7 +426,7 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_recvmsg_32:
               printf("[%d] recvmsg(", pid);
-              sockfd=get_args_send_recvmsg(pid, 2, (void *)arg.arg2);
+              sockfd=get_args_send_recvmsg(pid, 2, &arg);
               printf(" ) = %ld\n", ret);
               if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
                 return PROCESS_TASK_FOUND;
