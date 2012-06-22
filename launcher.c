@@ -14,7 +14,6 @@ FILE* comm_sim;
 
 char** get_command_line()
 {
-//   printf("Entering get Commandline\n");
   char* buff = NULL;
   size_t length;
   getline(&buff, &length, comm_sim);
@@ -30,22 +29,15 @@ int main (int argc, char** argv)
   int numero=2;
   char* buff = NULL;
   size_t length=0;
-//   printf("Getting line argument\n");
   getline(&buff, &length, comm_sim);
-  printf("%s\n", buff);
   sscanf(buff, "%d", &numero);
-  //numero =2;
-  
-//   printf("Process to launch : %d \n", numero);
   
   while(numero)
   {
     char** cmd_line = get_command_line();
-//     printf("End get_command_line\n");
     if(fork() == 0)
     {
       fclose(comm_sim);
-      printf("Commandline %s\n", cmd_line[0]);
       if (execv(cmd_line[0], cmd_line)==-1) {
 	perror("execl server");
 	exit(1);

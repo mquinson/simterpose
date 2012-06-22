@@ -70,22 +70,39 @@ int process_fork_call(int pid)
 }
 
 
-
-int process_handle(pid_t pid, SD_task_t task)
+int process_handle_active(pid_t pid)
 {
-  //Tant que les poules ne font pas des gauffres
-  
   int status;
+  ptrace_resume_process(pid);
+  waitpid(pid, &status, 0);
+  
+  return process_handle( pid, status);
+}
+
+
+
+int process_handle_idle(pid_t pid)
+{
+  int status;
+  
+  if(waitpid(pid, &status, WNOHANG))
+    return process_handle( pid, status);
+  else
+    return PROCESS_IDLE_STATE;
+}
+
+
+
+
+int process_handle(pid_t pid, int stat)
+{
+  
+  int status = stat;
   int sockfd;
   char ret_trace[SIZE_PARAM_TRACE]; 
   syscall_arg arg;
   while(1)
   {
-    printf("New loop ");
-    //waitpid sur le fils
-    waitpid(pid, &status, 0);
-    
-    printf("%d \n", pid);
     
     if (WIFEXITED(status)) {
       printf("[%d] Child is dead\n",pid);
@@ -139,7 +156,7 @@ int process_handle(pid_t pid, SD_task_t task)
     }
     else
     {
-      printf("New syscall out\n");
+      process_set_out_syscall(pid);
       ptrace_get_register(pid, &arg);
 
       switch (arg.reg_orig) {
@@ -425,9 +442,11 @@ int process_handle(pid_t pid, SD_task_t task)
           break;
             
       }
-      process_set_out_syscall(pid);
     }
     ptrace_resume_process(pid);
+    
+    //waitpid sur le fils
+    waitpid(pid, &status, 0);
   }
   
   THROW_IMPOSSIBLE; //There's no way to quit the loop

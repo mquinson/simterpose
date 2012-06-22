@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
       //If data is null, we are in presence of a non watch task
       if(data != NULL)
       {
-        int status = process_handle(*data, NULL);
+        int status = process_handle_active(*data);
         if(status == PROCESS_DEAD) //TODO add real gestion of process death
           --global_data->child_amount;
         else if(status == PROCESS_IDLE_STATE)
@@ -122,7 +122,12 @@ int main(int argc, char *argv[]) {
     int* idle_pid;
     xbt_dynar_foreach(idle_process, cpt, idle_pid)
     {
-      //Do handling of idle process here.
+      int status = process_handle_idle(*idle_pid);
+      if(status != PROCESS_IDLE_STATE) //TODO add real gestion of process death
+      {
+          --global_data->child_amount;
+          xbt_dynar_cursor_rm (idle_process, &cpt);
+      }
       //use void        xbt_dynar_cursor_rm (xbt_dynar_t dynar, unsigned int *const cursor) for remove
     }
     
@@ -135,8 +140,7 @@ int main(int argc, char *argv[]) {
     {
       if(SD_get_clock() == global_data->launching_time[amount_process_launch]->start_time)
       {
-        ptrace_resume_process(global_data->launching_time[amount_process_launch]->pid);
-        process_handle(global_data->launching_time[amount_process_launch]->pid, NULL);
+        process_handle_active(global_data->launching_time[amount_process_launch]->pid);
         ++global_data->child_amount;
         ++amount_process_launch;
       }
