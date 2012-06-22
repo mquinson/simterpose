@@ -22,7 +22,7 @@ int calculate_computation_time(int pid)
       //update_walltime_procs(pid,times_syscall[0]);
       process_descriptor* proc = process_get_descriptor(pid);
       double amount = (diff_cpu/global_data->micro_s_per_flop);
-      fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
+      //fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
       create_computation_task(pid, amount);
       return 1;
     }

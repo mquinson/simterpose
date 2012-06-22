@@ -84,7 +84,7 @@ int process_handle_active(pid_t pid)
 int process_handle_idle(pid_t pid)
 {
   int status;
-  
+
   if(waitpid(pid, &status, WNOHANG))
     return process_handle( pid, status);
   else
@@ -120,16 +120,16 @@ int process_handle(pid_t pid, int stat)
       ptrace_get_register(pid, &arg);
 
       #if defined(__x86_64)
-      if(arg.reg_orig == SYS_accept)
+      if(arg.reg_orig == SYS_accept || arg.reg_orig == SYS_connect)
       {
-        printf("[%d] accept_in", pid);
+        printf("[%d] accept_in\n", pid);
         ptrace_resume_process(pid);
         return PROCESS_IDLE_STATE;
       }
 
       else if(arg.reg_orig == SYS_recvfrom || arg.reg_orig == SYS_recvmsg)
       {
-        printf("[%d] recvfrom_in",pid);
+        printf("[%d] recvfrom_in\n",pid);
         ptrace_resume_process(pid);
         return PROCESS_IDLE_STATE;
       }

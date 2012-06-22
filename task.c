@@ -106,7 +106,7 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
 void task_schedule_receive(struct infos_socket* recv)
 {
   
-  printf("ENTERING create_recv_communication_task\n");
+  printf("ENTERING task_schedule_receive\n");
   task_comm_info* tci = xbt_fifo_shift(recv->recv_info->recv_task);
   
   
@@ -120,4 +120,6 @@ void task_schedule_receive(struct infos_socket* recv)
     schedule_last_computation_task(proc_receiver->pid, tci->task, "calculation");
 
   schedule_comm_task(proc_sender->station, proc_receiver->station, tci->task);
+  
+  printf("Leaving task_schedule_receive\n");
 }
