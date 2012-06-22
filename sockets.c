@@ -44,7 +44,6 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   is->port_remote=0;
   is->incomplete=1;
   is->closed=0;
-  is->communication_receive=0;
   
   recv_information* recv = malloc(sizeof(recv_information));
   recv->quantity_recv=0;
@@ -428,24 +427,5 @@ int finish_all_communication(int pid){
     }
   }
   return result;
-}
-
-int is_communication_received(pid_t pid, int sockfd)
-{
-  struct infos_socket* is = get_infos_socket(pid, sockfd);
-  printf("is_communication_received %d\n",is->communication_receive);
-  return (is->communication_receive > 0);
-}
-
-void socket_communication_receive(struct infos_socket *is)
-{
-  ++is->communication_receive;
- // printf("Entering socket_communication_receive %d    %d\n", is->proc->pid, is->communication_receive);
-}
-
-void socket_wait_for_sending(pid_t pid, int sockfd)
-{
-  struct infos_socket* is = get_infos_socket(pid, sockfd);
-  is->communication_receive = -1;
 }
 

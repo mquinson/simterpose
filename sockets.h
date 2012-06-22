@@ -33,7 +33,6 @@ struct infos_socket{
   int port_remote;
   int incomplete;
   int closed;
-  int communication_receive;
 };
 
 void init_socket_gestion();
@@ -45,12 +44,6 @@ void handle_new_send(struct infos_socket *is,  int length);
 int finish_all_communication(int pid);
 
 int handle_communication_stat(struct infos_socket* is);
-
-int is_communication_received(pid_t pid, int sockfd);
-
-void socket_wait_for_sending(pid_t pid, int sockfd);
-
-void socket_communication_receive(struct infos_socket *is);
 
 void register_socket(pid_t pid, int sockfd, int domain, int protocol);
 

@@ -113,8 +113,6 @@ void task_schedule_receive(struct infos_socket* recv)
   process_descriptor *proc_sender = process_get_descriptor(tci->sender_pid);
   process_descriptor *proc_receiver = recv->proc;
   
-  --recv->communication_receive;
-  
   //If we have a computation task in queue, we have to scedule it before doing the other operation
   if(proc_receiver->last_computation_task)
     schedule_last_computation_task(proc_receiver->pid, tci->task, "calculation");

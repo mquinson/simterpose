@@ -2,12 +2,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "xbt.h"
-#include "surf/surfxml_parse.h"
 #include "parser.h"
 
 FILE* comm_sim;
@@ -46,7 +44,8 @@ int main (int argc, char** argv)
     --numero;
   }
   fclose(comm_sim);
-  
-  //TODO see how to avoid non waiting son
+  int status;
+  while(wait(&status) > 0);
+
   return EXIT_SUCCESS;
 }
