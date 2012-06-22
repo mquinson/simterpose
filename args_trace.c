@@ -708,11 +708,3 @@ void get_args_poll(pid_t child, void * src, nfds_t nfds) {
   printf(" ]");
 }
 
-
-
-
-
-
-
-
-

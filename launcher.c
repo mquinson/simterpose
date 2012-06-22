@@ -24,7 +24,7 @@ int main (int argc, char** argv)
 { 
   comm_sim = fdopen(3, "r");
 
-  int numero=2;
+  int numero;
   char* buff = NULL;
   size_t length=0;
   getline(&buff, &length, comm_sim);

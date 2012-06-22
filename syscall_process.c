@@ -255,12 +255,16 @@ int process_handle(pid_t pid, int stat)
           printf("[%d] connect( ", pid);
           get_args_bind_connect(pid, 1, &arg);
           printf(" ) = %ld\n", arg.ret);
+          ptrace_resume_process(pid);
+          return PROCESS_IDLE_STATE;
           break;
           
         case SYS_accept:
           printf("[%d] accept( ", pid);
           get_args_accept(pid, &arg);
           printf(" ) = %ld\n", arg.ret);
+          ptrace_resume_process(pid);
+          return PROCESS_IDLE_STATE;
           break;
           
         case SYS_listen:
@@ -354,6 +358,8 @@ int process_handle(pid_t pid, int stat)
               printf(" ) = %ld\n", arg.ret);
               if (ret<0)
                 printf("%s\n",strerror(-arg.ret));
+              ptrace_resume_process(pid);
+              return PROCESS_IDLE_STATE;
               break;
                     
             case SYS_listen_32: 
@@ -366,6 +372,8 @@ int process_handle(pid_t pid, int stat)
               printf("[%d] accept( ", pid);
               get_args_accept(pid, &arg);
               printf(" ) = %ld\n", arg.ret);
+              ptrace_resume_process(pid);
+              return PROCESS_IDLE_STATE;
               break;
               
             case SYS_send_32:
