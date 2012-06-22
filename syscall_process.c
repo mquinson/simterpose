@@ -99,7 +99,6 @@ int process_handle(pid_t pid, int stat)
   
   int status = stat;
   int sockfd;
-  char ret_trace[SIZE_PARAM_TRACE]; 
   syscall_arg arg;
   while(1)
   {
@@ -272,7 +271,7 @@ int process_handle(pid_t pid, int stat)
               
         case SYS_sendto:
           printf("[%d] sendto( ", pid);
-          sockfd=get_args_sendto_recvfrom(pid, 1, ret_trace, &arg);
+          sockfd=get_args_sendto_recvfrom(pid, 1, &arg);
           printf(" ) = %ld\n", arg.ret);
           process_send_call(pid, sockfd, arg.ret);
           return PROCESS_TASK_FOUND;
@@ -280,7 +279,7 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_recvfrom:
           printf("[%d] recvfrom( ", pid);
-          sockfd=get_args_sendto_recvfrom(pid, 2, ret_trace, &arg);
+          sockfd=get_args_sendto_recvfrom(pid, 2, &arg);
           printf(" ) = %ld\n",arg.ret);
           if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
             return PROCESS_TASK_FOUND;
@@ -288,7 +287,7 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_sendmsg:
           printf("[%d] sendmsg( ", pid);
-          sockfd=get_args_send_recvmsg(pid, 1, ret_trace, &arg);
+          sockfd=get_args_send_recvmsg(pid, 1, &arg);
           printf(" ) = %ld\n", arg.ret); 
           process_send_call(pid, sockfd, arg.ret);
           return PROCESS_TASK_FOUND;
@@ -296,7 +295,7 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_recvmsg:
           printf("[%d] recvmsg( ", pid);
-          sockfd=get_args_send_recvmsg(pid, 2, ret_trace, &arg);
+          sockfd=get_args_send_recvmsg(pid, 2, &arg);
           printf(" ) = %ld\n",arg.ret);
           if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
             return PROCESS_TASK_FOUND;
@@ -371,7 +370,7 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_send_32:
               printf("[%d] send( ", pid);
-              sockfd=get_args_send_recv(pid, 1, ret_trace, (void *)arg.arg2);
+              sockfd=get_args_send_recv(pid, 1, (void *)arg.arg2);
               printf(" ) = %ld\n", arg.ret);
               process_send_call(pid, sockfd, arg.ret);
               return PROCESS_TASK_FOUND;
@@ -379,7 +378,7 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_recv_32:
               printf("[%d] recv( ", pid);
-              sockfd=get_args_send_recv(pid, 2, ret_trace, (void *)arg.arg2);
+              sockfd=get_args_send_recv(pid, 2, (void *)arg.arg2);
               printf(" ) = %ld\n", arg.ret);
               if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
                 return PROCESS_TASK_FOUND;
@@ -387,7 +386,7 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_sendto_32:
               printf("[%d] sendto(", pid);
-              sockfd=get_args_sendto_recvfrom(pid, 1, ret_trace, (void *)arg.arg2);
+              sockfd=get_args_sendto_recvfrom(pid, 1, (void *)arg.arg2);
               printf(" ) = %ld\n", arg.ret); 
               process_send_call(pid, sockfd, arg.ret);
               return PROCESS_TASK_FOUND;
@@ -395,7 +394,7 @@ int process_handle(pid_t pid, int stat)
                     
             case SYS_recvfrom_32:
               printf("[%d] recvfrom(", pid);
-              sockfd=get_args_sendto_recvfrom(pid, 2, ret_trace, (void *)arg.arg2);
+              sockfd=get_args_sendto_recvfrom(pid, 2, (void *)arg.arg2);
               printf(" ) = %ld\n", arg.ret);
               if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
                 return PROCESS_TASK_FOUND;
@@ -419,7 +418,7 @@ int process_handle(pid_t pid, int stat)
                     
             case SYS_sendmsg_32:
               printf("[%d] sendmsg(", pid);
-              sockfd=get_args_send_recvmsg(pid, 1, ret_trace, (void *)arg.arg2);
+              sockfd=get_args_send_recvmsg(pid, 1, (void *)arg.arg2);
               printf(" ) = %ld\n", ret);
               process_send_call(pid, sockfd, arg.ret);
               return PROCESS_TASK_FOUND;
@@ -427,7 +426,7 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_recvmsg_32:
               printf("[%d] recvmsg(", pid);
-              sockfd=get_args_send_recvmsg(pid, 2, ret_trace, (void *)arg.arg2);
+              sockfd=get_args_send_recvmsg(pid, 2, (void *)arg.arg2);
               printf(" ) = %ld\n", ret);
               if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
                 return PROCESS_TASK_FOUND;

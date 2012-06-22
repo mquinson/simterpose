@@ -302,13 +302,13 @@ void get_flags_recv(int flags) {
   printf(", ");
 }
 
-int get_args_send_recv(pid_t child, int syscall, char *ret_trace, ...) {
+int get_args_send_recv(pid_t child, int syscall, ...) {
  
   int sockfd;
   size_t len;
   //int flags;
   va_list ap;
-  va_start(ap, ret_trace);
+  va_start(ap, syscall);
 
 #if defined(__x86_64)
 
@@ -338,8 +338,6 @@ int get_args_send_recv(pid_t child, int syscall, char *ret_trace, ...) {
 //    } else
 //      printf("0, ");
  
-  memset(ret_trace,0,SIZE_PARAM_TRACE);
-  sprintf(ret_trace, "(%d, \"...\", %d)", sockfd, (int)len);
   return sockfd;
 }
 
@@ -511,7 +509,7 @@ void get_args_get_setsockopt(pid_t child, int syscall, ...) {
 
 
 
-int get_args_sendto_recvfrom(pid_t child, int syscall, char *ret_trace, ...) {
+int get_args_sendto_recvfrom(pid_t child, int syscall, ...) {
 
   int sockfd;
   int len;
@@ -521,7 +519,7 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, char *ret_trace, ...) {
   struct sockaddr_un *psau=NULL;
   struct sockaddr_nl *psnl=NULL;
   va_list ap;
-  va_start(ap, ret_trace);
+  va_start(ap, syscall);
 
 #if defined(__x86_64)
 
@@ -597,7 +595,6 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, char *ret_trace, ...) {
       struct sockaddr_in sai;
       ptrace_cpy(child, &sai, (void *)psai, sizeof(struct sockaddr_in),"sendto ou -- recvfrom");
       printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(sai.sin_port),inet_ntoa(sai.sin_addr));
-      sprintf(ret_trace, "(%d, \"...\", %d, {sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, %d)", sockfd, (int) len, ntohs(sai.sin_port),inet_ntoa(sai.sin_addr), (int)addrlen );
      } else
       printf("NULL, ");
   }
@@ -607,7 +604,6 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, char *ret_trace, ...) {
       struct sockaddr_un sau;
       ptrace_cpy(child, &sau, psau, sizeof(struct sockaddr_un),"sendto ou recvfrom");
       printf("{sa_family=AF_UNIX, sun_path=\"%s\"}, ",sau.sun_path);
-      sprintf(ret_trace, "(%d, \"...\", %d, {sa_family=AF_UNIX, sun_path=\"%s\"}, %d)", sockfd, (int) len,sau.sun_path, (int)addrlen );
     } else
       printf("NULL, ");
     
@@ -618,7 +614,6 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, char *ret_trace, ...) {
       struct sockaddr_nl snl;
       ptrace_cpy(child, &snl, psnl, sizeof(struct sockaddr_nl),"sendto ou recvfrom");
       printf("{sa_family=AF_NETLINK, pid=%d, groups=%u}, ",snl.nl_pid,snl.nl_groups);
-      sprintf(ret_trace, "(%d, \"...\", %d, {sa_family=AF_NETLINK, pid=%d, groups=%u}, %d)", sockfd, (int)len, snl.nl_pid,snl.nl_groups, (int)addrlen );
     } else
       printf("NULL, ");
   } else {
@@ -631,7 +626,7 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, char *ret_trace, ...) {
  
 }
 
-int get_args_send_recvmsg(pid_t child, int syscall, char *ret_trace, ...) {
+int get_args_send_recvmsg(pid_t child, int syscall, ...) {
 
   int sockfd;
   int flags;
@@ -639,7 +634,7 @@ int get_args_send_recvmsg(pid_t child, int syscall, char *ret_trace, ...) {
   struct msghdr msg;
   
   va_list ap;
-  va_start(ap, ret_trace);
+  va_start(ap, syscall);
 
 #if defined(__x86_64)
 
@@ -667,7 +662,6 @@ int get_args_send_recvmsg(pid_t child, int syscall, char *ret_trace, ...) {
 
   ptrace_cpy(child, &msg, pmsg, sizeof(struct msghdr),"sendmsg ou recvmsg");  
   printf(", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ",(int)msg.msg_namelen,(int)msg.msg_iovlen,(int)msg.msg_controllen,msg.msg_flags);
-  sprintf(ret_trace, "(%d, {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d})", sockfd,(int)msg.msg_namelen,(int)msg.msg_iovlen,(int)msg.msg_controllen,msg.msg_flags );
 
   if (flags>0) {
     if (syscall == 1)

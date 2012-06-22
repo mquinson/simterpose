@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
   xbt_dynar_t idle_process = xbt_dynar_new(sizeof(int*), NULL);
   
   do{
+//     printf("NEW TURN %lf\n", SD_get_clock());
     //We calculate the time of simulation.
     if(amount_process_launch < parser_get_amount())
       time_to_simulate = global_data->launching_time[amount_process_launch]->start_time - SD_get_clock();
