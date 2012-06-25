@@ -118,6 +118,17 @@ int process_handle(pid_t pid, int stat)
 
       ptrace_get_register(pid, &arg);
 
+      
+      if(arg.reg_orig == SYS_poll)
+      {
+        //If poll is called with timeout, that mean we have an idle process
+//         if(arg.arg3 == -1)
+//         {
+        ptrace_resume_process(pid);
+        return PROCESS_IDLE_STATE;
+//         }
+      }
+      
       #if defined(__x86_64)
       if(arg.reg_orig == SYS_accept || arg.reg_orig == SYS_connect)
       {
