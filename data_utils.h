@@ -13,4 +13,6 @@ pid_t pop_next_pid();
 
 double get_next_start_time();
 
+void add_launching_time(pid_t pid, double start_time);
+
 #endif

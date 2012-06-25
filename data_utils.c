@@ -51,5 +51,12 @@ pid_t pop_next_pid()
   return res;
 }
 
-
+void add_launching_time(pid_t pid, double start_time)
+{
+  time_desc* t = malloc(sizeof(time_desc));
+  t->pid = pid;
+  t->start_time = start_time;
+  
+  xbt_dynar_push(global_data->launching_time, &t);
+}
 

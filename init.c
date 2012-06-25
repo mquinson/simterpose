@@ -3,6 +3,7 @@
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
 #include "xbt.h"
+#include "data_utils.h"
 
 #include <stdio.h>
 
@@ -138,11 +139,7 @@ void init_all_process()
       run_until_exec(new_pid);
       process_set_in_syscall(new_pid);
       
-      time_desc* t = malloc(sizeof(time_desc));
-      t->pid = new_pid;
-      t->start_time = parser_get_start_time(amount_process_launch);
-      
-      xbt_dynar_push(global_data->launching_time, &t);
+      add_launching_time(new_pid, parser_get_start_time(amount_process_launch));
       
       ++amount_process_launch;
     }

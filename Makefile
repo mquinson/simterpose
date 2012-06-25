@@ -50,7 +50,7 @@ task.o: task.c task.h run_trace.h data_utils.h sockets.h process_descriptor.h
 parser.o: parser.c parser.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-init.o: init.c init.h parser.h process_descriptor.h run_trace.h ptrace_utils.h
+init.o: init.c init.h parser.h process_descriptor.h run_trace.h ptrace_utils.h data_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 sockets.o: sockets.c sockets.h run_trace.h sysdep.h task.h insert_trace.h
