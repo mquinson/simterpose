@@ -2,13 +2,14 @@
 #include "data_utils.h"
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
+#include "xbt.h"
 
 void init_global_data()
 {
   global_data->child_amount = 0;
   global_data->flops_per_second = 0.0;
   global_data->micro_s_per_flop = 0.0;
-  global_data->launching_time = NULL;
+  global_data->launching_time = xbt_dynar_new(sizeof(time_desc*), NULL);
   
   int i;
   for(i=0; i<MAX_PID; ++i)
@@ -29,6 +30,25 @@ void launch_process_idling(pid_t pid)
 {
   process_set_idle(pid, 0);
   ptrace_resume_process(pid);
+}
+
+
+double get_next_start_time()
+{
+  if(xbt_dynar_is_empty(global_data->launching_time))
+    return -1;
+  
+  time_desc** t = (time_desc**)xbt_dynar_get_ptr(global_data->launching_time, 0);
+  return (*t)->start_time;
+}
+
+pid_t pop_next_pid()
+{
+  time_desc* t = NULL;
+  xbt_dynar_shift(global_data->launching_time, &t);
+  int res = t->pid;
+  free(t);
+  return res;
 }
 
 

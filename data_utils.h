@@ -9,4 +9,8 @@ double update_simulation_clock();
 
 void launch_process_idling(pid_t pid);
 
+pid_t pop_next_pid();
+
+double get_next_start_time();
+
 #endif

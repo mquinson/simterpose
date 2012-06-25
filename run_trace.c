@@ -89,13 +89,9 @@ int main(int argc, char *argv[]) {
   do{
 //     printf("NEW TURN %lf\n", SD_get_clock());
     //We calculate the time of simulation.
-    if(amount_process_launch < parser_get_amount())
-      time_to_simulate = global_data->launching_time[amount_process_launch]->start_time - SD_get_clock();
-    else
-      time_to_simulate=-1;
+    time_to_simulate= get_next_start_time();
     
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
-    
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
@@ -132,13 +128,15 @@ int main(int argc, char *argv[]) {
     //Now we the next process if the time is come
     if(amount_process_launch < parser_get_amount())
     {
-      if(SD_get_clock() == global_data->launching_time[amount_process_launch]->start_time)
+      if(SD_get_clock() == get_next_start_time())
       {
-        int status = process_handle_active(global_data->launching_time[amount_process_launch]->pid);
+        printf("Starting new process\n");
+        int temp_pid = pop_next_pid();
+        int status = process_handle_active(temp_pid);
         if(status == PROCESS_IDLE_STATE)
         {
           int *temp = malloc(sizeof(int));
-          *temp = global_data->launching_time[amount_process_launch]->pid;
+          *temp = temp_pid;
           xbt_dynar_push(idle_process, &temp);
         }
         ++global_data->child_amount;

@@ -7,6 +7,7 @@
 #define MAX_PID 32768  
 
 #include "process_descriptor.h"
+#include "xbt.h"
 
 //For num syscall see 
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
@@ -45,7 +46,7 @@ typedef struct{
 
 
 struct simterpose_data{
-  time_desc** launching_time;
+  xbt_dynar_t launching_time;
   process_descriptor *process_desc[MAX_PID];
   int child_amount;
   float flops_per_second;

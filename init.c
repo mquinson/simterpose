@@ -2,6 +2,7 @@
 #include "run_trace.h"
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
+#include "xbt.h"
 
 #include <stdio.h>
 
@@ -104,9 +105,6 @@ void init_all_process()
     int amount_process_launch = 0;
     int amount = parser_get_amount();
     
-    //We initialise launching time array
-    global_data->launching_time = malloc(sizeof(time_desc*)*amount);
-    
     //We write the amount of process to launch for the launcher
     fprintf(launcher_pipe, "%d\n", amount);
     fflush(launcher_pipe);
@@ -144,7 +142,7 @@ void init_all_process()
       t->pid = new_pid;
       t->start_time = parser_get_start_time(amount_process_launch);
       
-      global_data->launching_time[amount_process_launch] = t;
+      xbt_dynar_push(global_data->launching_time, &t);
       
       ++amount_process_launch;
     }

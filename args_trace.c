@@ -695,7 +695,7 @@ void disp_pollfd(struct pollfd fds[], int nfds) {
 }
 
 void get_args_poll(pid_t child, void * src, nfds_t nfds) {
-
+  //TODO modify to found time_out
   struct pollfd fds[nfds];
   int nbfds=nfds;
   printf("[%d] poll([ ",child);
