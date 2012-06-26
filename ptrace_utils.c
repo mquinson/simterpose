@@ -60,6 +60,47 @@ void ptrace_get_register(const pid_t pid, syscall_arg* arg)
   #endif
 }
 
+void ptrace_set_register(const pid_t pid)
+{
+  struct user_regs_struct regs;
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+  //regs.rax=184;
+  regs.orig_rax = 184;
+  printf("eip = %lu\n", regs.rip);
+  
+  
+  if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+
+}
+
+void ptrace_rewind_syscalls(const pid_t pid)
+{
+  struct user_regs_struct regs;
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+
+  regs.rax = regs.orig_rax;
+  regs.rip -= 2;
+  printf("eip = %lu (%lu)\n", regs.rip, regs.rax);
+  
+  
+  if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+  
+}
+
 unsigned long ptrace_get_pid_fork(const pid_t pid)
 {
   unsigned long new_pid;

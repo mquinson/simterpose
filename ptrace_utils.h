@@ -22,6 +22,10 @@ void ptrace_get_register(const pid_t pid, syscall_arg* arg);
 
 unsigned long ptrace_get_pid_fork(const pid_t pid);
 
+void ptrace_set_register(const pid_t pid);
+
+void ptrace_rewind_syscalls(const pid_t pid);
+
 
 #endif
 
