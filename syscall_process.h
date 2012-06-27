@@ -4,9 +4,10 @@
 #include <sys/types.h> //for pid_t
 
 #define PROCESS_DEAD 0
-#define PROCESS_IDLE_STATE 1
-#define PROCESS_TASK_FOUND 2
-#define PROCESS_NO_TASK_FOUND 3
+#define PROCESS_GROUP_DEAD 1
+#define PROCESS_IDLE_STATE 2
+#define PROCESS_TASK_FOUND 3
+#define PROCESS_NO_TASK_FOUND 4
 
 void process_send_call(pid_t pid, int sockfd, int ret);
 
