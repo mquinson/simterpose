@@ -4,6 +4,7 @@
 #include "simdag/simdag.h"
 
 #include <stdlib.h>
+#include <sched.h> /* For clone flags*/
 
 
 process_descriptor *process_descriptor_new(char* name, pid_t pid)
@@ -15,11 +16,10 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
 //   strcat(buff, ".txt");
 //   result->trace = fopen(buff, "w");
   result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
-  result->launch_by_launcher=0;
   result->pid=pid;
+  result->pid = pid; //By default, we consider that process is the first of this pgid
   result->cpu_time=0; 
   result->syscall_in = 0;
-  result->execve_call_before_start=1;
   result->idle=0;
   result->last_computation_task = NULL;
   int i;
@@ -95,9 +95,7 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
   result->pid=new_pid;
   result->cpu_time=0;
   result->syscall_in = 0;
-  result->execve_call_before_start=1;
   result->idle=0;
-  result->launch_by_launcher=0;
   result->last_computation_task = NULL;
   int i;
   for(i=0; i<MAX_FD ; ++i)
@@ -106,6 +104,39 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
   result->station = forked->station;
   
   global_data->process_desc[new_pid] = result;
+}
+
+//For detail on clone flags report to man clone
+void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
+{
+  process_descriptor* result = malloc(sizeof(process_descriptor));
+  process_descriptor* cloned = process_get_descriptor(pid_cloned);
+  
+  result->pid=new_pid;
+  result->cpu_time=0;
+  result->syscall_in = 0;
+  result->idle=0;
+  result->last_computation_task = NULL;
+  result->station = cloned->station;
+  
+  //Now we handle flags option to do the right cloning
+  
+  if(flags & CLONE_VFORK)
+    THROW_UNIMPLEMENTED;
+  
+  if(flags & CLONE_THREAD)
+    result->tgid = cloned->tgid;
+
+  //if clone files flags is set, we have to share the fd_list
+  if(flags & CLONE_FILES)
+    result->fd_list = cloned->fd_list;
+  else
+  {
+    result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
+    int i;
+    for(i=0; i<MAX_FD ; ++i)
+      result->fd_list[i]=NULL;
+  }
 }
 
 

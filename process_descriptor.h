@@ -8,8 +8,7 @@ typedef struct process_descriptor process_descriptor;
 
 struct process_descriptor{
   pid_t pid;
-  int launch_by_launcher;
-  int execve_call_before_start;
+  pid_t tgid;
   int idle;
   int syscall_in;
   long long int cpu_time;
@@ -44,5 +43,7 @@ int process_in_syscall(pid_t pid);
 void process_set_in_syscall(pid_t pid);
 
 void process_set_out_syscall(pid_t pid);
+
+void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags);
 
 #endif
