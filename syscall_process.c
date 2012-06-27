@@ -103,16 +103,11 @@ int process_handle(pid_t pid, int stat)
   while(1)
   {
     
-    if (WIFEXITED(status)) {
-      printf("[%d] Child is dead\n",pid);
-      return PROCESS_DEAD;
-    }
-    
     int stat16=status >> 16;
     if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
       THROW_UNIMPLEMENTED; //For now fork and clone are not handle by simterpose.
     } 
-    
+
     if (process_in_syscall(pid)==0) {
       process_set_in_syscall(pid);
 
@@ -121,12 +116,20 @@ int process_handle(pid_t pid, int stat)
       
       if(arg.reg_orig == SYS_poll)
       {
-        //If poll is called with timeout, that mean we have an idle process
-//         if(arg.arg3 == -1)
-//         {
+        ptrace_set_register(pid);
         ptrace_resume_process(pid);
         return PROCESS_IDLE_STATE;
-//         }
+      }
+      
+      if(arg.reg_orig == SYS_exit_group)
+      {
+        printf("[%d] exit_group(%ld) called \n",pid, arg.arg1);
+        return PROCESS_DEAD;
+      }
+      if(arg.reg_orig == SYS_exit)
+      {
+        printf("[%d] exit(%ld) called \n", pid, arg.arg1);
+        return PROCESS_DEAD;
       }
       
       #if defined(__x86_64)
@@ -226,16 +229,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_dup2:
           printf("[%d] dup2(%ld, %ld) = %ld\n", pid, arg.arg1, arg.arg2, arg.ret);
           THROW_UNIMPLEMENTED; //Dup are not handle yet
-          break;
-          
-        case SYS_exit_group:
-          printf("[%d] exit_group(%ld) called \n",pid, arg.arg1);
-          //insert_trace_fork_exit(pid,"exit_group", (int)arg.arg1);
-          break;
-          
-        case SYS_exit:
-          printf("[%d] exit(%ld) called \n", pid, arg.arg1);
-          //insert_trace_fork_exit(pid,"exit",(int)arg.arg1);
           break;
           
         case SYS_execve:

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <poll.h>
 
 #define SERV_PORT 2227
 
@@ -56,6 +57,12 @@ int main(){
 	printf("Attente demande de connexion\n");
 	int clilen=sizeof(struct sockaddr_in);
 	struct sockaddr_in *cli_addr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+        
+//         struct pollfd ld = {serverSocket, POLLIN, 0};
+//         int temp;
+//         while((temp = poll(&ld, 1, 100)) != 1);
+//         
+//         printf("End of pool : %d\n", temp);
 	if((client_socket=accept(serverSocket, (struct sockaddr *)cli_addr,(socklen_t *)&clilen)) < 0){
 	  perror("error accept");
 	  exit(1);
