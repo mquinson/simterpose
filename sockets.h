@@ -35,6 +35,8 @@ struct infos_socket{
   int closed;
 };
 
+recv_information* recv_information_new();
+
 void init_socket_gestion();
 
 int handle_new_receive(int pid, int sockfd, int length);
@@ -71,6 +73,6 @@ int socket_closed(pid_t pid, int fd);
 
 int socket_netlink(pid_t pid, int fd);
 
-struct infos_socket* getSocketInfoFromContext(char* remote_ip, int remote_port, char* locale_ip, int locale_port);
+struct infos_socket* getSocketInfoFromContext(char* locale_ip, int locale_port);
 
 #endif

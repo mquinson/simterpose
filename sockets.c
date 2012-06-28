@@ -18,7 +18,17 @@ void print_infos_socket(struct infos_socket *is);
 
 void init_socket_gestion()
 {
-   all_sockets = xbt_dynar_new(sizeof(struct infos_socket*), NULL);
+  all_sockets = xbt_dynar_new(sizeof(struct infos_socket*), NULL);
+}
+
+recv_information* recv_information_new()
+{
+  recv_information* res = malloc(sizeof(recv_information));
+  res->quantity_recv=0;
+  res->send_fifo = xbt_fifo_new();
+  res->recv_task = xbt_fifo_new();
+  
+  return res;
 }
 
 void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
@@ -45,11 +55,7 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   is->incomplete=1;
   is->closed=0;
   
-  recv_information* recv = malloc(sizeof(recv_information));
-  recv->quantity_recv=0;
-  recv->send_fifo = xbt_fifo_new();
-  recv->recv_task = xbt_fifo_new();
-  is->recv_info = recv;
+  is->recv_info = recv_information_new();
 
   xbt_dynar_push(all_sockets, &is);
 }
@@ -322,16 +328,15 @@ int socket_netlink(pid_t pid, int fd) {
 }
 
 
-struct infos_socket* getSocketInfoFromContext(char* ip_remote, int port_remote, char* ip_local, int port_local)
+struct infos_socket* getSocketInfoFromContext(char* ip_local, int port_local)
 {
   struct infos_socket* temp_is;
   unsigned int cpt=0;
+  
   xbt_dynar_foreach(all_sockets, cpt, temp_is){
     print_infos_socket(temp_is);
-    if ((strcmp(temp_is->ip_remote,ip_remote)==0) 
-      && (temp_is->port_remote==port_remote)
-      && (strcmp(temp_is->ip_local,ip_local)==0) 
-      && (temp_is->port_local==port_local)){
+    if (strcmp(temp_is->ip_local,ip_local)==0  && (temp_is->port_local==port_local))
+    {
       return temp_is;
     }
   }

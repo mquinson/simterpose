@@ -26,7 +26,7 @@ void process_send_call(int pid, int sockfd, int ret)
     {
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
-      struct infos_socket *s = getSocketInfoFromContext(is->ip_local, is->port_local, is->ip_remote, is->port_remote);
+      struct infos_socket *s = getSocketInfoFromContext(is->ip_remote, is->port_remote);
       
       if(s!=NULL)
         handle_new_send(s,  ret);
@@ -91,7 +91,6 @@ int process_handle_active(pid_t pid)
 int process_handle_idle(pid_t pid)
 {
   int status;
-  printf("Handling idle %d\n", pid);
   if(waitpid(pid, &status, WNOHANG))
     return process_handle( pid, status);
   else

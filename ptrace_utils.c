@@ -42,7 +42,7 @@ void ptrace_get_register(const pid_t pid, syscall_arg* arg)
   struct user_regs_struct regs;
   int r;
   
-  printf("getregs of pid %d\n", pid);
+//   printf("getregs of pid %d\n", pid);
   
   if (( r = ptrace(PTRACE_GETREGS, pid,NULL, &regs)) == -1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
