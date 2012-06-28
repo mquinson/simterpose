@@ -2,6 +2,7 @@
 #include "insert_trace.h"
 #include "xbt.h"
 #include "task.h"
+#include "sysdep.h"
 
 #define LOCAL 1
 #define REMOTE 2
@@ -48,8 +49,8 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   is->proc=proc;
   is->domain=domain;
   is->protocol=protocol;
-  is->ip_local=strdup("");
-  is->ip_remote=strdup("");
+  is->ip_local=-1;
+  is->ip_remote=-1;
   is->port_local=0;
   is->port_remote=0;
   is->incomplete=1;
@@ -109,7 +110,8 @@ void update_socket(pid_t pid, int fd) {
 
 void set_localaddr_port_socket(pid_t pid, int fd, char *ip, int port) {
   struct infos_socket* is = get_infos_socket(pid, fd);
-  is->ip_local = strdup(ip);
+  struct in_addr t;
+  is->ip_local = inet_aton(ip, &t);
   is->port_local = port;
   print_infos_socket(is);
 }
@@ -129,20 +131,20 @@ void get_localaddr_port_socket(pid_t pid, int fd) {
 
 void print_infos_socket(struct infos_socket *is) {
   fprintf(stdout,"\n%5s %5s %10s %10s %21s %21s %12s %10s\n","pid","fd","domain","protocol","locale_ip:port","remote_ip:port","incomplete", "closed");
-    if(is->proc != NULL){
+    if(is->proc != NULL){}
 
-  fprintf(stdout,"%5d %5d %10d %10d %15s:%5d %15s:%5d %12d %10d\n",
-	  is->proc->pid,
-	  is->fd,
-	  is->domain,
-	  is->protocol,
-	  is->ip_local,
-	  is->port_local,
-	  is->ip_remote,
-	  is->port_remote,
-	  is->incomplete,
-	  is->closed);
-  }
+//   fprintf(stdout,"%5d %5d %10d %10d %15s:%5d %15s:%5d %12d %10d\n",
+// 	  is->proc->pid,
+// 	  is->fd,
+// 	  is->domain,
+// 	  is->protocol,
+// 	  is->ip_local,
+// 	  is->port_local,
+// 	  is->ip_remote,
+// 	  is->port_remote,
+// 	  is->incomplete,
+// 	  is->closed);
+//   }
 }
 
 #define INODE_OFFSET 91
@@ -231,10 +233,10 @@ int get_addr_port_sock(pid_t pid, int fd, int addr_type) {
 
   if (res==1) {
     if (addr_type==LOCAL) { // locale
-      is->ip_local=strdup(inet_ntoa(addr_port.sin_addr));
+      is->ip_local= addr_port.sin_addr.s_addr;
       is->port_local = addr_port.sin_port;
     } else { // remote
-      is->ip_remote=strdup(inet_ntoa(addr_port.sin_addr));
+      is->ip_remote=addr_port.sin_addr.s_addr;
       is->port_remote = addr_port.sin_port;
     }
   }
@@ -275,9 +277,9 @@ int get_pid_socket_dest(struct infos_socket *is) {
   unsigned int cpt=0;
   
   xbt_dynar_foreach(all_sockets, cpt, temp_is){
-    if ((strcmp(temp_is->ip_remote,is->ip_local)==0) 
+    if ((temp_is->ip_remote == is->ip_local) 
       && (temp_is->port_remote==is->port_local)
-      && (strcmp(temp_is->ip_local,is->ip_remote)==0) 
+      && (temp_is->ip_local == is->ip_remote) 
       && (temp_is->port_local==is->port_remote))
       return temp_is->proc->pid;
   }
@@ -328,14 +330,14 @@ int socket_netlink(pid_t pid, int fd) {
 }
 
 
-struct infos_socket* getSocketInfoFromContext(char* ip_local, int port_local)
+struct infos_socket* getSocketInfoFromContext(unsigned int ip_local, int port_local)
 {
   struct infos_socket* temp_is;
   unsigned int cpt=0;
   
   xbt_dynar_foreach(all_sockets, cpt, temp_is){
     print_infos_socket(temp_is);
-    if (strcmp(temp_is->ip_local,ip_local)==0  && (temp_is->port_local==port_local))
+    if ((temp_is->ip_local == ip_local) && (temp_is->port_local==port_local))
     {
       return temp_is;
     }

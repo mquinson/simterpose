@@ -27,9 +27,9 @@ struct infos_socket{
   int fd;
   int domain;
   int protocol;
-  char *ip_local;
+  unsigned int ip_local;
   int port_local;
-  char *ip_remote;
+  unsigned int ip_remote;
   int port_remote;
   int incomplete;
   int closed;
@@ -73,6 +73,6 @@ int socket_closed(pid_t pid, int fd);
 
 int socket_netlink(pid_t pid, int fd);
 
-struct infos_socket* getSocketInfoFromContext(char* locale_ip, int locale_port);
+struct infos_socket* getSocketInfoFromContext(unsigned int locale_ip, int locale_port);
 
 #endif
