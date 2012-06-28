@@ -10,6 +10,8 @@
 #include "xbt.h"
 #include "simdag/simdag.h"
 
+#include <linux/futex.h>
+
 //TODO test the possibility to remove incomplete checking
 //There is no need to return value because send always bring a task
 void process_send_call(int pid, int sockfd, int ret)
@@ -74,7 +76,12 @@ int process_handle_active(pid_t pid)
 {
   int status;
   ptrace_resume_process(pid);
-  waitpid(pid, &status, 0);
+
+  if(waitpid(pid, &status, 0) < 0)
+  {
+    fprintf(stderr, " [%d] waitpid %s %d\n", pid, strerror(errno), errno);
+    exit(1);
+  }
   
   return process_handle( pid, status);
 }
@@ -84,35 +91,56 @@ int process_handle_active(pid_t pid)
 int process_handle_idle(pid_t pid)
 {
   int status;
-
+  printf("Handling idle %d\n", pid);
   if(waitpid(pid, &status, WNOHANG))
     return process_handle( pid, status);
   else
     return PROCESS_IDLE_STATE;
 }
 
+int process_clone_call(pid_t pid, syscall_arg *arg)
+{
+  unsigned long tid = arg->ret;
+  unsigned long flags = arg->arg1;
+  
+  //Now create new process in model
+  process_clone(tid, pid, flags);
+  
+  //Now add it to the launching time table to be the next process to be launch
+  set_next_launchment(tid);
+  
+  int status;
+  
+  //wait for clone
+  waitpid(tid, &status, 0);
+  ptrace_resume_process(tid);
+  //place process to te first call after clone
+  waitpid(tid, &status, 0);
+  process_set_in_syscall(tid);
+  
+  return 0;
+}
 
 
 
 int process_handle(pid_t pid, int stat)
-{
-  
+{  
   int status = stat;
   int sockfd;
   syscall_arg arg;
   while(1)
   {
     
-    int stat16=status >> 16;
+   /* int stat16=status >> 16;
     if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
       THROW_UNIMPLEMENTED; //For now fork and clone are not handle by simterpose.
-    } 
+    }*/ 
 
     if (process_in_syscall(pid)==0) {
+      
       process_set_in_syscall(pid);
 
       ptrace_get_register(pid, &arg);
-
       
       if(arg.reg_orig == SYS_poll)
       {
@@ -130,6 +158,17 @@ int process_handle(pid_t pid, int stat)
       {
         printf("[%d] exit(%ld) called \n", pid, arg.arg1);
         return PROCESS_DEAD;
+      }
+      
+      if(arg.reg_orig == SYS_futex)
+      {
+        printf("[%d] futex_in %p %d\n", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
+        //TODO add real gestion of timeout
+        if(arg.arg2 == FUTEX_WAIT)
+        {
+          ptrace_resume_process(pid);
+          return PROCESS_IDLE_STATE;
+        }
       }
       
       #if defined(__x86_64)
@@ -173,6 +212,7 @@ int process_handle(pid_t pid, int stat)
       ptrace_get_register(pid, &arg);
 
       switch (arg.reg_orig) {
+        
         case SYS_write:
           printf("[%d] write(%ld, ... , %d) = %ld\n",pid, arg.arg1,(int)arg.arg3, arg.ret);
           if (socket_registered(pid, arg.arg1) != -1) {
@@ -212,8 +252,14 @@ int process_handle(pid_t pid, int stat)
         break;
         
         case SYS_clone:
-          printf("[%d] clone\n",pid);
-          THROW_UNIMPLEMENTED; //Clone are not handle yet
+          THROW_UNIMPLEMENTED;
+          if(arg.ret < MAX_PID)
+          {
+            process_clone_call(pid, &arg);
+            return PROCESS_IDLE_STATE;
+          }
+          else
+            process_set_in_syscall(pid);
           break;
           
         case SYS_close: 
@@ -458,6 +504,7 @@ int process_handle(pid_t pid, int stat)
     
     //waitpid sur le fils
     waitpid(pid, &status, 0);
+    //printf("tempppid = %d\n", temppid);
   }
   
   THROW_IMPOSSIBLE; //There's no way to quit the loop

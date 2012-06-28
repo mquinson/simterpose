@@ -1,6 +1,6 @@
 #include "ptrace_utils.h"
 #include "sysdep.h"
-
+#include "xbt.h"
 
 void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) {   
 
@@ -22,7 +22,8 @@ void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) 
 void ptrace_resume_process(const pid_t pid)
 {
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
-    perror("ptrace syscall");
+    fprintf(stderr, " [%d] ptrace syscall %s\n", pid, strerror(errno));
+    THROW_IMPOSSIBLE;
     exit(1);
   }
 }
@@ -39,9 +40,12 @@ void ptrace_detach_process(const pid_t pid)
 void ptrace_get_register(const pid_t pid, syscall_arg* arg)
 {
   struct user_regs_struct regs;
+  int r;
   
-  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
+  printf("getregs of pid %d\n", pid);
+  
+  if (( r = ptrace(PTRACE_GETREGS, pid,NULL, &regs)) == -1) {
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
     exit(1);
   }
   /* ---- test archi for registers ---- */
@@ -51,6 +55,7 @@ void ptrace_get_register(const pid_t pid, syscall_arg* arg)
   arg->arg1=regs.rdi;
   arg->arg2=regs.rsi;
   arg->arg3=regs.rdx;
+  arg->arg4=regs.r8;
   #elif defined(i386)
   arg->reg_orig=regs.orig_eax;
   arg->ret=regs.eax;

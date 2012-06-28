@@ -340,7 +340,7 @@ struct infos_socket* getSocketInfoFromContext(char* ip_remote, int port_remote, 
 
 //FIXME what happen when there's to sending akwnowledgement in the same turn
 //maybe use an global ghost task which have every recv task in dependencies and use last_computation task mecanism
-int handle_communication_stat(struct infos_socket* is)
+int handle_communication_stat(struct infos_socket* is, pid_t pid)
 {
   int result=0;
   int *size = (int*)xbt_fifo_shift(is->recv_info->send_fifo);
@@ -351,7 +351,7 @@ int handle_communication_stat(struct infos_socket* is)
   if(*size == -1)
   {
 //     insert_trace_comm(is->proc->pid, is->fd, "recv", 0);
-    task_schedule_receive(is);
+    task_schedule_receive(is, pid);
     free(size);
     result = 1;
     size = (int*)xbt_fifo_shift(is->recv_info->send_fifo);
@@ -369,7 +369,7 @@ int handle_communication_stat(struct infos_socket* is)
     if(is->recv_info->quantity_recv > 0)
     {
       result = 1;
-      handle_communication_stat(is);
+      handle_communication_stat(is, pid);
     }
   }
   
@@ -384,7 +384,7 @@ int handle_new_receive(int pid, int sockfd, int length)
   recv_information* recv = is->recv_info;
   recv->quantity_recv += length;
   
-  return handle_communication_stat(is);
+  return handle_communication_stat(is, pid);
 }
 
 

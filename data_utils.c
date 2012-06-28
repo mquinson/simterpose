@@ -3,6 +3,7 @@
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
 #include "xbt.h"
+#include "simdag/simdag.h" /* For SD_get_clock() */
 
 void init_global_data()
 {
@@ -58,5 +59,19 @@ void add_launching_time(pid_t pid, double start_time)
   t->start_time = start_time;
   
   xbt_dynar_push(global_data->launching_time, &t);
+}
+
+void set_next_launchment(pid_t pid)
+{
+  time_desc* t = malloc(sizeof(time_desc));
+  t->pid = pid;
+  t->start_time = SD_get_clock();
+  
+  xbt_dynar_unshift(global_data->launching_time, &t);
+}
+
+int has_sleeping_to_launch()
+{
+  return !xbt_dynar_is_empty(global_data->launching_time);
 }
 

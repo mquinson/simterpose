@@ -74,17 +74,15 @@ void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_t
 SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *recv, double amount)
 {
   process_descriptor *proc_sender = process_get_descriptor(pid_sender);
-  process_descriptor *proc_receiver = recv->proc;
   
   int* data_sender = malloc(sizeof(int));
   *data_sender=pid_sender;
   
-  int* data_receiver = malloc(sizeof(int));
-  *data_receiver=proc_receiver->pid;
+
   
   SD_task_t task_sending = SD_task_create("communication send", data_sender, amount);
   SD_task_watch(task_sending, SD_DONE);
-  SD_task_t task_receiving = SD_task_create("communication recv", data_receiver, 0);
+  SD_task_t task_receiving = SD_task_create("communication recv", NULL, 0);
   SD_task_watch(task_receiving, SD_DONE);
   
   task_comm_info* temp = malloc(sizeof(task_comm_info));
@@ -103,15 +101,20 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   return task_sending;
 }
 
-void task_schedule_receive(struct infos_socket* recv)
+void task_schedule_receive(struct infos_socket* recv, pid_t pid)
 {
   
   printf("ENTERING task_schedule_receive\n");
+  
+  int* data_receiver = malloc(sizeof(int));
+  *data_receiver=pid;
+  
   task_comm_info* tci = xbt_fifo_shift(recv->recv_info->recv_task);
   
+  SD_task_set_data(tci->task, data_receiver);
   
   process_descriptor *proc_sender = process_get_descriptor(tci->sender_pid);
-  process_descriptor *proc_receiver = recv->proc;
+  process_descriptor *proc_receiver = process_get_descriptor(pid);
   
   //If we have a computation task in queue, we have to scedule it before doing the other operation
   if(proc_receiver->last_computation_task)

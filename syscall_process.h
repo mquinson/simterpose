@@ -2,6 +2,7 @@
 #define INCLUDED_SYSCALL_PROCESS
 
 #include <sys/types.h> //for pid_t
+#include "ptrace_utils.h"
 
 #define PROCESS_DEAD 0
 #define PROCESS_GROUP_DEAD 1
@@ -20,5 +21,7 @@ int process_handle(pid_t pid, int status);
 int process_handle_active(pid_t pid);
 
 int process_handle_idle(pid_t pid);
+
+int process_clone_call(pid_t pid, syscall_arg *arg);
 
 #endif

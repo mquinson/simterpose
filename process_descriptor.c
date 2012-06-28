@@ -137,6 +137,8 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
     for(i=0; i<MAX_FD ; ++i)
       result->fd_list[i]=NULL;
   }
+  
+  global_data->process_desc[new_pid] = result;
 }
 
 

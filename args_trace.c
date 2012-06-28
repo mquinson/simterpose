@@ -147,8 +147,9 @@ void get_args_bind_connect(pid_t child, int syscall, syscall_arg *arg) {
   } else {
     printf("{sockaddr unknown}, ");
   }
-  
   printf("%d",addrlen);
+  
+  
 
 }
 
@@ -225,7 +226,6 @@ void get_args_accept(pid_t child, syscall_arg *arg) {
   }
 
   printf("%d",addrlen);
-  
 }
 
 void get_args_listen(pid_t child, syscall_arg *arg) {

@@ -1,3 +1,7 @@
+Voir si on peut thread exit le thread maitre.
+
+Ajouter un compteur de référence pour les fils descriptors.
+
 Repenser le mécanisme connect/accept pour modéliser au mieux les connections
 
 Concentré tous les print des syscall en un seul endroit pour pouvoir commenter.
