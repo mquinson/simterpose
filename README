@@ -1,4 +1,5 @@
-Simterpose is a tool which trapped all systems calls made by a set of application to simulate them in various architecture independantly of where you ran them.
+Simterpose is a tool which trapped all systems calls made by a set of application to simulate 
+them in various architecture independantly of where you ran them.
 
 Requirement:
 	-simgrid > v.6.2 ( no test proceed with previous version)
@@ -7,15 +8,20 @@ To compil program
 	make
 
 To run program
-	./run_trace [-fp flops_power]
+	./run_trace [-p flops_power] platform_file deployment_file
 
 To replay trace
-	./replay platform_file deployment_file
-==> in deployment file, you have to put personnal traces of each process. Simterpose already generate personal trace file for each process build with name (process_name.txt)
+	disable for a while
+
+
+GENERAL USE:
+
+This version of Simterpose use deployment file to run processus. Function value
+is the executable, start_time represent the delay before simulation begin and 
+launchment of application. The argument given in process are consider as commandline
+argument and are given to applciation in order.
 
 WARNING:
 
-This version of Simterpose doesn't use deployment file to run processus. So you have to furnished an application call launcher which will launch all application. Before each launchment, you have to 
-write on the file descriptor 3 the name of the processus you will launch. Command line launch by simterpose to run launcher is ./launcher
-
-This version of Simterpose is delivered without any waranty, it's a development version and serveral things are not implemented yet.
+This version of Simterpose is delivered without any waranty, it's a development 
+version and serveral things are not implemented yet.
