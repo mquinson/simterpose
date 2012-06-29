@@ -1,5 +1,6 @@
 #include "args_trace.h"
 #include "ptrace_utils.h"
+#include "communication.h"
 
 
 void get_args_socket(pid_t child, syscall_arg *arg) { 
@@ -128,9 +129,21 @@ void get_args_bind_connect(pid_t child, int syscall, syscall_arg *arg) {
     printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(sai.sin_port),inet_ntoa(sai.sin_addr));
     if (ret==0) {
       if (syscall==0)
-	set_localaddr_port_socket(child,sockfd,inet_ntoa(sai.sin_addr),ntohs(sai.sin_port)); // update local informations if bind 
+	set_localaddr_port_socket(child,sockfd,inet_ntoa(sai.sin_addr),sai.sin_port); // update local informations if bind 
       else
-	update_socket(child,sockfd); // update remote informations if connect 
+      {
+	update_socket(child,sockfd); // update remote informations if connect
+        struct sockaddr_in * remote_addr = malloc(sizeof(struct sockaddr_in));
+        struct infos_socket* is = get_infos_socket(child, sockfd);
+        
+        socket_get_remote_addr(child, sockfd, remote_addr);
+//         printf("Connect to peer %d %d\n", remote_addr->sin_addr.s_addr, remote_addr->sin_port);
+        comm_t comm = comm_find_incomplete(remote_addr->sin_addr.s_addr, remote_addr->sin_port, is);
+        if(comm == NULL) //if communication is not create yet
+          comm_new(is, remote_addr->sin_addr.s_addr, remote_addr->sin_port);
+        else
+          comm_join(comm, get_infos_socket(child, sockfd));
+      }
     }
   }
 
@@ -148,9 +161,6 @@ void get_args_bind_connect(pid_t child, int syscall, syscall_arg *arg) {
     printf("{sockaddr unknown}, ");
   }
   printf("%d",addrlen);
-  
-  
-
 }
 
 void get_args_accept(pid_t child, syscall_arg *arg) {
@@ -198,8 +208,9 @@ void get_args_accept(pid_t child, syscall_arg *arg) {
 
   printf("%d, ",sockfd);
 
+  struct sockaddr_in sai;
   if (domain == 2 ) { // PF_INET
-    struct sockaddr_in sai;
+    
     ptrace_cpy(child, &sai, psai, sizeof(struct sockaddr_in),"accept");
     printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(sai.sin_port),inet_ntoa(sai.sin_addr));
   }
@@ -220,8 +231,20 @@ void get_args_accept(pid_t child, syscall_arg *arg) {
 
   int protocol=get_protocol_socket(child,sockfd);
   if (ret>=0 ) {
-    register_socket(child,ret,domain,protocol);
+    struct infos_socket* is = register_socket(child,ret,domain,protocol);
+    printf("Now update socket %d\n", is->fd);
     update_socket(child,ret);
+    
+    if(domain == 2) //PF_INET
+    {
+//       printf("Try to found communication %du %d \n", sai.sin_addr.s_addr, ntohs(sai.sin_port));
+      comm_t comm = comm_find_incomplete(sai.sin_addr.s_addr, ntohs(sai.sin_port), is);
+      if(comm == NULL)//if there no communication which correspond
+        comm = comm_new(is, sai.sin_addr.s_addr, ntohs(sai.sin_port));
+      else //else we have to join the communication
+        comm_join(comm, is);
+    }
+
     get_localaddr_port_socket(child,sockfd);
   }
 

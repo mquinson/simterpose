@@ -32,7 +32,7 @@ recv_information* recv_information_new()
   return res;
 }
 
-void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
+struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
 
   process_descriptor* proc = global_data->process_desc[pid];
   
@@ -46,6 +46,7 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   proc_info->proc = proc;
   proc_info->fd = sockfd;
   
+  is->comm = NULL;
   is->proc=proc;
   is->domain=domain;
   is->protocol=protocol;
@@ -59,6 +60,8 @@ void confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
   is->recv_info = recv_information_new();
 
   xbt_dynar_push(all_sockets, &is);
+  
+  return is;
 }
 
 void delete_socket(pid_t pid, int fd) {
@@ -69,24 +72,22 @@ void delete_socket(pid_t pid, int fd) {
   }
   CATCH(e){
     printf("Socket not found\n");
-  }
-  
-  
+  } 
 }
 
 
-void register_socket(pid_t pid, int sockfd, int domain, int protocol) {
+struct infos_socket* register_socket(pid_t pid, int sockfd, int domain, int protocol) {
 //   printf("Registering socket %d for processus %d\n", sockfd, pid);
   if (socket_registered(pid,sockfd)==1) {
     if (socket_closed(pid,sockfd) == 1) {
       delete_socket(pid,sockfd);
-      confirm_register_socket(pid,sockfd,domain,protocol);
+      return confirm_register_socket(pid,sockfd,domain,protocol);
     } else {
       perror("Error create socket, fd not closed !");
       exit(1);
     }
   }else{
-     confirm_register_socket(pid,sockfd,domain,protocol);
+     return confirm_register_socket(pid,sockfd,domain,protocol);
   }
 
 }
@@ -131,20 +132,20 @@ void get_localaddr_port_socket(pid_t pid, int fd) {
 
 void print_infos_socket(struct infos_socket *is) {
   fprintf(stdout,"\n%5s %5s %10s %10s %21s %21s %12s %10s\n","pid","fd","domain","protocol","locale_ip:port","remote_ip:port","incomplete", "closed");
-    if(is->proc != NULL){}
+    if(is->proc != NULL){
 
-//   fprintf(stdout,"%5d %5d %10d %10d %15s:%5d %15s:%5d %12d %10d\n",
-// 	  is->proc->pid,
-// 	  is->fd,
-// 	  is->domain,
-// 	  is->protocol,
-// 	  is->ip_local,
-// 	  is->port_local,
-// 	  is->ip_remote,
-// 	  is->port_remote,
-// 	  is->incomplete,
-// 	  is->closed);
-//   }
+  fprintf(stdout,"%5d %5d %10d %10d %15d:%5d %15d:%5d %12d %10d\n",
+	  is->proc->pid,
+	  is->fd,
+	  is->domain,
+	  is->protocol,
+	  is->ip_local,
+	  is->port_local,
+	  is->ip_remote,
+	  is->port_remote,
+	  is->incomplete,
+	  is->closed);
+  }
 }
 
 #define INODE_OFFSET 91
@@ -191,6 +192,45 @@ int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, int add
 
 }
 
+int socket_get_remote_addr(pid_t pid, int fd, struct sockaddr_in* addr_port)
+{
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  int protocol = is->protocol;
+  
+  char path[512];
+  char dest[512];
+  sprintf(path,"/proc/%d/fd/%d", pid, fd);
+  if (readlink(path, dest, 512) == -1) {
+    printf("Failed reading /proc/%d/fd/%d",pid,fd);
+    return -1;
+  }
+  
+  char *token;
+  token = strtok(dest,"["); // left part before socket id
+  token = strtok(NULL,"]"); // socket id 
+  int num_socket = atoi(token);
+  
+  int res=0;
+  
+  if (protocol == 1) { // case IPPROTO_ICMP -> protocol unknown -> test TCP
+    res = get_addr_port(TCP_PROTOCOL, num_socket, addr_port, REMOTE);
+    if (res == -1) { // not tcp -> test UDP
+      res = get_addr_port(UDP_PROTOCOL, num_socket, addr_port, REMOTE);
+      if (res == -1) // not udp -> test RAW
+        res = get_addr_port(RAW_PROTOCOL, num_socket, addr_port, REMOTE);
+    }
+  }
+  
+  if (protocol == 6 || protocol == 0) // case IPPROTO_TCP ou IPPROTO_IP
+    res=get_addr_port(TCP_PROTOCOL, num_socket, addr_port, REMOTE);
+  if (protocol == 17 ) // case IPPROTO_UDP 
+    res=get_addr_port(UDP_PROTOCOL, num_socket, addr_port, REMOTE);
+  if (protocol == 255 ) // case IPPROTO_RAW 
+    res=get_addr_port(RAW_PROTOCOL, num_socket, addr_port, REMOTE);
+  
+  return res;
+}
+
 
 int get_addr_port_sock(pid_t pid, int fd, int addr_type) {
 
@@ -233,6 +273,7 @@ int get_addr_port_sock(pid_t pid, int fd, int addr_type) {
 
   if (res==1) {
     if (addr_type==LOCAL) { // locale
+      printf("Update local ip and port %ud %d\n", addr_port.sin_addr.s_addr, addr_port.sin_port);
       is->ip_local= addr_port.sin_addr.s_addr;
       is->port_local = addr_port.sin_port;
     } else { // remote
@@ -398,6 +439,7 @@ int handle_new_receive(int pid, int sockfd, int length)
 //TODO simplify handling 
 void handle_new_send(struct infos_socket *is,  int length)
 {
+//   printf("New send on port %d\n", is->port_local);
   recv_information* recv = is->recv_info;
   int *size = malloc(sizeof(int));
   *size=length;
@@ -435,4 +477,6 @@ int finish_all_communication(int pid){
   }
   return result;
 }
+
+// unsigned int socket_get_ip(struct inf
 

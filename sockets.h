@@ -1,26 +1,33 @@
 #ifndef __SOCKETS_H 
 #define __SOCKETS_H
 
+/*Decalration of all typedef of structure declared below*/
+typedef struct recv_information recv_information;
+typedef struct process_info process_info;
+struct infos_socket;
+
 #include "sysdep.h"
 #include "xbt.h"
 #include "xbt/fifo.h"
 #include "run_trace.h"
+#include "communication.h"
 
 #define MAX_SOCKETS 512
 
 
-typedef struct {
+struct recv_information{
   xbt_fifo_t send_fifo;
   xbt_fifo_t recv_task;
   int quantity_recv;
-}recv_information;
+};
 
-typedef struct{
+struct process_info{
   process_descriptor* proc;
   int fd;
-}process_info;
+};
 
 struct infos_socket{
+  comm_t comm;//point to the communication which socket involved in
   recv_information *recv_info;
   xbt_dynar_t proc_infos;
   process_descriptor* proc;//contain information of proc which handle the socket
@@ -47,7 +54,7 @@ int finish_all_communication(int pid);
 
 int handle_communication_stat(struct infos_socket* is, pid_t pid);
 
-void register_socket(pid_t pid, int sockfd, int domain, int protocol);
+struct infos_socket* register_socket(pid_t pid, int sockfd, int domain, int protocol);
 
 void update_socket(pid_t pid, int fd);
 
@@ -72,6 +79,8 @@ int socket_incomplete(pid_t pid, int fd);
 int socket_closed(pid_t pid, int fd);
 
 int socket_netlink(pid_t pid, int fd);
+
+int socket_get_remote_addr(pid_t pid, int fd, struct sockaddr_in* addr_port);
 
 struct infos_socket* getSocketInfoFromContext(unsigned int locale_ip, int locale_port);
 

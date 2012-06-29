@@ -15,6 +15,7 @@
 #include "data_utils.h"
 #include "parser.h"
 #include "init.h"
+#include "communication.h"
 
 #define BUFFER_SIZE 512
 
@@ -33,12 +34,12 @@ int main(int argc, char *argv[]) {
   
   global_data = malloc(sizeof(simterpose_data_t));
   
+  //TODO faire une vrai gestion de l'initialisation (avec pracour des options et tous le tralala)
   init_global_data();
   init_socket_gestion();
+  init_comm();
   init_cputime();
 
-  
-  //TODO mettre un vrai gestionnaire d'option et gérer les extensions des fichiers passés en paramètre
   int i, manual_flop=0;
   if(argc>2)
   {
