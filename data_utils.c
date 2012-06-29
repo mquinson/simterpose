@@ -1,7 +1,6 @@
 #include "run_trace.h"
 #include "data_utils.h"
 #include "process_descriptor.h"
-#include "ptrace_utils.h"
 #include "xbt.h"
 #include "simdag/simdag.h" /* For SD_get_clock() */
 
@@ -26,12 +25,6 @@ void init_global_data()
 //   global_data->last_clock = new_clock;
 //   return result;
 // }
-
-void launch_process_idling(pid_t pid)
-{
-  process_set_idle(pid, 0);
-  ptrace_resume_process(pid);
-}
 
 
 double get_next_start_time()

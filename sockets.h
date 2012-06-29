@@ -12,18 +12,11 @@ struct infos_socket;
 #include "run_trace.h"
 #include "communication.h"
 
-#define MAX_SOCKETS 512
-
 
 struct recv_information{
   xbt_fifo_t send_fifo;
   xbt_fifo_t recv_task;
   int quantity_recv;
-};
-
-struct process_info{
-  process_descriptor* proc;
-  int fd;
 };
 
 struct infos_socket{

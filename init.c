@@ -3,9 +3,88 @@
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
 #include "xbt.h"
+#include "simdag/simdag.h"
 #include "data_utils.h"
+#include "benchmark.h"
+#include "calc_times_proc.h"
+#include "init.h"
 
 #include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void usage(char* progName) {
+  printf("usage : %s [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
+}
+
+float str_to_double(const char *string)
+{
+  double value=0;
+  char *endptr;
+  
+  value = strtof(string, &endptr);
+  if (*endptr != '\0')
+    THROWF(unknown_error, 0, "%s is not a double", string);
+  return value;
+}
+
+void simterpose_init(int argc, char** argv)
+{
+  float flops_power = 0;
+  float micro_s_per_flop = 0;
+  int flop_option=0;
+  if(argc < 3)
+  {
+    usage(argv[0]);
+    exit(1);
+  }
+  else
+  {
+    int c;
+    while((c = getopt(argc, argv, "+p:"))!=EOF)
+    {
+      switch(c){
+        case 'p':
+          flop_option = 1;
+          flops_power = str_to_double(optarg);
+          micro_s_per_flop = 1000000/flops_power;
+          break;
+        
+        default:
+          usage(argv[0]);
+          break;
+      }
+    }
+
+  }
+  
+  if(argc - optind < 2)
+  {
+    usage(argv[0]);
+    exit(1);
+  }
+  
+  if(!flop_option)
+    benchmark_matrix_product(&flops_power, &micro_s_per_flop);
+  
+  global_data = malloc(sizeof(simterpose_data_t));
+  init_global_data();
+  
+  global_data->flops_per_second = flops_power;
+  global_data->micro_s_per_flop = micro_s_per_flop;
+  
+  init_socket_gestion();
+  init_comm();
+  init_cputime();
+  
+  SD_init(&argc, argv);
+  SD_create_environment(argv[optind]);
+  
+  parse_deployment_file(argv[optind+1]);
+  
+  init_all_process();
+
+}
 
 
 void fprint_array(FILE* file, char** array)

@@ -1,28 +1,19 @@
 #include <unistd.h>
 
 #include "args_trace.h"
-#include "ptrace_utils.h"
-#include "sysdep.h"
 #include "calc_times_proc.h"
 #include "process_descriptor.h"
-#include "sockets.h"
-#include "insert_trace.h"
 #include "run_trace.h"
-#include "benchmark.h"
-#include "syscall_process.h"
 #include "xbt/fifo.h"
-#include "replay.h"
 #include "data_utils.h"
 #include "parser.h"
 #include "init.h"
 #include "communication.h"
+#include "syscall_process.h"
 
 #define BUFFER_SIZE 512
 
 
-void usage(char* progName) {
-  printf("usage : %s platform_file.xml deployment_file.xml [-fp flops_power]\n", progName);
-}
 
 void print_trace_header(FILE* trace)
 {
@@ -32,56 +23,8 @@ void print_trace_header(FILE* trace)
 
 int main(int argc, char *argv[]) { 
   
-  global_data = malloc(sizeof(simterpose_data_t));
-  
-  //TODO faire une vrai gestion de l'initialisation (avec pracour des options et tous le tralala)
-  init_global_data();
-  init_socket_gestion();
-  init_comm();
-  init_cputime();
+  simterpose_init(argc, argv);
 
-  int i, manual_flop=0;
-  if(argc>2)
-  {
-    for(i=3; i<argc; ++i)
-    {
-      if(!strcmp(argv[i], "-fp"))
-      {
-	if(argv[i+1] == NULL)
-	{
-	  usage(argv[0]); 
-	}
-	else
-	{
-	  char* endptr = argv[i+1]+strlen(argv[i+1])-1;
-	  global_data->flops_per_second = strtod(argv[i+1], &endptr);
-	  if(endptr == argv[i+1])
-	    usage(argv[0]);
-	  else
-	  {
-	    global_data->micro_s_per_flop  = 1000000/global_data->flops_per_second;
-	    manual_flop = 1;
-	  }
-	}
-      }
-    }
-  }
-  else
-  {
-    usage(argv[0]);
-    exit(1);
-  }
-  
-  if(!manual_flop)
-    benchmark_matrix_product(&(global_data->flops_per_second), &(global_data->micro_s_per_flop));
-  
-  SD_init(&argc, argv);
-  SD_create_environment(argv[1]);
-  
-  parse_deployment_file(argv[2]);
-  
-  init_all_process();
-  
   int amount_process_launch=0;
   int time_to_simulate=0;
   

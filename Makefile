@@ -11,12 +11,11 @@ all : run_trace benchmark launcher
 run_trace: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
-run_trace.o: run_trace.c run_trace.h insert_trace.h sysdep.h sockets.h calc_times_proc.h process_descriptor.h \
-		benchmark.h args_trace.h ptrace_utils.h syscall_process.h replay.h data_utils.h parser.h init.h\
-		communication.h
+run_trace.o: run_trace.c run_trace.h calc_times_proc.h process_descriptor.h \
+		data_utils.h parser.h init.h communication.h syscall_process.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h
+args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h communication.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 benchmark.o: benchmark.c benchmark.h calc_times_proc.h 
@@ -36,7 +35,7 @@ process_descriptor.o: process_descriptor.c process_descriptor.h run_trace.h sock
 	$(CC) $(CFLAGS) -c $< -o $@
 
 syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h run_trace.h ptrace_utils.h \
-		process_descriptor.h args_trace.h task.h
+		process_descriptor.h args_trace.h task.h communication.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 #replay.o : replay.c replay.h
@@ -45,16 +44,17 @@ syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h 
 data_utils.o : data_utils.c data_utils.h run_trace.h sysdep.h process_descriptor.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-task.o: task.c task.h run_trace.h data_utils.h sockets.h process_descriptor.h
+task.o: task.c task.h run_trace.h data_utils.h sockets.h process_descriptor.h communication.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 parser.o: parser.c parser.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-init.o: init.c init.h parser.h process_descriptor.h run_trace.h ptrace_utils.h data_utils.h
+init.o: init.c init.h parser.h process_descriptor.h run_trace.h ptrace_utils.h data_utils.h\
+		calc_times_proc.h benchmark.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-sockets.o: sockets.c sockets.h run_trace.h sysdep.h task.h insert_trace.h
+sockets.o: sockets.c sockets.h run_trace.h sysdep.h task.h insert_trace.h communication.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 communication.o: communication.c communication.h sockets.h
