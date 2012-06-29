@@ -48,8 +48,6 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   is->port_local=0;
   is->incomplete=1;
   is->closed=0;
-  
-  is->recv_info = recv_information_new();
 
   xbt_dynar_push(all_sockets, &is);
   
@@ -262,7 +260,6 @@ int get_addr_port_sock(pid_t pid, int fd, int addr_type) {
       
 
   if (res==1) {
-    printf("Update local ip and port %ud %d\n", addr_port.sin_addr.s_addr, addr_port.sin_port);
     is->ip_local= addr_port.sin_addr.s_addr;
     is->port_local = addr_port.sin_port;
   }
@@ -359,7 +356,8 @@ struct infos_socket* getSocketInfoFromContext(unsigned int ip_local, int port_lo
 int handle_communication_stat(struct infos_socket* is, pid_t pid)
 {
   int result=0;
-  int *size = (int*)xbt_fifo_shift(is->recv_info->send_fifo);
+  recv_information* recv = comm_get_own_recv(is);
+  int *size = (int*)xbt_fifo_shift(recv->send_fifo);
   if(size==NULL)
     return 0;
   
@@ -370,19 +368,19 @@ int handle_communication_stat(struct infos_socket* is, pid_t pid)
     task_schedule_receive(is, pid);
     free(size);
     result = 1;
-    size = (int*)xbt_fifo_shift(is->recv_info->send_fifo);
+    size = (int*)xbt_fifo_shift(recv->send_fifo);
   }
   
-  if(is->recv_info->quantity_recv < *size)
+  if(recv->quantity_recv < *size)
   {
-    xbt_fifo_unshift(is->recv_info->send_fifo, size);
+    xbt_fifo_unshift(recv->send_fifo, size);
   }
   else
   {
-    is->recv_info->quantity_recv -= *size;
+    recv->quantity_recv -= *size;
     free(size);
     //til we acknowledge sending, we continue
-    if(is->recv_info->quantity_recv > 0)
+    if(recv->quantity_recv > 0)
     {
       result = 1;
       handle_communication_stat(is, pid);
@@ -397,7 +395,7 @@ int handle_new_receive(int pid, int sockfd, int length)
 {
   struct infos_socket* is = get_infos_socket(pid, sockfd);
 
-  recv_information* recv = is->recv_info;
+  recv_information* recv = comm_get_own_recv(is);
   recv->quantity_recv += length;
   
   return handle_communication_stat(is, pid);
@@ -408,7 +406,7 @@ int handle_new_receive(int pid, int sockfd, int length)
 void handle_new_send(struct infos_socket *is,  int length)
 {
 //   printf("New send on port %d\n", is->port_local);
-  recv_information* recv = is->recv_info;
+  recv_information* recv = comm_get_own_recv(is);
   int *size = malloc(sizeof(int));
   *size=length;
   
@@ -421,29 +419,29 @@ void handle_new_send(struct infos_socket *is,  int length)
 
 
 int finish_all_communication(int pid){
-  
-  process_descriptor* proc = global_data->process_desc[pid];
-  int i=0;
-  int result=0;
-  for(i=0; i<MAX_FD ; ++i)
-  {
-    if (proc->fd_list[i]!=NULL)
-    {
-      int *size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
-      while(size != NULL)
-      {
-// 	insert_trace_comm(pid, i, "recv", 0);
-	//create_recv_communication_task(proc->fd_list[i]);
-	free(size);
-	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
-	result=1;
-      }
-      //FIXME add reference counter to see if this is the last process to use the socket
-      //delete_socket(pid, i);
-      proc->fd_list[i]=NULL;
-    }
-  }
-  return result;
+  THROW_UNIMPLEMENTED;
+//   process_descriptor* proc = global_data->process_desc[pid];
+//   int i=0;
+//   int result=0;
+//   for(i=0; i<MAX_FD ; ++i)
+//   {
+//     if (proc->fd_list[i]!=NULL)
+//     {
+//       int *size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
+//       while(size != NULL)
+//       {
+// // 	insert_trace_comm(pid, i, "recv", 0);
+// 	//create_recv_communication_task(proc->fd_list[i]);
+// 	free(size);
+// 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
+// 	result=1;
+//       }
+//       //FIXME add reference counter to see if this is the last process to use the socket
+//       //delete_socket(pid, i);
+//       proc->fd_list[i]=NULL;
+//     }
+//   }
+//   return result;
 }
 
 // unsigned int socket_get_ip(struct inf

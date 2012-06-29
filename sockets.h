@@ -28,7 +28,6 @@ struct process_info{
 
 struct infos_socket{
   comm_t comm;//point to the communication which socket involved in
-  recv_information *recv_info;
   process_descriptor* proc;//contain information of proc which handle the socket
   int fd;
   int domain;

@@ -3,6 +3,7 @@
 #include "data_utils.h"
 #include "process_descriptor.h"
 #include "sockets.h"
+#include "communication.h"
 
 #include "simdag/simdag.h"
 #include "xbt/fifo.h"
@@ -71,7 +72,7 @@ void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_t
 
 
 
-SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *recv, double amount)
+SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *is, double amount)
 {
   process_descriptor *proc_sender = process_get_descriptor(pid_sender);
   
@@ -89,7 +90,8 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   temp->task = task_receiving;
   temp->sender_pid = pid_sender;
   
-  xbt_fifo_push(recv->recv_info->recv_task, temp);
+  recv_information* recv = comm_get_own_recv(is);
+  xbt_fifo_push(recv->recv_task, temp);
   
   //if last_computation_task is not NULL, that means that we have to do some computation before process syscall
   if(proc_sender->last_computation_task)
@@ -101,7 +103,7 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   return task_sending;
 }
 
-void task_schedule_receive(struct infos_socket* recv, pid_t pid)
+void task_schedule_receive(struct infos_socket* is, pid_t pid)
 {
   
   printf("ENTERING task_schedule_receive\n");
@@ -109,7 +111,9 @@ void task_schedule_receive(struct infos_socket* recv, pid_t pid)
   int* data_receiver = malloc(sizeof(int));
   *data_receiver=pid;
   
-  task_comm_info* tci = xbt_fifo_shift(recv->recv_info->recv_task);
+  recv_information* recv = comm_get_own_recv(is);
+  
+  task_comm_info* tci = xbt_fifo_shift(recv->recv_task);
   
   SD_task_set_data(tci->task, data_receiver);
   

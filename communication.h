@@ -33,4 +33,6 @@ void comm_join(comm_t comm, struct infos_socket* socket);
 
 struct infos_socket* comm_get_peer(struct infos_socket* is);
 
+recv_information* comm_get_own_recv(struct infos_socket* is);
+
 #endif

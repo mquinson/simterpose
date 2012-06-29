@@ -67,3 +67,12 @@ struct infos_socket* comm_get_peer(struct infos_socket* is)
     return comm->info[0].socket;
 }
 
+recv_information* comm_get_own_recv(struct infos_socket* is)
+{
+  comm_t comm = is->comm;
+  if( comm->info[0].socket == is)
+    return comm->info[0].recv;
+  else
+    return comm->info[1].recv;
+}
+
