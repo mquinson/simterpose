@@ -57,3 +57,13 @@ void comm_join(comm_t comm, struct infos_socket* socket)
   socket->comm = comm;
   comm->info[1].socket = socket;
 }
+
+struct infos_socket* comm_get_peer(struct infos_socket* is)
+{
+  comm_t comm = is->comm;
+  if( comm->info[0].socket == is)
+    return comm->info[1].socket;
+  else
+    return comm->info[0].socket;
+}
+

@@ -9,6 +9,7 @@
 #include "task.h"
 #include "xbt.h"
 #include "simdag/simdag.h"
+#include "communication.h"
 
 #include <linux/futex.h>
 
@@ -26,7 +27,7 @@ void process_send_call(int pid, int sockfd, int ret)
     {
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
-      struct infos_socket *s = getSocketInfoFromContext(is->ip_remote, is->port_remote);
+      struct infos_socket *s = comm_get_peer(is);
       
       if(s!=NULL)
         handle_new_send(s,  ret);

@@ -40,20 +40,12 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   proc->fd_list[sockfd]=is;
   is->fd= sockfd;
   
-  is->proc_infos = xbt_dynar_new(sizeof(process_info*), NULL);
-  
-  process_info* proc_info  = malloc(sizeof(process_info));
-  proc_info->proc = proc;
-  proc_info->fd = sockfd;
-  
   is->comm = NULL;
   is->proc=proc;
   is->domain=domain;
   is->protocol=protocol;
   is->ip_local=-1;
-  is->ip_remote=-1;
   is->port_local=0;
-  is->port_remote=0;
   is->incomplete=1;
   is->closed=0;
   
@@ -99,7 +91,7 @@ void update_socket(pid_t pid, int fd) {
 
   if (is->domain == 2) { // PF_INET
     if (get_addr_port_sock(pid, fd, LOCAL)) { // 1-> locale
-      if (get_addr_port_sock(pid, fd, REMOTE)) { // 2 -> remote
+      if (is->comm != NULL) { // 2 -> remote
 	is->incomplete=0;
       }
     }
@@ -134,15 +126,13 @@ void print_infos_socket(struct infos_socket *is) {
   fprintf(stdout,"\n%5s %5s %10s %10s %21s %21s %12s %10s\n","pid","fd","domain","protocol","locale_ip:port","remote_ip:port","incomplete", "closed");
     if(is->proc != NULL){
 
-  fprintf(stdout,"%5d %5d %10d %10d %15d:%5d %15d:%5d %12d %10d\n",
+  fprintf(stdout,"%5d %5d %10d %10d %15d:%5d %12d %10d\n",
 	  is->proc->pid,
 	  is->fd,
 	  is->domain,
 	  is->protocol,
 	  is->ip_local,
 	  is->port_local,
-	  is->ip_remote,
-	  is->port_remote,
 	  is->incomplete,
 	  is->closed);
   }
@@ -255,31 +245,26 @@ int get_addr_port_sock(pid_t pid, int fd, int addr_type) {
   int res=0;
 
   if (protocol == 1) { // case IPPROTO_ICMP -> protocol unknown -> test TCP
-    res = get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, addr_type);
+    res = get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, LOCAL);
     if (res == -1) { // not tcp -> test UDP
-      res = get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, addr_type);
+      res = get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, LOCAL);
       if (res == -1) // not udp -> test RAW
-	res = get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, addr_type);
+	res = get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
     }
   }
 
   if (protocol == 6 || protocol == 0) // case IPPROTO_TCP ou IPPROTO_IP
-    res=get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, addr_type);
+    res=get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, LOCAL);
   if (protocol == 17 ) // case IPPROTO_UDP 
-    res=get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, addr_type);
+    res=get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, LOCAL);
   if (protocol == 255 ) // case IPPROTO_RAW 
-    res=get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, addr_type);
+    res=get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
       
 
   if (res==1) {
-    if (addr_type==LOCAL) { // locale
-      printf("Update local ip and port %ud %d\n", addr_port.sin_addr.s_addr, addr_port.sin_port);
-      is->ip_local= addr_port.sin_addr.s_addr;
-      is->port_local = addr_port.sin_port;
-    } else { // remote
-      is->ip_remote=addr_port.sin_addr.s_addr;
-      is->port_remote = addr_port.sin_port;
-    }
+    printf("Update local ip and port %ud %d\n", addr_port.sin_addr.s_addr, addr_port.sin_port);
+    is->ip_local= addr_port.sin_addr.s_addr;
+    is->port_local = addr_port.sin_port;
   }
 
   return res;
@@ -302,7 +287,7 @@ int socket_registered(pid_t pid, int fd) {
       return 1;
   else if( is != NULL)
     return 0;
-  //printf("[IMPORTANT] unknown socket\n");
+
   return -1;
 }
 
@@ -310,23 +295,6 @@ int socket_registered(pid_t pid, int fd) {
 struct infos_socket* get_infos_socket(pid_t pid, int fd) {
   return global_data->process_desc[pid]->fd_list[fd];
 }
-
-//TODO faire en sortes que la structure socket soit un lien entre les deux processus qui parle et que l'on puisse les récupérer sans faire des foreach
-int get_pid_socket_dest(struct infos_socket *is) {
-  
-  struct infos_socket* temp_is;
-  unsigned int cpt=0;
-  
-  xbt_dynar_foreach(all_sockets, cpt, temp_is){
-    if ((temp_is->ip_remote == is->ip_local) 
-      && (temp_is->port_remote==is->port_local)
-      && (temp_is->ip_local == is->ip_remote) 
-      && (temp_is->port_local==is->port_remote))
-      return temp_is->proc->pid;
-  }
-  return -1;
-}
-
 
 void close_sockfd(pid_t pid, int fd) {
   struct infos_socket* is = get_infos_socket(pid, fd);
@@ -464,7 +432,7 @@ int finish_all_communication(int pid){
       int *size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
       while(size != NULL)
       {
-	insert_trace_comm(pid, i, "recv", 0);
+// 	insert_trace_comm(pid, i, "recv", 0);
 	//create_recv_communication_task(proc->fd_list[i]);
 	free(size);
 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);

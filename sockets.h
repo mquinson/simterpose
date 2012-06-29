@@ -29,15 +29,12 @@ struct process_info{
 struct infos_socket{
   comm_t comm;//point to the communication which socket involved in
   recv_information *recv_info;
-  xbt_dynar_t proc_infos;
   process_descriptor* proc;//contain information of proc which handle the socket
   int fd;
   int domain;
   int protocol;
   unsigned int ip_local;
   int port_local;
-  unsigned int ip_remote;
-  int port_remote;
   int incomplete;
   int closed;
 };
@@ -65,8 +62,6 @@ struct infos_socket* get_infos_socket(pid_t pid, int fd);
 void get_localaddr_port_socket(pid_t pid, int fd);
 
 void set_localaddr_port_socket(pid_t pid, int fd, char *ip, int port);
-
-int get_pid_socket_dest(struct infos_socket *is);
 
 void close_sockfd(pid_t pid, int fd);
 

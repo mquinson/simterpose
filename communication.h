@@ -31,4 +31,6 @@ comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket* is);
 //Add a socket to a communication
 void comm_join(comm_t comm, struct infos_socket* socket);
 
+struct infos_socket* comm_get_peer(struct infos_socket* is);
+
 #endif
