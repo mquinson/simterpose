@@ -138,10 +138,47 @@ int main(){
             perror("erreur envoi server");
             exit(1);
           }
-          shutdown(client_socket,2);
-          close(client_socket);
+//           shutdown(client_socket,2);
+//           close(client_socket);
 	}
+	
+	if((client_socket=accept(serverSocket, (struct sockaddr *)cli_addr,(socklen_t *)&clilen)) < 0){
+          perror("error accept");
+          exit(1);
+        }else{
+          printf("Connexion acceptée\n");
+          int length = BUFFER_SIZE;
+          while(length !=0)
+          {
+            res = recv(client_socket,buff,length,0);
+            if(res==-1){
+              perror("erreur réception server");
+              exit(1);
+            }
+            length -= res;
+            printf("Server : recv %d (left %d)\n", res, length);
+          }
+          //printf("Message reçu : %s",buff);
+          strcpy(buff,"envoi serveur\n");
+          printf("Server envoie au client\n");
+          int i=0;
+          int j;
+          for(i=0; i<2000000 ; ++i)
+          {
+            j=i*(i%14);
+            --j;
+          }
+          res=send(client_socket,buff,BUFFER_SIZE,0);
+          if(res==-1){
+            perror("erreur envoi server");
+            exit(1);
+          }
+//           shutdown(client_socket,2);
+//           close(client_socket);
+        }
       }
     }
   }
+  
+  return 0;
 }
