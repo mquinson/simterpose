@@ -168,3 +168,26 @@ void process_set_poll(pid_t pid, int nbfd, struct pollfd* list)
   proc->poll_arg.fd_list = list;
 }
 
+int process_get_state(pid_t pid)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  return proc->state;
+}
+
+void* process_get_argument(pid_t pid)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  if(proc->state & PROC_POLL)
+    return &(proc->poll_arg);
+  else if(proc->state & PROC_SELECT)
+    return &(proc->select_arg);
+  
+  return NULL;
+}
+
+struct infos_socket* process_get_fd(pid_t pid, int num)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  return proc->fd_list[num];
+}
+

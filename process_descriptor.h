@@ -5,6 +5,11 @@
 #define PROC_POLL       0x00002
 
 typedef struct process_descriptor process_descriptor;
+typedef struct select_arg_s select_arg_s;
+typedef select_arg_s* select_arg_t;
+
+typedef struct poll_arg_s poll_arg_s;
+typedef poll_arg_s* poll_arg_t;
 
 #include "simdag/simdag.h"
 #include "sockets.h"
@@ -15,7 +20,17 @@ typedef struct process_descriptor process_descriptor;
 #include <unistd.h>
 #include <poll.h>
 
+struct select_arg_s{
+  int maxfd;
+  fd_set fd_read;
+  fd_set fd_write;
+  fd_set fd_except;
+};
 
+struct poll_arg_s{
+  int nbfd;
+  struct pollfd* fd_list;
+};
 
 struct process_descriptor{
   pid_t pid;
@@ -31,16 +46,8 @@ struct process_descriptor{
   
   int state;
   union{
-    struct{
-      int maxfd;
-      fd_set fd_read;
-      fd_set fd_write;
-      fd_set fd_except;
-    } select_arg;
-    struct{
-      int nbfd;
-      struct pollfd* fd_list;
-    }poll_arg;
+    select_arg_s select_arg;
+    poll_arg_s poll_arg;
   };
 };
 
@@ -75,4 +82,11 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags);
 void process_set_select(pid_t pid, int max, fd_set rd, fd_set wr, fd_set ex);
 
 void process_set_poll(pid_t pid, int nbfd, struct pollfd* list);
+
+int process_get_state(pid_t pid);
+
+void* process_get_argument(pid_t pid);
+
+struct infos_socket* process_get_fd(pid_t pid, int num);
+
 #endif
