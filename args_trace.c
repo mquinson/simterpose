@@ -717,7 +717,7 @@ void get_revents_poll(short revents) {
   printf("} ");
 }
 
-void disp_pollfd(struct pollfd fds[], int nfds) {
+void disp_pollfd(struct pollfd *fds, int nfds) {
   int i;
   for (i = 0; i< nfds-1; i++) {
     printf("{fd=%d, ",fds[i].fd);
@@ -736,17 +736,26 @@ void disp_pollfd(struct pollfd fds[], int nfds) {
   
 }
 
-void get_args_poll(pid_t child, void * src, nfds_t nfds) {
+double get_args_poll(pid_t child, syscall_arg* arg) {
   //TODO modify to found time_out
-  struct pollfd fds[nfds];
-  int nbfds=nfds;
+  
+  void * src = (void*)arg->arg1;
+  int nbfds = arg->arg2;
+  double timeout = arg->arg3;
+  
+  struct pollfd* fds= malloc(sizeof(nbfds)* sizeof(struct pollfd));
+  
   printf("[%d] poll([ ",child);
   if (src!=0) {
-    ptrace_cpy(child,&fds, src, nbfds * sizeof( struct pollfd),"poll");
-    disp_pollfd(fds, (int)nfds);
+    ptrace_cpy(child,fds, src, nbfds * sizeof( struct pollfd),"poll");
+    disp_pollfd(fds, nbfds);
   } else {
     printf("NULL");
   }
   printf(" ]");
+  
+  process_set_poll(child, nbfds, fds);
+  
+  return timeout;
 }
 

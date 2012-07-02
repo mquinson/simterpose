@@ -232,7 +232,7 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_poll:
-          get_args_poll(pid,(void *)arg.arg1, (nfds_t)arg.arg2);
+          get_args_poll(pid, &arg);
           printf(" = %d \n", (int)arg.ret);
           break;
           

@@ -20,7 +20,7 @@ int get_args_send_recv(pid_t child, int syscall, syscall_arg *arg);
 
 double get_args_select(pid_t child, syscall_arg *r);
 
-void get_args_poll(pid_t child, void * src, nfds_t nfds);
+double get_args_poll(pid_t child, syscall_arg* arg);
 
 void get_args_get_setsockopt(pid_t child, int syscall, syscall_arg* arg);
 
