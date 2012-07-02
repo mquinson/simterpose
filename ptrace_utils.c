@@ -86,6 +86,23 @@ void ptrace_set_register(const pid_t pid)
 
 }
 
+void ptrace_neutralize_syscall(const pid_t pid)
+{
+  struct user_regs_struct regs;
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+
+  regs.orig_rax = 184;
+  
+  if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+}
+
 void ptrace_rewind_syscalls(const pid_t pid)
 {
   struct user_regs_struct regs;

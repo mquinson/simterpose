@@ -144,7 +144,11 @@ int process_handle(pid_t pid, int stat)
       
       if(arg.reg_orig == SYS_poll)
       {
-        ptrace_set_register(pid);
+        double timeout = get_args_poll(pid, &arg);
+        //Now we have to add the process in launching list
+        add_launching_time(pid, timeout+SD_get_clock());
+        printf(" = %d \n", (int)arg.ret);
+        ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
         return PROCESS_IDLE_STATE;
       }
@@ -178,7 +182,16 @@ int process_handle(pid_t pid, int stat)
         ptrace_resume_process(pid);
         return PROCESS_IDLE_STATE;
       }
-
+      
+      else if(arg.reg_orig == SYS_select)
+      {
+        double timeout = get_args_select(pid,&arg);
+        add_launching_time(pid, timeout + SD_get_clock());
+        ptrace_neutralize_syscall(pid);
+        ptrace_resume_process(pid);
+        return PROCESS_IDLE_STATE;
+      }
+      
       else if(arg.reg_orig == SYS_recvfrom || arg.reg_orig == SYS_recvmsg)
       {
         printf("[%d] recvfrom_in\n",pid);
@@ -193,6 +206,15 @@ int process_handle(pid_t pid, int stat)
         if(arg.arg1 == SYS_accept_32)
         {
           printf("[%d] accept_in\n");
+          ptrace_resume_process(pid);
+          return PROCESS_IDLE_STATE;
+        }
+        
+        else if(arg.arg1 == SYS_select_32)
+        {
+          double timeout = get_args_select(pid,&arg);
+          add_launching_time(pid, timeout + SD_get_clock());
+          ptrace_neutralize_syscall(pid);
           ptrace_resume_process(pid);
           return PROCESS_IDLE_STATE;
         }
@@ -232,8 +254,7 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_poll:
-          get_args_poll(pid, &arg);
-          printf(" = %d \n", (int)arg.ret);
+          THROW_IMPOSSIBLE;
           break;
           
         case SYS_open:
@@ -286,7 +307,7 @@ int process_handle(pid_t pid, int stat)
           #if defined(__x86_64)  
           
         case SYS_select: 
-          get_args_select(pid,&arg);
+          THROW_IMPOSSIBLE;
           break;
           
         case SYS_socket: 
@@ -384,7 +405,7 @@ int process_handle(pid_t pid, int stat)
           #else
           
         case SYS__newselect:
-          get_args_select(pid, &arg);
+          THROW_IMPOSSIBLE;
           break;
           
         case SYS_socketcall:

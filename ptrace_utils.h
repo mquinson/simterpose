@@ -28,6 +28,7 @@ void ptrace_set_register(const pid_t pid);
 
 void ptrace_rewind_syscalls(const pid_t pid);
 
+void ptrace_neutralize_syscall(const pid_t pid);
 
 #endif
 
