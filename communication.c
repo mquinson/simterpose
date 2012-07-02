@@ -27,6 +27,9 @@ comm_t comm_new(struct infos_socket* socket, unsigned int remote_ip, int remote_
   res->remote_port = remote_port;
   res->remote_ip = remote_ip;
   
+  res->state = COMM_OPEN;
+  res->conn_wait = 0;
+  
   xbt_dynar_push(comm_list, &res);
   
   return res;
@@ -79,6 +82,27 @@ recv_information* comm_get_own_recv(struct infos_socket* is)
 void comm_set_state(comm_t comm, int new_state)
 {
   comm->state = new_state; 
+}
+
+void comm_set_close(comm_t comm)
+{
+  //Here we have to make an and.
+  comm->state = comm->state & COMM_CLOSED;
+}
+
+void comm_set_listen(comm_t comm)
+{
+  comm->state =  comm->state | COMM_LISTEN;
+}
+
+void comm_ask_connect(comm_t comm)
+{
+  comm->conn_wait +=1;
+}
+
+void comm_accept_connect(comm_t comm)
+{
+  comm->conn_wait -= 1;
 }
 
 int comm_get_socket_state(struct infos_socket* is)
