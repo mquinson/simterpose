@@ -18,7 +18,7 @@ void get_args_listen(pid_t child, syscall_arg *arg);
 
 int get_args_send_recv(pid_t child, int syscall, syscall_arg *arg);
 
-void get_args_select(pid_t child, syscall_arg *r);
+double get_args_select(pid_t child, syscall_arg *r);
 
 void get_args_poll(pid_t child, void * src, nfds_t nfds);
 

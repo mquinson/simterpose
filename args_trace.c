@@ -355,9 +355,10 @@ void disp_fd(fd_set * fd) {
   printf("]");
 }
 
-void get_args_select(pid_t child, syscall_arg *r) {
+double get_args_select(pid_t child, syscall_arg *r) {
 
   fd_set fr, fw, fe;
+  double timeout;
   //TODO add recuperation of except's fd_set
   FD_ZERO(&fe);
 #if defined(__x86_64)
@@ -385,16 +386,30 @@ void get_args_select(pid_t child, syscall_arg *r) {
   }
   
   printf(", ");
-//   if (r->r10!=0) {
-//     ptrace_cpy(child, &fe, (void *)r->r10, sizeof(fd_set),"select");
-//     disp_fd(&fe);
-//   } else 
-//     printf("NULL");
+  if (r->arg4!=0) {
+    ptrace_cpy(child, &fe, (void *)r->arg4, sizeof(fd_set),"select");
+    disp_fd(&fe);
+  }
+  else 
+  {
+    FD_ZERO(&fw);
+    printf("NULL");
+  }
+  
+  if(r->arg5 != 0)
+  {
+    struct timeval t;
+    ptrace_cpy(child, &t, (void *)r->arg5, sizeof(struct timeval),"select");
+    timeout = t.tv_sec + 0.000001 * t.tv_usec;
+  }
+  else
+    timeout = -1;
+  
   
   printf(") = %d\n",(int)r->ret);
 
 #else 
-
+  //FIXME do portability on 32 bits
   printf("[%d] select(%d,", child, (int) r->ebx);
   if (r->arg2!=0) {
     ptrace_cpy(child, &fr, (void *)r->arg2, sizeof(fd_set),"select");
@@ -421,7 +436,9 @@ void get_args_select(pid_t child, syscall_arg *r) {
 #endif
   // FIXME handle ret value
 
+  process_set_select(child, r->arg1, fr, fw, fe);
   
+  return timeout;
 }
 
 void get_args_get_setsockopt(pid_t child, int syscall, syscall_arg* arg) {
