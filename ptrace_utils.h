@@ -10,6 +10,7 @@ typedef struct{
   unsigned long arg2;
   unsigned long arg3;
   unsigned long arg4;
+  unsigned long arg5;
 }syscall_arg;
 
 

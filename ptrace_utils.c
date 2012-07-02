@@ -55,7 +55,8 @@ void ptrace_get_register(const pid_t pid, syscall_arg* arg)
   arg->arg1=regs.rdi;
   arg->arg2=regs.rsi;
   arg->arg3=regs.rdx;
-  arg->arg4=regs.r8;
+  arg->arg4=regs.r10;
+  arg->arg5=regs.r8;
   #elif defined(i386)
   arg->reg_orig=regs.orig_eax;
   arg->ret=regs.eax;

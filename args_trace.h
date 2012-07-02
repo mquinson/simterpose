@@ -5,7 +5,7 @@
 #include "sockets.h"
 #include "sysdep.h"
 
- 
+
 extern int nb_procs;
 
 void get_args_socket(pid_t child, syscall_arg *arg);

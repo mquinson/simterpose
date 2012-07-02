@@ -357,23 +357,32 @@ void disp_fd(fd_set * fd) {
 
 void get_args_select(pid_t child, syscall_arg *r) {
 
-  
+  fd_set fr, fw, fe;
+  //TODO add recuperation of except's fd_set
+  FD_ZERO(&fe);
 #if defined(__x86_64)
 
-  fd_set fr, fw;
   printf("[%d] select(%d,", child, (int) r->arg1);
   if (r->arg2!=0) {
     ptrace_cpy(child, &fr, (void *)r->arg2, sizeof(fd_set),"select");
     disp_fd(&fr);
-  } else 
+  } 
+  else 
+  {
+    FD_ZERO(&fr);
     printf("NULL");
+  }
   
   printf(", ");
   if (r->arg3!=0) {
     ptrace_cpy(child, &fw, (void *)r->arg3, sizeof(fd_set),"select");
     disp_fd(&fw);
-  } else 
+  } 
+  else 
+  {
+    FD_ZERO(&fw);
     printf("NULL");
+  }
   
   printf(", ");
 //   if (r->r10!=0) {
@@ -386,7 +395,6 @@ void get_args_select(pid_t child, syscall_arg *r) {
 
 #else 
 
-  fd_set fr, fw;
   printf("[%d] select(%d,", child, (int) r->ebx);
   if (r->arg2!=0) {
     ptrace_cpy(child, &fr, (void *)r->arg2, sizeof(fd_set),"select");
@@ -412,7 +420,8 @@ void get_args_select(pid_t child, syscall_arg *r) {
 
 #endif
   // FIXME handle ret value
-	 
+
+  
 }
 
 void get_args_get_setsockopt(pid_t child, int syscall, syscall_arg* arg) {
@@ -425,22 +434,15 @@ void get_args_get_setsockopt(pid_t child, int syscall, syscall_arg* arg) {
 
 #if defined(__x86_64)
 
-  struct user_regs_struct res;
-  
-  if (ptrace(PTRACE_GETREGS, child,NULL, &res)==-1) {
-    perror("ptrace getregs");
-    exit(1);
-  }
-
-  sockfd=(int)res.rdi;
-  level=(int)res.rsi;
-  optname=(int)res.rdx;
-  //optval=(void *)res.r10;
+  sockfd=(int)arg->arg1;
+  level=(int)arg->arg2;
+  optname=(int)arg->arg3;
+  //optval=(void *)arg->arg4;
 
   if (syscall == 1) // getsockopt
-    ptrace_cpy(child,&optlen,(void *)res.r8,sizeof(socklen_t),"getsockopt ou setsockopt");
+    ptrace_cpy(child,&optlen,(void *)arg->arg5,sizeof(socklen_t),"getsockopt ou setsockopt");
   else  // setsockopt
-    optlen=res.r8;
+    optlen=arg->arg5;
 
   
 #else
