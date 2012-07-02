@@ -21,6 +21,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->cpu_time=0; 
   result->syscall_in = 0;
   result->idle=0;
+  result->state = 0;
   result->last_computation_task = NULL;
   int i;
   for(i=0; i<MAX_FD ; ++i)
@@ -147,5 +148,23 @@ void process_exec(pid_t pid)
   //TODO add mecanism to socket to know when close them on exec (witho SOCK_CLOEXEC on type)
   //   for(i=0; i<MAX_FD ; ++i)
   //     result->fd_list[i]=NULL;
+}
+
+void process_set_select(pid_t pid, int max, fd_set rd, fd_set wr, fd_set ex)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  proc->state = PROC_SELECT;
+  proc->select_arg.maxfd = max;
+  proc->select_arg.fd_read = rd;
+  proc->select_arg.fd_write = wr;
+  proc->select_arg.fd_except = ex;
+}
+
+void process_set_poll(pid_t pid, int nbfd, struct pollfd* list)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  proc->state = PROC_POLL;
+  proc->poll_arg.nbfd = nbfd;
+  proc->poll_arg.fd_list = list;
 }
 
