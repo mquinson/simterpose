@@ -76,3 +76,21 @@ recv_information* comm_get_own_recv(struct infos_socket* is)
     return comm->info[1].recv;
 }
 
+void comm_set_state(comm_t comm, int new_state)
+{
+  comm->state = new_state; 
+}
+
+int comm_get_socket_state(struct infos_socket* is)
+{
+  comm_t comm = is->comm;
+  int res=0;
+  recv_information* recv = comm_get_own_recv(is);
+  if(recv->quantity_recv > 0)
+    res = res | SOCKET_READ_OK;
+  if(comm->state == COMM_CLOSED)
+    res = res | SOCKET_CLOSED;
+  
+  return res;
+}
+

@@ -444,5 +444,8 @@ int finish_all_communication(int pid){
 //   return result;
 }
 
-// unsigned int socket_get_ip(struct inf
+int socket_get_state(struct infos_socket* is)
+{
+  return comm_get_socket_state(is);
+}
 
