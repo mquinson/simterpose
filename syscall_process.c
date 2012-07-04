@@ -196,7 +196,7 @@ int process_clone_call(pid_t pid, reg_s *arg)
 
 int process_connect_in_call(pid_t pid)
 {
-  
+  return 0;
 }
 
 
@@ -206,6 +206,7 @@ int process_handle(pid_t pid, int stat)
   int status = stat;
   int sockfd;
   reg_s arg;
+  syscall_arg_u sysarg;
   while(1)
   {
     
@@ -406,13 +407,13 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_bind:
           printf("[%d] bind( ", pid);
-          get_args_bind_connect(pid, 0, &arg);
+          get_args_bind_connect(pid, 0, &arg, &sysarg);
           printf(" ) = %ld\n", arg.ret);
           break;
           
         case SYS_connect:
           printf("[%d] connect( ", pid);
-          get_args_bind_connect(pid, 1, &arg);
+          get_args_bind_connect(pid, 1, &arg, &sysarg);
           printf(" ) = %ld\n", arg.ret);
           process_set_state(pid, PROC_CONNECT);
           return PROCESS_IDLE_STATE;
@@ -513,13 +514,13 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_bind_32:
               printf("[%d] bind( ", pid);
-              get_args_bind_connect(pid, 0, &arg);
+              get_args_bind_connect(pid, 0, &arg, &sysarg);
               printf(" ) = %ld\n",arg.ret);
               break;
               
             case SYS_connect_32:
               printf("[%d] connect( ", pid);
-              get_args_bind_connect(pid, 1, &arg);
+              get_args_bind_connect(pid, 1, &arg, &sysarg);
               printf(" ) = %ld\n", arg.ret);
               if (ret<0)
                 printf("%s\n",strerror(-arg.ret));

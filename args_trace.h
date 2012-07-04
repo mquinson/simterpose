@@ -5,12 +5,24 @@
 #include "sockets.h"
 #include "sysdep.h"
 
+typedef union{
+  struct{
+    int sockfd;
+    int ret;
+    union{
+      struct sockaddr_in * psai;
+      struct sockaddr_un * psau;
+      struct sockaddr_nl * psnl;
+    };
+    socklen_t addrlen;
+  }connect;
+}syscall_arg_u;
 
 extern int nb_procs;
 
 void get_args_socket(pid_t child, reg_s *arg);
 
-void get_args_bind_connect(pid_t child, int syscall, reg_s *arg);
+void get_args_bind_connect(pid_t child, int syscall, reg_s *reg,  syscall_arg_u *arg);
 
 //Return the pid of which socket is accept
 pid_t get_args_accept(pid_t child, reg_s *arg);
