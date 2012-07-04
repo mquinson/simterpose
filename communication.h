@@ -56,4 +56,7 @@ pid_t comm_accept_connect(struct infos_socket* is);
 
 int comm_get_socket_state(struct infos_socket* is);
 
+//Indicate if theres process which wait for connection on this socket
+int comm_has_connect_waiting(struct infos_socket* is);
+
 #endif

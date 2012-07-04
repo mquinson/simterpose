@@ -173,6 +173,7 @@ void process_set_state(pid_t tid, int state)
 {
   process_descriptor* proc = process_get_descriptor(tid);
   proc->state = state;
+//   printf("Set new state to %d : %d\n", tid, state);
 }
 
 int process_get_state(pid_t pid)

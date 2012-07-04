@@ -3,256 +3,146 @@
 #include "communication.h"
 
 
-void get_args_socket(pid_t child, reg_s *arg) { 
+void get_args_socket(pid_t child, reg_s *reg, syscall_arg_u * sysarg) { 
 
-  //printf("Entering get_args_socket : %d __", sockfd);
-  int sockfd = arg->ret;
-  int domain;
-  int type;
-  int protocol;
+  socket_arg_t arg = &sysarg->socket;
+  arg->ret = reg->ret;
 
 #if defined(__x86_64)
 
-  domain = (int)arg->arg1;
-  type = (int)arg->arg2;
-  protocol = (int)arg->arg3;
+  arg->domain = (int)reg->arg1;
+  arg->type = (int)reg->arg2;
+  arg->protocol = (int)reg->arg3;
 
 #else
 
-  void *addr = (void *)arg->arg2;
-  ptrace_cpy(child,&domain, addr, sizeof(int),"socket");  
-  ptrace_cpy(child,&type, addr + sizeof(long), sizeof(int),"socket");  
-  ptrace_cpy(child,&protocol, addr + 2* sizeof(long), sizeof(int),"socket");  
+//   void *addr = (void *)reg->arg2;
+//   ptrace_cpy(child,&domain, addr, sizeof(int),"socket");  
+//   ptrace_cpy(child,&type, addr + sizeof(long), sizeof(int),"socket");  
+//   ptrace_cpy(child,&protocol, addr + 2* sizeof(long), sizeof(int),"socket");  
 
 #endif
-
-  switch (domain) {
-  case 0: printf("PF_UNSPEC, "); break;
-  case 1: printf("PF_UNIX, "); break;
-  case 2: 
-    printf("PF_INET, ");
-    switch (type) {
-    case 1: printf("SOCK_STREAM, "); break;
-    case 2: printf("SOCK_DGRAM, "); break;
-    case 3: printf("SOCK_RAW, "); break;
-    case 4: printf("SOCK_RDM, "); break;
-    case 5: printf("SOCK_SEQPACKET, "); break;
-    case 6: printf("SOCK_DCCP, "); break;
-    case 10: printf("SOCK_PACKET, "); break;
-    default : printf("TYPE UNKNOWN (%d), ",type); break;
-    }
-    switch (protocol) {
-    case 0: printf("IPPROTO_IP"); break;
-    case 1: printf("IPPROTO_ICMP"); break;
-    case 2: printf("IPPROTO_IGMP"); break;
-    case 3: printf("IPPROTO_GGP"); break;
-    case 6: printf("IPPROTO_TCP"); break;
-    case 17: printf("IPPROTO_UDP"); break;
-    case 132: printf("IPPROTO_STCP"); break;
-    case 255: printf("IPPROTO_RAW"); break;
-    default : printf("PROTOCOL UNKNOWN (%d)", protocol); break;
-    }  
-    break;
-  case 16 : 
-    printf("PF_NETLINK, ");
-    switch (type) {
-    case 1: printf("SOCK_STREAM, "); break;
-    case 2: printf("SOCK_DGRAM, "); break;
-    case 3: printf("SOCK_RAW, "); break;
-    case 4: printf("SOCK_RDM, "); break;
-    case 5: printf("SOCK_SEQPACKET, "); break;
-    case 6: printf("SOCK_DCCP, "); break;
-    case 10: printf("SOCK_PACKET, "); break;
-    default : printf("TYPE UNKNOWN (%d), ",type); break;
-    }
-    switch (protocol) {
-    case 0: printf("NETLINK_ROUTE"); break;
-    case 1: printf("NETLINK_UNUSED"); break;
-    case 2: printf("NETLINK_USERSOCK"); break;
-    case 3: printf("NETLINK_FIREWALL"); break;
-    case 4: printf("NETLINK_INET_DIAG"); break;
-    default : printf("PROTOCOL UNKNOWN (%d)", protocol); break;
-    }  
-    break;
-  default :
-    printf("DOMAIN UNKNOWN (%d), ",domain); break;
-  }
-//   printf("finish parsing argument of socket\n");
-  if (sockfd>0) 
-    register_socket(child,sockfd,domain,protocol);
-
-//   printf("Leaving parsing argument socket\n");
 }
 
-void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *arg) {
+void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sysarg) {
   
-  arg->connect.ret = reg->ret;
+  connect_arg_t arg = &(sysarg->connect);
+  
+  arg->ret = reg->ret;
 
 #if defined(__x86_64)
 
-  arg->connect.sockfd=(int)reg->arg1;
-  int domain = get_domain_socket(child,arg->connect.sockfd);
-  printf("%d, ",arg->connect.sockfd);
-  arg->connect.addrlen=(socklen_t)reg->arg3;
+  arg->sockfd=(int)reg->arg1;
+  int domain = get_domain_socket(child,arg->sockfd);
+  arg->addrlen=(socklen_t)reg->arg3;
   if (domain == 2) // PF_INET
-    arg->connect.psai = (void *)reg->arg2;
+    ptrace_cpy(child, &arg->sai, (void *)reg->arg2, sizeof(struct sockaddr_in),"bind ou connect");
   if (domain == 1) // PF_UNIX
-    arg->connect.psau = (void *)reg->arg2;
+    ptrace_cpy(child, &arg->sau, (void *)reg->arg2, sizeof(struct sockaddr_in),"bind ou connect");
   if (domain == 16) // PF_NETLINK
-    arg->connect.psnl = (void *)reg->arg2;
+    ptrace_cpy(child, &arg->sau, (void *)reg->arg2, sizeof(struct sockaddr_in),"bind ou connect");
 
 #else
 
-    void *addr=(void *)reg.arg2;
-    ptrace_cpy(child, &(arg->connect.sockfd), addr, sizeof(int),"bind ou connect");
-  printf("%d, ",sockfd);
-  int domain = get_domain_socket(child,sockfd);
-  if (domain == 2 ) // PF_INET
-    ptrace_cpy(child, &(arg->connect.psai), addr + sizeof(long), sizeof(struct sockaddr_in *),"bind ou connect");
-  if (domain == 1) // PF_UNIX
-    ptrace_cpy(child, &(arg->connect.psau), addr + sizeof(long), sizeof(struct sockaddr_un *),"bind ou connect");
-  if (domain == 16) // PF_NETLINK
-    ptrace_cpy(child, &(arg->connect.psnl), addr + sizeof(long), sizeof(struct sockaddr_nl *),"bind ou connect");
-  
-  ptrace_cpy(child,&(arg->connect.addrlen), addr + 2 * sizeof(long), sizeof(socklen_t),"bind ou connect");
- 
+//     void *addr=(void *)reg.arg2;
+//     ptrace_cpy(child, &(arg->connect.sockfd), addr, sizeof(int),"bind ou connect");
+//   printf("%d, ",sockfd);
+//   int domain = get_domain_socket(child,sockfd);
+//   if (domain == 2 ) // PF_INET
+//     ptrace_cpy(child, &(arg->connect.psai), addr + sizeof(long), sizeof(struct sockaddr_in *),"bind ou connect");
+//   if (domain == 1) // PF_UNIX
+//     ptrace_cpy(child, &(arg->connect.psau), addr + sizeof(long), sizeof(struct sockaddr_un *),"bind ou connect");
+//   if (domain == 16) // PF_NETLINK
+//     ptrace_cpy(child, &(arg->connect.psnl), addr + sizeof(long), sizeof(struct sockaddr_nl *),"bind ou connect");
+//   
+//   ptrace_cpy(child,&(arg->connect.addrlen), addr + 2 * sizeof(long), sizeof(socklen_t),"bind ou connect");
+//  
 #endif
 
   if (domain == 2 ) {
-    struct sockaddr_in sai;
-    ptrace_cpy(child, &sai, arg->connect.psai, sizeof(struct sockaddr_in),"bind ou connect");
-    printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(sai.sin_port),inet_ntoa(sai.sin_addr));
-    if (arg->connect.ret==0) {
-      if (syscall==0)
-      {
-        printf("%d %d\n", sai.sin_addr.s_addr, ntohs(sai.sin_port));
-        set_localaddr_port_socket(child,arg->connect.sockfd,inet_ntoa(sai.sin_addr),ntohs(sai.sin_port)); // update local informations if bind 
-      }
-      else
-      {
-        update_socket(child,arg->connect.sockfd); // update remote informations if connect
-        struct sockaddr_in * remote_addr = malloc(sizeof(struct sockaddr_in));
-        struct infos_socket* is = get_infos_socket(child, arg->connect.sockfd);
-        
-        socket_get_remote_addr(child, arg->connect.sockfd, remote_addr);
-        //Now mark the socket as connect wait
-        comm_ask_connect(remote_addr->sin_addr.s_addr, remote_addr->sin_port, child);
-        
-//         printf("Connect to peer %d %d\n", remote_addr->sin_addr.s_addr, remote_addr->sin_port);
-        comm_t comm = comm_find_incomplete(remote_addr->sin_addr.s_addr, remote_addr->sin_port, is);
-        if(comm == NULL) //if communication is not create yet
-          comm_new(is, remote_addr->sin_addr.s_addr, remote_addr->sin_port);
-        else
-          comm_join(comm, get_infos_socket(child, arg->connect.sockfd));
-      }
+//      struct sockaddr_in *sai = &(arg->sai);
+    if (arg->ret==0) {
+        update_socket(child,arg->sockfd); // update remote informations if connect
+//         struct sockaddr_in * remote_addr = malloc(sizeof(struct sockaddr_in));
+//         struct infos_socket* is = get_infos_socket(child, arg->connect.sockfd);
+//         
+//         socket_get_remote_addr(child, arg->connect.sockfd, remote_addr);
+//         //Now mark the socket as connect wait
+//         comm_ask_connect(remote_addr->sin_addr.s_addr, remote_addr->sin_port, child);
+//         
+// //         printf("Connect to peer %d %d\n", remote_addr->sin_addr.s_addr, remote_addr->sin_port);
+//         comm_t comm = comm_find_incomplete(remote_addr->sin_addr.s_addr, remote_addr->sin_port, is);
+//         if(comm == NULL) //if communication is not create yet
+//           comm_new(is, remote_addr->sin_addr.s_addr, remote_addr->sin_port);
+//         else
+//           comm_join(comm, get_infos_socket(child, arg->connect.sockfd));
     }
   }
-
-  if (domain == 1) { //PF_UNIX
-    struct sockaddr_un sau;
-    ptrace_cpy(child, &sau, arg->connect.psau, sizeof(struct sockaddr_un),"bind ou connect");
-    printf("{sa_family=AF_UNIX, sun_path=\"%s\"}, ",sau.sun_path);
-  }
-
-  if (domain == 16) { //PF_NETLINK
-    struct sockaddr_nl snl;
-    ptrace_cpy(child, &snl, arg->connect.psnl, sizeof(struct sockaddr_nl),"bind ou connect");
-    printf("{sa_family=AF_NETLINK, pid=%d, groups=%u}, ",snl.nl_pid,snl.nl_groups);
-  } else {
-    printf("{sockaddr unknown}, ");
-  }
-  printf("%d",arg->connect.addrlen);
 }
 
-pid_t get_args_accept(pid_t child, reg_s *arg) {
+pid_t get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
   
-  int sockfd;
-  int ret = arg->ret;
-  socklen_t addrlen;
-  struct sockaddr_in * psai;
-  struct sockaddr_un * psau;
-  struct sockaddr_nl * psnl;
+  accept_arg_t arg = &(sysarg->accept);
+
+  arg->ret = reg->ret;
 
 #if defined(__x86_64)
 
-  sockfd=(int)arg->arg1;
+  arg->sockfd=(int)reg->arg1;
 
-  int domain = get_domain_socket(child,sockfd);
+  int domain = get_domain_socket(child,arg->sockfd);
   if (domain == 2) // PF_INET
-    psai = (void*)arg->arg2;
+    ptrace_cpy(child, &arg->sai, (void*)reg->arg2, sizeof(struct sockaddr_in),"accept");
   if (domain == 1) // PF_UINX
-    psau = (void*)arg->arg2;
+    ptrace_cpy(child, &arg->sau, (void*)reg->arg2, sizeof(struct sockaddr_in),"accept");        
   if (domain == 16) // PF_NETLINK
-    psnl = (void*)arg->arg2;
+    ptrace_cpy(child, &arg->snl, (void*)reg->arg2, sizeof(struct sockaddr_in),"accept");
 
-  ptrace_cpy(child,&addrlen, (void*)arg->arg3,sizeof(socklen_t),"accept");
+  ptrace_cpy(child,&arg->addrlen, (void*)reg->arg3,sizeof(socklen_t),"accept");
 
 #else
 
-  void *addr = (void*)arg->arg2;
-  ptrace_cpy(child, &sockfd, addr, sizeof(int),"accept");
-
-  int domain = get_domain_socket(child,sockfd);
-  if (domain == 2 ) //PF_INET
-    ptrace_cpy(child, &psai, addr + sizeof(long), sizeof(struct sockaddr_in *),"accept");
-  if (domain == 1) //PF_UNIX
-    ptrace_cpy(child, &psau, addr + sizeof(long), sizeof(struct sockaddr_un *),"accept");
-  if (domain == 16) // PF_NETLINK
-    ptrace_cpy(child, &psnl, addr + sizeof(long), sizeof(struct sockaddr_nl *),"accept");
-  
-  long addr_addrlen;
-  ptrace_cpy(child,&addr_addrlen, addr + 2 * sizeof(long), sizeof(long),"accept");
-  ptrace_cpy(child,&addrlen,(void *)addr_addrlen,sizeof(socklen_t),"accept");
- 
+//   void *addr = (void*)reg->arg2;
+//   ptrace_cpy(child, &arg->sockfd, addr, sizeof(int),"accept");
+// 
+//   int domain = get_domain_socket(child,arg->sockfd);
+//   if (domain == 2 ) //PF_INET
+//     ptrace_cpy(child, &psai, addr + sizeof(long), sizeof(struct sockaddr_in *),"accept");
+//   if (domain == 1) //PF_UNIX
+//     ptrace_cpy(child, &psau, addr + sizeof(long), sizeof(struct sockaddr_un *),"accept");
+//   if (domain == 16) // PF_NETLINK
+//     ptrace_cpy(child, &psnl, addr + sizeof(long), sizeof(struct sockaddr_nl *),"accept");
+//   
+//   long addr_addrlen;
+//   ptrace_cpy(child,&addr_addrlen, addr + 2 * sizeof(long), sizeof(long),"accept");
+//   ptrace_cpy(child,&addrlen,(void *)addr_addrlen,sizeof(socklen_t),"accept");
+//  
 #endif
-
-
-  printf("%d, ",sockfd);
-
-  struct sockaddr_in sai;
-  if (domain == 2 ) { // PF_INET
-    
-    ptrace_cpy(child, &sai, psai, sizeof(struct sockaddr_in),"accept");
-    printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(sai.sin_port),inet_ntoa(sai.sin_addr));
-  }
   
-  if (domain == 1) { //PF_UNIX
-    struct sockaddr_un sau;
-    ptrace_cpy(child, &sau, psau, sizeof(struct sockaddr_un),"accept");
-    printf("{sa_family=AF_UNIX, sun_path=\"%s\"}, ",sau.sun_path);
-  }
-
-  if (domain == 16) { //PF_NETLINK
-    struct sockaddr_nl snl;
-    ptrace_cpy(child, &snl, psnl, sizeof(struct sockaddr_nl),"accept");
-    printf("{sa_family=AF_NETLINK, pid=%d, groups=%u}, ",snl.nl_pid,snl.nl_groups);
-  } else {
-    printf("{sockaddr unknown}, ");
-  }
-
-  int protocol=get_protocol_socket(child,sockfd);
+//   int protocol=get_protocol_socket(child,arg->sockfd);
   pid_t tid = -1;
-  if (ret>=0 ) {
-    struct infos_socket* is = register_socket(child,ret,domain,protocol);
-    printf("Now update socket %d\n", is->fd);
-    update_socket(child,ret);
-    
-    if(domain == 2) //PF_INET
-    {
-//       printf("Try to found communication %du %d \n", sai.sin_addr.s_addr, ntohs(sai.sin_port));
-      comm_t comm = comm_find_incomplete(sai.sin_addr.s_addr, ntohs(sai.sin_port), is);
-      tid = comm_accept_connect(get_infos_socket(child, sockfd));
-      if(comm == NULL)//if there no communication which correspond
-        comm = comm_new(is, sai.sin_addr.s_addr, ntohs(sai.sin_port));
-      else //else we have to join the communication
-        comm_join(comm, is);
-    }
+  if (arg->ret>=0 ) {
+//     struct infos_socket* is = register_socket(child,arg->ret,domain,protocol);
+//     printf("Now update socket %d\n", is->fd);
+//     update_socket(child,arg->ret);
+//     
+//     if(domain == 2) //PF_INET
+//     {
+//       //printf("Try to found communication %du %d \n", sai.sin_addr.s_addr, ntohs(sai.sin_port));
+//       comm_t comm = comm_find_incomplete(arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port), is);
+//       tid = comm_accept_connect(get_infos_socket(child, arg->sockfd));
+//       if(comm == NULL)//if there no communication which correspond
+//         comm = comm_new(is, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port));
+//       else //else we have to join the communication
+//         comm_join(comm, is);
+//     }
 
-    get_localaddr_port_socket(child,sockfd);
+    get_localaddr_port_socket(child,arg->sockfd);
   }
 
-  printf("%d",addrlen);
   
+  
+
   return tid;
 }
 

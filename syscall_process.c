@@ -11,6 +11,7 @@
 #include "simdag/simdag.h"
 #include "xbt/log.h"
 #include "communication.h"
+#include "print_syscall.h"
 
 #include <linux/futex.h>
 
@@ -194,8 +195,37 @@ int process_clone_call(pid_t pid, reg_s *arg)
   return 0;
 }
 
-int process_connect_in_call(pid_t pid)
+//This function check if the communication already have been set. Means that 
+int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
 {
+  connect_arg_t conn = &(arg->connect);
+  int domain = get_domain_socket(pid, conn->sockfd);
+  
+  if(domain == 2)//PF_INET
+  {
+    struct sockaddr_in *sai = &(arg->connect.sai);
+    
+    //We ask for a connection on the socket
+    comm_ask_connect(sai->sin_addr.s_addr, ntohs(sai->sin_port), pid);
+    //now mark the process as waiting for conn
+    process_set_state(pid, PROC_CONNECT);
+  }
+  return 1;
+}
+
+int process_bind_call(pid_t pid, syscall_arg_u *arg)
+{
+  connect_arg_t conn = &(arg->connect);
+  set_localaddr_port_socket(pid,conn->sockfd,inet_ntoa(conn->sai.sin_addr),ntohs(conn->sai.sin_port));
+  return 0;
+}
+
+int process_socket_call(pid_t pid, syscall_arg_u *arg)
+{
+  socket_arg_t sock = &(arg->socket);
+  if (sock->ret>0) 
+    register_socket(pid,sock->ret,sock->domain,sock->protocol);
+  
   return 0;
 }
 
@@ -259,12 +289,16 @@ int process_handle(pid_t pid, int stat)
       if(arg.reg_orig == SYS_connect)
       {
         printf("[%d] connect_in\n", pid);
-        ptrace_resume_process(pid);
+        get_args_bind_connect(pid, 0, &arg, &sysarg);
+        process_connect_in_call(pid, &sysarg);
         return PROCESS_IDLE_STATE;
       }
+      
       if(arg.reg_orig == SYS_accept)
       {
         printf("[%d] accept_in\n", pid);
+        //If we have don't have process which waiting for connection we put process on idle state
+        get_args_accept(pid, &arg, &sysarg);
         ptrace_resume_process(pid);
         return PROCESS_IDLE_STATE;
       }
@@ -400,37 +434,38 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_socket: 
-          printf("[%d] socket( ",pid);
-          get_args_socket(pid, &arg);
-          printf(" ) = %ld\n", arg.ret);
+          get_args_socket(pid, &arg, &sysarg);
+          print_socket_syscall(pid, &sysarg);
+
           break;
           
         case SYS_bind:
-          printf("[%d] bind( ", pid);
           get_args_bind_connect(pid, 0, &arg, &sysarg);
-          printf(" ) = %ld\n", arg.ret);
+          print_bind_syscall(pid, &(sysarg.connect));
+          process_bind_call(pid, &sysarg);
           break;
           
         case SYS_connect:
-          printf("[%d] connect( ", pid);
+          
           get_args_bind_connect(pid, 1, &arg, &sysarg);
-          printf(" ) = %ld\n", arg.ret);
+          print_connect_syscall(pid, &(sysarg.connect));
           process_set_state(pid, PROC_CONNECT);
           return PROCESS_IDLE_STATE;
           break;
           
         case SYS_accept:
-          printf("[%d] accept( ", pid);
-          int conn_pid = get_args_accept(pid, &arg);
-          printf(" ) = %ld\n", arg.ret);
+        {
+          int conn_pid = get_args_accept(pid, &arg, &sysarg);
+          print_accept_syscall(pid, &sysarg.accept);
           if(conn_pid == 0)
           {
             THROW_IMPOSSIBLE;
-            process_set_state(pid, PROC_ACCEPT);
+            process_set_state(pid, PROC_ACCEPT_IN);
           }
           else
             process_mark_connect_do(conn_pid);
           return PROCESS_IDLE_STATE;
+        }
           break;
           
         case SYS_listen:

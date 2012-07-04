@@ -124,6 +124,7 @@ void comm_ask_connect(unsigned int ip, int port, pid_t tid)
         //Now verify if it's a listening socket
         if(temp->state & COMM_LISTEN)
         {
+          printf("Add to connection asking queue\n");
           xbt_dynar_push(temp->conn_wait, &tid);
           return ;
         }
@@ -143,6 +144,12 @@ pid_t comm_accept_connect(struct infos_socket* is)
     return 0;
   xbt_dynar_shift(comm->conn_wait, &tid);
   return tid;
+}
+
+int comm_has_connect_waiting(struct infos_socket* is)
+{
+  comm_t comm = is->comm;
+  return !xbt_dynar_is_empty(comm->conn_wait);
 }
 
 int comm_get_socket_state(struct infos_socket* is)

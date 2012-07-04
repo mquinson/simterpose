@@ -4,7 +4,7 @@
 #define PROC_SELECT             0x00001
 #define PROC_POLL               0x00002
 #define PROC_CONNECT            0x00004
-#define PROC_ACCEPT             0x00008
+#define PROC_ACCEPT_IN          0x00008
 #define PROC_CONNECT_DONE       0x00010
 
 #define SELECT_FDRD_SET 0x01
