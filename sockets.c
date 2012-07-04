@@ -407,8 +407,7 @@ int handle_new_receive(int pid, int sockfd, int length)
 //TODO simplify handling 
 void handle_new_send(struct infos_socket *is,  int length)
 {
-//   printf("New send on port %d\n", is->port_local);
-  recv_information* recv = comm_get_own_recv(is);
+  recv_information* recv = comm_get_peer_recv(is);
   int *size = malloc(sizeof(int));
   *size=length;
   

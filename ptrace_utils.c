@@ -19,6 +19,22 @@ void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) 
   }
 }
 
+void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
+{
+  size_t i = 0;
+  
+  while (i < len / sizeof(long)) {
+    long ret;
+    errno = 0;
+    ret = ptrace(PTRACE_POKEDATA, pid, dst + i * sizeof(long), src + i * sizeof(long));
+    if (ret == -1 && errno != 0) {
+      printf("ptrace pokedata\n");
+      exit(1);
+    }
+    i++;
+  }
+}
+
 void ptrace_resume_process(const pid_t pid)
 {
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
@@ -37,12 +53,10 @@ void ptrace_detach_process(const pid_t pid)
 }
 
 
-void ptrace_get_register(const pid_t pid, syscall_arg* arg)
+void ptrace_get_register(const pid_t pid, reg_s* arg)
 {
   struct user_regs_struct regs;
   int r;
-  
-//   printf("getregs of pid %d\n", pid);
   
   if (( r = ptrace(PTRACE_GETREGS, pid,NULL, &regs)) == -1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
@@ -86,6 +100,8 @@ void ptrace_set_register(const pid_t pid)
 
 }
 
+//TODO add 32 bit gestion
+
 void ptrace_neutralize_syscall(const pid_t pid)
 {
   struct user_regs_struct regs;
@@ -96,6 +112,24 @@ void ptrace_neutralize_syscall(const pid_t pid)
   }
 
   regs.orig_rax = 184;
+  
+  if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+}
+
+void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long result)
+{
+  struct user_regs_struct regs;
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
+    perror("ptrace getregs");
+    exit(1);
+  }
+  
+  regs.orig_rax = syscall;
+  regs.rax = result;
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
     perror("ptrace getregs");

@@ -11,6 +11,7 @@ typedef struct comm_s comm_s;
 typedef comm_s *comm_t;
 
 #include "sockets.h"
+#include "xbt.h"
 #include <sys/types.h>
 
 typedef struct{
@@ -24,7 +25,7 @@ struct comm_s{
   int remote_port;
   comm_info info[2];
   int state;
-  int conn_wait;
+  xbt_dynar_t conn_wait;
 };
 
 void init_comm();
@@ -41,15 +42,17 @@ struct infos_socket* comm_get_peer(struct infos_socket* is);
 
 recv_information* comm_get_own_recv(struct infos_socket* is);
 
+recv_information* comm_get_peer_recv(struct infos_socket* is);
+
 void comm_set_state(comm_t comm, int new_state);
 
 void comm_set_close(comm_t comm);
 
 void comm_set_listen(comm_t comm);
 
-void comm_ask_connect(comm_t comm);
+void comm_ask_connect(unsigned int ip, int port, pid_t tid);
 
-void comm_accept_connect(comm_t comm);
+pid_t comm_accept_connect(struct infos_socket* is);
 
 int comm_get_socket_state(struct infos_socket* is);
 

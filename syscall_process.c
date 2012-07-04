@@ -9,9 +9,12 @@
 #include "task.h"
 #include "xbt.h"
 #include "simdag/simdag.h"
+#include "xbt/log.h"
 #include "communication.h"
 
 #include <linux/futex.h>
+
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process log");
 
 //TODO test the possibility to remove incomplete checking
 //There is no need to return value because send always bring a task
@@ -29,12 +32,9 @@ void process_send_call(int pid, int sockfd, int ret)
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = comm_get_peer(is);
       
-      if(s!=NULL)
-        handle_new_send(s,  ret);
-      else
-        THROW_IMPOSSIBLE;
+      handle_new_send(is,  ret);
 
-      SD_task_t task = create_send_communication_task(pid, s, ret);
+      SD_task_t task = create_send_communication_task(pid, is, ret);
 
       schedule_comm_task(is->proc->station, s->proc->station, task);
     }
@@ -73,6 +73,54 @@ int process_fork_call(int pid)
 }
 
 
+int process_select_call(pid_t pid)
+{
+  select_arg_t arg = (select_arg_t) process_get_argument(pid);
+  
+  int i;
+  
+  fd_set fd_rd, fd_wr, fd_ex;
+  
+  fd_rd = arg->fd_read;
+  fd_wr = arg->fd_write;
+  fd_ex = arg->fd_except;
+  
+  int match = 0;
+  
+  for(i=0 ; i < arg->maxfd ; ++i)
+  {
+    struct infos_socket* is = process_get_fd(pid, i);
+    //if i is NULL that means that i is not a socket
+    if(is == NULL)
+      continue;
+    int sock_status = socket_get_state(is);
+    if(FD_ISSET(i, &(fd_rd)))
+    {
+      if(sock_status & SOCKET_READ_OK)
+        ++match;
+      else
+        FD_CLR(i, &(fd_rd));
+    }
+    if(FD_ISSET(i, &(fd_wr)))
+    {
+      XBT_WARN("Mediation for writing states on socket are not support yet\n");
+    }
+    if(FD_ISSET(i, &(fd_ex)))
+    {
+      XBT_WARN("Mediation for exception states on socket are not support yet\n");
+    }
+  }
+  if(match > 0)
+  {
+    sys_build_select(pid, match);
+    return match;
+  }
+  else
+    //printf("No match for select\n");
+  return 0;
+}
+
+
 int process_handle_active(pid_t pid)
 {
   int status;
@@ -92,13 +140,38 @@ int process_handle_active(pid_t pid)
 int process_handle_idle(pid_t pid)
 {
   int status;
-  if(waitpid(pid, &status, WNOHANG))
-    return process_handle( pid, status);
+  int proc_state = process_get_state(pid);
+  
+  if(proc_state & PROC_SELECT)
+  {
+    //if the select match changment we have to run the child
+    if(process_select_call(pid))
+      return process_handle_active(pid);
+    else
+      return PROCESS_IDLE_STATE;
+  }
+  if(proc_state & PROC_CONNECT)
+  {
+    //if the select match changment we have to run the child
+    if(process_is_connect_done(pid))
+      return process_handle_active(pid);
+    else
+      return PROCESS_IDLE_STATE;
+  }
+  else if(proc_state & PROC_POLL)
+  {
+    THROW_UNIMPLEMENTED;
+  }
   else
-    return PROCESS_IDLE_STATE;
+  {
+    if(waitpid(pid, &status, WNOHANG))
+      return process_handle( pid, status);
+    else
+      return PROCESS_IDLE_STATE;
+  }
 }
 
-int process_clone_call(pid_t pid, syscall_arg *arg)
+int process_clone_call(pid_t pid, reg_s *arg)
 {
   unsigned long tid = arg->ret;
   unsigned long flags = arg->arg1;
@@ -121,13 +194,18 @@ int process_clone_call(pid_t pid, syscall_arg *arg)
   return 0;
 }
 
+int process_connect_in_call(pid_t pid)
+{
+  
+}
+
 
 
 int process_handle(pid_t pid, int stat)
 {  
   int status = stat;
   int sockfd;
-  syscall_arg arg;
+  reg_s arg;
   while(1)
   {
     
@@ -150,6 +228,7 @@ int process_handle(pid_t pid, int stat)
         printf(" = %d \n", (int)arg.ret);
         ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
+        process_set_out_syscall(pid);
         return PROCESS_IDLE_STATE;
       }
       
@@ -176,7 +255,13 @@ int process_handle(pid_t pid, int stat)
       }
       
       #if defined(__x86_64)
-      if(arg.reg_orig == SYS_accept || arg.reg_orig == SYS_connect)
+      if(arg.reg_orig == SYS_connect)
+      {
+        printf("[%d] connect_in\n", pid);
+        ptrace_resume_process(pid);
+        return PROCESS_IDLE_STATE;
+      }
+      if(arg.reg_orig == SYS_accept)
       {
         printf("[%d] accept_in\n", pid);
         ptrace_resume_process(pid);
@@ -185,10 +270,12 @@ int process_handle(pid_t pid, int stat)
       
       else if(arg.reg_orig == SYS_select)
       {
+        THROW_UNIMPLEMENTED;
         double timeout = get_args_select(pid,&arg);
         add_launching_time(pid, timeout + SD_get_clock());
         ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
+        process_set_out_syscall(pid);
         return PROCESS_IDLE_STATE;
       }
       
@@ -216,6 +303,7 @@ int process_handle(pid_t pid, int stat)
           add_launching_time(pid, timeout + SD_get_clock());
           ptrace_neutralize_syscall(pid);
           ptrace_resume_process(pid);
+          process_set_out_syscall(pid);
           return PROCESS_IDLE_STATE;
         }
 
@@ -326,15 +414,21 @@ int process_handle(pid_t pid, int stat)
           printf("[%d] connect( ", pid);
           get_args_bind_connect(pid, 1, &arg);
           printf(" ) = %ld\n", arg.ret);
-          ptrace_resume_process(pid);
+          process_set_state(pid, PROC_CONNECT);
           return PROCESS_IDLE_STATE;
           break;
           
         case SYS_accept:
           printf("[%d] accept( ", pid);
-          get_args_accept(pid, &arg);
+          int conn_pid = get_args_accept(pid, &arg);
           printf(" ) = %ld\n", arg.ret);
-          ptrace_resume_process(pid);
+          if(conn_pid == 0)
+          {
+            THROW_IMPOSSIBLE;
+            process_set_state(pid, PROC_ACCEPT);
+          }
+          else
+            process_mark_connect_do(conn_pid);
           return PROCESS_IDLE_STATE;
           break;
           
@@ -434,6 +528,7 @@ int process_handle(pid_t pid, int stat)
               break;
                     
             case SYS_listen_32: 
+              //TODO add listen mark
               printf("[%d] listen( ", pid); 
               get_args_listen(pid, &arg;
               printf(" ) = %ld\n", arg.ret);

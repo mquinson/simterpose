@@ -90,7 +90,7 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   temp->task = task_receiving;
   temp->sender_pid = pid_sender;
   
-  recv_information* recv = comm_get_own_recv(is);
+  recv_information* recv = comm_get_peer_recv(is);
   xbt_fifo_push(recv->recv_task, temp);
   
   //if last_computation_task is not NULL, that means that we have to do some computation before process syscall

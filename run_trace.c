@@ -5,6 +5,7 @@
 #include "process_descriptor.h"
 #include "run_trace.h"
 #include "xbt/fifo.h"
+#include "xbt/log.h"
 #include "data_utils.h"
 #include "parser.h"
 #include "init.h"
@@ -13,6 +14,7 @@
 
 #define BUFFER_SIZE 512
 
+XBT_LOG_NEW_CATEGORY(SIMTERPOSE, "Simterpose log");
 
 
 void print_trace_header(FILE* trace)

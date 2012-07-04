@@ -107,7 +107,7 @@ void run_until_exec(pid_t pid)
   int status;
   
   //First we run process until we found the first exec.
-  syscall_arg arg;
+  reg_s arg;
   while(!exec_found)
   {
     waitpid(pid, &status, 0);

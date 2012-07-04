@@ -19,6 +19,8 @@ comm_t comm_new(struct infos_socket* socket, unsigned int remote_ip, int remote_
   
   socket->comm=res;
   
+  printf("Register new connection for %d, %d\n", socket->ip_local, socket->port_local);
+  
   res->info[0].socket = socket;
   res->info[0].recv = recv_information_new();
   res->info[1].socket = NULL;
@@ -28,7 +30,7 @@ comm_t comm_new(struct infos_socket* socket, unsigned int remote_ip, int remote_
   res->remote_ip = remote_ip;
   
   res->state = COMM_OPEN;
-  res->conn_wait = 0;
+  res->conn_wait = xbt_dynar_new(sizeof(pid_t), NULL);
   
   xbt_dynar_push(comm_list, &res);
   
@@ -79,6 +81,15 @@ recv_information* comm_get_own_recv(struct infos_socket* is)
     return comm->info[1].recv;
 }
 
+recv_information* comm_get_peer_recv(struct infos_socket* is)
+{
+  comm_t comm = is->comm;
+  if( comm->info[0].socket == is)
+    return comm->info[1].recv;
+  else
+    return comm->info[0].recv;
+}
+
 void comm_set_state(comm_t comm, int new_state)
 {
   comm->state = new_state; 
@@ -93,21 +104,52 @@ void comm_set_close(comm_t comm)
 void comm_set_listen(comm_t comm)
 {
   comm->state =  comm->state | COMM_LISTEN;
+  printf("Listen do %d\n", comm->state & COMM_LISTEN);
 }
 
-void comm_ask_connect(comm_t comm)
+void comm_ask_connect(unsigned int ip, int port, pid_t tid)
 {
-  comm->conn_wait +=1;
+  comm_t temp;
+  unsigned int cpt = 0;
+  
+  xbt_dynar_foreach(comm_list, cpt, temp)
+  {
+    printf("temp->state & COMM_LISTEN : %d\n", temp->state & COMM_LISTEN);
+    if(temp->state & COMM_LISTEN)
+    {
+      struct infos_socket* socket = temp->info[0].socket;
+      printf("Checking %d %d\n", socket->ip_local, socket->port_local);
+      if((socket->ip_local == ip || socket->ip_local == 1)&&  socket->port_local == port)
+      {
+        //Now verify if it's a listening socket
+        if(temp->state & COMM_LISTEN)
+        {
+          xbt_dynar_push(temp->conn_wait, &tid);
+          return ;
+        }
+      }
+    }
+  }
+  printf("Don't found listened socket %ud %d\n", ip, port);
 }
 
-void comm_accept_connect(comm_t comm)
+pid_t comm_accept_connect(struct infos_socket* is)
 {
-  comm->conn_wait -= 1;
+  comm_t comm = is->comm;
+  pid_t tid;
+  if(comm==NULL)
+    THROW_IMPOSSIBLE;
+  if(xbt_dynar_is_empty(comm->conn_wait))
+    return 0;
+  xbt_dynar_shift(comm->conn_wait, &tid);
+  return tid;
 }
 
 int comm_get_socket_state(struct infos_socket* is)
 {
   comm_t comm = is->comm;
+  if(comm == NULL)
+    THROW_IMPOSSIBLE;
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
   if(recv->quantity_recv > 0 || comm->conn_wait > 0)

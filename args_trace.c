@@ -3,7 +3,7 @@
 #include "communication.h"
 
 
-void get_args_socket(pid_t child, syscall_arg *arg) { 
+void get_args_socket(pid_t child, reg_s *arg) { 
 
   //printf("Entering get_args_socket : %d __", sockfd);
   int sockfd = arg->ret;
@@ -84,7 +84,7 @@ void get_args_socket(pid_t child, syscall_arg *arg) {
 //   printf("Leaving parsing argument socket\n");
 }
 
-void get_args_bind_connect(pid_t child, int syscall, syscall_arg *arg) {
+void get_args_bind_connect(pid_t child, int syscall, reg_s *arg) {
   
   int sockfd;
   int ret = arg->ret;
@@ -129,7 +129,10 @@ void get_args_bind_connect(pid_t child, int syscall, syscall_arg *arg) {
     printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(sai.sin_port),inet_ntoa(sai.sin_addr));
     if (ret==0) {
       if (syscall==0)
-	set_localaddr_port_socket(child,sockfd,inet_ntoa(sai.sin_addr),sai.sin_port); // update local informations if bind 
+      {
+        printf("%d %d\n", sai.sin_addr.s_addr, ntohs(sai.sin_port));
+        set_localaddr_port_socket(child,sockfd,inet_ntoa(sai.sin_addr),ntohs(sai.sin_port)); // update local informations if bind 
+      }
       else
       {
 	update_socket(child,sockfd); // update remote informations if connect
@@ -137,6 +140,9 @@ void get_args_bind_connect(pid_t child, int syscall, syscall_arg *arg) {
         struct infos_socket* is = get_infos_socket(child, sockfd);
         
         socket_get_remote_addr(child, sockfd, remote_addr);
+        //Now mark the socket as connect wait
+        comm_ask_connect(remote_addr->sin_addr.s_addr, remote_addr->sin_port, child);
+        
 //         printf("Connect to peer %d %d\n", remote_addr->sin_addr.s_addr, remote_addr->sin_port);
         comm_t comm = comm_find_incomplete(remote_addr->sin_addr.s_addr, remote_addr->sin_port, is);
         if(comm == NULL) //if communication is not create yet
@@ -163,7 +169,7 @@ void get_args_bind_connect(pid_t child, int syscall, syscall_arg *arg) {
   printf("%d",addrlen);
 }
 
-void get_args_accept(pid_t child, syscall_arg *arg) {
+pid_t get_args_accept(pid_t child, reg_s *arg) {
   
   int sockfd;
   int ret = arg->ret;
@@ -230,6 +236,7 @@ void get_args_accept(pid_t child, syscall_arg *arg) {
   }
 
   int protocol=get_protocol_socket(child,sockfd);
+  pid_t tid = -1;
   if (ret>=0 ) {
     struct infos_socket* is = register_socket(child,ret,domain,protocol);
     printf("Now update socket %d\n", is->fd);
@@ -239,6 +246,7 @@ void get_args_accept(pid_t child, syscall_arg *arg) {
     {
 //       printf("Try to found communication %du %d \n", sai.sin_addr.s_addr, ntohs(sai.sin_port));
       comm_t comm = comm_find_incomplete(sai.sin_addr.s_addr, ntohs(sai.sin_port), is);
+      tid = comm_accept_connect(get_infos_socket(child, sockfd));
       if(comm == NULL)//if there no communication which correspond
         comm = comm_new(is, sai.sin_addr.s_addr, ntohs(sai.sin_port));
       else //else we have to join the communication
@@ -249,9 +257,11 @@ void get_args_accept(pid_t child, syscall_arg *arg) {
   }
 
   printf("%d",addrlen);
+  
+  return tid;
 }
 
-void get_args_listen(pid_t child, syscall_arg *arg) {
+void get_args_listen(pid_t pid, reg_s *arg) {
   
   int sockfd;
   int backlog;
@@ -264,14 +274,17 @@ void get_args_listen(pid_t child, syscall_arg *arg) {
 #else
 
   void *addr= (void*) arg->arg2;
-  ptrace_cpy(child, &sockfd, addr, sizeof(int),"listen");
-  ptrace_cpy(child, &backlog, addr + sizeof(long), sizeof(int),"listen");
+  ptrace_cpy(pid, &sockfd, addr, sizeof(int),"listen");
+  ptrace_cpy(pid, &backlog, addr + sizeof(long), sizeof(int),"listen");
   
 #endif
 
   printf("%d, ",sockfd);
   printf("%d ",backlog);
-
+  
+  struct infos_socket* is = get_infos_socket(pid, sockfd);
+  comm_t comm = comm_new(is, 0, 0);
+  comm_set_listen(comm);
 }
 
 
@@ -309,7 +322,7 @@ void get_flags_recv(int flags) {
   printf(", ");
 }
 
-int get_args_send_recv(pid_t child, int syscall, syscall_arg *arg) {
+int get_args_send_recv(pid_t child, int syscall, reg_s *arg) {
  
   int sockfd;
   size_t len;
@@ -355,10 +368,11 @@ void disp_fd(fd_set * fd) {
   printf("]");
 }
 
-double get_args_select(pid_t child, syscall_arg *r) {
+double get_args_select(pid_t child, reg_s *r) {
 
   fd_set fr, fw, fe;
   double timeout;
+  int fd_state=0;
   //TODO add recuperation of except's fd_set
   FD_ZERO(&fe);
 #if defined(__x86_64)
@@ -367,6 +381,7 @@ double get_args_select(pid_t child, syscall_arg *r) {
   if (r->arg2!=0) {
     ptrace_cpy(child, &fr, (void *)r->arg2, sizeof(fd_set),"select");
     disp_fd(&fr);
+    fd_state = fd_state | SELECT_FDRD_SET;
   } 
   else 
   {
@@ -378,6 +393,7 @@ double get_args_select(pid_t child, syscall_arg *r) {
   if (r->arg3!=0) {
     ptrace_cpy(child, &fw, (void *)r->arg3, sizeof(fd_set),"select");
     disp_fd(&fw);
+    fd_state = fd_state | SELECT_FDWR_SET;
   } 
   else 
   {
@@ -389,6 +405,7 @@ double get_args_select(pid_t child, syscall_arg *r) {
   if (r->arg4!=0) {
     ptrace_cpy(child, &fe, (void *)r->arg4, sizeof(fd_set),"select");
     disp_fd(&fe);
+    fd_state = fd_state | SELECT_FDEX_SET;
   }
   else 
   {
@@ -436,12 +453,37 @@ double get_args_select(pid_t child, syscall_arg *r) {
 #endif
   // FIXME handle ret value
 
-  process_set_select(child, r->arg1, fr, fw, fe);
+  process_set_select(child, fd_state, r->arg1, fr, fw, fe);
   
   return timeout;
 }
 
-void get_args_get_setsockopt(pid_t child, int syscall, syscall_arg* arg) {
+//TODO add 32 bit gestion
+void sys_build_select(pid_t pid, int match)
+{
+  ptrace_restore_syscall(pid, SYS_select, match);
+  reg_s r;
+  ptrace_get_register(pid, &r);
+  
+  select_arg_t arg = (select_arg_t)process_get_argument(pid);
+  
+  if(arg->fd_state & SELECT_FDRD_SET)
+  {
+    ptrace_poke(pid, (void*)r.arg2, &(arg->fd_read), sizeof(fd_set));
+  }
+  if(arg->fd_state & SELECT_FDWR_SET)
+  {
+    ptrace_poke(pid, (void*)r.arg3, &(arg->fd_write), sizeof(fd_set));
+  }
+  if(arg->fd_state & SELECT_FDEX_SET)
+  {
+    ptrace_poke(pid, (void*)r.arg4, &(arg->fd_except), sizeof(fd_set));
+  }
+}
+
+
+
+void get_args_get_setsockopt(pid_t child, int syscall, reg_s* arg) {
 
   int sockfd;
   int level;
@@ -526,7 +568,7 @@ void get_args_get_setsockopt(pid_t child, int syscall, syscall_arg* arg) {
 
 
 
-int get_args_sendto_recvfrom(pid_t child, int syscall, syscall_arg* arg) {
+int get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* arg) {
 
   int sockfd;
   int len;
@@ -639,7 +681,7 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, syscall_arg* arg) {
  
 }
 
-int get_args_send_recvmsg(pid_t child, int syscall, syscall_arg* arg) {
+int get_args_send_recvmsg(pid_t child, int syscall, reg_s* arg) {
 
   int sockfd;
   int flags;
@@ -736,7 +778,7 @@ void disp_pollfd(struct pollfd *fds, int nfds) {
   
 }
 
-double get_args_poll(pid_t child, syscall_arg* arg) {
+double get_args_poll(pid_t child, reg_s* arg) {
   //TODO modify to found time_out
   
   void * src = (void*)arg->arg1;
