@@ -1,8 +1,11 @@
 #ifndef __ARGS_TRACE_H 
 #define __ARGS_TRACE_H
 
-typedef struct connect_arg_s connect_arg_s;
+typedef struct connect_bind_arg_s connect_arg_s;
 typedef connect_arg_s* connect_arg_t;
+
+typedef struct connect_bind_arg_s bind_arg_s;
+typedef bind_arg_s* bind_arg_t;
 
 typedef struct accept_arg_s accept_arg_s;
 typedef accept_arg_s* accept_arg_t;
@@ -14,7 +17,7 @@ typedef socket_arg_s* socket_arg_t;
 #include "sockets.h"
 #include "sysdep.h"
 
-struct connect_arg_s{
+struct connect_bind_arg_s{
   int sockfd;
   int ret;
   union{
@@ -45,6 +48,7 @@ struct socket_arg_s{
 
 typedef union{
   connect_arg_s connect;
+  bind_arg_s bind;
   accept_arg_s accept;
   socket_arg_s socket;
 } syscall_arg_u;

@@ -436,12 +436,12 @@ int process_handle(pid_t pid, int stat)
         case SYS_socket: 
           get_args_socket(pid, &arg, &sysarg);
           print_socket_syscall(pid, &sysarg);
-
+          process_socket_call(pid, &sysarg);
           break;
           
         case SYS_bind:
           get_args_bind_connect(pid, 0, &arg, &sysarg);
-          print_bind_syscall(pid, &(sysarg.connect));
+          print_bind_syscall(pid, &sysarg);
           process_bind_call(pid, &sysarg);
           break;
           

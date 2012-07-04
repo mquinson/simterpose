@@ -54,8 +54,9 @@ void print_connect_syscall(pid_t pid, connect_arg_t arg)
 }
 
 
-void print_bind_syscall(pid_t pid, connect_arg_t arg)
+void print_bind_syscall(pid_t pid, syscall_arg_u *sysarg)
 {
+  bind_arg_t arg = &(sysarg->bind);
   int domain = get_domain_socket(pid,arg->sockfd);
   
   printf("[%d] bind( ", pid);
