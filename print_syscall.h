@@ -19,4 +19,12 @@ void print_setsockopt_syscall(pid_t pid, syscall_arg_u* sysarg);
 
 void print_listen_syscall(pid_t pid, syscall_arg_u* sysarg);
 
+void print_recv_syscall(pid_t pid, syscall_arg_u* sysarg);
+
+void print_send_syscall(pid_t pid, syscall_arg_u* sysarg);
+
+void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg);
+
+void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg);
+
 #endif

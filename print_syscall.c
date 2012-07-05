@@ -248,3 +248,155 @@ void print_listen_syscall(pid_t pid, syscall_arg_u* sysarg)
   printf(" ) = %d\n", arg->ret);
 }
 
+void print_flags_send(int flags) {
+  if (flags & MSG_CONFIRM)
+    printf(" MSG_CONFIRM |");
+  if (flags & MSG_DONTROUTE)
+    printf(" MSG_DONTROUTE |");
+  if (flags & MSG_DONTWAIT)
+    printf(" MSG_DONTWAIT |");
+  if (flags & MSG_EOR)
+    printf(" MSG_EOR |");
+  if (flags & MSG_MORE)
+    printf(" MSG_MORE |");
+  if (flags & MSG_NOSIGNAL)
+    printf(" MSG_NOSIGNAL |");
+  if (flags & MSG_OOB)
+    printf(" MSG_OOB |");
+  printf(", ");
+}
+
+
+void print_flags_recv(int flags) {
+  if (flags & MSG_DONTWAIT)
+    printf(" MSG_DONTWAIT |");
+  if (flags & MSG_ERRQUEUE)
+    printf(" MSG_ERRQUEUE |");
+  if (flags & MSG_PEEK)
+    printf(" MSG_PEEK |");
+  if (flags & MSG_OOB)
+    printf(" MSG_OOB |");
+  if (flags & MSG_TRUNC)
+    printf(" MSG_TRUNC |");
+  if (flags & MSG_WAITALL)
+    printf(" MSG_WAITALL |");
+  printf(", ");
+}
+
+
+void print_recv_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  recv_arg_t arg = &(sysarg->recv);
+  printf("[%d] send( ", pid);
+  
+  printf("%d, ",arg->sockfd);
+  printf("%d ",(int)arg->len);
+  
+  if (arg->flags>0) {
+    print_flags_recv(arg->flags); 
+  } else
+    printf("0, ");
+  
+  printf(" ) = %d\n", arg->ret);
+}
+
+void print_send_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  recv_arg_t arg = &(sysarg->send);
+  printf("[%d] send( ", pid);
+  
+  printf("%d, ",arg->sockfd);
+  printf("%d ",(int)arg->len);
+  
+  if (arg->flags>0) {
+    print_flags_send(arg->flags); 
+  } else
+    printf("0, ");
+  
+  printf(" ) = %d\n", arg->ret);
+}
+
+void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  sendto_arg_t arg = &(sysarg->sendto);
+  int domain = get_domain_socket(pid,arg->sockfd);
+  
+  printf("[%d] sendto( ", pid);
+  printf("%d, \"...\",%d ",arg->sockfd, arg->len);
+  
+  if (arg->flags>0) {
+    print_flags_send(arg->flags); 
+  } else
+    printf("0, ");
+  
+  if (domain == 2 ) { // PF_INET
+    if (arg->is_addr) {
+      printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(arg->sai.sin_port),inet_ntoa(arg->sai.sin_addr));
+    } else
+      printf("NULL, ");
+  }
+  else if (domain == 1) { //PF_UNIX
+    if (arg->is_addr) {
+      printf("{sa_family=AF_UNIX, sun_path=\"%s\"}, ",arg->sau.sun_path);
+    } else
+      printf("NULL, ");
+    
+  }
+  else if (domain == 16) { //PF_NETLINK
+    if (arg->is_addr) {
+      printf("{sa_family=AF_NETLINK, pid=%d, groups=%u}, ",arg->snl.nl_pid, arg->snl.nl_groups);
+    } else
+      printf("NULL, ");
+  } 
+  else {
+    printf("{sockaddr unknown}, ");
+  }
+
+  printf("%d",(int)arg->addrlen); 
+  
+  printf(" ) = %d\n", arg->ret);
+}
+
+void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  sendto_arg_t arg = &(sysarg->sendto);
+  int domain = get_domain_socket(pid,arg->sockfd);
+  
+  printf("[%d] recvfrom( ", pid);
+  printf("%d, \"...\",%d ",arg->sockfd, arg->len);
+  
+  if (arg->flags>0) {
+    print_flags_send(arg->flags); 
+  } else
+    printf("0, ");
+  
+  if (domain == 2 ) { // PF_INET
+    if (arg->is_addr) {
+      printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(arg->sai.sin_port),inet_ntoa(arg->sai.sin_addr));
+    } else
+      printf("NULL, ");
+  }
+  else if (domain == 1) { //PF_UNIX
+    if (arg->is_addr) {
+      printf("{sa_family=AF_UNIX, sun_path=\"%s\"}, ",arg->sau.sun_path);
+    } else
+      printf("NULL, ");
+    
+  }
+  else if (domain == 16) { //PF_NETLINK
+    if (arg->is_addr) {
+      printf("{sa_family=AF_NETLINK, pid=%d, groups=%u}, ",arg->snl.nl_pid, arg->snl.nl_groups);
+    } else
+      printf("NULL, ");
+  } 
+  else {
+    printf("{sockaddr unknown}, ");
+  }
+  
+  printf("%d",(int)arg->addrlen); 
+  
+  printf(" ) = %d\n", arg->ret);
+}
+
+
+

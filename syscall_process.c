@@ -307,17 +307,13 @@ int process_listen_call(pid_t pid, syscall_arg_u* sysarg)
 
 int process_handle(pid_t pid, int stat)
 {  
+  printf("Handling %d \n", pid);
   int status = stat;
   int sockfd;
   reg_s arg;
   syscall_arg_u sysarg;
   while(1)
   {
-    
-   /* int stat16=status >> 16;
-    if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
-      THROW_UNIMPLEMENTED; //For now fork and clone are not handle by simterpose.
-    }*/ 
 
     if (process_in_syscall(pid)==0) {
       
@@ -544,18 +540,16 @@ int process_handle(pid_t pid, int stat)
           break;
               
         case SYS_sendto:
-          printf("[%d] sendto( ", pid);
-          sockfd=get_args_sendto_recvfrom(pid, 1, &arg);
-          printf(" ) = %ld\n", arg.ret);
-          process_send_call(pid, sockfd, arg.ret);
+          get_args_sendto_recvfrom(pid, 1, &arg, &sysarg);
+          print_sendto_syscall(pid, &sysarg);
+          process_send_call(pid, sysarg.sendto.sockfd, sysarg.sendto.ret);
           return PROCESS_TASK_FOUND;
           break;
           
         case SYS_recvfrom:
-          printf("[%d] recvfrom( ", pid);
-          sockfd=get_args_sendto_recvfrom(pid, 2, &arg);
-          printf(" ) = %ld\n",arg.ret);
-          if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
+          get_args_sendto_recvfrom(pid, 2, &arg, &sysarg);
+          print_recvfrom_syscall(pid, &sysarg);
+          if(process_recv_call(pid, sysarg.recvfrom.sockfd, sysarg.recvfrom.ret) == PROCESS_TASK_FOUND)
             return PROCESS_TASK_FOUND;
           break;
           

@@ -11,6 +11,7 @@ typedef struct{
   unsigned long arg3;
   unsigned long arg4;
   unsigned long arg5;
+  unsigned long arg6;
 }reg_s;
 
 

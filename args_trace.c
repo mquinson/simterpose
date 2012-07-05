@@ -30,7 +30,6 @@ void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *
   connect_arg_t arg = &(sysarg->connect);
   
   arg->ret = reg->ret;
-
 #if defined(__x86_64)
 
   arg->sockfd=(int)reg->arg1;
@@ -59,26 +58,6 @@ void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *
 //   ptrace_cpy(child,&(arg->connect.addrlen), addr + 2 * sizeof(long), sizeof(socklen_t),"bind ou connect");
 //  
 #endif
-
-//   if (domain == 2 ) {
-//      struct sockaddr_in *sai = &(arg->sai);
-//     if (arg->ret==0) {
-//         update_socket(child,arg->sockfd); // update remote informations if connect
-//         struct sockaddr_in * remote_addr = malloc(sizeof(struct sockaddr_in));
-//         struct infos_socket* is = get_infos_socket(child, arg->connect.sockfd);
-//         
-//         socket_get_remote_addr(child, arg->connect.sockfd, remote_addr);
-//         //Now mark the socket as connect wait
-//         comm_ask_connect(remote_addr->sin_addr.s_addr, remote_addr->sin_port, child);
-//         
-// //         printf("Connect to peer %d %d\n", remote_addr->sin_addr.s_addr, remote_addr->sin_port);
-//         comm_t comm = comm_find_incomplete(remote_addr->sin_addr.s_addr, remote_addr->sin_port, is);
-//         if(comm == NULL) //if communication is not create yet
-//           comm_new(is, remote_addr->sin_addr.s_addr, remote_addr->sin_port);
-//         else
-//           comm_join(comm, get_infos_socket(child, arg->connect.sockfd));
-//     }
-//   }
 }
 
 void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
@@ -133,13 +112,12 @@ void get_args_listen(pid_t pid, reg_s *reg, syscall_arg_u *sysarg) {
 
 #else
 
-  void *addr= (void*) reg->arg2;
-  ptrace_cpy(pid, &sockfd, addr, sizeof(int),"listen");
-  ptrace_cpy(pid, &backlog, addr + sizeof(long), sizeof(int),"listen");
+//   void *addr= (void*) reg->arg2;
+//   ptrace_cpy(pid, &sockfd, addr, sizeof(int),"listen");
+//   ptrace_cpy(pid, &backlog, addr + sizeof(long), sizeof(int),"listen");
   
 #endif
 }
-
 
 void get_flags_send(int flags) {
   if (flags & MSG_CONFIRM)
@@ -159,6 +137,7 @@ void get_flags_send(int flags) {
   printf(", ");
 }
 
+
 void get_flags_recv(int flags) {
   if (flags & MSG_DONTWAIT)
     printf(" MSG_DONTWAIT |");
@@ -175,17 +154,15 @@ void get_flags_recv(int flags) {
   printf(", ");
 }
 
-int get_args_send_recv(pid_t child, int syscall, reg_s *arg) {
- 
-  int sockfd;
-  size_t len;
-  //int flags;
-
+void get_args_send_recv(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sysarg) {
+  recv_arg_t arg = &(sysarg->recv);
+  
+  arg->ret = (int) reg->ret;
 #if defined(__x86_64)
 
-  sockfd = (int)arg->arg1;
-  len = (size_t)arg->arg3;
-  //flags=(int)res->r10;
+  arg->sockfd = (int)reg->arg1;
+  arg->len = (size_t)reg->arg3;
+  arg->flags=(int)reg->arg4;
 
 #else
 
@@ -196,17 +173,6 @@ int get_args_send_recv(pid_t child, int syscall, reg_s *arg) {
 
 #endif
 
-  printf("%d, ",sockfd);
-  printf("%d ",(int)len);
-//   if (flags>0) {
-//      if (syscall == 1)//sendto
-//        get_flags_send(flags);
-//      else //recvfrom
-//        get_flags_recv(flags); 
-//    } else
-//      printf("0, ");
- 
-  return sockfd;
 }
 
 
@@ -373,50 +339,41 @@ void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u
 
 
 
-int get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* arg) {
-
-  int sockfd;
-  int len;
-  int flags;
-  socklen_t addrlen;
-  struct sockaddr_in *psai=NULL; 
-  struct sockaddr_un *psau=NULL;
-  struct sockaddr_nl *psnl=NULL;
+void get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* reg, syscall_arg_u *sysarg) {
+  sendto_arg_t arg = &(sysarg->sendto);
+  
+  arg->ret = reg->ret;
 
 #if defined(__x86_64)
-
-  struct user_regs_struct res;
   
-  if (ptrace(PTRACE_GETREGS, child,NULL, &res)==-1) {
-    perror("ptrace getregs");
-    exit(1);
-  }
-  sockfd=(int)res.rdi;
-  len=(int)res.rdx;
-  flags=(int)res.r10;
+  arg->sockfd=(int)reg->arg1;
+  arg->len=(int)reg->arg3;
+  arg->flags=(int)reg->arg4;
   
-  int domain = get_domain_socket(child,sockfd);
-  
-  if (res.r8 != 0) { // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
+  int domain = get_domain_socket(child,arg->sockfd);
+  if (reg->arg5 != 0) { // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
+    arg->is_addr = 1;
     if (domain == 2 ) // PF_INET
-      psai=(void *)res.r8;
+      ptrace_cpy(child, &arg->sai, (void *)reg->arg5, sizeof(struct sockaddr_in),"sendto ou -- recvfrom");
     if (domain == 1) // PF_UNIX
-      psau=(void *)res.r8;
+      ptrace_cpy(child, &arg->sau, (void *)reg->arg5, sizeof(struct sockaddr_in),"sendto ou -- recvfrom");
     if (domain == 16) // PF_NETLINK
-      psnl=(void *)res.r8;
+      ptrace_cpy(child, &arg->snl, (void *)reg->arg5, sizeof(struct sockaddr_in),"sendto ou -- recvfrom");
   }
+  else
+    arg->is_addr = 0;
 
-  if (res.r9 != 0) {  // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
+  if (reg->arg5 != 0) {  // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     if (syscall == 1) // sendto
-      addrlen=(socklen_t)res.r9;
+      arg->addrlen=(socklen_t)reg->arg5;
     else // recvfrom
-      ptrace_cpy(child,&addrlen,(void *)res.r9, sizeof(socklen_t ),"sendto ou recvfrom");
+      ptrace_cpy(child,&arg->addrlen,(void *)reg->arg5, sizeof(socklen_t ),"sendto ou recvfrom");
   } else
-    addrlen=0;
+    arg->addrlen=0;
 
 #else
-  
-  void *src= (void*)arg->arg2;
+/*  
+  void *src= (void*)reg->arg2;
   ptrace_cpy(child,&sockfd,src,sizeof(int),"sendto ou recvfrom");
   ptrace_cpy(child,&len,src + 2 * sizeof(long), sizeof(size_t),"sendto ou recvfrom");  
   ptrace_cpy(child,&flags,src + 3 * sizeof(long), sizeof(int),"sendto ou recvfrom");
@@ -435,55 +392,8 @@ int get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* arg) {
     socklen_t *addr_addrlen;
     ptrace_cpy(child,&addr_addrlen, src + 5 * sizeof(long), sizeof(socklen_t *),"sendto ou recvfrom");
     ptrace_cpy(child,&addrlen,(void *)addr_addrlen, sizeof(socklen_t ),"sendto ou recvfrom");
-  }
-
- 
+  }*/
 #endif
-
-  printf("%d, \"...\",%d ",sockfd, len);
-  
-  if (flags>0) {
-    if (syscall == 1)//sendto
-      get_flags_send(flags);
-    else //recvfrom
-      get_flags_recv(flags); 
-  } else
-    printf("0, ");
-  
-  if (domain == 2 ) { // PF_INET
-    if (psai != NULL) {
-      struct sockaddr_in sai;
-      ptrace_cpy(child, &sai, (void *)psai, sizeof(struct sockaddr_in),"sendto ou -- recvfrom");
-      printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",ntohs(sai.sin_port),inet_ntoa(sai.sin_addr));
-     } else
-      printf("NULL, ");
-  }
-    
-  if (domain == 1) { //PF_UNIX
-    if (psau != NULL) {
-      struct sockaddr_un sau;
-      ptrace_cpy(child, &sau, psau, sizeof(struct sockaddr_un),"sendto ou recvfrom");
-      printf("{sa_family=AF_UNIX, sun_path=\"%s\"}, ",sau.sun_path);
-    } else
-      printf("NULL, ");
-    
-  }
-
-  if (domain == 16) { //PF_NETLINK
-    if (psnl != NULL) {
-      struct sockaddr_nl snl;
-      ptrace_cpy(child, &snl, psnl, sizeof(struct sockaddr_nl),"sendto ou recvfrom");
-      printf("{sa_family=AF_NETLINK, pid=%d, groups=%u}, ",snl.nl_pid,snl.nl_groups);
-    } else
-      printf("NULL, ");
-  } else {
-    printf("{sockaddr unknown}, ");
-  }
-  
-  printf("%d",(int)addrlen); 
-  
-  return sockfd;
- 
 }
 
 int get_args_send_recvmsg(pid_t child, int syscall, reg_s* arg) {
