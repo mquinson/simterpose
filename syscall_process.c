@@ -521,15 +521,13 @@ int process_handle(pid_t pid, int stat)
           break;
               
         case SYS_getsockopt:
-          printf("[%d] getsockopt(", pid);
-          get_args_get_setsockopt(pid, 1, &arg);
-          printf("%d\n", (int)arg.ret);
+          get_args_get_setsockopt(pid, 1, &arg, &sysarg);
+          print_getsockopt_syscall(pid, &sysarg);
           break;
           
         case SYS_setsockopt:
-          printf("[%d] setsockopt(", pid);
-          get_args_get_setsockopt(pid, 1, &arg);
-          printf("%d\n", (int)arg.ret);
+          get_args_get_setsockopt(pid, 1, &arg, &sysarg);
+          print_setsockopt_syscall(pid, &sysarg);
           break;
                 
           #else
@@ -616,13 +614,13 @@ int process_handle(pid_t pid, int stat)
               
             case SYS_setsockopt_32:
               printf("[%d] setsockopt(", pid);
-              get_args_get_setsockopt(pid, 2, &arg;
+              get_args_get_setsockopt(pid, 2, &arg, &sysarg);
               printf("%d\n", (int)arg.ret);
               break;
               
             case SYS_getsockopt_32:
               printf("[%d] getsockopt(", pid);
-              get_args_get_setsockopt(pid, 1, &arg);
+              get_args_get_setsockopt(pid, 1, &arg, &sysarg);
               printf("%d\n", (int)arg.ret);
               break;
                     

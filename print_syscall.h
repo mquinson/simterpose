@@ -13,5 +13,8 @@ void print_bind_syscall(pid_t pid, syscall_arg_u* sysarg);
 
 void print_socket_syscall(pid_t pid, syscall_arg_u* sysarg);
 
+void print_getsockopt_syscall(pid_t pid, syscall_arg_u* sysarg);
+
+void print_setsockopt_syscall(pid_t pid, syscall_arg_u* sysarg);
 
 #endif

@@ -24,6 +24,7 @@ void get_args_socket(pid_t child, reg_s *reg, syscall_arg_u * sysarg) {
 #endif
 }
 
+
 void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sysarg) {
   
   connect_arg_t arg = &(sysarg->connect);
@@ -139,10 +140,6 @@ pid_t get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
 
     get_localaddr_port_socket(child,arg->sockfd);
   }
-
-  
-  
-
   return tid;
 }
 
@@ -368,87 +365,39 @@ void sys_build_select(pid_t pid, int match)
 
 
 
-void get_args_get_setsockopt(pid_t child, int syscall, reg_s* arg) {
+void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u *sysarg) {
 
-  int sockfd;
-  int level;
-  int optname;
-  //void *optval;
-  socklen_t optlen;
+  getsockopt_arg_t arg = &(sysarg->getsockopt);
 
 #if defined(__x86_64)
-
-  sockfd=(int)arg->arg1;
-  level=(int)arg->arg2;
-  optname=(int)arg->arg3;
+  arg->ret = (int)reg->ret;
+  arg->sockfd=(int)reg->arg1;
+  arg->level=(int)reg->arg2;
+  arg->optname=(int)reg->arg3;
   //optval=(void *)arg->arg4;
 
   if (syscall == 1) // getsockopt
-    ptrace_cpy(child,&optlen,(void *)arg->arg5,sizeof(socklen_t),"getsockopt ou setsockopt");
+    ptrace_cpy(child,&arg->optlen,(void *)reg->arg5,sizeof(socklen_t),"getsockopt ou setsockopt");
   else  // setsockopt
-    optlen=arg->arg5;
+    arg->optlen=reg->arg5;
 
-  
 #else
 
-  void *src = (void*)arg->arg2;
-  socklen_t *addr_optlen;
-  ptrace_cpy(child,&sockfd,src,sizeof(int),"getsockopt ou setsockopt");
-  ptrace_cpy(child,&level,src + sizeof(long),sizeof(int),"getsockopt ou setsockopt");
-  ptrace_cpy(child,&optname,src + 2 * sizeof(long),sizeof(int),"getsockopt ou setsockopt");
-  ptrace_cpy(child,&optval,src + 3 * sizeof(long),sizeof(void *),"getsockopt ou setsockopt");
-
-  if (syscall == 1) { // getsockopt
-    ptrace_cpy(child,&addr_optlen,src + 4 * sizeof(long) ,sizeof(socklen_t *),"getsockopt ou setsockopt");
-    ptrace_cpy(child,&optlen,addr_optlen,sizeof(socklen_t),"getsockopt ou setsockopt");
-  } else // setsockopt
-    ptrace_cpy(child,&optlen,src + 4 * sizeof(long),sizeof(socklen_t),"getsockopt ou setsockopt");
-  
+//   void *src = (void*)arg->arg2;
+//   socklen_t *addr_optlen;
+//   ptrace_cpy(child,&sockfd,src,sizeof(int),"getsockopt ou setsockopt");
+//   ptrace_cpy(child,&level,src + sizeof(long),sizeof(int),"getsockopt ou setsockopt");
+//   ptrace_cpy(child,&optname,src + 2 * sizeof(long),sizeof(int),"getsockopt ou setsockopt");
+//   ptrace_cpy(child,&optval,src + 3 * sizeof(long),sizeof(void *),"getsockopt ou setsockopt");
+// 
+//   if (syscall == 1) { // getsockopt
+//     ptrace_cpy(child,&addr_optlen,src + 4 * sizeof(long) ,sizeof(socklen_t *),"getsockopt ou setsockopt");
+//     ptrace_cpy(child,&optlen,addr_optlen,sizeof(socklen_t),"getsockopt ou setsockopt");
+//   } else // setsockopt
+//     ptrace_cpy(child,&optlen,src + 4 * sizeof(long),sizeof(socklen_t),"getsockopt ou setsockopt");
+//   
 
 #endif
-
-  printf("%d, ",sockfd);
-
-  switch (level) {
-  case 0:
-    printf("SOL_IP, ");
-    switch (optname) {
-    case 1: printf("IP_TOS, "); break; 
-    case 2: printf("IP_TTL, "); break; 
-    case 3: printf("IP_HDRINCL, "); break; 
-    case 4: printf("IP_OPTIONS, "); break;
-    case 6: printf("IP_RECVOPTS, "); break; 
-    default: printf("OPTION UNKNOWN (%d), ", optname); break; 
-    }
-    break;
-  case 1 :
-    printf("SOL_SOCKET, "); 
-    switch (optname) {
-    case 1: printf("SO_DEBUG, "); break;
-    case 2: printf("SO_REUSEADDR, "); break;
-    case 3: printf("SO_TYPE, "); break;
-    case 4: printf("SO_ERROR, "); break;
-    case 5: printf("SO_DONTROUTE, "); break;
-    case 6: printf("SO_BROADCAST, "); break;
-    case 7: printf("SO_SNDBUF, "); break;
-    case 8: printf("SO_RCVBUF, "); break;
-    case 9: printf("SO_SNDBUFFORCE, "); break;
-    case 10: printf("SO_RCVBUFFORCE, "); break;
-    case 11: printf("SO_NO_CHECK, "); break;
-    case 12: printf("SO_PRIORITY, "); break;
-    case 13: printf("SO_LINGER, "); break;
-    case 14: printf("SO_BSDCOMPAT, "); break;
-    case 15: printf("SO_REUSEPORT, "); break;
-    default: printf("OPTION UNKNOWN (%d), ", optname); break; 
-    }
-    break;
-  case 41: printf("SOL_IPV6, "); break;
-  case 58: printf("SOL_ICMPV6, "); break;
-  default: printf("PROTOCOL UNKNOWN (%d), ",level); break;
-  }
- 
-  printf("%d ) = ", optlen);
-
 }
 
 

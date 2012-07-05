@@ -13,6 +13,12 @@ typedef accept_arg_s* accept_arg_t;
 typedef struct socket_arg_s socket_arg_s;
 typedef socket_arg_s* socket_arg_t;
 
+typedef struct getsockopt_arg_s getsockopt_arg_s;
+typedef getsockopt_arg_s* getsockopt_arg_t;
+
+typedef struct getsockopt_arg_s setsockopt_arg_s;
+typedef setsockopt_arg_s* setsockopt_arg_t;
+
 #include "ptrace_utils.h"
 #include "sockets.h"
 #include "sysdep.h"
@@ -46,11 +52,22 @@ struct socket_arg_s{
   int protocol;
 };
 
+struct getsockopt_arg_s{
+  int sockfd;
+  int level;
+  int optname;
+  //void *optval;
+  socklen_t optlen;
+  int ret;
+};
+
 typedef union{
   connect_arg_s connect;
   bind_arg_s bind;
   accept_arg_s accept;
   socket_arg_s socket;
+  getsockopt_arg_s getsockopt;
+  setsockopt_arg_s setsockopt;
 } syscall_arg_u;
 
 
@@ -74,7 +91,7 @@ void sys_build_select(pid_t pid, int match);
 
 double get_args_poll(pid_t child, reg_s* arg);
 
-void get_args_get_setsockopt(pid_t child, int syscall, reg_s* arg);
+void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u *sysarg);
 
 int get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* arg);
 

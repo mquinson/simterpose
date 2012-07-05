@@ -140,4 +140,100 @@ void print_socket_syscall(pid_t pid, syscall_arg_u* sysarg)
 }
 
 
+void print_getsockopt_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  getsockopt_arg_t arg = &(sysarg->getsockopt);
+  printf("[%d] getsockopt(", pid);
+  printf("%d, ",arg->sockfd);
+  
+  switch (arg->level) {
+    case 0:
+      printf("SOL_IP, ");
+      switch (arg->optname) {
+        case 1: printf("IP_TOS, "); break; 
+        case 2: printf("IP_TTL, "); break; 
+        case 3: printf("IP_HDRINCL, "); break; 
+        case 4: printf("IP_OPTIONS, "); break;
+        case 6: printf("IP_RECVOPTS, "); break; 
+        default: printf("OPTION UNKNOWN (%d), ", arg->optname); break; 
+      }
+      break;
+        case 1 :
+          printf("SOL_SOCKET, "); 
+          switch (arg->optname) {
+            case 1: printf("SO_DEBUG, "); break;
+            case 2: printf("SO_REUSEADDR, "); break;
+            case 3: printf("SO_TYPE, "); break;
+            case 4: printf("SO_ERROR, "); break;
+            case 5: printf("SO_DONTROUTE, "); break;
+            case 6: printf("SO_BROADCAST, "); break;
+            case 7: printf("SO_SNDBUF, "); break;
+            case 8: printf("SO_RCVBUF, "); break;
+            case 9: printf("SO_SNDBUFFORCE, "); break;
+            case 10: printf("SO_RCVBUFFORCE, "); break;
+            case 11: printf("SO_NO_CHECK, "); break;
+            case 12: printf("SO_PRIORITY, "); break;
+            case 13: printf("SO_LINGER, "); break;
+            case 14: printf("SO_BSDCOMPAT, "); break;
+            case 15: printf("SO_REUSEPORT, "); break;
+            default: printf("OPTION UNKNOWN (%d), ", arg->optname); break; 
+          }
+          break;
+            case 41: printf("SOL_IPV6, "); break;
+            case 58: printf("SOL_ICMPV6, "); break;
+            default: printf("PROTOCOL UNKNOWN (%d), ",arg->level); break;
+  }
+  
+  printf("%d ) = ", arg->optlen);
+  
+  printf("%d\n", (int)arg->ret);
+}
 
+void print_setsockopt_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  getsockopt_arg_t arg = &(sysarg->setsockopt);
+  printf("[%d] setsockopt(", pid);
+  printf("%d, ",arg->sockfd);
+  
+  switch (arg->level) {
+    case 0:
+      printf("SOL_IP, ");
+      switch (arg->optname) {
+        case 1: printf("IP_TOS, "); break; 
+        case 2: printf("IP_TTL, "); break; 
+        case 3: printf("IP_HDRINCL, "); break; 
+        case 4: printf("IP_OPTIONS, "); break;
+        case 6: printf("IP_RECVOPTS, "); break; 
+        default: printf("OPTION UNKNOWN (%d), ", arg->optname); break; 
+      }
+      break;
+        case 1 :
+          printf("SOL_SOCKET, "); 
+          switch (arg->optname) {
+            case 1: printf("SO_DEBUG, "); break;
+            case 2: printf("SO_REUSEADDR, "); break;
+            case 3: printf("SO_TYPE, "); break;
+            case 4: printf("SO_ERROR, "); break;
+            case 5: printf("SO_DONTROUTE, "); break;
+            case 6: printf("SO_BROADCAST, "); break;
+            case 7: printf("SO_SNDBUF, "); break;
+            case 8: printf("SO_RCVBUF, "); break;
+            case 9: printf("SO_SNDBUFFORCE, "); break;
+            case 10: printf("SO_RCVBUFFORCE, "); break;
+            case 11: printf("SO_NO_CHECK, "); break;
+            case 12: printf("SO_PRIORITY, "); break;
+            case 13: printf("SO_LINGER, "); break;
+            case 14: printf("SO_BSDCOMPAT, "); break;
+            case 15: printf("SO_REUSEPORT, "); break;
+            default: printf("OPTION UNKNOWN (%d), ", arg->optname); break; 
+          }
+          break;
+            case 41: printf("SOL_IPV6, "); break;
+            case 58: printf("SOL_ICMPV6, "); break;
+            default: printf("PROTOCOL UNKNOWN (%d), ",arg->level); break;
+  }
+  
+  printf("%d ) = ", arg->optlen);
+  
+  printf("%d\n", (int)arg->ret);
+}
