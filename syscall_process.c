@@ -76,49 +76,50 @@ int process_fork_call(int pid)
 
 int process_select_call(pid_t pid)
 {
-  select_arg_t arg = (select_arg_t) process_get_argument(pid);
-  
-  int i;
-  
-  fd_set fd_rd, fd_wr, fd_ex;
-  
-  fd_rd = arg->fd_read;
-  fd_wr = arg->fd_write;
-  fd_ex = arg->fd_except;
-  
-  int match = 0;
-  
-  for(i=0 ; i < arg->maxfd ; ++i)
-  {
-    struct infos_socket* is = process_get_fd(pid, i);
-    //if i is NULL that means that i is not a socket
-    if(is == NULL)
-      continue;
-    int sock_status = socket_get_state(is);
-    if(FD_ISSET(i, &(fd_rd)))
-    {
-      if(sock_status & SOCKET_READ_OK)
-        ++match;
-      else
-        FD_CLR(i, &(fd_rd));
-    }
-    if(FD_ISSET(i, &(fd_wr)))
-    {
-      XBT_WARN("Mediation for writing states on socket are not support yet\n");
-    }
-    if(FD_ISSET(i, &(fd_ex)))
-    {
-      XBT_WARN("Mediation for exception states on socket are not support yet\n");
-    }
-  }
-  if(match > 0)
-  {
-    sys_build_select(pid, match);
-    return match;
-  }
-  else
-    //printf("No match for select\n");
-  return 0;
+  THROW_UNIMPLEMENTED;
+//   select_arg_t arg = (select_arg_t) process_get_argument(pid);
+//   
+//   int i;
+//   
+//   fd_set fd_rd, fd_wr, fd_ex;
+//   
+//   fd_rd = arg->fd_read;
+//   fd_wr = arg->fd_write;
+//   fd_ex = arg->fd_except;
+//   
+//   int match = 0;
+//   
+//   for(i=0 ; i < arg->maxfd ; ++i)
+//   {
+//     struct infos_socket* is = process_get_fd(pid, i);
+//     //if i is NULL that means that i is not a socket
+//     if(is == NULL)
+//       continue;
+//     int sock_status = socket_get_state(is);
+//     if(FD_ISSET(i, &(fd_rd)))
+//     {
+//       if(sock_status & SOCKET_READ_OK)
+//         ++match;
+//       else
+//         FD_CLR(i, &(fd_rd));
+//     }
+//     if(FD_ISSET(i, &(fd_wr)))
+//     {
+//       XBT_WARN("Mediation for writing states on socket are not support yet\n");
+//     }
+//     if(FD_ISSET(i, &(fd_ex)))
+//     {
+//       XBT_WARN("Mediation for exception states on socket are not support yet\n");
+//     }
+//   }
+//   if(match > 0)
+//   {
+//     sys_build_select(pid, match);
+//     return match;
+//   }
+//   else
+//     //printf("No match for select\n");
+//   return 0;
 }
 
 
@@ -136,6 +137,38 @@ int process_handle_active(pid_t pid)
   return process_handle( pid, status);
 }
 
+//Return 0 if nobody wait or the pid of the one who wait
+int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
+{
+  accept_arg_t acc = &(sysarg->accept);
+  //We try to find here if there's a connection to accept
+  if(comm_has_connect_waiting(get_infos_socket(pid, acc->sockfd)))
+  {
+    pid_t conn_pid = comm_accept_connect(get_infos_socket(pid, acc->sockfd));
+    ptrace_resume_process(conn_pid);
+    process_set_state(conn_pid, PROC_CONNECT_DONE);
+    return conn_pid;
+  }
+  else
+  {
+    process_set_state(pid, PROC_ACCEPT_IN);
+    return 0;
+  }
+}
+
+void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
+{
+  accept_arg_t arg = &(sysarg->accept);
+  
+  int domain = get_domain_socket(pid, arg->sockfd);
+  int protocol=get_protocol_socket(pid, arg->sockfd);
+  
+  struct infos_socket* is = register_socket(pid, arg->ret, domain, protocol);
+  update_socket(pid, arg->ret);
+  comm_new(is, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port));
+  
+  process_set_state(pid, PROC_NO_STATE);
+}
 
 
 int process_handle_idle(pid_t pid)
@@ -162,6 +195,18 @@ int process_handle_idle(pid_t pid)
   else if(proc_state & PROC_POLL)
   {
     THROW_UNIMPLEMENTED;
+  }
+  else if(proc_state & PROC_ACCEPT_IN)
+  {
+    process_descriptor* proc = process_get_descriptor(pid);
+    if(process_accept_in_call(pid, &proc->sysarg))
+    {
+      printf("A process waiting for connection\n");
+      //Here process is like an active process so we launch him like that
+      return process_handle_active(pid);;
+    }
+    else
+      return PROCESS_IDLE_STATE;
   }
   else
   {
@@ -213,6 +258,25 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
   return 1;
 }
 
+void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
+{
+  connect_arg_t conn = &(sysarg->connect);
+  
+  int domain = get_domain_socket(pid, conn->sockfd);
+  if(domain ==2 )
+  {
+    update_socket(pid, conn->sockfd);
+    struct sockaddr_in remote_addr;
+    struct infos_socket* is = get_infos_socket(pid, conn->sockfd);
+    socket_get_remote_addr(pid, conn->sockfd, &remote_addr);
+    comm_t comm = comm_find_incomplete(remote_addr.sin_addr.s_addr, remote_addr.sin_port, is);
+    comm_join(comm, get_infos_socket(pid, conn->sockfd));
+    process_set_state(pid, PROC_NO_STATE);
+  }
+  else
+    THROW_UNIMPLEMENTED;
+}
+
 int process_bind_call(pid_t pid, syscall_arg_u *arg)
 {
   connect_arg_t conn = &(arg->connect);
@@ -225,6 +289,16 @@ int process_socket_call(pid_t pid, syscall_arg_u *arg)
   socket_arg_t sock = &(arg->socket);
   if (sock->ret>0) 
     register_socket(pid,sock->ret,sock->domain,sock->protocol);
+  return 0;
+}
+
+
+int process_listen_call(pid_t pid, syscall_arg_u* sysarg)
+{
+  listen_arg_t list = &(sysarg->listen);
+  struct infos_socket* is = get_infos_socket(pid, list->sockfd);
+  comm_t comm = comm_new(is, 0, 0);
+  comm_set_listen(comm);
   
   return 0;
 }
@@ -291,16 +365,22 @@ int process_handle(pid_t pid, int stat)
         printf("[%d] connect_in\n", pid);
         get_args_bind_connect(pid, 0, &arg, &sysarg);
         process_connect_in_call(pid, &sysarg);
+        process_set_state(pid, PROC_CONNECT);
         return PROCESS_IDLE_STATE;
       }
-      
+       
       if(arg.reg_orig == SYS_accept)
       {
         printf("[%d] accept_in\n", pid);
-        //If we have don't have process which waiting for connection we put process on idle state
         get_args_accept(pid, &arg, &sysarg);
-        ptrace_resume_process(pid);
-        return PROCESS_IDLE_STATE;
+        pid_t conn_pid = process_accept_in_call(pid, &sysarg);
+        //if we no process wait for connection we have to put process in idle and save arguments
+        if(!conn_pid)
+        {
+          process_descriptor* proc = process_get_descriptor(pid);
+          proc->sysarg.accept = sysarg.accept;
+          return PROCESS_IDLE_STATE;
+        }
       }
       
       else if(arg.reg_orig == SYS_select)
@@ -446,32 +526,21 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_connect:
-          
           get_args_bind_connect(pid, 1, &arg, &sysarg);
           print_connect_syscall(pid, &(sysarg.connect));
-          process_set_state(pid, PROC_CONNECT);
-          return PROCESS_IDLE_STATE;
+          process_connect_out_call(pid, &sysarg);
           break;
           
         case SYS_accept:
-        {
-          int conn_pid = get_args_accept(pid, &arg, &sysarg);
+          get_args_accept(pid, &arg, &sysarg);
           print_accept_syscall(pid, &sysarg.accept);
-          if(conn_pid == 0)
-          {
-            THROW_IMPOSSIBLE;
-            process_set_state(pid, PROC_ACCEPT_IN);
-          }
-          else
-            process_mark_connect_do(conn_pid);
-          return PROCESS_IDLE_STATE;
-        }
+          process_accept_out_call(pid, &sysarg);
           break;
           
         case SYS_listen:
-          printf("[%d] listen( ", pid); 
-          get_args_listen(pid, &arg);
-          printf(" ) = %ld\n", arg.ret);
+          get_args_listen(pid, &arg, &sysarg);
+          print_listen_syscall(pid, &sysarg);
+          process_listen_call(pid, &sysarg);
           break;
               
         case SYS_sendto:

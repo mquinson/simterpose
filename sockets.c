@@ -121,7 +121,7 @@ void get_localaddr_port_socket(pid_t pid, int fd) {
 
 
 void print_infos_socket(struct infos_socket *is) {
-  fprintf(stdout,"\n%5s %5s %10s %10s %21s %21s %12s %10s\n","pid","fd","domain","protocol","locale_ip:port","remote_ip:port","incomplete", "closed");
+  fprintf(stdout,"\n%5s %5s %10s %10s %21s %12s %10s\n","pid","fd","domain","protocol","locale_ip:port","incomplete", "closed");
     if(is->proc != NULL){
 
   fprintf(stdout,"%5d %5d %10d %10d %15d:%5d %12d %10d\n",

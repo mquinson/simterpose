@@ -150,25 +150,6 @@ void process_exec(pid_t pid)
   //     result->fd_list[i]=NULL;
 }
 
-void process_set_select(pid_t pid,int fd_state, int max, fd_set rd, fd_set wr, fd_set ex)
-{
-  process_descriptor* proc = process_get_descriptor(pid);
-  proc->state = PROC_SELECT;
-  proc->select_arg.fd_state = fd_state;
-  proc->select_arg.maxfd = max;
-  proc->select_arg.fd_read = rd;
-  proc->select_arg.fd_write = wr;
-  proc->select_arg.fd_except = ex;
-}
-
-void process_set_poll(pid_t pid, int nbfd, struct pollfd* list)
-{
-  process_descriptor* proc = process_get_descriptor(pid);
-  proc->state = PROC_POLL;
-  proc->poll_arg.nbfd = nbfd;
-  proc->poll_arg.fd_list = list;
-}
-
 void process_set_state(pid_t tid, int state)
 {
   process_descriptor* proc = process_get_descriptor(tid);
@@ -192,17 +173,6 @@ void process_mark_connect_do(pid_t pid)
 {
   process_descriptor* proc = process_get_descriptor(pid);
   proc->state = proc->state | PROC_CONNECT_DONE;
-}
-
-void* process_get_argument(pid_t pid)
-{
-  process_descriptor* proc = process_get_descriptor(pid);
-  if(proc->state & PROC_POLL)
-    return &(proc->poll_arg);
-  else if(proc->state & PROC_SELECT)
-    return &(proc->select_arg);
-  
-  return NULL;
 }
 
 struct infos_socket* process_get_fd(pid_t pid, int num)

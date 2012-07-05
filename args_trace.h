@@ -1,6 +1,8 @@
 #ifndef __ARGS_TRACE_H 
 #define __ARGS_TRACE_H
 
+#include "sysdep.h"
+
 typedef struct connect_bind_arg_s connect_arg_s;
 typedef connect_arg_s* connect_arg_t;
 
@@ -13,15 +15,33 @@ typedef accept_arg_s* accept_arg_t;
 typedef struct socket_arg_s socket_arg_s;
 typedef socket_arg_s* socket_arg_t;
 
+typedef struct listen_arg_s listen_arg_s;
+typedef listen_arg_s* listen_arg_t;
+
 typedef struct getsockopt_arg_s getsockopt_arg_s;
 typedef getsockopt_arg_s* getsockopt_arg_t;
 
 typedef struct getsockopt_arg_s setsockopt_arg_s;
 typedef setsockopt_arg_s* setsockopt_arg_t;
 
-#include "ptrace_utils.h"
-#include "sockets.h"
-#include "sysdep.h"
+typedef struct select_arg_s select_arg_s;
+typedef select_arg_s* select_arg_t;
+
+typedef struct poll_arg_s poll_arg_s;
+typedef poll_arg_s* poll_arg_t;
+
+struct select_arg_s{
+  int fd_state;
+  int maxfd;
+  fd_set fd_read;
+  fd_set fd_write;
+  fd_set fd_except;
+};
+
+struct poll_arg_s{
+  int nbfd;
+  struct pollfd* fd_list;
+};
 
 struct connect_bind_arg_s{
   int sockfd;
@@ -52,6 +72,12 @@ struct socket_arg_s{
   int protocol;
 };
 
+struct listen_arg_s{
+  int sockfd;
+  int backlog;
+  int ret;
+};
+
 struct getsockopt_arg_s{
   int sockfd;
   int level;
@@ -68,8 +94,11 @@ typedef union{
   socket_arg_s socket;
   getsockopt_arg_s getsockopt;
   setsockopt_arg_s setsockopt;
+  listen_arg_s listen;
 } syscall_arg_u;
 
+#include "ptrace_utils.h"
+#include "sockets.h"
 
 extern int nb_procs;
 
@@ -78,9 +107,9 @@ void get_args_socket(pid_t child, reg_s *arg, syscall_arg_u* sysarg);
 void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *arg);
 
 //Return the pid of which socket is accept
-pid_t get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *arg);
+void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *arg);
 
-void get_args_listen(pid_t child, reg_s *arg);
+void get_args_listen(pid_t child, reg_s *reg, syscall_arg_u *sysarg);
 
 int get_args_send_recv(pid_t child, int syscall, reg_s *arg);
 

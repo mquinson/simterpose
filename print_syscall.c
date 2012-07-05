@@ -237,3 +237,14 @@ void print_setsockopt_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   printf("%d\n", (int)arg->ret);
 }
+
+void print_listen_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  listen_arg_t arg = &(sysarg->listen);
+  
+  printf("[%d] listen( ", pid);
+  printf("%d, ",arg->sockfd);
+  printf("%d ",arg->backlog);
+  printf(" ) = %d\n", arg->ret);
+}
+

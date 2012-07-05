@@ -19,7 +19,8 @@ comm_t comm_new(struct infos_socket* socket, unsigned int remote_ip, int remote_
   
   socket->comm=res;
   
-  printf("Register new connection for %d, %d\n", socket->ip_local, socket->port_local);
+  printf("Register new connection for (%d,%d) (%d, %d)\n", 
+                socket->ip_local, socket->port_local, remote_ip, remote_port);
   
   res->info[0].socket = socket;
   res->info[0].recv = recv_information_new();
@@ -53,7 +54,7 @@ comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket* is)
         return temp;
     }
   }
-//   printf("No communication found\n");
+  printf("No communication found\n");
   return NULL;
 }
 

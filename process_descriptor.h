@@ -1,6 +1,7 @@
 #ifndef __TIME_PROC_H_ 
 #define __TIME_PROC_H_
 
+#define PROC_NO_STATE           0x00000
 #define PROC_SELECT             0x00001
 #define PROC_POLL               0x00002
 #define PROC_CONNECT            0x00004
@@ -12,14 +13,11 @@
 #define SELECT_FDEX_SET 0x04
 
 typedef struct process_descriptor process_descriptor;
-typedef struct select_arg_s select_arg_s;
-typedef select_arg_s* select_arg_t;
 
-typedef struct poll_arg_s poll_arg_s;
-typedef poll_arg_s* poll_arg_t;
-
+#include "args_trace.h"
 #include "simdag/simdag.h"
 #include "sockets.h"
+
 
 #include <sys/select.h>
 #include <sys/time.h>
@@ -27,18 +25,6 @@ typedef poll_arg_s* poll_arg_t;
 #include <unistd.h>
 #include <poll.h>
 
-struct select_arg_s{
-  int fd_state;
-  int maxfd;
-  fd_set fd_read;
-  fd_set fd_write;
-  fd_set fd_except;
-};
-
-struct poll_arg_s{
-  int nbfd;
-  struct pollfd* fd_list;
-};
 
 struct process_descriptor{
   pid_t pid;
@@ -53,10 +39,7 @@ struct process_descriptor{
   struct infos_socket** fd_list;
   
   int state;
-  union{
-    select_arg_s select_arg;
-    poll_arg_s poll_arg;
-  };
+  syscall_arg_u sysarg;
 };
 
 
@@ -86,16 +69,9 @@ void process_set_out_syscall(pid_t pid);
 
 void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags);
 
-//store select argument and set state to SELECT
-void process_set_select(pid_t pid,int fd_state,  int max, fd_set rd, fd_set wr, fd_set ex);
-
-void process_set_poll(pid_t pid, int nbfd, struct pollfd* list);
-
 int process_get_state(pid_t pid);
 
 void process_set_state(pid_t tid, int state);
-
-void* process_get_argument(pid_t pid);
 
 struct infos_socket* process_get_fd(pid_t pid, int num);
 

@@ -60,10 +60,10 @@ void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *
 //  
 #endif
 
-  if (domain == 2 ) {
+//   if (domain == 2 ) {
 //      struct sockaddr_in *sai = &(arg->sai);
-    if (arg->ret==0) {
-        update_socket(child,arg->sockfd); // update remote informations if connect
+//     if (arg->ret==0) {
+//         update_socket(child,arg->sockfd); // update remote informations if connect
 //         struct sockaddr_in * remote_addr = malloc(sizeof(struct sockaddr_in));
 //         struct infos_socket* is = get_infos_socket(child, arg->connect.sockfd);
 //         
@@ -77,11 +77,11 @@ void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *
 //           comm_new(is, remote_addr->sin_addr.s_addr, remote_addr->sin_port);
 //         else
 //           comm_join(comm, get_infos_socket(child, arg->connect.sockfd));
-    }
-  }
+//     }
+//   }
 }
 
-pid_t get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
+void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
   
   accept_arg_t arg = &(sysarg->accept);
 
@@ -119,54 +119,25 @@ pid_t get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
 //   ptrace_cpy(child,&addrlen,(void *)addr_addrlen,sizeof(socklen_t),"accept");
 //  
 #endif
-  
-//   int protocol=get_protocol_socket(child,arg->sockfd);
-  pid_t tid = -1;
-  if (arg->ret>=0 ) {
-//     struct infos_socket* is = register_socket(child,arg->ret,domain,protocol);
-//     printf("Now update socket %d\n", is->fd);
-//     update_socket(child,arg->ret);
-//     
-//     if(domain == 2) //PF_INET
-//     {
-//       //printf("Try to found communication %du %d \n", sai.sin_addr.s_addr, ntohs(sai.sin_port));
-//       comm_t comm = comm_find_incomplete(arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port), is);
-//       tid = comm_accept_connect(get_infos_socket(child, arg->sockfd));
-//       if(comm == NULL)//if there no communication which correspond
-//         comm = comm_new(is, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port));
-//       else //else we have to join the communication
-//         comm_join(comm, is);
-//     }
 
-    get_localaddr_port_socket(child,arg->sockfd);
-  }
-  return tid;
 }
 
-void get_args_listen(pid_t pid, reg_s *arg) {
-  
-  int sockfd;
-  int backlog;
+void get_args_listen(pid_t pid, reg_s *reg, syscall_arg_u *sysarg) {
+  listen_arg_t arg = &(sysarg->listen);
 
 #if defined(__x86_64)
 
-  sockfd=(int)arg->arg1;
-  backlog=(int)arg->arg2;
+  arg->sockfd=(int)reg->arg1;
+  arg->backlog=(int)reg->arg2;
+  arg->ret = (int)reg->ret;
 
 #else
 
-  void *addr= (void*) arg->arg2;
+  void *addr= (void*) reg->arg2;
   ptrace_cpy(pid, &sockfd, addr, sizeof(int),"listen");
   ptrace_cpy(pid, &backlog, addr + sizeof(long), sizeof(int),"listen");
   
 #endif
-
-  printf("%d, ",sockfd);
-  printf("%d ",backlog);
-  
-  struct infos_socket* is = get_infos_socket(pid, sockfd);
-  comm_t comm = comm_new(is, 0, 0);
-  comm_set_listen(comm);
 }
 
 
@@ -335,32 +306,33 @@ double get_args_select(pid_t child, reg_s *r) {
 #endif
   // FIXME handle ret value
 
-  process_set_select(child, fd_state, r->arg1, fr, fw, fe);
+  //process_set_select(child, fd_state, r->arg1, fr, fw, fe);
   
   return timeout;
 }
 
 //TODO add 32 bit gestion
+//FIXME make this function use unified union syscall_arg_u
 void sys_build_select(pid_t pid, int match)
 {
-  ptrace_restore_syscall(pid, SYS_select, match);
-  reg_s r;
-  ptrace_get_register(pid, &r);
-  
-  select_arg_t arg = (select_arg_t)process_get_argument(pid);
-  
-  if(arg->fd_state & SELECT_FDRD_SET)
-  {
-    ptrace_poke(pid, (void*)r.arg2, &(arg->fd_read), sizeof(fd_set));
-  }
-  if(arg->fd_state & SELECT_FDWR_SET)
-  {
-    ptrace_poke(pid, (void*)r.arg3, &(arg->fd_write), sizeof(fd_set));
-  }
-  if(arg->fd_state & SELECT_FDEX_SET)
-  {
-    ptrace_poke(pid, (void*)r.arg4, &(arg->fd_except), sizeof(fd_set));
-  }
+//   ptrace_restore_syscall(pid, SYS_select, match);
+//   reg_s r;
+//   ptrace_get_register(pid, &r);
+//   
+//   select_arg_t arg = (select_arg_t)process_get_argument(pid);
+//   
+//   if(arg->fd_state & SELECT_FDRD_SET)
+//   {
+//     ptrace_poke(pid, (void*)r.arg2, &(arg->fd_read), sizeof(fd_set));
+//   }
+//   if(arg->fd_state & SELECT_FDWR_SET)
+//   {
+//     ptrace_poke(pid, (void*)r.arg3, &(arg->fd_write), sizeof(fd_set));
+//   }
+//   if(arg->fd_state & SELECT_FDEX_SET)
+//   {
+//     ptrace_poke(pid, (void*)r.arg4, &(arg->fd_except), sizeof(fd_set));
+//   }
 }
 
 
@@ -395,7 +367,6 @@ void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u
 //     ptrace_cpy(child,&optlen,addr_optlen,sizeof(socklen_t),"getsockopt ou setsockopt");
 //   } else // setsockopt
 //     ptrace_cpy(child,&optlen,src + 4 * sizeof(long),sizeof(socklen_t),"getsockopt ou setsockopt");
-//   
 
 #endif
 }
@@ -630,7 +601,7 @@ double get_args_poll(pid_t child, reg_s* arg) {
   }
   printf(" ]");
   
-  process_set_poll(child, nbfds, fds);
+  //process_set_poll(child, nbfds, fds);
   
   return timeout;
 }
