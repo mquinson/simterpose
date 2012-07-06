@@ -77,50 +77,50 @@ int process_fork_call(int pid)
 
 int process_select_call(pid_t pid)
 {
-  THROW_UNIMPLEMENTED;
-//   select_arg_t arg = (select_arg_t) process_get_argument(pid);
-//   
-//   int i;
-//   
-//   fd_set fd_rd, fd_wr, fd_ex;
-//   
-//   fd_rd = arg->fd_read;
-//   fd_wr = arg->fd_write;
-//   fd_ex = arg->fd_except;
-//   
-//   int match = 0;
-//   
-//   for(i=0 ; i < arg->maxfd ; ++i)
-//   {
-//     struct infos_socket* is = process_get_fd(pid, i);
-//     //if i is NULL that means that i is not a socket
-//     if(is == NULL)
-//       continue;
-//     int sock_status = socket_get_state(is);
-//     if(FD_ISSET(i, &(fd_rd)))
-//     {
-//       if(sock_status & SOCKET_READ_OK)
-//         ++match;
-//       else
-//         FD_CLR(i, &(fd_rd));
-//     }
-//     if(FD_ISSET(i, &(fd_wr)))
-//     {
-//       XBT_WARN("Mediation for writing states on socket are not support yet\n");
-//     }
-//     if(FD_ISSET(i, &(fd_ex)))
-//     {
-//       XBT_WARN("Mediation for exception states on socket are not support yet\n");
-//     }
-//   }
-//   if(match > 0)
-//   {
-//     sys_build_select(pid, match);
-//     return match;
-//   }
+  process_descriptor *proc= process_get_descriptor(pid);
+  select_arg_t arg = &(proc->sysarg.select);
+  print_select_syscall(pid, &proc->sysarg);
+  int i;
+  
+  fd_set fd_rd, fd_wr, fd_ex;
+  
+  fd_rd = arg->fd_read;
+  fd_wr = arg->fd_write;
+  fd_ex = arg->fd_except;
+  
+  int match = 0;
+  
+  for(i=0 ; i < arg->maxfd ; ++i)
+  {
+    struct infos_socket* is = process_get_fd(pid, i);
+    //if i is NULL that means that i is not a socket
+    if(is == NULL)
+      continue;
+    int sock_status = socket_get_state(is);
+    if(FD_ISSET(i, &(fd_rd)))
+    {
+      if(sock_status & SOCKET_READ_OK)
+        ++match;
+      else
+        FD_CLR(i, &(fd_rd));
+    }
+    if(FD_ISSET(i, &(fd_wr)))
+    {
+      XBT_WARN("Mediation for writing states on socket are not support yet\n");
+    }
+    if(FD_ISSET(i, &(fd_ex)))
+    {
+      XBT_WARN("Mediation for exception states on socket are not support yet\n");
+    }
+  }
+  if(match > 0)
+  {
+    sys_build_select(pid, match);
+    return match;
+  }
 //   else
-//     //printf("No match for select\n");
-//   return 0;
+//     printf("No match for select\n");
+  return 0;
 }
 
 
@@ -381,13 +381,16 @@ int process_handle(pid_t pid, int stat)
       
       else if(arg.reg_orig == SYS_select)
       {
-        THROW_UNIMPLEMENTED;
-//         double timeout = get_args_select(pid,&arg);
-//         add_launching_time(pid, timeout + SD_get_clock());
-//         ptrace_neutralize_syscall(pid);
-//         ptrace_resume_process(pid);
-//         process_set_out_syscall(pid);
-//         return PROCESS_IDLE_STATE;
+        get_args_select(pid,&arg, &sysarg);
+        print_select_syscall(pid, &sysarg);
+        //add_launching_time(pid, sysarg.select.timeout + SD_get_clock());
+        ptrace_neutralize_syscall(pid);
+        ptrace_resume_process(pid);
+        process_set_out_syscall(pid);
+        process_set_state(pid, PROC_SELECT);
+        process_descriptor* proc = process_get_descriptor(pid);
+        proc->sysarg.select = sysarg.select;
+        return PROCESS_IDLE_STATE;
       }
       
       else if(arg.reg_orig == SYS_recvfrom || arg.reg_orig == SYS_recvmsg)

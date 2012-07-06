@@ -160,7 +160,9 @@ int comm_get_socket_state(struct infos_socket* is)
     THROW_IMPOSSIBLE;
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
-  if(recv->quantity_recv > 0 || comm->conn_wait > 0)
+  if(recv->quantity_recv > 0 )
+    res = res | SOCKET_READ_OK;
+  if(!xbt_dynar_is_empty(comm->conn_wait))
     res = res | SOCKET_READ_OK;
   if(comm->state == COMM_CLOSED)
     res = res | SOCKET_CLOSED;

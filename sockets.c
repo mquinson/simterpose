@@ -445,6 +445,14 @@ int finish_all_communication(int pid){
 //   return result;
 }
 
+int socket_read_event(pid_t pid, int fd)
+{
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  int res = comm_get_socket_state(is);
+  
+  return res;
+}
+
 int socket_get_state(struct infos_socket* is)
 {
   return comm_get_socket_state(is);

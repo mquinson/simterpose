@@ -137,7 +137,6 @@ void get_args_send_recv(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sys
 //   ptrace_cpy(child,&flags, addr + 3 * sizeof(long), sizeof(int),"send ou recv");
 
 #endif
-
 }
 
 

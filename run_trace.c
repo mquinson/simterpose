@@ -94,6 +94,8 @@ int main(int argc, char *argv[]) {
       }
     }
     
+    printf("End of loop\n");
+    
   }while(global_data->child_amount);
   
 

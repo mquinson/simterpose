@@ -1,7 +1,7 @@
 #ifndef SYSCALL_LIST_H
 #define SYSCALL_LIST_H
 
-char* syscall_list[] = {"read"
+static char* syscall_list[] = {"read"
 ,"write"
 ,"open"
 ,"close"

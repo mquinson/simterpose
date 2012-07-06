@@ -2,8 +2,8 @@
 #define __SOCKETS_H
 
 /*Declaration of state for socket*/
-#define SOCKET_READ_OK 0x000000
-#define SOCKET_CLOSED  0x000001
+#define SOCKET_READ_OK 0x000001
+#define SOCKET_CLOSED  0x000002
 
 /*Decalration of all typedef of structure declared below*/
 typedef struct recv_information recv_information;
@@ -76,5 +76,7 @@ int socket_get_remote_addr(pid_t pid, int fd, struct sockaddr_in* addr_port);
 struct infos_socket* getSocketInfoFromContext(unsigned int locale_ip, int locale_port);
 
 int socket_get_state(struct infos_socket* is);
+
+int socket_read_event(pid_t pid, int fd);
 
 #endif
