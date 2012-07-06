@@ -13,13 +13,9 @@ typedef struct process_descriptor process_descriptor;
 #include "args_trace.h"
 #include "simdag/simdag.h"
 #include "sockets.h"
+#include "run_trace.h"
 
-
-#include <sys/select.h>
-#include <sys/time.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <poll.h>
 
 
 struct process_descriptor{
@@ -30,6 +26,7 @@ struct process_descriptor{
   long long int cpu_time;
   char* name;
   FILE* trace;
+  time_desc* timeout;//point to the next timeout of process, NULL there is not timeout
   SD_workstation_t station;
   SD_task_t last_computation_task;
   struct infos_socket** fd_list;

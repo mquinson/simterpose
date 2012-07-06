@@ -115,7 +115,6 @@ void comm_ask_connect(unsigned int ip, int port, pid_t tid)
   
   xbt_dynar_foreach(comm_list, cpt, temp)
   {
-    printf("temp->state & COMM_LISTEN : %d\n", temp->state & COMM_LISTEN);
     if(temp->state & COMM_LISTEN)
     {
       struct infos_socket* socket = temp->info[0].socket;

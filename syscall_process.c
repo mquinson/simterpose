@@ -118,8 +118,6 @@ int process_select_call(pid_t pid)
     sys_build_select(pid, match);
     return match;
   }
-//   else
-//     printf("No match for select\n");
   return 0;
 }
 

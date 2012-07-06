@@ -41,6 +41,10 @@ pid_t pop_next_pid()
   time_desc* t = NULL;
   xbt_dynar_shift(global_data->launching_time, &t);
   int res = t->pid;
+  
+  process_descriptor* proc = process_get_descriptor(res);
+  proc->timeout = NULL;
+  
   free(t);
   return res;
 }
@@ -51,6 +55,9 @@ void add_launching_time(pid_t pid, double start_time)
   t->pid = pid;
   t->start_time = start_time;
   
+  process_descriptor* proc = process_get_descriptor(pid);
+  proc->timeout = t;
+  
   xbt_dynar_push(global_data->launching_time, &t);
 }
 
@@ -59,6 +66,9 @@ void set_next_launchment(pid_t pid)
   time_desc* t = malloc(sizeof(time_desc));
   t->pid = pid;
   t->start_time = SD_get_clock();
+  
+  process_descriptor* proc = process_get_descriptor(pid);
+  proc->timeout = t;
   
   xbt_dynar_unshift(global_data->launching_time, &t);
 }

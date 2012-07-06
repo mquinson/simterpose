@@ -6,6 +6,8 @@
 #define MAX_FD 1024
 #define MAX_PID 32768  
 
+typedef struct time_desc time_desc;
+
 #include "process_descriptor.h"
 #include "xbt.h"
 
@@ -39,10 +41,10 @@ typedef struct simterpose_data simterpose_data_t;
 simterpose_data_t* global_data;
 
 
-typedef struct{
+struct time_desc{
   pid_t pid;
   double start_time;
-}time_desc;
+};
 
 
 struct simterpose_data{
