@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 //     printf("NEW TURN %lf\n", SD_get_clock());
     //We calculate the time of simulation.
     time_to_simulate= get_next_start_time() - SD_get_clock();
-    printf("Next simulation time %d\n", time_to_simulate);
+//     printf("Next simulation time %d\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
     
     //Now we gonna handle each son for which a watching task is over
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+//     printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
   }while(global_data->child_amount);
   
 

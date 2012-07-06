@@ -77,7 +77,6 @@ int process_fork_call(int pid)
 
 int process_select_call(pid_t pid)
 {
-  printf("Entering process_select\n");
   process_descriptor *proc= process_get_descriptor(pid);
   select_arg_t arg = &(proc->sysarg.select);
   int i;
@@ -115,7 +114,6 @@ int process_select_call(pid_t pid)
   }
   if(match > 0)
   {
-    printf("Matching select found\n");
     arg->fd_read = fd_rd;
     arg->fd_write = fd_wr;
     arg->fd_except = fd_ex;
@@ -123,9 +121,8 @@ int process_select_call(pid_t pid)
     return match;
   }
   
-  if(proc->timeout == NULL)
+  if(proc->timeout == NULL && !proc->in_timeout)
   {
-    printf("Starting handle timeout\n");
     print_select_syscall(pid, &(proc->sysarg));
     FD_ZERO(&fd_rd);
     FD_ZERO(&fd_wr);
@@ -134,7 +131,6 @@ int process_select_call(pid_t pid)
     arg->fd_write = fd_wr;
     arg->fd_except = fd_ex;
     print_select_syscall(pid, &(proc->sysarg));
-    printf("Timeout!!!!!!!\n");
     sys_build_select(pid, 0);
     return 1;
   }
@@ -232,7 +228,6 @@ int process_handle_idle(pid_t pid)
     process_descriptor* proc = process_get_descriptor(pid);
     if(process_accept_in_call(pid, &proc->sysarg))
     {
-      printf("A process waiting for connection\n");
       //Here process is like an active process so we launch him like that
       return process_handle_active(pid);;
     }
@@ -413,14 +408,17 @@ int process_handle(pid_t pid, int stat)
       {
         get_args_select(pid,&arg, &sysarg);
         print_select_syscall(pid, &sysarg);
-        add_timeout(pid, sysarg.select.timeout + SD_get_clock());
+        process_descriptor* proc = process_get_descriptor(pid);
+        if(sysarg.select.timeout >=0)
+          add_timeout(pid, sysarg.select.timeout + SD_get_clock());
+        else
+          proc->in_timeout = 1;
         ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_SELECT);
-        process_descriptor* proc = process_get_descriptor(pid);
+        
         proc->sysarg.select = sysarg.select;
-        printf("Finish handling select_in\n");
         return PROCESS_IDLE_STATE;
       }
       
