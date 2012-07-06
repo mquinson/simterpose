@@ -12,6 +12,7 @@
 #include "xbt/log.h"
 #include "communication.h"
 #include "print_syscall.h"
+#include "syscall_list.h"
 
 #include <linux/futex.h>
 
@@ -705,7 +706,7 @@ int process_handle(pid_t pid, int stat)
         #endif
         
         default :
-          printf("[%d] Unknown syscall %ld ?= %ld\n", pid, arg.reg_orig, arg.ret);
+          printf("[%d] Unhandle syscall %s = %ld\n", pid, syscall_list[arg.reg_orig], arg.ret);
           break;
             
       }
