@@ -398,5 +398,140 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   printf(" ) = %d\n", arg->ret);
 }
 
+void print_recvmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  recvmsg_arg_t arg = &(sysarg->sendmsg);
+  
+  printf("[%d] recvmsg( ", pid);
+  printf("%d, ",arg->sockfd);
+  
+  printf(", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen,(int)arg->msg.msg_controllen,arg->msg.msg_flags);
+  
+  if (arg->flags>0) {
+    print_flags_recv(arg->flags);
+  } else
+    printf("0 ");
+  
+  printf(" ) = %d\n",arg->ret);
+}
 
+void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  recvmsg_arg_t arg = &(sysarg->sendmsg);
+  
+  printf("[%d] sendmsg( ", pid);
+  printf("%d, ",arg->sockfd);
+  
+  printf(", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen,(int)arg->msg.msg_controllen,arg->msg.msg_flags);
+  
+  if (arg->flags>0) {
+    print_flags_recv(arg->flags);
+  } else
+    printf("0 ");
+  
+  printf(" ) = %d\n",arg->ret);
+}
+
+
+
+void get_events_poll(short events) {
+  printf("events=");
+  if ((events & POLLIN)!=0)
+    printf("POLLIN |");
+  if ((events & POLLPRI)!=0)
+    printf("POLLPRI |");
+  if ((events & POLLOUT)!=0)
+    printf("POLLOUT |");
+  if ((events & POLLERR)!=0)
+    printf("POLLERR |");
+  if ((events & POLLHUP)!=0)
+    printf("POLLHUP |");
+  if ((events & POLLNVAL)!=0)
+    printf("POLLNVAL |");
+}
+
+void get_revents_poll(short revents) {
+  printf(", revents=");
+  if ((revents & POLLIN)!=0)
+    printf("POLLIN |");
+  if ((revents & POLLPRI)!=0)
+    printf("POLLPRI |");
+  if ((revents & POLLOUT)!=0)
+    printf("POLLOUT |");
+  if ((revents & POLLERR)!=0)
+    printf("POLLERR |");
+  if ((revents & POLLHUP)!=0)
+    printf("POLLHUP |");
+  if ((revents & POLLNVAL)!=0)
+    printf("POLLNVAL |");
+  printf("} ");
+}
+
+void disp_pollfd(struct pollfd *fds, int nfds) {
+  int i;
+  for (i = 0; i< nfds-1; i++) {
+    printf("{fd=%d, ",fds[i].fd);
+    get_events_poll(fds[i].events);
+    get_revents_poll(fds[i].revents); 
+    if (i>3) {
+      printf(" ... }");
+      break;
+    }
+  }
+  if (nfds<3) {
+    printf("{fd=%d, ",fds[nfds-1].fd);
+    get_events_poll(fds[nfds-1].events);
+    get_revents_poll(fds[nfds-1].revents);  
+  }
+  
+}
+
+void print_poll_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  poll_arg_t arg = &(sysarg->poll);
+  
+  printf("[%d] poll([ ",pid);
+  if(arg->fd_list != NULL)
+    disp_pollfd(arg->fd_list, arg->nbfd);
+  else
+    printf("NULL");
+  printf(" ]");
+}
+
+void disp_fd(fd_set * fd) {
+  int i;
+  printf("[ ");
+  for (i = 0; i< FD_SETSIZE; i++) {
+    if (FD_ISSET(i,fd)) {
+      printf("%d ", i);
+    }
+  }
+  printf("]");
+}
+
+void print_select_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  select_arg_t arg = &(sysarg->select);
+  printf("[%d] select(%d,", pid, arg->maxfd);
+  
+  if(arg->fd_state & SELECT_FDRD_SET)
+    disp_fd(&arg->fd_read);
+  else
+    printf("NULL");
+  printf(", ");
+  if(arg->fd_state & SELECT_FDWR_SET)
+    disp_fd(&arg->fd_write);
+  else
+    printf("NULL");
+  printf(", ");
+  if(arg->fd_state & SELECT_FDEX_SET)
+    disp_fd(&arg->fd_except);
+  else
+    printf("NULL");
+  printf(", ");
+  
+  printf("%lf) = %d\n",arg->timeout, arg->ret);
+  
+  
+}
 

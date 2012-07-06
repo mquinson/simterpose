@@ -8,10 +8,6 @@
 #define PROC_ACCEPT_IN          0x00008
 #define PROC_CONNECT_DONE       0x00010
 
-#define SELECT_FDRD_SET 0x01
-#define SELECT_FDWR_SET 0x02
-#define SELECT_FDEX_SET 0x04
-
 typedef struct process_descriptor process_descriptor;
 
 #include "args_trace.h"

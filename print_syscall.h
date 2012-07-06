@@ -27,4 +27,12 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg);
 
 void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg);
 
+void print_recvmsg_syscall(pid_t pid, syscall_arg_u* sysarg);
+
+void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg);
+
+void print_poll_syscall(pid_t pid, syscall_arg_u* sysarg);
+
+void print_select_syscall(pid_t pid, syscall_arg_u* sysarg);
+
 #endif

@@ -3,6 +3,10 @@
 
 #include "sysdep.h"
 
+#define SELECT_FDRD_SET 0x01
+#define SELECT_FDWR_SET 0x02
+#define SELECT_FDEX_SET 0x04
+
 typedef struct connect_bind_arg_s connect_arg_s;
 typedef connect_arg_s* connect_arg_t;
 
@@ -42,6 +46,12 @@ typedef sendto_arg_s* sendto_arg_t;
 typedef struct sendto_arg_s recvfrom_arg_s;
 typedef recvfrom_arg_s* recvfrom_arg_t;
 
+typedef struct recvmsg_arg_s sendmsg_arg_s;
+typedef sendmsg_arg_s* sendmsg_arg_t;
+
+typedef struct recvmsg_arg_s recvmsg_arg_s;
+typedef recvmsg_arg_s* recvmsg_arg_t;
+
 struct recv_arg_s{
   int sockfd;
   size_t len;
@@ -49,17 +59,27 @@ struct recv_arg_s{
   int ret;
 };
 
+struct recvmsg_arg_s{
+  int sockfd;
+  int ret;
+  struct msghdr msg;
+  int flags;
+};
+
 struct select_arg_s{
   int fd_state;
   int maxfd;
+  int ret;
   fd_set fd_read;
   fd_set fd_write;
   fd_set fd_except;
+  double timeout;
 };
 
 struct poll_arg_s{
   int nbfd;
   struct pollfd* fd_list;
+  double timeout;
 };
 
 struct sendto_arg_s{
@@ -132,6 +152,10 @@ typedef union{
   send_arg_s send;
   sendto_arg_s sendto;
   recvfrom_arg_s recvfrom;
+  recvmsg_arg_s recvmsg;
+  sendmsg_arg_s sendmsg;
+  poll_arg_s poll;
+  select_arg_s select;
 } syscall_arg_u;
 
 #include "ptrace_utils.h"
@@ -150,18 +174,18 @@ void get_args_listen(pid_t child, reg_s *reg, syscall_arg_u *sysarg);
 
 void get_args_send_recv(pid_t child, int syscall, reg_s *reg, syscall_arg_u *arg);
 
-double get_args_select(pid_t child, reg_s *r);
+void get_args_select(pid_t child, reg_s *r, syscall_arg_u *sysarg);
 
 //There's no need to pass more argument because process_desc already contain argument
 void sys_build_select(pid_t pid, int match);
 
-double get_args_poll(pid_t child, reg_s* arg);
+void get_args_poll(pid_t child, reg_s* arg, syscall_arg_u* sysarg);
 
 void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u *sysarg);
 
-void get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* arg, syscall_arg_u* sysarg);
+void get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* reg, syscall_arg_u* sysarg);
 
-int get_args_send_recvmsg(pid_t child, int syscall, reg_s* arg);
+void get_args_send_recvmsg(pid_t child, reg_s* reg, syscall_arg_u* sysarg);
 
 #endif
 

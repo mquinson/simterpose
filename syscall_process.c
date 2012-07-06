@@ -309,7 +309,6 @@ int process_handle(pid_t pid, int stat)
 {  
   printf("Handling %d \n", pid);
   int status = stat;
-  int sockfd;
   reg_s arg;
   syscall_arg_u sysarg;
   while(1)
@@ -323,14 +322,14 @@ int process_handle(pid_t pid, int stat)
       
       if(arg.reg_orig == SYS_poll)
       {
-        double timeout = get_args_poll(pid, &arg);
+        get_args_poll(pid, &arg, &sysarg);
         //Now we have to add the process in launching list
-        add_launching_time(pid, timeout+SD_get_clock());
-        printf(" = %d \n", (int)arg.ret);
-        ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        process_set_out_syscall(pid);
-        return PROCESS_IDLE_STATE;
+//         add_launching_time(pid, timeout+SD_get_clock());
+//         printf(" = %d \n", (int)arg.ret);
+//         ptrace_neutralize_syscall(pid);
+//         ptrace_resume_process(pid);
+//         process_set_out_syscall(pid);
+//         return PROCESS_IDLE_STATE;
       }
       
       if(arg.reg_orig == SYS_exit_group)
@@ -382,12 +381,12 @@ int process_handle(pid_t pid, int stat)
       else if(arg.reg_orig == SYS_select)
       {
         THROW_UNIMPLEMENTED;
-        double timeout = get_args_select(pid,&arg);
-        add_launching_time(pid, timeout + SD_get_clock());
-        ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        process_set_out_syscall(pid);
-        return PROCESS_IDLE_STATE;
+//         double timeout = get_args_select(pid,&arg);
+//         add_launching_time(pid, timeout + SD_get_clock());
+//         ptrace_neutralize_syscall(pid);
+//         ptrace_resume_process(pid);
+//         process_set_out_syscall(pid);
+//         return PROCESS_IDLE_STATE;
       }
       
       else if(arg.reg_orig == SYS_recvfrom || arg.reg_orig == SYS_recvmsg)
@@ -410,12 +409,12 @@ int process_handle(pid_t pid, int stat)
         
         else if(arg.arg1 == SYS_select_32)
         {
-          double timeout = get_args_select(pid,&arg);
-          add_launching_time(pid, timeout + SD_get_clock());
-          ptrace_neutralize_syscall(pid);
-          ptrace_resume_process(pid);
-          process_set_out_syscall(pid);
-          return PROCESS_IDLE_STATE;
+//           double timeout = get_args_select(pid,&arg);
+//           add_launching_time(pid, timeout + SD_get_clock());
+//           ptrace_neutralize_syscall(pid);
+//           ptrace_resume_process(pid);
+//           process_set_out_syscall(pid);
+//           return PROCESS_IDLE_STATE;
         }
 
         else if(arg.arg1 == SYS_recv_32 || arg.arg1 == SYS_recvfrom_32 || arg.arg1 == SYS_recvmsg_32)
@@ -554,18 +553,16 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_sendmsg:
-          printf("[%d] sendmsg( ", pid);
-          sockfd=get_args_send_recvmsg(pid, 1, &arg);
-          printf(" ) = %ld\n", arg.ret); 
-          process_send_call(pid, sockfd, arg.ret);
+          get_args_send_recvmsg(pid, &arg, &sysarg);
+          print_sendmsg_syscall(pid, &sysarg);
+          process_send_call(pid, sysarg.sendmsg.sockfd, sysarg.sendmsg.ret);
           return PROCESS_TASK_FOUND;
           break;
           
         case SYS_recvmsg:
-          printf("[%d] recvmsg( ", pid);
-          sockfd=get_args_send_recvmsg(pid, 2, &arg);
-          printf(" ) = %ld\n",arg.ret);
-          if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
+          get_args_send_recvmsg(pid, &arg, &sysarg);
+          print_recvmsg_syscall(pid, &sysarg);
+          if(process_recv_call(pid, sysarg.recvmsg.sockfd, sysarg.recvmsg.ret) == PROCESS_TASK_FOUND)
             return PROCESS_TASK_FOUND;
           break;
           

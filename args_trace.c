@@ -119,42 +119,7 @@ void get_args_listen(pid_t pid, reg_s *reg, syscall_arg_u *sysarg) {
 #endif
 }
 
-void get_flags_send(int flags) {
-  if (flags & MSG_CONFIRM)
-    printf(" MSG_CONFIRM |");
-  if (flags & MSG_DONTROUTE)
-    printf(" MSG_DONTROUTE |");
-  if (flags & MSG_DONTWAIT)
-    printf(" MSG_DONTWAIT |");
-  if (flags & MSG_EOR)
-    printf(" MSG_EOR |");
-  if (flags & MSG_MORE)
-    printf(" MSG_MORE |");
-  if (flags & MSG_NOSIGNAL)
-    printf(" MSG_NOSIGNAL |");
-  if (flags & MSG_OOB)
-    printf(" MSG_OOB |");
-  printf(", ");
-}
-
-
-void get_flags_recv(int flags) {
-  if (flags & MSG_DONTWAIT)
-    printf(" MSG_DONTWAIT |");
-  if (flags & MSG_ERRQUEUE)
-    printf(" MSG_ERRQUEUE |");
-  if (flags & MSG_PEEK)
-    printf(" MSG_PEEK |");
-  if (flags & MSG_OOB)
-    printf(" MSG_OOB |");
-  if (flags & MSG_TRUNC)
-    printf(" MSG_TRUNC |");
-  if (flags & MSG_WAITALL)
-    printf(" MSG_WAITALL |");
-  printf(", ");
-}
-
-void get_args_send_recv(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sysarg) {
+void get_args_send_recv(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sysarg) {  
   recv_arg_t arg = &(sysarg->recv);
   
   arg->ret = (int) reg->ret;
@@ -176,105 +141,73 @@ void get_args_send_recv(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sys
 }
 
 
-void disp_fd(fd_set * fd) {
-  int i;
-  printf("[ ");
-  for (i = 0; i< FD_SETSIZE; i++) {
-    if (FD_ISSET(i,fd)) {
-      printf("%d ", i);
-    }
-  }
-  printf("]");
-}
+void get_args_select(pid_t child, reg_s *r, syscall_arg_u* sysarg) {
+  select_arg_t arg = &(sysarg->select);
 
-double get_args_select(pid_t child, reg_s *r) {
+  arg->fd_state=0;
+  arg->maxfd = (int) r->arg1;
 
-  fd_set fr, fw, fe;
-  double timeout;
-  int fd_state=0;
-  //TODO add recuperation of except's fd_set
-  FD_ZERO(&fe);
 #if defined(__x86_64)
 
-  printf("[%d] select(%d,", child, (int) r->arg1);
+  
   if (r->arg2!=0) {
-    ptrace_cpy(child, &fr, (void *)r->arg2, sizeof(fd_set),"select");
-    disp_fd(&fr);
-    fd_state = fd_state | SELECT_FDRD_SET;
+    ptrace_cpy(child, &arg->fd_read, (void *)r->arg2, sizeof(fd_set),"select");
+    arg->fd_state = arg->fd_state | SELECT_FDRD_SET;
   } 
   else 
-  {
-    FD_ZERO(&fr);
-    printf("NULL");
-  }
+    FD_ZERO(&arg->fd_read);
   
-  printf(", ");
   if (r->arg3!=0) {
-    ptrace_cpy(child, &fw, (void *)r->arg3, sizeof(fd_set),"select");
-    disp_fd(&fw);
-    fd_state = fd_state | SELECT_FDWR_SET;
+    ptrace_cpy(child, &arg->fd_write, (void *)r->arg3, sizeof(fd_set),"select");
+    arg->fd_state = arg->fd_state | SELECT_FDWR_SET;
   } 
   else 
-  {
-    FD_ZERO(&fw);
-    printf("NULL");
-  }
+    FD_ZERO(&arg->fd_write);
   
-  printf(", ");
   if (r->arg4!=0) {
-    ptrace_cpy(child, &fe, (void *)r->arg4, sizeof(fd_set),"select");
-    disp_fd(&fe);
-    fd_state = fd_state | SELECT_FDEX_SET;
+    ptrace_cpy(child, &arg->fd_except, (void *)r->arg4, sizeof(fd_set),"select");
+    arg->fd_state = arg->fd_state | SELECT_FDEX_SET;
   }
   else 
-  {
-    FD_ZERO(&fw);
-    printf("NULL");
-  }
+    FD_ZERO(&arg->fd_except);
   
   if(r->arg5 != 0)
   {
     struct timeval t;
     ptrace_cpy(child, &t, (void *)r->arg5, sizeof(struct timeval),"select");
-    timeout = t.tv_sec + 0.000001 * t.tv_usec;
+    arg->timeout = t.tv_sec + 0.000001 * t.tv_usec;
   }
   else
-    timeout = -1;
+    arg->timeout = -1;
   
-  
-  printf(") = %d\n",(int)r->ret);
+  arg->ret = (int)r->ret;
 
 #else 
-  //FIXME do portability on 32 bits
-  printf("[%d] select(%d,", child, (int) r->ebx);
-  if (r->arg2!=0) {
-    ptrace_cpy(child, &fr, (void *)r->arg2, sizeof(fd_set),"select");
-    disp_fd(&fr);
-  } else 
-    printf("NULL");
-  
-  printf(", ");
-  if (r->arg3!=0) {
-    ptrace_cpy(child, &fw, (void *)r->arg3, sizeof(fd_set),"select");
-    disp_fd(&fw);
-  } else 
-    printf("NULL");
-  
-  printf(", ");
-//   if (r->esi!=0) {
-//     ptrace_cpy(child, &fe, (void *)r->esi, sizeof(fd_set),"select");
-//     disp_fd(&fe);
+//   //FIXME do portability on 32 bits
+//   printf("[%d] select(%d,", child, (int) r->ebx);
+//   if (r->arg2!=0) {
+//     ptrace_cpy(child, &fr, (void *)r->arg2, sizeof(fd_set),"select");
+//     disp_fd(&fr);
 //   } else 
 //     printf("NULL");
-  
-  printf(") = %d\n",(int)r->ret);
+//   
+//   printf(", ");
+//   if (r->arg3!=0) {
+//     ptrace_cpy(child, &fw, (void *)r->arg3, sizeof(fd_set),"select");
+//     disp_fd(&fw);
+//   } else 
+//     printf("NULL");
+//   
+//   printf(", ");
+// //   if (r->esi!=0) {
+// //     ptrace_cpy(child, &fe, (void *)r->esi, sizeof(fd_set),"select");
+// //     disp_fd(&fe);
+// //   } else 
+// //     printf("NULL");
+//   
+//   printf(") = %d\n",(int)r->ret);
 
 #endif
-  // FIXME handle ret value
-
-  //process_set_select(child, fd_state, r->arg1, fr, fw, fe);
-  
-  return timeout;
 }
 
 //TODO add 32 bit gestion
@@ -396,123 +329,38 @@ void get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* reg, syscall_arg_
 #endif
 }
 
-int get_args_send_recvmsg(pid_t child, int syscall, reg_s* arg) {
-
-  int sockfd;
-  int flags;
-  struct msghdr *pmsg;
-  struct msghdr msg;
-
+void get_args_send_recvmsg(pid_t child, reg_s* reg, syscall_arg_u *sysarg) {
+  recvmsg_arg_t arg = &(sysarg->recvmsg);
 
 #if defined(__x86_64)
 
-  sockfd=(int)arg->arg1;
-  flags=(int)arg->arg3;
-  pmsg=malloc(sizeof(struct msghdr *));
-  pmsg=(struct msghdr *)arg->arg2;
-
+  arg->sockfd=(int)reg->arg1;
+  arg->flags=(int)reg->arg3;
+  ptrace_cpy(child, &arg->msg, (void *)reg->arg2, sizeof(struct msghdr),"sendmsg ou recvmsg");  
 #else
 
-  void *src= (void*)arg->arg2;
+  void *src= (void*)reg->arg2;
   ptrace_cpy(child,&sockfd,src,sizeof(int),"sendmsg ou recvmsg");
-
-  memset(ret_trace,0,SIZE_PARAM_TRACE);
-   
   ptrace_cpy(child, &pmsg, src + sizeof(long), sizeof(struct msghdr *),"sendmsg ou recvmsg");
   ptrace_cpy(child,&flags,src + 2 * sizeof(long), sizeof(int),"sendmsg ou recvmsg");
  
 #endif
-
-  printf("%d, ",sockfd);
-
-  ptrace_cpy(child, &msg, pmsg, sizeof(struct msghdr),"sendmsg ou recvmsg");  
-  printf(", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ",(int)msg.msg_namelen,(int)msg.msg_iovlen,(int)msg.msg_controllen,msg.msg_flags);
-
-  if (flags>0) {
-    if (syscall == 1)
-      get_flags_send(flags);
-    else
-      get_flags_recv(flags);
-  } else
-    printf("0 ");
-
-  return sockfd;
-  
 }
 
 
-void get_events_poll(short events) {
-  printf("events=");
-  if ((events & POLLIN)!=0)
-    printf("POLLIN |");
-  if ((events & POLLPRI)!=0)
-    printf("POLLPRI |");
-  if ((events & POLLOUT)!=0)
-    printf("POLLOUT |");
-  if ((events & POLLERR)!=0)
-    printf("POLLERR |");
-  if ((events & POLLHUP)!=0)
-    printf("POLLHUP |");
-  if ((events & POLLNVAL)!=0)
-    printf("POLLNVAL |");
-}
+void get_args_poll(pid_t child, reg_s* reg, syscall_arg_u* sysarg) {
+  poll_arg_t arg = &(sysarg->poll);
+  
+  void * src = (void*)reg->arg1;
+  arg->nbfd = reg->arg2;
+  arg->timeout = reg->arg3;
 
-void get_revents_poll(short revents) {
-  printf(", revents=");
-  if ((revents & POLLIN)!=0)
-    printf("POLLIN |");
-  if ((revents & POLLPRI)!=0)
-    printf("POLLPRI |");
-  if ((revents & POLLOUT)!=0)
-    printf("POLLOUT |");
-  if ((revents & POLLERR)!=0)
-    printf("POLLERR |");
-  if ((revents & POLLHUP)!=0)
-    printf("POLLHUP |");
-  if ((revents & POLLNVAL)!=0)
-    printf("POLLNVAL |");
-  printf("} ");
-}
-
-void disp_pollfd(struct pollfd *fds, int nfds) {
-  int i;
-  for (i = 0; i< nfds-1; i++) {
-    printf("{fd=%d, ",fds[i].fd);
-    get_events_poll(fds[i].events);
-    get_revents_poll(fds[i].revents); 
-    if (i>3) {
-      printf(" ... }");
-      break;
-    }
-  }
-  if (nfds<3) {
-    printf("{fd=%d, ",fds[nfds-1].fd);
-    get_events_poll(fds[nfds-1].events);
-    get_revents_poll(fds[nfds-1].revents);  
-  }
-  
-}
-
-double get_args_poll(pid_t child, reg_s* arg) {
-  //TODO modify to found time_out
-  
-  void * src = (void*)arg->arg1;
-  int nbfds = arg->arg2;
-  double timeout = arg->arg3;
-  
-  struct pollfd* fds= malloc(sizeof(nbfds)* sizeof(struct pollfd));
-  
-  printf("[%d] poll([ ",child);
   if (src!=0) {
-    ptrace_cpy(child,fds, src, nbfds * sizeof( struct pollfd),"poll");
-    disp_pollfd(fds, nbfds);
-  } else {
-    printf("NULL");
-  }
-  printf(" ]");
-  
-  //process_set_poll(child, nbfds, fds);
-  
-  return timeout;
+    arg->fd_list = malloc(sizeof(arg->nbfd)* sizeof(struct pollfd));
+    ptrace_cpy(child,arg->fd_list, src, arg->nbfd * sizeof( struct pollfd),"poll");
+    
+  } 
+  else
+    arg->fd_list = NULL;
 }
 
