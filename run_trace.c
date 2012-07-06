@@ -27,7 +27,6 @@ int main(int argc, char *argv[]) {
   
   simterpose_init(argc, argv);
 
-  int amount_process_launch=0;
   int time_to_simulate=0;
   
   xbt_dynar_t idle_process = xbt_dynar_new(sizeof(int*), NULL);
@@ -35,8 +34,8 @@ int main(int argc, char *argv[]) {
   do{
 //     printf("NEW TURN %lf\n", SD_get_clock());
     //We calculate the time of simulation.
-    time_to_simulate= get_next_start_time();
-    //printf("Next simulation time %d\n", time_to_simulate);
+    time_to_simulate= get_next_start_time() - SD_get_clock();
+    printf("Next simulation time %d\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
     
     //Now we gonna handle each son for which a watching task is over
@@ -82,6 +81,11 @@ int main(int argc, char *argv[]) {
       {
         //printf("Starting new process\n");
         int temp_pid = pop_next_pid();
+        process_descriptor* proc = process_get_descriptor(temp_pid);
+        if(!proc->in_timeout)
+          ++global_data->child_amount;
+        else
+          proc->in_timeout=0;
         int status = process_handle_active(temp_pid);
         if(status == PROCESS_IDLE_STATE)
         {
@@ -89,13 +93,9 @@ int main(int argc, char *argv[]) {
           *temp = temp_pid;
           xbt_dynar_push(idle_process, &temp);
         }
-        ++global_data->child_amount;
-        ++amount_process_launch;
       }
     }
-    
-    printf("End of loop\n");
-    
+    printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
   }while(global_data->child_amount);
   
 

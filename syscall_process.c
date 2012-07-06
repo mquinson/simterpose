@@ -77,9 +77,9 @@ int process_fork_call(int pid)
 
 int process_select_call(pid_t pid)
 {
+  printf("Entering process_select\n");
   process_descriptor *proc= process_get_descriptor(pid);
   select_arg_t arg = &(proc->sysarg.select);
-  print_select_syscall(pid, &proc->sysarg);
   int i;
   
   fd_set fd_rd, fd_wr, fd_ex;
@@ -115,8 +115,28 @@ int process_select_call(pid_t pid)
   }
   if(match > 0)
   {
+    printf("Matching select found\n");
+    arg->fd_read = fd_rd;
+    arg->fd_write = fd_wr;
+    arg->fd_except = fd_ex;
     sys_build_select(pid, match);
     return match;
+  }
+  
+  if(proc->timeout == NULL)
+  {
+    printf("Starting handle timeout\n");
+    print_select_syscall(pid, &(proc->sysarg));
+    FD_ZERO(&fd_rd);
+    FD_ZERO(&fd_wr);
+    FD_ZERO(&fd_ex);
+    arg->fd_read = fd_rd;
+    arg->fd_write = fd_wr;
+    arg->fd_except = fd_ex;
+    print_select_syscall(pid, &(proc->sysarg));
+    printf("Timeout!!!!!!!\n");
+    sys_build_select(pid, 0);
+    return 1;
   }
   return 0;
 }
@@ -125,8 +145,15 @@ int process_select_call(pid_t pid)
 int process_handle_active(pid_t pid)
 {
   int status;
+  
+  int proc_state = process_get_state(pid);
+  if(proc_state & PROC_SELECT)
+  {
+    process_select_call(pid);
+    process_set_state(pid, PROC_NO_STATE);
+  }
   ptrace_resume_process(pid);
-
+  
   if(waitpid(pid, &status, 0) < 0)
   {
     fprintf(stderr, " [%d] waitpid %s %d\n", pid, strerror(errno), errno);
@@ -179,7 +206,12 @@ int process_handle_idle(pid_t pid)
   {
     //if the select match changment we have to run the child
     if(process_select_call(pid))
+    {
+      process_descriptor* proc = process_get_descriptor(pid);
+      if(proc->timeout != NULL)
+        remove_timeout(pid);
       return process_handle_active(pid);
+    }
     else
       return PROCESS_IDLE_STATE;
   }
@@ -381,13 +413,14 @@ int process_handle(pid_t pid, int stat)
       {
         get_args_select(pid,&arg, &sysarg);
         print_select_syscall(pid, &sysarg);
-        //add_launching_time(pid, sysarg.select.timeout + SD_get_clock());
+        add_timeout(pid, sysarg.select.timeout + SD_get_clock());
         ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_SELECT);
         process_descriptor* proc = process_get_descriptor(pid);
         proc->sysarg.select = sysarg.select;
+        printf("Finish handling select_in\n");
         return PROCESS_IDLE_STATE;
       }
       

@@ -1,5 +1,6 @@
 #include "args_trace.h"
 #include "ptrace_utils.h"
+#include "process_descriptor.h"
 #include "communication.h"
 
 
@@ -213,24 +214,25 @@ void get_args_select(pid_t child, reg_s *r, syscall_arg_u* sysarg) {
 //FIXME make this function use unified union syscall_arg_u
 void sys_build_select(pid_t pid, int match)
 {
-//   ptrace_restore_syscall(pid, SYS_select, match);
-//   reg_s r;
-//   ptrace_get_register(pid, &r);
-//   
-//   select_arg_t arg = (select_arg_t)process_get_argument(pid);
-//   
-//   if(arg->fd_state & SELECT_FDRD_SET)
-//   {
-//     ptrace_poke(pid, (void*)r.arg2, &(arg->fd_read), sizeof(fd_set));
-//   }
-//   if(arg->fd_state & SELECT_FDWR_SET)
-//   {
-//     ptrace_poke(pid, (void*)r.arg3, &(arg->fd_write), sizeof(fd_set));
-//   }
-//   if(arg->fd_state & SELECT_FDEX_SET)
-//   {
-//     ptrace_poke(pid, (void*)r.arg4, &(arg->fd_except), sizeof(fd_set));
-//   }
+  ptrace_restore_syscall(pid, SYS_select, match);
+  reg_s r;
+  ptrace_get_register(pid, &r);
+  
+  process_descriptor* proc = process_get_descriptor(pid);
+  select_arg_t arg = &(proc->sysarg.select);
+  
+  if(arg->fd_state & SELECT_FDRD_SET)
+  {
+    ptrace_poke(pid, (void*)r.arg2, &(arg->fd_read), sizeof(fd_set));
+  }
+  if(arg->fd_state & SELECT_FDWR_SET)
+  {
+    ptrace_poke(pid, (void*)r.arg3, &(arg->fd_write), sizeof(fd_set));
+  }
+  if(arg->fd_state & SELECT_FDEX_SET)
+  {
+    ptrace_poke(pid, (void*)r.arg4, &(arg->fd_except), sizeof(fd_set));
+  }
 }
 
 

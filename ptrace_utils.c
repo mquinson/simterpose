@@ -12,7 +12,7 @@ void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) 
     ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
     if (ret == -1 && errno != 0) {
       printf("ptrace peekdata in %s\n",syscall);
-      exit(1);
+      xbt_die("Impossible to continue\n");
     }
     ((long *)dst)[i] = ret;
     i++;
@@ -26,10 +26,10 @@ void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
   while (i < len / sizeof(long)) {
     long ret;
     errno = 0;
-    ret = ptrace(PTRACE_POKEDATA, pid, dst + i * sizeof(long), src + i * sizeof(long));
+    ret = ptrace(PTRACE_POKEDATA, pid, dst + i * sizeof(long), *((long*)(src + i * sizeof(long))));
     if (ret == -1 && errno != 0) {
       printf("ptrace pokedata\n");
-      exit(1);
+      xbt_die("Impossible to continue\n");
     }
     i++;
   }
@@ -40,7 +40,7 @@ void ptrace_resume_process(const pid_t pid)
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
     fprintf(stderr, " [%d] ptrace syscall %s\n", pid, strerror(errno));
     THROW_IMPOSSIBLE;
-    exit(1);
+    xbt_die("Impossible to continue\n");
   }
 }
 
@@ -48,7 +48,7 @@ void ptrace_detach_process(const pid_t pid)
 {
   if (ptrace(PTRACE_DETACH, pid, NULL, NULL)==-1) {
     perror("ptrace detach");
-    exit(1);
+    xbt_die("Impossible to continue\n");
   }
 }
 
@@ -60,7 +60,7 @@ void ptrace_get_register(const pid_t pid, reg_s* arg)
   
   if (( r = ptrace(PTRACE_GETREGS, pid,NULL, &regs)) == -1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
-    exit(1);
+    xbt_die("Impossible to continue\n");
   }
   /* ---- test archi for registers ---- */
   #if defined(__x86_64) || defined(amd64)
@@ -86,8 +86,8 @@ void ptrace_set_register(const pid_t pid)
   struct user_regs_struct regs;
   
   if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
   }
   //regs.rax=184;
   regs.orig_rax = 184;
@@ -95,8 +95,8 @@ void ptrace_set_register(const pid_t pid)
   
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
   }
 
 }
@@ -108,15 +108,15 @@ void ptrace_neutralize_syscall(const pid_t pid)
   struct user_regs_struct regs;
   
   if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
   }
 
   regs.orig_rax = 184;
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
   }
 }
 
@@ -125,16 +125,16 @@ void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long resu
   struct user_regs_struct regs;
   
   if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
   }
   
   regs.orig_rax = syscall;
   regs.rax = result;
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
   }
 }
 
@@ -143,8 +143,8 @@ void ptrace_rewind_syscalls(const pid_t pid)
   struct user_regs_struct regs;
   
   if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
   }
 
   regs.rax = regs.orig_rax;
@@ -153,8 +153,8 @@ void ptrace_rewind_syscalls(const pid_t pid)
   
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
-    perror("ptrace getregs");
-    exit(1);
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
   }
   
 }
@@ -164,7 +164,7 @@ unsigned long ptrace_get_pid_fork(const pid_t pid)
   unsigned long new_pid;
   if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &new_pid)==-1) {
     perror("ptrace geteventmsg");
-    exit(1);
+    xbt_die("Impossible to continue\n");
   }
   return new_pid;
 }

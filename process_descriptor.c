@@ -23,6 +23,8 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->idle=0;
   result->state = 0;
   result->last_computation_task = NULL;
+  result->timeout= NULL;
+  result->in_timeout=0;
   int i;
   for(i=0; i<MAX_FD ; ++i)
     result->fd_list[i]=NULL;

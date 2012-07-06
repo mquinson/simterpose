@@ -78,3 +78,43 @@ int has_sleeping_to_launch()
   return !xbt_dynar_is_empty(global_data->launching_time);
 }
 
+void add_timeout(pid_t pid, double start_time)
+{
+  printf("Add new timeout of %lf for %d\n", start_time, pid);
+  time_desc* t = malloc(sizeof(time_desc));
+  t->pid = pid;
+  t->start_time = start_time;
+  
+  process_descriptor* proc = process_get_descriptor(pid);
+  proc->timeout = t;
+  proc->in_timeout=1;
+  
+  int i=0;
+  while( i < xbt_dynar_length(global_data->launching_time))
+  {
+    time_desc** t = xbt_dynar_get_ptr(global_data->launching_time, i);
+    if( start_time < (*t)->start_time)
+      break;
+    ++i;
+  }
+  xbt_dynar_insert_at(global_data->launching_time, i, &t);
+}
+
+void remove_timeout(pid_t pid)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  time_desc* t = proc->timeout;
+  proc->timeout = NULL;
+  proc->in_timeout=0;
+  
+  xbt_ex_t e;
+  TRY{
+    int i= xbt_dynar_search(global_data->launching_time, &t);
+    xbt_dynar_remove_at(global_data->launching_time, i, NULL);
+  }
+  CATCH(e){
+    printf("Timeout not found %d\n", xbt_dynar_is_empty(global_data->launching_time));
+  }
+  free(t);
+}
+

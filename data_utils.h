@@ -17,4 +17,8 @@ void set_next_launchment(pid_t pid);
 
 int has_sleeping_to_launch();
 
+void add_timeout(pid_t pid, double start_time);
+
+void remove_timeout(pid_t pid);
+
 #endif
