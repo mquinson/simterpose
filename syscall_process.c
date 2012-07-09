@@ -273,10 +273,12 @@ int process_handle_idle(pid_t pid)
     else
       return PROCESS_IDLE_STATE;
   }
+  
   if(proc_state & PROC_CONNECT)
   {
     return PROCESS_IDLE_STATE;
   }
+  
   else if(proc_state & PROC_POLL)
   {
     if(process_poll_call(pid))
@@ -290,17 +292,20 @@ int process_handle_idle(pid_t pid)
     else
       return PROCESS_IDLE_STATE;
   }
+  
   else if(proc_state & PROC_ACCEPT_IN)
   {
     process_descriptor* proc = process_get_descriptor(pid);
-    if(process_accept_in_call(pid, &proc->sysarg))
+    pid_t conn_pid = process_accept_in_call(pid, &proc->sysarg);
+    if(conn_pid)
     {
-      //Here process is like an active process so we launch him like that
+      //Here process is like an active process so we launch it like that
       return process_handle_active(pid);;
     }
     else
       return PROCESS_IDLE_STATE;
   }
+  
   else
   {
     if(waitpid(pid, &status, WNOHANG))

@@ -22,21 +22,35 @@ void print_trace_header(FILE* trace)
   fprintf(trace,"%8s %12s %8s %10s %10s %21s %21s\n","pidX", "syscall", "pidY", "return","diff_cpu","local_addr:port", "remote_addr:port");
 }
 xbt_dynar_t idle_process;
+xbt_dynar_t sched_list;
 
 
 void add_to_idle(pid_t pid)
 {
   unsigned int cpt=0;
-  int* idle_pid = NULL;
+  int idle_pid;
   xbt_dynar_foreach(idle_process, cpt, idle_pid)
   {
-    if(*idle_pid == pid)
+    if(idle_pid == pid)
       return;
   }
-  int *temp = malloc(sizeof(int));
-  *temp = pid;
-  xbt_dynar_push(idle_process, &temp);
+  xbt_dynar_push_as(idle_process, pid_t, pid);
 }
+
+
+//Verify is the process is not already schedule before adding
+void add_to_sched_list(pid_t pid)
+{
+  unsigned int cpt=0;
+  int temp=0;
+  xbt_dynar_foreach(sched_list, cpt, temp)
+  {
+    if(temp == pid)
+      return;
+  }
+  xbt_dynar_push_as(sched_list, pid_t, pid);
+}
+
 
 
 int main(int argc, char *argv[]) { 
@@ -45,7 +59,8 @@ int main(int argc, char *argv[]) {
 
   int time_to_simulate=0;
   
-  idle_process = xbt_dynar_new(sizeof(int*), NULL);
+  idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
+  sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
   
   do{
     
@@ -79,16 +94,15 @@ int main(int argc, char *argv[]) {
     
     //Now we will run all idle process store in 
     unsigned int cpt=0;
-    int* idle_pid = NULL;
+    int idle_pid;
     xbt_dynar_foreach(idle_process, cpt, idle_pid)
     {
 //       printf("Handle idling process %d\n", *idle_pid);
-      int status = process_handle_idle(*idle_pid);
+      int status = process_handle_idle(idle_pid);
       if(status != PROCESS_IDLE_STATE)
           xbt_dynar_cursor_rm (idle_process, &cpt);
-//       else
-//         printf("No remove form idle list\n");
     }
+
     
 //     printf("Handle sleeping process %d\n", has_sleeping_to_launch());
     
@@ -111,13 +125,13 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+//     printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
   }while(global_data->child_amount);
   
 
   finish_cputime();
   
-  printf("Simulation time : %lf\n", SD_get_clock());
+  printf("End of simulation. Time : %lf\n", SD_get_clock());
   
   return 0;
 
