@@ -55,5 +55,6 @@ struct simterpose_data{
   float micro_s_per_flop;
 };
 
+void add_to_sched_list(pid_t pid);
 
 #endif

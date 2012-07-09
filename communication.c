@@ -108,7 +108,7 @@ void comm_set_listen(comm_t comm)
   printf("Listen do %d\n", comm->state & COMM_LISTEN);
 }
 
-void comm_ask_connect(unsigned int ip, int port, pid_t tid)
+int comm_ask_connect(unsigned int ip, int port, pid_t tid)
 {
   comm_t temp;
   unsigned int cpt = 0;
@@ -126,12 +126,14 @@ void comm_ask_connect(unsigned int ip, int port, pid_t tid)
         {
           printf("Add to connection asking queue\n");
           xbt_dynar_push(temp->conn_wait, &tid);
-          return ;
+          
+          return socket->proc->pid;
         }
       }
     }
   }
   printf("Don't found listened socket %ud %d\n", ip, port);
+  return 0;
 }
 
 pid_t comm_accept_connect(struct infos_socket* is)

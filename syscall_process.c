@@ -187,7 +187,6 @@ int process_poll_call(pid_t pid)
     sys_build_poll(pid, 0);
     return 1;
   }
-//   printf("No matching for poll\n");
   return match;
 }
 
@@ -295,10 +294,13 @@ int process_handle_idle(pid_t pid)
   
   else if(proc_state & PROC_ACCEPT_IN)
   {
+    printf("Process handle accept_in\n");
     process_descriptor* proc = process_get_descriptor(pid);
     pid_t conn_pid = process_accept_in_call(pid, &proc->sysarg);
     if(conn_pid)
     {
+      //We have to add conn_pid to the schedule list
+      add_to_sched_list(conn_pid);
       //Here process is like an active process so we launch it like that
       return process_handle_active(pid);;
     }
@@ -349,7 +351,11 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
     struct sockaddr_in *sai = &(arg->connect.sai);
     
     //We ask for a connection on the socket
-    comm_ask_connect(sai->sin_addr.s_addr, ntohs(sai->sin_port), pid);
+    int acc_pid = comm_ask_connect(sai->sin_addr.s_addr, ntohs(sai->sin_port), pid);
+    
+    //if someone waiting for connection we add him to shedule list
+    if(pid)
+      add_to_sched_list(acc_pid);
     //now mark the process as waiting for conn
     process_set_state(pid, PROC_CONNECT);
   }
@@ -475,10 +481,13 @@ int process_handle(pid_t pid, int stat)
         //if we no process wait for connection we have to put process in idle and save arguments
         if(!conn_pid)
         {
+
           process_descriptor* proc = process_get_descriptor(pid);
           proc->sysarg.accept = sysarg.accept;
           return PROCESS_IDLE_STATE;
         }
+        else
+          add_to_sched_list(conn_pid);
       }
       
       else if(arg.reg_orig == SYS_select)

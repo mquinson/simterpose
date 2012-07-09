@@ -50,7 +50,7 @@ void comm_set_close(comm_t comm);
 
 void comm_set_listen(comm_t comm);
 
-void comm_ask_connect(unsigned int ip, int port, pid_t tid);
+int comm_ask_connect(unsigned int ip, int port, pid_t tid);
 
 pid_t comm_accept_connect(struct infos_socket* is);
 

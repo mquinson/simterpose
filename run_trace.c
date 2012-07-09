@@ -33,6 +33,7 @@ void remove_from_idle_list(pid_t pid)
   {
     if(t == pid)
     {
+      printf("Remove process %d from idle list\n", pid); 
       xbt_dynar_cursor_rm (idle_process, &cpt);
       return;
     }
@@ -42,7 +43,7 @@ void remove_from_idle_list(pid_t pid)
 
 void add_to_idle(pid_t pid)
 {
-  printf("Add process %d to idle list\n", pid);
+
   int t;
   unsigned int cpt;
   xbt_dynar_foreach(idle_process, cpt, t)
@@ -50,6 +51,7 @@ void add_to_idle(pid_t pid)
     if(t == pid)
       return;
   }
+  printf("Add process %d to idle list\n", pid);
   xbt_dynar_push_as(idle_process, pid_t, pid);
 }
 
@@ -65,9 +67,8 @@ void add_to_sched_list(pid_t pid)
       return;
   }
   xbt_dynar_push_as(sched_list, pid_t, pid);
-  
-  if(process_get_state(pid) == PROC_IDLE)
-    remove_from_idle_list(pid);
+  printf("Add process %d to sched list\n", pid);
+  remove_from_idle_list(pid);
 }
 
 
@@ -120,7 +121,7 @@ int main(int argc, char *argv[]) {
       else
         break;
     }
-    printf("Size of sched_list %d\n", xbt_dynar_length(sched_list));
+    printf("Size of sched_list %ldu\n", xbt_dynar_length(sched_list));
     
     //Now we have global list of process_data, we have to handle them
     while(!xbt_dynar_is_empty(sched_list))
