@@ -8,6 +8,9 @@
 #define PROC_ACCEPT_IN          0x00008
 #define PROC_CONNECT_DONE       0x00010
 
+#define PROC_NO_IDLE            0
+#define PROC_IDLE               1
+
 typedef struct process_descriptor process_descriptor;
 
 #include "args_trace.h"

@@ -25,13 +25,29 @@ xbt_dynar_t idle_process;
 xbt_dynar_t sched_list;
 
 
+void remove_from_idle_list(pid_t pid)
+{
+  int t;
+  unsigned int cpt;
+  xbt_dynar_foreach(idle_process, cpt, t)
+  {
+    if(t == pid)
+    {
+      xbt_dynar_cursor_rm (idle_process, &cpt);
+      return;
+    }
+  }
+}
+
+
 void add_to_idle(pid_t pid)
 {
-  unsigned int cpt=0;
-  int idle_pid;
-  xbt_dynar_foreach(idle_process, cpt, idle_pid)
+  printf("Add process %d to idle list\n", pid);
+  int t;
+  unsigned int cpt;
+  xbt_dynar_foreach(idle_process, cpt, t)
   {
-    if(idle_pid == pid)
+    if(t == pid)
       return;
   }
   xbt_dynar_push_as(idle_process, pid_t, pid);
@@ -49,6 +65,9 @@ void add_to_sched_list(pid_t pid)
       return;
   }
   xbt_dynar_push_as(sched_list, pid_t, pid);
+  
+  if(process_get_state(pid) == PROC_IDLE)
+    remove_from_idle_list(pid);
 }
 
 
@@ -60,13 +79,12 @@ int main(int argc, char *argv[]) {
   int time_to_simulate=0;
   
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
+  xbt_dynar_reset(idle_process);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
   
   do{
-    
     //We calculate the time of simulation.
     time_to_simulate= get_next_start_time() - SD_get_clock();
-    
 //     printf("Next simulation time %d\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
 //     printf("NEW TURN %lf\n", SD_get_clock());
@@ -77,55 +95,71 @@ int main(int argc, char *argv[]) {
     {
       xbt_dynar_shift(arr, &task_over);
       int* data = (int *)SD_task_get_data(task_over);
-      //If data is null, we are in presence of a non watch task
+      //If data is null, we schedule the process
       if(data != NULL)
-      {
-//         printf("Handling ended task for %d\n", *data);
-        int status = process_handle_active(*data);
-        if(status == PROCESS_DEAD) //TODO add real gestion of process death
-          --global_data->child_amount;
-        else if(status == PROCESS_IDLE_STATE)
-        {
-          add_to_idle(*data);
-        }
-      }
-    }
-    
-    
-    //Now we will run all idle process store in 
-    unsigned int cpt=0;
-    int idle_pid;
-    xbt_dynar_foreach(idle_process, cpt, idle_pid)
-    {
-//       printf("Handle idling process %d\n", *idle_pid);
-      int status = process_handle_idle(idle_pid);
-      if(status != PROCESS_IDLE_STATE)
-          xbt_dynar_cursor_rm (idle_process, &cpt);
+        xbt_dynar_push_as(sched_list, pid_t, *data);
     }
 
-    
-//     printf("Handle sleeping process %d\n", has_sleeping_to_launch());
-    
-    //Now we the next process if the time is come
-    if(has_sleeping_to_launch())
+    //Now we move all idle process to schedule list
+    xbt_dynar_merge(&sched_list, &idle_process);
+    idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
+
+    while(has_sleeping_to_launch())
     {
+      //if we have to launch them to this turn
       if(SD_get_clock() == get_next_start_time())
       {
-        //printf("Starting new process\n");
         int temp_pid = pop_next_pid();
+        xbt_dynar_push_as(sched_list, pid_t, temp_pid);
         process_descriptor* proc = process_get_descriptor(temp_pid);
         if(!proc->in_timeout)
           ++global_data->child_amount;
         else
           proc->in_timeout=0;
-        int status = process_handle_active(temp_pid);
+      }
+      else
+        break;
+    }
+    printf("Size of sched_list %d\n", xbt_dynar_length(sched_list));
+    
+    //Now we have global list of process_data, we have to handle them
+    while(!xbt_dynar_is_empty(sched_list))
+    {
+      
+      pid_t pid;
+      xbt_dynar_shift (sched_list, &pid);
+      
+      printf("Handling process %d %d\n", pid, process_get_idle(pid));
+      
+      if(process_get_idle(pid) == PROC_IDLE)
+      {
+        int status = process_handle_idle(pid);
         if(status == PROCESS_IDLE_STATE)
         {
-          add_to_idle(temp_pid);
+          process_set_idle(pid, PROC_IDLE);
+          add_to_idle(pid);
         }
+        else if( status == PROCESS_DEAD)
+          --global_data->child_amount;
+        else
+          process_set_idle(pid, PROC_NO_IDLE);
+      }
+      else
+      {
+        int status = process_handle_active(pid);
+        if(status == PROCESS_IDLE_STATE)
+        {
+          process_set_idle(pid, PROC_IDLE);
+          add_to_idle(pid);
+        }
+        else if( status == PROCESS_DEAD)
+          --global_data->child_amount;
+        else
+          process_set_idle(pid, PROC_NO_IDLE);
       }
     }
-//     printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+    
+    printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
   }while(global_data->child_amount);
   
 
@@ -134,5 +168,4 @@ int main(int argc, char *argv[]) {
   printf("End of simulation. Time : %lf\n", SD_get_clock());
   
   return 0;
-
 }
