@@ -88,7 +88,6 @@ int main(int argc, char *argv[]) {
           xbt_dynar_cursor_rm (idle_process, &cpt);
 //       else
 //         printf("No remove form idle list\n");
-
     }
     
 //     printf("Handle sleeping process %d\n", has_sleeping_to_launch());
@@ -112,7 +111,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-//     printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+    printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
   }while(global_data->child_amount);
   
 

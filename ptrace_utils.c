@@ -28,7 +28,7 @@ void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
     errno = 0;
     ret = ptrace(PTRACE_POKEDATA, pid, dst + i * sizeof(long), *((long*)(src + i * sizeof(long))));
     if (ret == -1 && errno != 0) {
-      printf("ptrace pokedata\n");
+      perror("ptrace pokedata");
       xbt_die("Impossible to continue\n");
     }
     i++;

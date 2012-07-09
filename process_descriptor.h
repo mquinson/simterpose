@@ -31,9 +31,11 @@ struct process_descriptor{
   SD_task_t last_computation_task;
   struct infos_socket** fd_list;
   int in_timeout;
+
   
   int state;
   syscall_arg_u sysarg;
+  int saved_status;
 };
 
 

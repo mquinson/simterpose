@@ -77,7 +77,7 @@ int process_fork_call(int pid)
 
 int process_select_call(pid_t pid)
 {
-//   printf("Entering select\n");
+  printf("Entering select\n");
   process_descriptor *proc= process_get_descriptor(pid);
   select_arg_t arg = &(proc->sysarg.select);
   int i;
@@ -124,7 +124,7 @@ int process_select_call(pid_t pid)
   
   if(proc->timeout == NULL && !proc->in_timeout)
   {
-//     printf("Timeout for select\n");
+    printf("Timeout for select\n");
 //     print_select_syscall(pid, &(proc->sysarg));
     FD_ZERO(&fd_rd);
     FD_ZERO(&fd_wr);
@@ -145,7 +145,7 @@ int process_poll_call(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
   
-//   printf("Entering poll %lf %p\n", SD_get_clock(), proc->timeout);
+  printf("Entering poll %lf %p\n", SD_get_clock(), proc->timeout);
   poll_arg_t arg = (poll_arg_t)&(proc->sysarg.poll);
   
   int match=0;
@@ -177,13 +177,13 @@ int process_poll_call(pid_t pid)
   }
   if(match > 0)
   {
-//     printf("Result for poll\n");
+    printf("Result for poll\n");
     sys_build_poll(pid, match);
     return match;
   }
   if(proc->timeout == NULL && !proc->in_timeout)
   {
-//     printf("Time out on poll\n");
+    printf("Time out on poll\n");
     sys_build_poll(pid, 0);
     return 1;
   }
@@ -194,7 +194,7 @@ int process_poll_call(pid_t pid)
 
 int process_handle_active(pid_t pid)
 {
-//   printf("Handle active process\n");
+  printf("Handle active process\n");
   int status;
   
   int proc_state = process_get_state(pid);
@@ -255,6 +255,7 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
 
 int process_handle_idle(pid_t pid)
 {
+  printf("Handle idling process %d\n", pid);
   int status;
   int proc_state = process_get_state(pid);
   
@@ -422,6 +423,7 @@ int process_handle(pid_t pid, int stat)
           proc->in_timeout = 1;
         ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
+        waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_POLL);
         proc->sysarg.poll = sysarg.poll;
@@ -485,6 +487,7 @@ int process_handle(pid_t pid, int stat)
           proc->in_timeout = 1;
         ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
+        waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_SELECT);
         proc->sysarg.select = sysarg.select;
