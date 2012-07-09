@@ -355,7 +355,10 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
     
     //if someone waiting for connection we add him to shedule list
     if(pid)
-      add_to_sched_list(acc_pid);
+    {
+      if(process_get_state(pid) == PROC_ACCEPT_IN)
+        add_to_sched_list(acc_pid);
+    }
     //now mark the process as waiting for conn
     process_set_state(pid, PROC_CONNECT);
   }
@@ -486,7 +489,7 @@ int process_handle(pid_t pid, int stat)
           proc->sysarg.accept = sysarg.accept;
           return PROCESS_IDLE_STATE;
         }
-        else
+        else//  We don't need to check conn_pid state because it must be in a connect
           add_to_sched_list(conn_pid);
       }
       

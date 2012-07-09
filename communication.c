@@ -126,7 +126,6 @@ int comm_ask_connect(unsigned int ip, int port, pid_t tid)
         {
           printf("Add to connection asking queue\n");
           xbt_dynar_push(temp->conn_wait, &tid);
-          
           return socket->proc->pid;
         }
       }
