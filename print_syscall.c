@@ -496,6 +496,7 @@ void print_poll_syscall(pid_t pid, syscall_arg_u* sysarg)
   else
     printf("NULL");
   printf(" ]");
+  printf("%lf) = %d\n",arg->timeout, arg->ret);
 }
 
 void disp_fd(fd_set * fd) {

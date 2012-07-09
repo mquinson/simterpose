@@ -352,6 +352,8 @@ void get_args_send_recvmsg(pid_t child, reg_s* reg, syscall_arg_u *sysarg) {
 void get_args_poll(pid_t child, reg_s* reg, syscall_arg_u* sysarg) {
   poll_arg_t arg = &(sysarg->poll);
   
+  arg->ret = reg->ret;
+  
   void * src = (void*)reg->arg1;
   arg->nbfd = reg->arg2;
   arg->timeout = reg->arg3;

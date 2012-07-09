@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
       //If data is null, we are in presence of a non watch task
       if(data != NULL)
       {
-        //printf("Handling ended task for %d\n", *data);
+        printf("Handling ended task for %d\n", *data);
         int status = process_handle_active(*data);
         if(status == PROCESS_DEAD) //TODO add real gestion of process death
           --global_data->child_amount;
@@ -59,13 +59,14 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    //printf("Handle idling process\n");
+    
     
     //Now we will run all idle process store in 
     unsigned int cpt=0;
     int* idle_pid = NULL;
     xbt_dynar_foreach(idle_process, cpt, idle_pid)
     {
+      printf("Handle idling process %d\n", *idle_pid);
       int status = process_handle_idle(*idle_pid);
       if(status != PROCESS_IDLE_STATE)
           xbt_dynar_cursor_rm (idle_process, &cpt);
@@ -95,7 +96,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-//     printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+    printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
   }while(global_data->child_amount);
   
 

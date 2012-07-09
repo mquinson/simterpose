@@ -138,6 +138,42 @@ int process_select_call(pid_t pid)
 }
 
 
+int process_poll_call(pid_t pid)
+{
+  process_descriptor *proc = process_get_descriptor(pid);
+  poll_arg_t arg = (poll_arg_t)&(proc->sysarg.poll);
+  
+  int match=0;
+  int i;
+  
+  for(i=0; i < arg->nbfd; ++i)
+  {
+    struct pollfd *temp = &(arg->fd_list[i]);
+    printf("Process fd %d\n", temp->fd);
+    
+    struct infos_socket *is = get_infos_socket(pid, temp->fd);
+    if(is == NULL)
+      continue;
+    else
+    {
+      int sock_status = socket_get_state(is);
+      if(temp->events & POLLIN)
+      {
+        printf("Ask for read %d\n", sock_status);
+        if(sock_status & SOCKET_READ_OK)
+        {
+          temp->revents = temp->revents | POLLIN;
+          ++match;
+        }
+        else
+          printf("No reading found\n");
+      }
+    }
+  }
+  return match;
+}
+
+
 int process_handle_active(pid_t pid)
 {
   int status;
@@ -221,7 +257,16 @@ int process_handle_idle(pid_t pid)
   }
   else if(proc_state & PROC_POLL)
   {
-    THROW_UNIMPLEMENTED;
+    if(process_poll_call(pid))
+    {
+      //process_descriptor* proc = process_get_descriptor(pid);
+      return process_handle_active(pid);
+    }
+    else
+    {
+      printf("Idle satet retrun\n");
+      return PROCESS_IDLE_STATE;
+    }
   }
   else if(proc_state & PROC_ACCEPT_IN)
   {
@@ -349,13 +394,14 @@ int process_handle(pid_t pid, int stat)
       if(arg.reg_orig == SYS_poll)
       {
         get_args_poll(pid, &arg, &sysarg);
-        //Now we have to add the process in launching list
-//         add_launching_time(pid, timeout+SD_get_clock());
-//         printf(" = %d \n", (int)arg.ret);
-//         ptrace_neutralize_syscall(pid);
-//         ptrace_resume_process(pid);
-//         process_set_out_syscall(pid);
-//         return PROCESS_IDLE_STATE;
+        print_poll_syscall(pid, &sysarg);
+        process_descriptor* proc = process_get_descriptor(pid);
+        ptrace_neutralize_syscall(pid);
+        ptrace_resume_process(pid);
+        process_set_out_syscall(pid);
+        process_set_state(pid, PROC_POLL);
+        proc->sysarg.poll = sysarg.poll;
+        return PROCESS_IDLE_STATE;
       }
       
       if(arg.reg_orig == SYS_exit_group)
@@ -417,7 +463,6 @@ int process_handle(pid_t pid, int stat)
         ptrace_resume_process(pid);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_SELECT);
-        
         proc->sysarg.select = sysarg.select;
         return PROCESS_IDLE_STATE;
       }

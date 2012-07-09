@@ -80,6 +80,7 @@ struct poll_arg_s{
   int nbfd;
   struct pollfd* fd_list;
   double timeout;
+  int ret;
 };
 
 struct sendto_arg_s{
@@ -117,6 +118,7 @@ struct accept_arg_s{
   };
   socklen_t addrlen;
 };
+
 
 struct socket_arg_s{
   int ret;
