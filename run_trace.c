@@ -21,6 +21,22 @@ void print_trace_header(FILE* trace)
 {
   fprintf(trace,"%8s %12s %8s %10s %10s %21s %21s\n","pidX", "syscall", "pidY", "return","diff_cpu","local_addr:port", "remote_addr:port");
 }
+xbt_dynar_t idle_process;
+
+
+void add_to_idle(pid_t pid)
+{
+  unsigned int cpt=0;
+  int* idle_pid = NULL;
+  xbt_dynar_foreach(idle_process, cpt, idle_pid)
+  {
+    if(*idle_pid == pid)
+      return;
+  }
+  int *temp = malloc(sizeof(int));
+  *temp = pid;
+  xbt_dynar_push(idle_process, &temp);
+}
 
 
 int main(int argc, char *argv[]) { 
@@ -29,14 +45,16 @@ int main(int argc, char *argv[]) {
 
   int time_to_simulate=0;
   
-  xbt_dynar_t idle_process = xbt_dynar_new(sizeof(int*), NULL);
+  idle_process = xbt_dynar_new(sizeof(int*), NULL);
   
   do{
-//     printf("NEW TURN %lf\n", SD_get_clock());
+    
     //We calculate the time of simulation.
     time_to_simulate= get_next_start_time() - SD_get_clock();
+    
 //     printf("Next simulation time %d\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
+//     printf("NEW TURN %lf\n", SD_get_clock());
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
@@ -47,15 +65,13 @@ int main(int argc, char *argv[]) {
       //If data is null, we are in presence of a non watch task
       if(data != NULL)
       {
-        printf("Handling ended task for %d\n", *data);
+//         printf("Handling ended task for %d\n", *data);
         int status = process_handle_active(*data);
         if(status == PROCESS_DEAD) //TODO add real gestion of process death
           --global_data->child_amount;
         else if(status == PROCESS_IDLE_STATE)
         {
-          int *temp = malloc(sizeof(int));
-          *temp = *data;
-          xbt_dynar_push(idle_process, &temp);
+          add_to_idle(*data);
         }
       }
     }
@@ -66,14 +82,16 @@ int main(int argc, char *argv[]) {
     int* idle_pid = NULL;
     xbt_dynar_foreach(idle_process, cpt, idle_pid)
     {
-      printf("Handle idling process %d\n", *idle_pid);
+//       printf("Handle idling process %d\n", *idle_pid);
       int status = process_handle_idle(*idle_pid);
       if(status != PROCESS_IDLE_STATE)
           xbt_dynar_cursor_rm (idle_process, &cpt);
+//       else
+//         printf("No remove form idle list\n");
 
     }
     
-    //printf("Handle sleeping process %d\n", has_sleeping_to_launch());
+//     printf("Handle sleeping process %d\n", has_sleeping_to_launch());
     
     //Now we the next process if the time is come
     if(has_sleeping_to_launch())
@@ -90,13 +108,11 @@ int main(int argc, char *argv[]) {
         int status = process_handle_active(temp_pid);
         if(status == PROCESS_IDLE_STATE)
         {
-          int *temp = malloc(sizeof(int));
-          *temp = temp_pid;
-          xbt_dynar_push(idle_process, &temp);
+          add_to_idle(temp_pid);
         }
       }
     }
-    printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+//     printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
   }while(global_data->child_amount);
   
 

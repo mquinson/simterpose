@@ -77,6 +77,7 @@ int process_fork_call(int pid)
 
 int process_select_call(pid_t pid)
 {
+//   printf("Entering select\n");
   process_descriptor *proc= process_get_descriptor(pid);
   select_arg_t arg = &(proc->sysarg.select);
   int i;
@@ -123,10 +124,12 @@ int process_select_call(pid_t pid)
   
   if(proc->timeout == NULL && !proc->in_timeout)
   {
-    print_select_syscall(pid, &(proc->sysarg));
+//     printf("Timeout for select\n");
+//     print_select_syscall(pid, &(proc->sysarg));
     FD_ZERO(&fd_rd);
     FD_ZERO(&fd_wr);
     FD_ZERO(&fd_ex);
+    arg->ret=0;
     arg->fd_read = fd_rd;
     arg->fd_write = fd_wr;
     arg->fd_except = fd_ex;
@@ -141,6 +144,8 @@ int process_select_call(pid_t pid)
 int process_poll_call(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
+  
+//   printf("Entering poll %lf %p\n", SD_get_clock(), proc->timeout);
   poll_arg_t arg = (poll_arg_t)&(proc->sysarg.poll);
   
   int match=0;
@@ -149,7 +154,6 @@ int process_poll_call(pid_t pid)
   for(i=0; i < arg->nbfd; ++i)
   {
     struct pollfd *temp = &(arg->fd_list[i]);
-    printf("Process fd %d\n", temp->fd);
     
     struct infos_socket *is = get_infos_socket(pid, temp->fd);
     if(is == NULL)
@@ -159,29 +163,49 @@ int process_poll_call(pid_t pid)
       int sock_status = socket_get_state(is);
       if(temp->events & POLLIN)
       {
-        printf("Ask for read %d\n", sock_status);
         if(sock_status & SOCKET_READ_OK)
         {
           temp->revents = temp->revents | POLLIN;
           ++match;
         }
-        else
-          printf("No reading found\n");
+        else if( sock_status & ~SOCKET_READ_OK)
+        {
+          XBT_WARN("Mediation different than POLLIN are not handle for poll\n");
+        }
       }
     }
   }
+  if(match > 0)
+  {
+//     printf("Result for poll\n");
+    sys_build_poll(pid, match);
+    return match;
+  }
+  if(proc->timeout == NULL && !proc->in_timeout)
+  {
+//     printf("Time out on poll\n");
+    sys_build_poll(pid, 0);
+    return 1;
+  }
+//   printf("No matching for poll\n");
   return match;
 }
 
 
 int process_handle_active(pid_t pid)
 {
+//   printf("Handle active process\n");
   int status;
   
   int proc_state = process_get_state(pid);
   if(proc_state & PROC_SELECT)
   {
     process_select_call(pid);
+    process_set_state(pid, PROC_NO_STATE);
+  }
+  if(proc_state & PROC_POLL)
+  {
+    process_poll_call(pid);
     process_set_state(pid, PROC_NO_STATE);
   }
   ptrace_resume_process(pid);
@@ -242,6 +266,7 @@ int process_handle_idle(pid_t pid)
       process_descriptor* proc = process_get_descriptor(pid);
       if(proc->timeout != NULL)
         remove_timeout(pid);
+      process_set_state(pid, PROC_NO_STATE);
       return process_handle_active(pid);
     }
     else
@@ -249,24 +274,20 @@ int process_handle_idle(pid_t pid)
   }
   if(proc_state & PROC_CONNECT)
   {
-    //if the select match changment we have to run the child
-    if(process_is_connect_done(pid))
-      return process_handle_active(pid);
-    else
-      return PROCESS_IDLE_STATE;
+    return PROCESS_IDLE_STATE;
   }
   else if(proc_state & PROC_POLL)
   {
     if(process_poll_call(pid))
     {
-      //process_descriptor* proc = process_get_descriptor(pid);
+      process_descriptor* proc = process_get_descriptor(pid);
+      if(proc->timeout != NULL)
+        remove_timeout(pid);
+      process_set_state(pid, PROC_NO_STATE);
       return process_handle_active(pid);
     }
     else
-    {
-      printf("Idle satet retrun\n");
       return PROCESS_IDLE_STATE;
-    }
   }
   else if(proc_state & PROC_ACCEPT_IN)
   {
@@ -378,7 +399,6 @@ int process_listen_call(pid_t pid, syscall_arg_u* sysarg)
 
 int process_handle(pid_t pid, int stat)
 {  
-  printf("Handling %d \n", pid);
   int status = stat;
   reg_s arg;
   syscall_arg_u sysarg;
@@ -396,6 +416,10 @@ int process_handle(pid_t pid, int stat)
         get_args_poll(pid, &arg, &sysarg);
         print_poll_syscall(pid, &sysarg);
         process_descriptor* proc = process_get_descriptor(pid);
+        if(sysarg.poll.timeout >=0)
+          add_timeout(pid, sysarg.poll.timeout + SD_get_clock());
+        else
+          proc->in_timeout = 1;
         ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
         process_set_out_syscall(pid);
@@ -508,7 +532,6 @@ int process_handle(pid_t pid, int stat)
     {
       process_set_out_syscall(pid);
       ptrace_get_register(pid, &arg);
-
       switch (arg.reg_orig) {
         
         case SYS_write:
@@ -602,6 +625,7 @@ int process_handle(pid_t pid, int stat)
           get_args_bind_connect(pid, 1, &arg, &sysarg);
           print_connect_syscall(pid, &(sysarg.connect));
           process_connect_out_call(pid, &sysarg);
+          process_set_state(pid, PROC_NO_STATE);
           break;
           
         case SYS_accept:

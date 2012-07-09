@@ -43,6 +43,7 @@ pid_t pop_next_pid()
   int res = t->pid;
   
   process_descriptor* proc = process_get_descriptor(res);
+//   printf("Removing timeout for pid %d\n", res);
   proc->timeout = NULL;
   
   free(t);
@@ -80,7 +81,7 @@ int has_sleeping_to_launch()
 
 void add_timeout(pid_t pid, double start_time)
 {
-  printf("Add new timeout of %lf for %d\n", start_time, pid);
+//   printf("Add new timeout of %lf for %d\n", start_time, pid);
   time_desc* t = malloc(sizeof(time_desc));
   t->pid = pid;
   t->start_time = start_time;

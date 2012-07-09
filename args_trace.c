@@ -349,6 +349,22 @@ void get_args_send_recvmsg(pid_t child, reg_s* reg, syscall_arg_u *sysarg) {
 }
 
 
+void sys_build_poll(pid_t pid, int match)
+{
+  ptrace_restore_syscall(pid, SYS_poll, match);
+  reg_s r;
+  ptrace_get_register(pid, &r);
+  
+  process_descriptor* proc = process_get_descriptor(pid);
+  poll_arg_t arg = &(proc->sysarg.poll);
+  
+  if(r.arg1!=0)
+  {
+    ptrace_poke(pid, (void*)r.arg1, arg->fd_list, sizeof(struct pollfd)*arg->nbfd);
+  }
+}
+
+
 void get_args_poll(pid_t child, reg_s* reg, syscall_arg_u* sysarg) {
   poll_arg_t arg = &(sysarg->poll);
   
@@ -356,7 +372,7 @@ void get_args_poll(pid_t child, reg_s* reg, syscall_arg_u* sysarg) {
   
   void * src = (void*)reg->arg1;
   arg->nbfd = reg->arg2;
-  arg->timeout = reg->arg3;
+  arg->timeout = reg->arg3/1000;//the timeout is in millisecond
 
   if (src!=0) {
     arg->fd_list = malloc(sizeof(arg->nbfd)* sizeof(struct pollfd));
