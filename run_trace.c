@@ -144,33 +144,28 @@ int main(int argc, char *argv[]) {
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
       proc->scheduled = 0;
-//       printf("Scheduling process %d\n", pid);      
+//       printf("Scheduling process %d\n", pid);    
+      int status;
+      
       if(process_get_idle(pid) == PROC_IDLE)
+        status = process_handle_idle(pid);
+        
+      else
+        status = process_handle_active(pid);
+      
+
+      if(status == PROCESS_IDLE_STATE)
       {
-        int status = process_handle_idle(pid);
-        if(status == PROCESS_IDLE_STATE)
-        {
-          process_set_idle(pid, PROC_IDLE);
-          add_to_idle(pid);
-        }
-        else if( status == PROCESS_DEAD)
-          --global_data->child_amount;
-        else
-          process_set_idle(pid, PROC_NO_IDLE);
+        process_set_idle(pid, PROC_IDLE);
+        add_to_idle(pid);
+      }
+      else if( status == PROCESS_DEAD)
+      {
+        process_die(pid);
+        --global_data->child_amount;
       }
       else
-      {
-        int status = process_handle_active(pid);
-        if(status == PROCESS_IDLE_STATE)
-        {
-          process_set_idle(pid, PROC_IDLE);
-          add_to_idle(pid);
-        }
-        else if( status == PROCESS_DEAD)
-          --global_data->child_amount;
-        else
-          process_set_idle(pid, PROC_NO_IDLE);
-      }
+        process_set_idle(pid, PROC_NO_IDLE);
     }
     
     printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());

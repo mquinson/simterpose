@@ -187,3 +187,8 @@ struct infos_socket* process_get_fd(pid_t pid, int num)
   return proc->fd_list[num];
 }
 
+void process_die(pid_t pid)
+{
+  close_all_communication(pid);
+}
+

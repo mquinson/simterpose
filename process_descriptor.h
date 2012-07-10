@@ -80,4 +80,6 @@ int process_is_connect_done(pid_t pid);
 
 void process_mark_connect_do(pid_t pid);
 
+void process_die(pid_t pid);
+
 #endif

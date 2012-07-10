@@ -48,7 +48,6 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   is->protocol=protocol;
   is->ip_local=-1;
   is->port_local=0;
-  is->closed=0;
 
   xbt_dynar_push(all_sockets, &is);
   
@@ -66,25 +65,24 @@ void delete_socket(pid_t pid, int fd) {
   } 
 }
 
-void socket_close(struct infos_socket* is)
+void socket_close(pid_t pid, int fd)
 {
-  is->closed=1;
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  if(is!=NULL)
+  {
+    comm_set_close(is->comm);
+    
+    delete_socket(pid, fd);
+  }
   
 }
-
 
 struct infos_socket* register_socket(pid_t pid, int sockfd, int domain, int protocol) {
 //   printf("Registering socket %d for processus %d\n", sockfd, pid);
   if (socket_registered(pid,sockfd)==1) {
-    if (socket_closed(pid,sockfd) == 1) {
-      delete_socket(pid,sockfd);
-      return confirm_register_socket(pid,sockfd,domain,protocol);
-    } else {
-      perror("Error create socket, fd not closed !");
-      exit(1);
-    }
+    xbt_die("Inconsistence found in model. Socket already exist");
   }else{
-     return confirm_register_socket(pid,sockfd,domain,protocol);
+    return confirm_register_socket(pid,sockfd,domain,protocol);
   }
 
 }
@@ -124,17 +122,16 @@ void get_localaddr_port_socket(pid_t pid, int fd) {
 
 
 void print_infos_socket(struct infos_socket *is) {
-  fprintf(stdout,"\n%5s %5s %10s %10s %21s %10s\n","pid","fd","domain","protocol","locale_ip:port", "closed");
+  fprintf(stdout,"\n%5s %5s %10s %10s %21s\n","pid","fd","domain","protocol","locale_ip:port");
     if(is->proc != NULL){
 
-  fprintf(stdout,"%5d %5d %10d %10d %15d:%5d %10d\n",
+  fprintf(stdout,"%5d %5d %10d %10d %15d:%5d\n",
 	  is->proc->pid,
 	  is->fd,
 	  is->domain,
 	  is->protocol,
 	  is->ip_local,
-	  is->port_local,
-	  is->closed);
+	  is->port_local);
   }
 }
 
@@ -282,11 +279,8 @@ int get_domain_socket(pid_t pid, int fd) {
 int socket_registered(pid_t pid, int fd) {
   struct infos_socket* is = get_infos_socket(pid, fd);
   
-  if(is != NULL && !is->closed)
+  if(is != NULL)
       return 1;
-  else if( is != NULL)
-    return 0;
-
   return -1;
 }
 
@@ -294,16 +288,6 @@ int socket_registered(pid_t pid, int fd) {
 struct infos_socket* get_infos_socket(pid_t pid, int fd) {
   return global_data->process_desc[pid]->fd_list[fd];
 }
-
-void close_sockfd(pid_t pid, int fd) {
-  struct infos_socket* is = get_infos_socket(pid, fd);
-  if(is!=NULL)
-  {
-    comm_set_close(is->comm);
-    is->closed=1;
-  }
-}
-
 
 
 int get_protocol_socket(pid_t pid, int fd) {
@@ -313,15 +297,6 @@ int get_protocol_socket(pid_t pid, int fd) {
     return is->protocol;
   return -1;
 }
-
-int socket_closed(pid_t pid, int fd) { 
-  struct infos_socket* is = get_infos_socket(pid, fd);
-  
-  if (is != NULL )
-    return is->closed;
-  return -1;
-}
-
 
 int socket_netlink(pid_t pid, int fd) {
   struct infos_socket* is = get_infos_socket(pid, fd);
@@ -435,11 +410,11 @@ int close_all_communication(int pid){
       task_comm_info* tci;
       while(xbt_fifo_size(tl))
       {
-        tci = (task_comm_info*) xbt_fifo_shift(sl);
+        tci = (task_comm_info*) xbt_fifo_shift(tl);
         SD_task_destroy(tci->task);
         free(tci);
       }
-      
+      socket_close(pid, i);
       proc->fd_list[i]=NULL;
     }
   }

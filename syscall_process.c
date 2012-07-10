@@ -629,7 +629,7 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_close: 
           printf("[%d] close(%ld) = %ld\n",pid, arg.arg1,arg.ret);
-          close_sockfd(pid,(int)arg.arg1);
+          socket_close(pid,(int)arg.arg1);
           break;
           
         case SYS_dup:

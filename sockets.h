@@ -31,7 +31,6 @@ struct infos_socket{
   int protocol;
   unsigned int ip_local;
   int port_local;
-  int closed;
 };
 
 recv_information* recv_information_new();
@@ -58,15 +57,11 @@ void get_localaddr_port_socket(pid_t pid, int fd);
 
 void set_localaddr_port_socket(pid_t pid, int fd, char *ip, int port);
 
-void close_sockfd(pid_t pid, int fd);
-
 int get_protocol_socket(pid_t pid, int fd);
 
 int get_domain_socket(pid_t pid, int fd);
 
 int socket_incomplete(pid_t pid, int fd);
-
-int socket_closed(pid_t pid, int fd);
 
 int socket_netlink(pid_t pid, int fd);
 
@@ -77,5 +72,7 @@ struct infos_socket* getSocketInfoFromContext(unsigned int locale_ip, int locale
 int socket_get_state(struct infos_socket* is);
 
 int socket_read_event(pid_t pid, int fd);
+
+void socket_close(pid_t pid, int fd);
 
 #endif
