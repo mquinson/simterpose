@@ -48,7 +48,6 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   is->protocol=protocol;
   is->ip_local=-1;
   is->port_local=0;
-  is->incomplete=1;
   is->closed=0;
 
   xbt_dynar_push(all_sockets, &is);
@@ -96,11 +95,7 @@ void update_socket(pid_t pid, int fd) {
   struct infos_socket* is = get_infos_socket(pid, fd);
 
   if (is->domain == 2) { // PF_INET
-    if (get_addr_port_sock(pid, fd, LOCAL)) { // 1-> locale
-      if (is->comm != NULL) { // 2 -> remote
-	is->incomplete=0;
-      }
-    }
+    get_addr_port_sock(pid, fd, LOCAL);
     print_infos_socket(is);
   }
 }
@@ -129,17 +124,16 @@ void get_localaddr_port_socket(pid_t pid, int fd) {
 
 
 void print_infos_socket(struct infos_socket *is) {
-  fprintf(stdout,"\n%5s %5s %10s %10s %21s %12s %10s\n","pid","fd","domain","protocol","locale_ip:port","incomplete", "closed");
+  fprintf(stdout,"\n%5s %5s %10s %10s %21s %10s\n","pid","fd","domain","protocol","locale_ip:port", "closed");
     if(is->proc != NULL){
 
-  fprintf(stdout,"%5d %5d %10d %10d %15d:%5d %12d %10d\n",
+  fprintf(stdout,"%5d %5d %10d %10d %15d:%5d %10d\n",
 	  is->proc->pid,
 	  is->fd,
 	  is->domain,
 	  is->protocol,
 	  is->ip_local,
 	  is->port_local,
-	  is->incomplete,
 	  is->closed);
   }
 }
@@ -317,14 +311,6 @@ int get_protocol_socket(pid_t pid, int fd) {
   
   if (is != NULL )
     return is->protocol;
-  return -1;
-}
-
-int socket_incomplete(pid_t pid, int fd){
-  struct infos_socket* is = get_infos_socket(pid, fd);
-  
-  if (is != NULL )
-    return is->incomplete;
   return -1;
 }
 

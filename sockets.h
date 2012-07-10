@@ -31,7 +31,6 @@ struct infos_socket{
   int protocol;
   unsigned int ip_local;
   int port_local;
-  int incomplete;
   int closed;
 };
 
