@@ -34,6 +34,13 @@ recv_information* recv_information_new()
   return res;
 }
 
+void recv_information_destroy(recv_information *recv)
+{
+  xbt_fifo_free(recv->send_fifo);
+  xbt_fifo_free(recv->recv_task);
+  free(recv);
+}
+
 struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
 
   process_descriptor* proc = global_data->process_desc[pid];

@@ -40,8 +40,10 @@ comm_t comm_new(struct infos_socket* socket, unsigned int remote_ip, int remote_
 
 void comm_destroy(comm_t comm)
 {
-  printf("Destruction of communication\n");
-  //TODO destruction of communication
+  recv_information_destroy(comm->info[0].recv);
+  recv_information_destroy(comm->info[1].recv);
+  xbt_dynar_free(&comm->conn_wait);
+  free(comm);
 }
 
 

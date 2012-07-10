@@ -35,6 +35,8 @@ struct infos_socket{
 
 recv_information* recv_information_new();
 
+void recv_information_destroy(recv_information *recv);
+
 void init_socket_gestion();
 
 int handle_new_receive(int pid, int sockfd, int length);
