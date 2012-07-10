@@ -45,7 +45,6 @@ void process_send_call(int pid, int sockfd, int ret)
     THROW_IMPOSSIBLE;
 }
 
-
 int process_recv_call(int pid, int sockfd, int ret)
 {
   if (socket_registered(pid,sockfd) != -1) {
@@ -215,6 +214,21 @@ int process_handle_active(pid_t pid)
   
   return process_handle( pid, status);
 }
+
+
+int process_recv_in_call(int pid, syscall_arg_u *sysarg)
+{
+  recv_arg_t arg = &(sysarg->recv);
+  process_descriptor *proc = process_get_descriptor(pid);
+  if(proc->fd_list[arg->sockfd]==NULL)
+    return 0;
+  int status =comm_get_socket_state(get_infos_socket(pid, arg->sockfd));
+  
+  printf("socket %d : %d\n", arg->sockfd, status);
+  
+  return (status & SOCKET_READ_OK);
+}
+
 
 //Return 0 if nobody wait or the pid of the one who wait
 int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
@@ -512,13 +526,23 @@ int process_handle(pid_t pid, int stat)
         return PROCESS_IDLE_STATE;
       }
       
-      else if(arg.reg_orig == SYS_recvfrom || arg.reg_orig == SYS_recvmsg)
+      else if(arg.reg_orig == SYS_recvfrom)
       {
         printf("[%d] recvfrom_in\n",pid);
+        get_args_sendto_recvfrom(pid,2, &arg, &sysarg);
+        if(!process_recv_in_call(pid, &sysarg))
+        {
+          ptrace_resume_process(pid);
+          return PROCESS_IDLE_STATE;
+        }
+      }
+      
+      else if(arg.reg_orig == SYS_recvmsg)
+      {
+        printf("[%d] recvmsg_in\n",pid);
         ptrace_resume_process(pid);
         return PROCESS_IDLE_STATE;
       }
-
       #else
 
       if(arg.reg_orig == SYS_socketcall)

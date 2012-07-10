@@ -54,16 +54,16 @@ typedef recvmsg_arg_s* recvmsg_arg_t;
 
 struct recv_arg_s{
   int sockfd;
-  size_t len;
-  int flags;
   int ret;
+  int flags;
+  size_t len;
 };
 
 struct recvmsg_arg_s{
   int sockfd;
   int ret;
-  struct msghdr msg;
   int flags;
+  struct msghdr msg;
 };
 
 struct select_arg_s{
