@@ -3,8 +3,16 @@
 
 #include <stdlib.h>
 
+typedef struct task_comm_info task_comm_info;
+
 #include "sockets.h"
 #include "simdag/simdag.h"
+
+struct task_comm_info{ 
+  SD_task_t task;
+  pid_t sender_pid;
+};
+
 
 void create_computation_task(pid_t pid, double amount);
 

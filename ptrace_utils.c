@@ -39,7 +39,6 @@ void ptrace_resume_process(const pid_t pid)
 {
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
     fprintf(stderr, " [%d] ptrace syscall %s\n", pid, strerror(errno));
-    THROW_IMPOSSIBLE;
     xbt_die("Impossible to continue\n");
   }
 }

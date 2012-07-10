@@ -12,10 +12,6 @@
 #include <stdlib.h>
 
 //Contains all informations necessary to make receive task when happen with passing only the info_socket
-typedef struct{
-  SD_task_t task;
-  pid_t sender_pid;
-}task_comm_info;
 
 
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* name)
@@ -79,9 +75,10 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   int* data_sender = malloc(sizeof(int));
   *data_sender=pid_sender;
   
-
+   char buff[256];
+   sprintf(buff, "%s send",proc_sender->name);
   
-  SD_task_t task_sending = SD_task_create("communication send", data_sender, amount);
+  SD_task_t task_sending = SD_task_create(buff, data_sender, amount);
   SD_task_watch(task_sending, SD_DONE);
   SD_task_t task_receiving = SD_task_create("communication recv", NULL, 0);
   SD_task_watch(task_receiving, SD_DONE);

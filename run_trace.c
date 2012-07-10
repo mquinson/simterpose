@@ -60,7 +60,7 @@ void add_to_sched_list(pid_t pid)
   proc->scheduled =1;
   xbt_dynar_push_as(sched_list, pid_t, pid);
   
-//   printf("Add process %d to sched_list\n", pid);
+  printf("Add process %d to sched_list\n", pid);
   if(proc->idle_list)
     remove_from_idle_list(pid);
 }
@@ -75,7 +75,7 @@ void move_idle_to_sched()
     process_descriptor *proc = process_get_descriptor(pid);
     
     proc->idle_list = 0;
-//     printf("Move process %d on sched_list\n", pid);
+    printf("Move process %d on sched_list\n", pid);
     proc->scheduled =1;
     xbt_dynar_push_as(sched_list, pid_t, pid);
   }
@@ -102,15 +102,19 @@ int main(int argc, char *argv[]) {
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
+//     printf("Handle task end\n");
     while(!xbt_dynar_is_empty(arr))
     {
       xbt_dynar_shift(arr, &task_over);
+      if(SD_task_get_state(task_over) != SD_DONE)
+        continue;
       int* data = (int *)SD_task_get_data(task_over);
       //If data is null, we schedule the process
       if(data != NULL)
         add_to_sched_list(*data);
     }
-
+    
+//     printf("Handle idle task\n");
     //Now adding all idle process to the scheduled list
     move_idle_to_sched();
 

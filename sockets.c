@@ -3,6 +3,8 @@
 #include "xbt.h"
 #include "task.h"
 #include "sysdep.h"
+#include "simdag/simdag.h"
+#include "xbt.h"
 
 #define LOCAL 1
 #define REMOTE 2
@@ -63,6 +65,12 @@ void delete_socket(pid_t pid, int fd) {
   CATCH(e){
     printf("Socket not found\n");
   } 
+}
+
+void socket_close(struct infos_socket* is)
+{
+  is->closed=1;
+  
 }
 
 
@@ -419,30 +427,37 @@ void handle_new_send(struct infos_socket *is,  int length)
 }
 
 
-int finish_all_communication(int pid){
-  THROW_UNIMPLEMENTED;
-//   process_descriptor* proc = global_data->process_desc[pid];
-//   int i=0;
-//   int result=0;
-//   for(i=0; i<MAX_FD ; ++i)
-//   {
-//     if (proc->fd_list[i]!=NULL)
-//     {
-//       int *size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
-//       while(size != NULL)
-//       {
-// // 	insert_trace_comm(pid, i, "recv", 0);
-// 	//create_recv_communication_task(proc->fd_list[i]);
-// 	free(size);
-// 	size = (int*)xbt_fifo_shift(proc->fd_list[i]->recv_info->send_fifo);
-// 	result=1;
-//       }
-//       //FIXME add reference counter to see if this is the last process to use the socket
-//       //delete_socket(pid, i);
-//       proc->fd_list[i]=NULL;
-//     }
-//   }
-//   return result;
+int close_all_communication(int pid){
+  process_descriptor* proc = global_data->process_desc[pid];
+  int i=0;
+  int result=0;
+  for(i=0; i<MAX_FD ; ++i)
+  {
+    if (proc->fd_list[i]!=NULL)
+    {
+      recv_information* recv = comm_get_own_recv(proc->fd_list[i]);
+      
+      xbt_fifo_t sl = recv->send_fifo;
+      int *size;
+      while(xbt_fifo_size(sl))
+      {
+        size = (int*)xbt_fifo_shift(sl);
+        free(size);
+      }
+      
+      xbt_fifo_t tl = recv->recv_task;
+      task_comm_info* tci;
+      while(xbt_fifo_size(tl))
+      {
+        tci = (task_comm_info*) xbt_fifo_shift(sl);
+        SD_task_destroy(tci->task);
+        free(tci);
+      }
+      
+      proc->fd_list[i]=NULL;
+    }
+  }
+  return result;
 }
 
 int socket_read_event(pid_t pid, int fd)

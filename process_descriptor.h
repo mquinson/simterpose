@@ -41,7 +41,6 @@ struct process_descriptor{
   
   int state;
   syscall_arg_u sysarg;
-  int saved_status;
 };
 
 

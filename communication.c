@@ -102,6 +102,17 @@ void comm_set_close(comm_t comm)
   comm->state = comm->state & COMM_CLOSED;
 }
 
+
+int comm_close(struct infos_socket* is)
+{
+  comm_t comm = is->comm;
+  if( comm->info[0].socket == is)
+    return 0;
+  else
+    return 1;
+}
+
+
 void comm_set_listen(comm_t comm)
 {
   comm->state =  comm->state | COMM_LISTEN;

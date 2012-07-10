@@ -43,7 +43,7 @@ int handle_new_receive(int pid, int sockfd, int length);
 
 void handle_new_send(struct infos_socket *is,  int length);
 
-int finish_all_communication(int pid);
+int close_all_communication(int pid);
 
 int handle_communication_stat(struct infos_socket* is, pid_t pid);
 

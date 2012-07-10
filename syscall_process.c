@@ -24,15 +24,15 @@ void process_send_call(int pid, int sockfd, int ret)
 {
 
   if (socket_registered(pid,sockfd) != -1) {
-    if (socket_incomplete(pid,sockfd))
-    {
-      update_socket(pid,sockfd);
-    }
     if (!socket_netlink(pid,sockfd))
     {
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = comm_get_peer(is);
+      
+      int peer_stat = process_get_state(s->proc->pid);
+      if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL)
+        add_to_sched_list(s->proc->pid);
       
       handle_new_send(is,  ret);
 
@@ -49,8 +49,6 @@ void process_send_call(int pid, int sockfd, int ret)
 int process_recv_call(int pid, int sockfd, int ret)
 {
   if (socket_registered(pid,sockfd) != -1) {
-    if (socket_incomplete(pid,sockfd)) 
-      update_socket(pid,sockfd);
     if (!socket_netlink(pid,sockfd))
     {
       calculate_computation_time(pid);
@@ -254,7 +252,7 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
 
 int process_handle_idle(pid_t pid)
 {
-//   printf("Handle idling process %d\n", pid);
+  printf("Handle idling process %d\n", pid);
   int status;
   int proc_state = process_get_state(pid);
   
@@ -309,6 +307,7 @@ int process_handle_idle(pid_t pid)
   
   else
   {
+    printf("No special idling state\n");
     if(waitpid(pid, &status, WNOHANG))
       return process_handle( pid, status);
     else
@@ -447,11 +446,13 @@ int process_handle(pid_t pid, int stat)
       if(arg.reg_orig == SYS_exit_group)
       {
         printf("[%d] exit_group(%ld) called \n",pid, arg.arg1);
+        ptrace_detach_process(pid);
         return PROCESS_DEAD;
       }
       if(arg.reg_orig == SYS_exit)
       {
         printf("[%d] exit(%ld) called \n", pid, arg.arg1);
+        ptrace_detach_process(pid);
         return PROCESS_DEAD;
       }
       
@@ -652,6 +653,8 @@ int process_handle(pid_t pid, int stat)
           get_args_accept(pid, &arg, &sysarg);
           print_accept_syscall(pid, &sysarg.accept);
           process_accept_out_call(pid, &sysarg);
+          add_to_sched_list(pid);
+          return PROCESS_NO_TASK_FOUND;
           break;
           
         case SYS_listen:
