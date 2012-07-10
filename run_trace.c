@@ -27,39 +27,32 @@ xbt_dynar_t sched_list;
 
 void remove_from_idle_list(pid_t pid)
 {
-  int t;
-  unsigned int cpt;
-  xbt_dynar_foreach(idle_process, cpt, t)
-  {
-    if(t == pid)
-    {
-//       printf("Remove process %d from idle list\n", pid); 
-      xbt_dynar_cursor_rm (idle_process, &cpt);
-      return;
-    }
+  xbt_ex_t e;
+  TRY{
+    int i= xbt_dynar_search(idle_process, &pid);
+    xbt_dynar_remove_at(idle_process, i, NULL);
+    process_descriptor *proc = process_get_descriptor(pid);
+    proc->idle_list=0;
   }
+  CATCH(e){
+    xbt_die("Pid not found in list. Inconsistance found in model");
+  } 
 }
 
 
 void add_to_idle(pid_t pid)
 {
-
-  int t;
-  unsigned int cpt;
-  xbt_dynar_foreach(idle_process, cpt, t)
-  {
-    if(t == pid)
-      return;
-  }
+  process_descriptor* proc = process_get_descriptor(pid);
+  if(proc->idle_list)
+    return;
+  
 //   printf("Add process %d to idle list\n", pid);
   xbt_dynar_push_as(idle_process, pid_t, pid);
 }
 
-
 //Verify is the process is not already schedule before adding
 void add_to_sched_list(pid_t pid)
 {
-  printf("Entering sched\n");
   process_descriptor *proc = process_get_descriptor(pid);
   if(proc->scheduled)
     return;
@@ -67,8 +60,24 @@ void add_to_sched_list(pid_t pid)
   proc->scheduled =1;
   xbt_dynar_push_as(sched_list, pid_t, pid);
   
-  printf("Add process %d to sched list\n", pid);
-  remove_from_idle_list(pid);
+  if(proc->idle_list)
+    remove_from_idle_list(pid);
+}
+
+
+void move_idle_to_sched()
+{
+  pid_t pid;
+  while(!xbt_dynar_is_empty(idle_process))
+  {
+    xbt_dynar_shift(idle_process, &pid);
+    process_descriptor *proc = process_get_descriptor(pid);
+    
+    proc->idle_list = 0;
+    
+    proc->scheduled =1;
+    xbt_dynar_push_as(sched_list, pid_t, pid);
+  }
 }
 
 
@@ -102,12 +111,7 @@ int main(int argc, char *argv[]) {
     }
 
     //Now adding all idle process to the scheduled list
-    pid_t idle_pid;
-    while(!xbt_dynar_is_empty(idle_process))
-    {
-      xbt_dynar_shift(arr, &idle_pid);
-      add_to_sched_list(idle_pid);
-    }
+    move_idle_to_sched();
 
     while(has_sleeping_to_launch())
     {

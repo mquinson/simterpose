@@ -36,6 +36,7 @@ struct process_descriptor{
   
   unsigned int in_timeout :1;
   unsigned int scheduled  :1;
+  unsigned int idle_list  :1;
 
   
   int state;
