@@ -45,7 +45,7 @@ void add_to_idle(pid_t pid)
   process_descriptor* proc = process_get_descriptor(pid);
   if(proc->idle_list)
     return;
-  
+  proc->idle_list=1;
 //   printf("Add process %d to idle list\n", pid);
   xbt_dynar_push_as(idle_process, pid_t, pid);
 }
@@ -60,6 +60,7 @@ void add_to_sched_list(pid_t pid)
   proc->scheduled =1;
   xbt_dynar_push_as(sched_list, pid_t, pid);
   
+//   printf("Add process %d to sched_list\n", pid);
   if(proc->idle_list)
     remove_from_idle_list(pid);
 }
@@ -74,7 +75,7 @@ void move_idle_to_sched()
     process_descriptor *proc = process_get_descriptor(pid);
     
     proc->idle_list = 0;
-    
+//     printf("Move process %d on sched_list\n", pid);
     proc->scheduled =1;
     xbt_dynar_push_as(sched_list, pid_t, pid);
   }
@@ -97,7 +98,7 @@ int main(int argc, char *argv[]) {
     time_to_simulate= get_next_start_time() - SD_get_clock();
 //     printf("Next simulation time %d\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
-//     printf("NEW TURN %lf\n", SD_get_clock());
+    printf("NEW TURN %lf\n", SD_get_clock());
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
@@ -139,9 +140,7 @@ int main(int argc, char *argv[]) {
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
       proc->scheduled = 0;
-      
-//       printf("Handling process %d %d\n", pid, process_get_idle(pid));
-      
+//       printf("Scheduling process %d\n", pid);      
       if(process_get_idle(pid) == PROC_IDLE)
       {
         int status = process_handle_idle(pid);
