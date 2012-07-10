@@ -33,7 +33,7 @@ void remove_from_idle_list(pid_t pid)
   {
     if(t == pid)
     {
-      printf("Remove process %d from idle list\n", pid); 
+//       printf("Remove process %d from idle list\n", pid); 
       xbt_dynar_cursor_rm (idle_process, &cpt);
       return;
     }
@@ -51,7 +51,7 @@ void add_to_idle(pid_t pid)
     if(t == pid)
       return;
   }
-  printf("Add process %d to idle list\n", pid);
+//   printf("Add process %d to idle list\n", pid);
   xbt_dynar_push_as(idle_process, pid_t, pid);
 }
 
@@ -59,14 +59,14 @@ void add_to_idle(pid_t pid)
 //Verify is the process is not already schedule before adding
 void add_to_sched_list(pid_t pid)
 {
-  unsigned int cpt=0;
-  int temp=0;
-  xbt_dynar_foreach(sched_list, cpt, temp)
-  {
-    if(temp == pid)
-      return;
-  }
+  printf("Entering sched\n");
+  process_descriptor *proc = process_get_descriptor(pid);
+  if(proc->scheduled)
+    return;
+  
+  proc->scheduled =1;
   xbt_dynar_push_as(sched_list, pid_t, pid);
+  
   printf("Add process %d to sched list\n", pid);
   remove_from_idle_list(pid);
 }
@@ -98,12 +98,16 @@ int main(int argc, char *argv[]) {
       int* data = (int *)SD_task_get_data(task_over);
       //If data is null, we schedule the process
       if(data != NULL)
-        xbt_dynar_push_as(sched_list, pid_t, *data);
+        add_to_sched_list(*data);
     }
 
-    //Now we move all idle process to schedule list
-    xbt_dynar_merge(&sched_list, &idle_process);
-    idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
+    //Now adding all idle process to the scheduled list
+    pid_t idle_pid;
+    while(!xbt_dynar_is_empty(idle_process))
+    {
+      xbt_dynar_shift(arr, &idle_pid);
+      add_to_sched_list(idle_pid);
+    }
 
     while(has_sleeping_to_launch())
     {
@@ -111,7 +115,7 @@ int main(int argc, char *argv[]) {
       if(SD_get_clock() == get_next_start_time())
       {
         int temp_pid = pop_next_pid();
-        xbt_dynar_push_as(sched_list, pid_t, temp_pid);
+        add_to_sched_list(temp_pid);
         process_descriptor* proc = process_get_descriptor(temp_pid);
         if(!proc->in_timeout)
           ++global_data->child_amount;
@@ -121,7 +125,7 @@ int main(int argc, char *argv[]) {
       else
         break;
     }
-    printf("Size of sched_list %ldu\n", xbt_dynar_length(sched_list));
+//     printf("Size of sched_list %ldu\n", xbt_dynar_length(sched_list));
     
     //Now we have global list of process_data, we have to handle them
     while(!xbt_dynar_is_empty(sched_list))
@@ -129,8 +133,10 @@ int main(int argc, char *argv[]) {
       
       pid_t pid;
       xbt_dynar_shift (sched_list, &pid);
+      process_descriptor* proc = process_get_descriptor(pid);
+      proc->scheduled = 0;
       
-      printf("Handling process %d %d\n", pid, process_get_idle(pid));
+//       printf("Handling process %d %d\n", pid, process_get_idle(pid));
       
       if(process_get_idle(pid) == PROC_IDLE)
       {

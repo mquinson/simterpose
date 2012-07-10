@@ -294,7 +294,6 @@ int process_handle_idle(pid_t pid)
   
   else if(proc_state & PROC_ACCEPT_IN)
   {
-    printf("Process handle accept_in\n");
     process_descriptor* proc = process_get_descriptor(pid);
     pid_t conn_pid = process_accept_in_call(pid, &proc->sysarg);
     if(conn_pid)
