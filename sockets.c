@@ -70,11 +70,9 @@ void socket_close(pid_t pid, int fd)
   struct infos_socket* is = get_infos_socket(pid, fd);
   if(is!=NULL)
   {
-    comm_set_close(is->comm);
-    
+    comm_close(is);
     delete_socket(pid, fd);
   }
-  
 }
 
 struct infos_socket* register_socket(pid_t pid, int sockfd, int domain, int protocol) {

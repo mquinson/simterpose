@@ -38,6 +38,12 @@ comm_t comm_new(struct infos_socket* socket, unsigned int remote_ip, int remote_
   return res;
 }
 
+void comm_destroy(comm_t comm)
+{
+  printf("Destruction of communication\n");
+  //TODO destruction of communication
+}
+
 
 comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket* is)
 {
@@ -103,13 +109,25 @@ void comm_set_close(comm_t comm)
 }
 
 
-int comm_close(struct infos_socket* is)
+void comm_close(struct infos_socket* is)
 {
   comm_t comm = is->comm;
   if( comm->info[0].socket == is)
-    return 0;
+  {
+    comm->info[0].socket = NULL;
+    if(comm->state == COMM_CLOSED || comm->state == COMM_LISTEN)
+      comm_destroy(comm);
+    else
+      comm->state = COMM_CLOSED;
+  }
   else
-    return 1;
+  {
+    comm->info[1].socket = NULL;
+    if(comm->state == COMM_CLOSED)
+      comm_destroy(comm);
+    else
+      comm->state = COMM_CLOSED;
+  }
 }
 
 
