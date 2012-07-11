@@ -12,6 +12,7 @@ typedef comm_s *comm_t;
 
 #include "sockets.h"
 #include "xbt.h"
+#include "task.h"
 #include <sys/types.h>
 
 typedef struct{
@@ -60,5 +61,9 @@ int comm_get_socket_state(struct infos_socket* is);
 int comm_has_connect_waiting(struct infos_socket* is);
 
 void comm_close(struct infos_socket* is);
+
+void comm_send_data(struct infos_socket *is, task_comm_info *tci);
+
+task_comm_info* comm_get_send(struct infos_socket* is);
 
 #endif

@@ -21,4 +21,6 @@ void add_timeout(pid_t pid, double start_time);
 
 void remove_timeout(pid_t pid);
 
+void destroy_global_data();
+
 #endif

@@ -176,5 +176,7 @@ int main(int argc, char *argv[]) {
   
   printf("End of simulation. Time : %lf\n", SD_get_clock());
   
+  SD_exit();
+  destroy_global_data();
   return 0;
 }

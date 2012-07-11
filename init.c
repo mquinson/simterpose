@@ -167,7 +167,7 @@ void init_all_process()
     
     close(comm_launcher[0]);
     
-    global_data->process_desc[launcherpid]= process_descriptor_new("launcher", launcherpid);
+    //global_data->process_desc[launcherpid]= process_descriptor_new("launcher", launcherpid);
     
     // We wait for the child to be blocked by ptrace in the first exec()
     waitpid(launcherpid, &status, 0);

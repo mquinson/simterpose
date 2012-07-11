@@ -18,14 +18,11 @@ void init_global_data()
   }
 }
 
-// double update_simulation_clock()
-// {
-//   double new_clock = SD_get_clock();
-//   double result = new_clock - global_data->last_clock;
-//   global_data->last_clock = new_clock;
-//   return result;
-// }
-
+void destroy_global_data()
+{
+  xbt_dynar_free(&(global_data->launching_time));
+  free(global_data);
+}
 
 double get_next_start_time()
 {

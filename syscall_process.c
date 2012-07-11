@@ -613,6 +613,7 @@ int process_handle(pid_t pid, int stat)
             printf("[%d] open(\"...\", %s) = %ld\n",pid, flags, arg.ret);
           else
             printf("[%d] open(\"...\", no_flags) = %ld\n",pid, arg.ret);
+          free(flags);
         }
         break;
         

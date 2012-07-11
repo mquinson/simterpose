@@ -1,6 +1,7 @@
 #include "sockets.h"
 #include "communication.h"
 #include "xbt.h"
+#include "task.h"
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -200,5 +201,19 @@ int comm_get_socket_state(struct infos_socket* is)
     res = res | SOCKET_CLOSED;
   
   return res;
+}
+
+
+void comm_send_data(struct infos_socket *is, task_comm_info *tci)
+{
+  recv_information* recv = comm_get_peer_recv(is);
+  xbt_fifo_push(recv->recv_task, tci);
+}
+
+task_comm_info* comm_get_send(struct infos_socket* is)
+{
+  recv_information* recv = comm_get_own_recv(is);
+  
+  return xbt_fifo_shift(recv->recv_task);
 }
 

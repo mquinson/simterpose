@@ -17,7 +17,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
 //   result->trace = fopen(buff, "w");
   result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
   result->pid=pid;
-  result->pid = pid; //By default, we consider that process is the first of this pgid
+  result->tgid = pid; //By default, we consider that process is the first of this pgid
   result->cpu_time=0; 
   result->syscall_in = 0;
   result->idle=0;
@@ -36,6 +36,19 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->station = SD_workstation_get_by_name(result->name);
   
   return result;
+}
+
+
+void process_descriptor_destroy(process_descriptor* proc)
+{
+  free(proc->name);
+  //We don't free each fd beacuse application do this before
+  free(proc->fd_list);
+  if(proc->timeout)
+    free(proc->timeout);
+  if(proc->last_computation_task)
+    SD_task_destroy(proc->last_computation_task);
+  free(proc);
 }
 
 //TODO regarder l'inline pour cette fonction
@@ -190,5 +203,8 @@ struct infos_socket* process_get_fd(pid_t pid, int num)
 void process_die(pid_t pid)
 {
   close_all_communication(pid);
+  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_destroy(proc);
+  global_data->process_desc[pid]=NULL;
 }
 

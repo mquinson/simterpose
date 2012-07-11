@@ -27,6 +27,9 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
   
   SD_task_dependency_add(name, NULL, proc->last_computation_task, next_task);
   SD_task_schedule(proc->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
+  free(comp_size);
+  free(comm_amount);
+  free(work_list);
   proc->last_computation_task=NULL;
 }
 
@@ -64,6 +67,9 @@ void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_t
   work_list[1] = receiver;
   
   SD_task_schedule(task, 2, work_list, comp_size, comm_amount, -1);
+  free(comp_size);
+  free(comm_amount);
+  free(work_list);
 }
 
 
@@ -85,10 +91,9 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   
   task_comm_info* temp = malloc(sizeof(task_comm_info));
   temp->task = task_receiving;
-  temp->sender_pid = pid_sender;
+  temp->sender_station = proc_sender->station;
   
-  recv_information* recv = comm_get_peer_recv(is);
-  xbt_fifo_push(recv->recv_task, temp);
+  comm_send_data(is, temp);
   
   //if last_computation_task is not NULL, that means that we have to do some computation before process syscall
   if(proc_sender->last_computation_task)
@@ -108,20 +113,18 @@ void task_schedule_receive(struct infos_socket* is, pid_t pid)
   int* data_receiver = malloc(sizeof(int));
   *data_receiver=pid;
   
-  recv_information* recv = comm_get_own_recv(is);
-  
-  task_comm_info* tci = xbt_fifo_shift(recv->recv_task);
+  task_comm_info* tci = comm_get_send(is);
   
   SD_task_set_data(tci->task, data_receiver);
   
-  process_descriptor *proc_sender = process_get_descriptor(tci->sender_pid);
   process_descriptor *proc_receiver = process_get_descriptor(pid);
   
   //If we have a computation task in queue, we have to scedule it before doing the other operation
   if(proc_receiver->last_computation_task)
     schedule_last_computation_task(proc_receiver->pid, tci->task, "calculation");
 
-  schedule_comm_task(proc_sender->station, proc_receiver->station, tci->task);
+  schedule_comm_task(tci->sender_station, proc_receiver->station, tci->task);
+  free(tci);
   
   printf("Leaving task_schedule_receive\n");
 }
