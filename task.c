@@ -18,18 +18,12 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 {
   process_descriptor *proc = process_get_descriptor(pid);
   
-  double* comp_size = malloc(sizeof(double));
-  double* comm_amount = malloc(sizeof(double));
-  SD_workstation_t* work_list = malloc(sizeof(SD_workstation_t));
-  work_list[0] = proc->station;
-  *comm_amount=0;
-  *comp_size =SD_task_get_amount(proc->last_computation_task);
+  double comp_size = SD_task_get_amount(proc->last_computation_task);
+  double comm_amount = 0;
+  SD_workstation_t work_list = proc->station;
   
   SD_task_dependency_add(name, NULL, proc->last_computation_task, next_task);
-  SD_task_schedule(proc->last_computation_task, 1, work_list, comp_size, comm_amount, -1);
-  free(comp_size);
-  free(comm_amount);
-  free(work_list);
+  SD_task_schedule(proc->last_computation_task, 1, &work_list, &comp_size, &comm_amount, -1);
   proc->last_computation_task=NULL;
 }
 
@@ -78,13 +72,10 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
 {
   process_descriptor *proc_sender = process_get_descriptor(pid_sender);
   
-  int* data_sender = malloc(sizeof(int));
-  *data_sender=pid_sender;
+  char buff[256];
+  sprintf(buff, "%s send",proc_sender->name);
   
-   char buff[256];
-   sprintf(buff, "%s send",proc_sender->name);
-  
-  SD_task_t task_sending = SD_task_create(buff, data_sender, amount);
+  SD_task_t task_sending = SD_task_create(buff, &(proc_sender->pid), amount);
   SD_task_watch(task_sending, SD_DONE);
   SD_task_t task_receiving = SD_task_create("communication recv", NULL, 0);
   SD_task_watch(task_receiving, SD_DONE);
@@ -107,17 +98,13 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
 
 void task_schedule_receive(struct infos_socket* is, pid_t pid)
 {
-  
   printf("ENTERING task_schedule_receive\n");
-  
-  int* data_receiver = malloc(sizeof(int));
-  *data_receiver=pid;
   
   task_comm_info* tci = comm_get_send(is);
   
-  SD_task_set_data(tci->task, data_receiver);
-  
   process_descriptor *proc_receiver = process_get_descriptor(pid);
+  
+  SD_task_set_data(tci->task, &(proc_receiver->pid));
   
   //If we have a computation task in queue, we have to scedule it before doing the other operation
   if(proc_receiver->last_computation_task)
