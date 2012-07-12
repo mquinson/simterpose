@@ -90,12 +90,21 @@ void simterpose_init(int argc, char** argv)
 void fprint_array(FILE* file, char** array)
 {
   int i=0;
-  while(array[i]!= NULL)
+  while(1)
   {
-    fprintf(file, "%s ", array[i]);
+    fprintf(file, "%s", array[i]);
+    printf("[%s]", array[i]);
     ++i;
+    if(array[i]!= NULL)
+    {
+      printf(" ");
+      fprintf(file, " ");
+    }
+    else
+      break;
   }
   fprintf(file, "\n");
+  printf("(fin de commande)\n");
   fflush(file);
 }
 

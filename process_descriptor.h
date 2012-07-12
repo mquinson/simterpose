@@ -11,6 +11,10 @@
 #define PROC_NO_IDLE            0
 #define PROC_IDLE               1
 
+#define PROC_NO_TIMEOUT         0
+#define PROC_IN_TIMEOUT         1
+#define PROC_TIMEOUT_EXPIRE     2
+
 typedef struct process_descriptor process_descriptor;
 
 #include "args_trace.h"
@@ -34,7 +38,7 @@ struct process_descriptor{
   SD_task_t last_computation_task;
   struct infos_socket** fd_list;
   
-  unsigned int in_timeout :1;
+  unsigned int in_timeout :2;
   unsigned int scheduled  :1;
   unsigned int idle_list  :1;
 

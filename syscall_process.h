@@ -10,7 +10,7 @@
 #define PROCESS_TASK_FOUND 3
 #define PROCESS_NO_TASK_FOUND 4
 
-void process_send_call(pid_t pid, int sockfd, int ret);
+int process_send_call(pid_t pid, int sockfd, int ret);
 
 int process_recv_call(pid_t pid, int sockfd, int ret);
 

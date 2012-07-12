@@ -30,7 +30,9 @@ void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *
   
   connect_arg_t arg = &(sysarg->connect);
   
-  arg->ret = reg->ret;
+  arg->ret = (int)reg->ret;
+  if(arg->ret == -EINPROGRESS)
+    arg->ret = 0;
 #if defined(__x86_64)
 
   arg->sockfd=(int)reg->arg1;
@@ -70,6 +72,7 @@ void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
 #if defined(__x86_64)
 
   arg->sockfd=(int)reg->arg1;
+  printf("Socket for accepting %lu\n", reg->arg1);
 
   int domain = get_domain_socket(child,arg->sockfd);
   if (domain == 2) // PF_INET
@@ -357,6 +360,7 @@ void sys_build_poll(pid_t pid, int match)
   
   process_descriptor* proc = process_get_descriptor(pid);
   poll_arg_t arg = &(proc->sysarg.poll);
+  arg->ret = match;
   
   if(r.arg1!=0)
   {

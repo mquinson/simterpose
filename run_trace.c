@@ -60,7 +60,7 @@ void add_to_sched_list(pid_t pid)
   proc->scheduled =1;
   xbt_dynar_push_as(sched_list, pid_t, pid);
   
-  printf("Add process %d to sched_list\n", pid);
+//   printf("Add process %d to sched_list\n", pid);
   if(proc->idle_list)
     remove_from_idle_list(pid);
 }
@@ -75,7 +75,7 @@ void move_idle_to_sched()
     process_descriptor *proc = process_get_descriptor(pid);
     
     proc->idle_list = 0;
-    printf("Move process %d on sched_list\n", pid);
+//     printf("Move process %d on sched_list\n", pid);
     proc->scheduled =1;
     xbt_dynar_push_as(sched_list, pid_t, pid);
   }
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
   
   simterpose_init(argc, argv);
 
-  int time_to_simulate=0;
+  double time_to_simulate=0;
   
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
   xbt_dynar_reset(idle_process);
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
   do{
     //We calculate the time of simulation.
     time_to_simulate= get_next_start_time() - SD_get_clock();
-//     printf("Next simulation time %d\n", time_to_simulate);
+    printf("Next simulation time %lf\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
     printf("NEW TURN %lf\n", SD_get_clock());
     
@@ -120,16 +120,16 @@ int main(int argc, char *argv[]) {
 
     while(has_sleeping_to_launch())
     {
+//       printf("Trying to add in wait process\n");
       //if we have to launch them to this turn
       if(SD_get_clock() == get_next_start_time())
       {
         int temp_pid = pop_next_pid();
         add_to_sched_list(temp_pid);
         process_descriptor* proc = process_get_descriptor(temp_pid);
-        if(!proc->in_timeout)
+        if(proc->in_timeout == PROC_NO_TIMEOUT)
           ++global_data->child_amount;
-        else
-          proc->in_timeout=0;
+//         printf("In_timeout = %d\n", proc->in_timeout);
       }
       else
         break;

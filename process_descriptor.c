@@ -25,7 +25,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->last_computation_task = NULL;
   result->timeout= NULL;
   
-  result->in_timeout = 0;
+  result->in_timeout = PROC_NO_TIMEOUT;
   result->scheduled = 0;
   result->idle_list = 0;
   

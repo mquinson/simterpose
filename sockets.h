@@ -77,4 +77,6 @@ int socket_read_event(pid_t pid, int fd);
 
 void socket_close(pid_t pid, int fd);
 
+int socket_network(pid_t pid, int fd);
+
 #endif

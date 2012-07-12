@@ -115,6 +115,8 @@ void comm_set_close(comm_t comm)
 void comm_close(struct infos_socket* is)
 {
   comm_t comm = is->comm;
+  if(comm == NULL)
+    return;
   if( comm->info[0].socket == is)
   {
     comm->info[0].socket = NULL;

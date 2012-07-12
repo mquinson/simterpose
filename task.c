@@ -29,7 +29,6 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 
 
 
-
 void create_computation_task(pid_t pid, double amount)
 {
   printf("ENTERING create_computation_task\n");

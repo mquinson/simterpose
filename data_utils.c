@@ -30,6 +30,7 @@ double get_next_start_time()
     return -1;
   
   time_desc** t = (time_desc**)xbt_dynar_get_ptr(global_data->launching_time, 0);
+  printf("Next start_time %lf\n", (*t)->start_time);
   return (*t)->start_time;
 }
 
@@ -40,7 +41,8 @@ pid_t pop_next_pid()
   int res = t->pid;
   
   process_descriptor* proc = process_get_descriptor(res);
-//   printf("Removing timeout for pid %d\n", res);
+  if(proc->in_timeout == PROC_IN_TIMEOUT)
+    proc->in_timeout = PROC_TIMEOUT_EXPIRE;
   proc->timeout = NULL;
   
   free(t);
@@ -78,14 +80,17 @@ int has_sleeping_to_launch()
 
 void add_timeout(pid_t pid, double start_time)
 {
-//   printf("Add new timeout of %lf for %d\n", start_time, pid);
+  
+  if(start_time == SD_get_clock())
+    start_time += 0.0001;
+  printf("Add new timeout of %lf for %d\n", start_time, pid);
   time_desc* t = malloc(sizeof(time_desc));
   t->pid = pid;
   t->start_time = start_time;
   
   process_descriptor* proc = process_get_descriptor(pid);
   proc->timeout = t;
-  proc->in_timeout=1;
+  proc->in_timeout = PROC_IN_TIMEOUT;
   
   int i=0;
   while( i < xbt_dynar_length(global_data->launching_time))
@@ -103,7 +108,7 @@ void remove_timeout(pid_t pid)
   process_descriptor* proc = process_get_descriptor(pid);
   time_desc* t = proc->timeout;
   proc->timeout = NULL;
-  proc->in_timeout=0;
+  proc->in_timeout = PROC_NO_TIMEOUT;
   
   xbt_ex_t e;
   TRY{

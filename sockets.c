@@ -77,8 +77,11 @@ void socket_close(pid_t pid, int fd)
   struct infos_socket* is = get_infos_socket(pid, fd);
   if(is!=NULL)
   {
-    comm_close(is);
+    if(socket_network(pid, fd))
+      comm_close(is);
     delete_socket(pid, fd);
+    process_descriptor* proc = global_data->process_desc[pid];
+    proc->fd_list[fd]=NULL;
   }
 }
 
@@ -291,6 +294,7 @@ int socket_registered(pid_t pid, int fd) {
 
 
 struct infos_socket* get_infos_socket(pid_t pid, int fd) {
+  //printf("Info socket %d %d\n", pid, fd);
   return global_data->process_desc[pid]->fd_list[fd];
 }
 
@@ -307,8 +311,22 @@ int socket_netlink(pid_t pid, int fd) {
   struct infos_socket* is = get_infos_socket(pid, fd);
   
   if (is != NULL )
-    return is->protocol==16;
-  return -1;
+  {
+    printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
+    return is->domain == 16;
+  }
+  return 0;
+}
+
+int socket_network(pid_t pid, int fd)
+{
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  if (is != NULL )
+  {
+    printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
+    return is->domain != 16 && is->domain != 2;
+  }
+  return 0;
 }
 
 

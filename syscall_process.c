@@ -20,12 +20,13 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process lo
 
 //TODO test the possibility to remove incomplete checking
 //There is no need to return value because send always bring a task
-void process_send_call(int pid, int sockfd, int ret)
+int process_send_call(int pid, int sockfd, int ret)
 {
 
   if (socket_registered(pid,sockfd) != -1) {
     if (!socket_netlink(pid,sockfd))
     {
+      printf("This is not a netlink socket\n");
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,sockfd);
       struct infos_socket *s = comm_get_peer(is);
@@ -39,7 +40,9 @@ void process_send_call(int pid, int sockfd, int ret)
       SD_task_t task = create_send_communication_task(pid, is, ret);
 
       schedule_comm_task(is->proc->station, s->proc->station, task);
+      return 1;
     }
+    return 0;
   }
   else 
     THROW_IMPOSSIBLE;
@@ -103,6 +106,7 @@ int process_select_call(pid_t pid)
     }
     if(FD_ISSET(i, &(fd_wr)))
     {
+      ++match;
       XBT_WARN("Mediation for writing states on socket are not support yet\n");
     }
     if(FD_ISSET(i, &(fd_ex)))
@@ -112,17 +116,19 @@ int process_select_call(pid_t pid)
   }
   if(match > 0)
   {
+    
     arg->fd_read = fd_rd;
     arg->fd_write = fd_wr;
     arg->fd_except = fd_ex;
     sys_build_select(pid, match);
+    print_select_syscall(pid, &(proc->sysarg));
     return match;
   }
   
-  if(proc->timeout == NULL && !proc->in_timeout)
+  if(proc->in_timeout == PROC_TIMEOUT_EXPIRE)
   {
 //     printf("Timeout for select\n");
-//     print_select_syscall(pid, &(proc->sysarg));
+    
     FD_ZERO(&fd_rd);
     FD_ZERO(&fd_wr);
     FD_ZERO(&fd_ex);
@@ -130,8 +136,9 @@ int process_select_call(pid_t pid)
     arg->fd_read = fd_rd;
     arg->fd_write = fd_wr;
     arg->fd_except = fd_ex;
-    print_select_syscall(pid, &(proc->sysarg));
     sys_build_select(pid, 0);
+    print_select_syscall(pid, &(proc->sysarg));
+    proc->in_timeout = PROC_NO_TIMEOUT;
     return 1;
   }
   return 0;
@@ -165,23 +172,28 @@ int process_poll_call(pid_t pid)
           temp->revents = temp->revents | POLLIN;
           ++match;
         }
-        else if( sock_status & ~SOCKET_READ_OK)
+        else
         {
-          XBT_WARN("Mediation different than POLLIN are not handle for poll\n");
+          temp->revents = temp->revents & ~POLLIN;
         }
       }
+      else
+        XBT_WARN("Mediation different than POLLIN are not handle for poll\n");
     }
   }
   if(match > 0)
   {
-//     printf("Result for poll\n");
+    printf("Result for poll\n");
     sys_build_poll(pid, match);
+    print_poll_syscall(pid, &(proc->sysarg));
     return match;
   }
-  if(proc->timeout == NULL && !proc->in_timeout)
+  if(proc->in_timeout == PROC_TIMEOUT_EXPIRE)
   {
-//     printf("Time out on poll\n");
+    printf("Time out on poll\n");
     sys_build_poll(pid, 0);
+    print_poll_syscall(pid, &(proc->sysarg));
+    proc->in_timeout = PROC_NO_TIMEOUT;
     return 1;
   }
   return match;
@@ -216,15 +228,22 @@ int process_handle_active(pid_t pid)
 }
 
 
-int process_recv_in_call(int pid, syscall_arg_u *sysarg)
+int process_recv_in_call(int pid, int fd)
 {
-  recv_arg_t arg = &(sysarg->recv);
+   
+//   printf("[%d] Recvmsg in %d\n",pid,  fd);
   process_descriptor *proc = process_get_descriptor(pid);
-  if(proc->fd_list[arg->sockfd]==NULL)
+  if(proc->fd_list[fd]==NULL)
     return 0;
-  int status =comm_get_socket_state(get_infos_socket(pid, arg->sockfd));
   
-  printf("socket %d : %d\n", arg->sockfd, status);
+  if(socket_netlink(pid, fd))
+  {
+//     printf("Netlink socket found\n");
+    return 1;
+  }
+  int status =comm_get_socket_state(get_infos_socket(pid, fd));
+  
+//   printf("socket %d : %d\n", fd, status);
   
   return (status & SOCKET_READ_OK);
 }
@@ -253,20 +272,22 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
   
-  int domain = get_domain_socket(pid, arg->sockfd);
-  int protocol=get_protocol_socket(pid, arg->sockfd);
-  
-  struct infos_socket* is = register_socket(pid, arg->ret, domain, protocol);
-  update_socket(pid, arg->ret);
-  comm_new(is, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port));
-  
+  if(arg->ret >= 0)
+  {
+    int domain = get_domain_socket(pid, arg->sockfd);
+    int protocol=get_protocol_socket(pid, arg->sockfd);
+    
+    struct infos_socket* is = register_socket(pid, arg->ret, domain, protocol);
+    update_socket(pid, arg->ret);
+    comm_new(is, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port));
+  }
   process_set_state(pid, PROC_NO_STATE);
 }
 
 
 int process_handle_idle(pid_t pid)
 {
-  printf("Handle idling process %d\n", pid);
+//   printf("Handle idling process %d\n", pid);
   int status;
   int proc_state = process_get_state(pid);
   
@@ -321,7 +342,7 @@ int process_handle_idle(pid_t pid)
   
   else
   {
-    printf("No special idling state\n");
+//     printf("No special idling state\n");
     if(waitpid(pid, &status, WNOHANG))
       return process_handle( pid, status);
     else
@@ -374,8 +395,10 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
     }
     //now mark the process as waiting for conn
     process_set_state(pid, PROC_CONNECT);
+    return 1;
   }
-  return 1;
+  else
+    return 0;
 }
 
 void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
@@ -383,18 +406,18 @@ void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
   connect_arg_t conn = &(sysarg->connect);
   
   int domain = get_domain_socket(pid, conn->sockfd);
-  if(domain ==2 )
+  if(domain ==2 && conn->ret >= 0)
   {
+//     printf("DO the connection\n");
     update_socket(pid, conn->sockfd);
     struct sockaddr_in remote_addr;
     struct infos_socket* is = get_infos_socket(pid, conn->sockfd);
     socket_get_remote_addr(pid, conn->sockfd, &remote_addr);
     comm_t comm = comm_find_incomplete(remote_addr.sin_addr.s_addr, remote_addr.sin_port, is);
     comm_join(comm, get_infos_socket(pid, conn->sockfd));
-    process_set_state(pid, PROC_NO_STATE);
+    
   }
-  else
-    THROW_UNIMPLEMENTED;
+  process_set_state(pid, PROC_NO_STATE);
 }
 
 int process_bind_call(pid_t pid, syscall_arg_u *arg)
@@ -438,6 +461,18 @@ int process_handle(pid_t pid, int stat)
       process_set_in_syscall(pid);
 
       ptrace_get_register(pid, &arg);
+      
+      if(arg.reg_orig == SYS_read)
+      {
+        if (socket_registered(pid, arg.arg1) != -1) {
+          if(!process_recv_in_call(pid, arg.arg1))
+          {
+            ptrace_resume_process(pid);
+            return PROCESS_IDLE_STATE;
+          }
+        }
+        
+      }
       
       if(arg.reg_orig == SYS_poll)
       {
@@ -486,15 +521,16 @@ int process_handle(pid_t pid, int stat)
       {
         printf("[%d] connect_in\n", pid);
         get_args_bind_connect(pid, 0, &arg, &sysarg);
-        process_connect_in_call(pid, &sysarg);
-        process_set_state(pid, PROC_CONNECT);
-        return PROCESS_IDLE_STATE;
+        print_connect_syscall(pid, &(sysarg.connect));
+        if(process_connect_in_call(pid, &sysarg))
+          return PROCESS_IDLE_STATE;
       }
        
       if(arg.reg_orig == SYS_accept)
       {
         printf("[%d] accept_in\n", pid);
         get_args_accept(pid, &arg, &sysarg);
+        print_accept_syscall(pid, &(sysarg.accept));
         pid_t conn_pid = process_accept_in_call(pid, &sysarg);
         //if we no process wait for connection we have to put process in idle and save arguments
         if(!conn_pid)
@@ -530,7 +566,7 @@ int process_handle(pid_t pid, int stat)
       {
         printf("[%d] recvfrom_in\n",pid);
         get_args_sendto_recvfrom(pid,2, &arg, &sysarg);
-        if(!process_recv_in_call(pid, &sysarg))
+        if(!process_recv_in_call(pid, sysarg.recv.sockfd))
         {
           ptrace_resume_process(pid);
           return PROCESS_IDLE_STATE;
@@ -540,8 +576,12 @@ int process_handle(pid_t pid, int stat)
       else if(arg.reg_orig == SYS_recvmsg)
       {
         printf("[%d] recvmsg_in\n",pid);
-        ptrace_resume_process(pid);
-        return PROCESS_IDLE_STATE;
+        get_args_send_recvmsg(pid, &arg, &sysarg);
+        if(!process_recv_in_call(pid, sysarg.recvmsg.sockfd))
+        {
+          ptrace_resume_process(pid);
+          return PROCESS_IDLE_STATE;
+        }
       }
       #else
 
@@ -582,14 +622,16 @@ int process_handle(pid_t pid, int stat)
         case SYS_write:
           printf("[%d] write(%ld, ... , %d) = %ld\n",pid, arg.arg1,(int)arg.arg3, arg.ret);
           if (socket_registered(pid, arg.arg1) != -1) {
-            THROW_UNIMPLEMENTED; //non socket interface interaction with socket are not handle yet
+            if(process_send_call(pid, arg.arg1, arg.ret))
+              return PROCESS_TASK_FOUND;
           }
           break;
 
         case SYS_read:
           printf("[%d] read(%ld, ..., %ld) = %ld\n",pid, arg.arg1, arg.arg3, arg.ret);
           if (socket_registered(pid, arg.arg1) != -1) {
-            THROW_UNIMPLEMENTED; //non socket interface interaction with socket are not handle yet
+            if(process_recv_call(pid, arg.arg1, arg.ret) == PROCESS_TASK_FOUND)
+              return PROCESS_TASK_FOUND;
           }
           break;
 
@@ -635,7 +677,7 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_dup:
           printf("[%d] dup(%ld) = %ld\n",pid,arg.arg1,arg.ret);
-          THROW_UNIMPLEMENTED; //Dup are not handle yet
+          //THROW_UNIMPLEMENTED; //Dup are not handle yet
           break;
           
         case SYS_dup2:
@@ -691,8 +733,8 @@ int process_handle(pid_t pid, int stat)
         case SYS_sendto:
           get_args_sendto_recvfrom(pid, 1, &arg, &sysarg);
           print_sendto_syscall(pid, &sysarg);
-          process_send_call(pid, sysarg.sendto.sockfd, sysarg.sendto.ret);
-          return PROCESS_TASK_FOUND;
+          if(process_send_call(pid, sysarg.sendto.sockfd, sysarg.sendto.ret))
+            return PROCESS_TASK_FOUND;
           break;
           
         case SYS_recvfrom:
@@ -705,8 +747,8 @@ int process_handle(pid_t pid, int stat)
         case SYS_sendmsg:
           get_args_send_recvmsg(pid, &arg, &sysarg);
           print_sendmsg_syscall(pid, &sysarg);
-          process_send_call(pid, sysarg.sendmsg.sockfd, sysarg.sendmsg.ret);
-          return PROCESS_TASK_FOUND;
+          if(process_send_call(pid, sysarg.sendmsg.sockfd, sysarg.sendmsg.ret))
+            return PROCESS_TASK_FOUND;
           break;
           
         case SYS_recvmsg:
