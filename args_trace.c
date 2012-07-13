@@ -387,3 +387,15 @@ void get_args_poll(pid_t child, reg_s* reg, syscall_arg_u* sysarg) {
     arg->fd_list = NULL;
 }
 
+void get_args_fcntl(pid_t pid, reg_s* reg,syscall_arg_u* sysarg)
+{
+  fcntl_arg_t arg = &(sysarg->fcntl);
+  arg->fd = (int)reg->arg1;
+  arg->cmd = (int) reg->arg2;
+  //TODO make a real gestion of fcntl arg
+  arg->arg = (int)reg->arg3;
+  
+  arg->ret = (int) reg->ret;
+  
+}
+

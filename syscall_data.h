@@ -52,6 +52,10 @@ typedef sendmsg_arg_s* sendmsg_arg_t;
 typedef struct recvmsg_arg_s recvmsg_arg_s;
 typedef recvmsg_arg_s* recvmsg_arg_t;
 
+typedef struct fcntl_arg_s fcntl_arg_s;
+typedef struct fcntl_arg_s* fcntl_arg_t;
+
+
 struct recv_arg_s{
   int sockfd;
   int ret;
@@ -142,6 +146,13 @@ struct getsockopt_arg_s{
   int ret;
 };
 
+struct fcntl_arg_s{
+  int fd;
+  int cmd;
+  int arg;
+  int ret;
+};
+
 typedef union{
   connect_arg_s connect;
   bind_arg_s bind;
@@ -158,6 +169,7 @@ typedef union{
   sendmsg_arg_s sendmsg;
   poll_arg_s poll;
   select_arg_s select;
+  fcntl_arg_s fcntl;
 } syscall_arg_u;
 
 
