@@ -263,6 +263,7 @@ int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
   }
   else
   {
+    printf("Communication wait\n");
     process_set_state(pid, PROC_ACCEPT_IN);
     return 0;
   }
@@ -279,7 +280,7 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
     
     struct infos_socket* is = register_socket(pid, arg->ret, domain, protocol);
     update_socket(pid, arg->ret);
-    comm_new(is, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port));
+    comm_join_on_accept(is, pid, arg->sockfd);
   }
   process_set_state(pid, PROC_NO_STATE);
 }
@@ -384,7 +385,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
     struct sockaddr_in *sai = &(arg->connect.sai);
     
     //We ask for a connection on the socket
-    int acc_pid = comm_ask_connect(sai->sin_addr.s_addr, ntohs(sai->sin_port), pid);
+    int acc_pid = comm_ask_connect(sai->sin_addr.s_addr, ntohs(sai->sin_port), pid, conn->sockfd);
     
     //if someone waiting for connection we add him to shedule list
     if(acc_pid)
@@ -393,6 +394,8 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
       if(status == PROC_ACCEPT_IN || status == PROC_SELECT || status == PROC_POLL)
         add_to_sched_list(acc_pid);
     }
+    else
+      THROW_IMPOSSIBLE;
     //now mark the process as waiting for conn
     process_set_state(pid, PROC_CONNECT);
     return 1;
@@ -408,14 +411,7 @@ void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
   int domain = get_domain_socket(pid, conn->sockfd);
   if(domain ==2 && conn->ret >= 0)
   {
-//     printf("DO the connection\n");
     update_socket(pid, conn->sockfd);
-    struct sockaddr_in remote_addr;
-    struct infos_socket* is = get_infos_socket(pid, conn->sockfd);
-    socket_get_remote_addr(pid, conn->sockfd, &remote_addr);
-    comm_t comm = comm_find_incomplete(remote_addr.sin_addr.s_addr, remote_addr.sin_port, is);
-    comm_join(comm, get_infos_socket(pid, conn->sockfd));
-    
   }
   process_set_state(pid, PROC_NO_STATE);
 }
@@ -440,7 +436,7 @@ int process_listen_call(pid_t pid, syscall_arg_u* sysarg)
 {
   listen_arg_t list = &(sysarg->listen);
   struct infos_socket* is = get_infos_socket(pid, list->sockfd);
-  comm_t comm = comm_new(is, 0, 0);
+  comm_t comm = comm_new(is);
   comm_set_listen(comm);
   
   return 0;

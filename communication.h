@@ -32,12 +32,12 @@ struct comm_s{
 void init_comm();
 
 //Create a new communication and register socket passed into
-comm_t comm_new(struct infos_socket* socket, unsigned int remote_ip, int remote_port);
+comm_t comm_new(struct infos_socket* socket);
 
 comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket* is);
 
 //Add a socket to a communication
-void comm_join(comm_t comm, struct infos_socket* socket);
+void comm_join_on_accept(struct infos_socket* socket, pid_t pid, int fd_listen);
 
 struct infos_socket* comm_get_peer(struct infos_socket* is);
 
@@ -51,7 +51,7 @@ void comm_set_close(comm_t comm);
 
 void comm_set_listen(comm_t comm);
 
-int comm_ask_connect(unsigned int ip, int port, pid_t tid);
+int comm_ask_connect(unsigned int ip, int port, pid_t tid, int fd);
 
 pid_t comm_accept_connect(struct infos_socket* is);
 

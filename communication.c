@@ -13,26 +13,21 @@ void init_comm()
   comm_list = xbt_dynar_new(sizeof(comm_t), NULL); 
 }
 
-comm_t comm_new(struct infos_socket* socket, unsigned int remote_ip, int remote_port)
+comm_t comm_new(struct infos_socket* socket)
 {
 //   printf("Creating new communication with peer %d %d\n", remote_ip, remote_port);
   comm_t res = malloc(sizeof(comm_s));
   
   socket->comm=res;
-  
-  printf("Register new connection for (%d,%d) (%d, %d)\n", 
-                socket->ip_local, socket->port_local, remote_ip, remote_port);
-  
+//   printf("New communication init by %d\n", socket->proc->pid); 
   res->info[0].socket = socket;
   res->info[0].recv = recv_information_new();
   res->info[1].socket = NULL;
   res->info[1].recv = recv_information_new();
   
-  res->remote_port = remote_port;
-  res->remote_ip = remote_ip;
-  
+  //TODO do a real gestion of communication state
   res->state = COMM_OPEN;
-  res->conn_wait = xbt_dynar_new(sizeof(pid_t), NULL);
+  res->conn_wait = xbt_dynar_new(sizeof(comm_t), NULL);
   
   xbt_dynar_push(comm_list, &res);
   
@@ -45,32 +40,6 @@ void comm_destroy(comm_t comm)
   recv_information_destroy(comm->info[1].recv);
   xbt_dynar_free(&comm->conn_wait);
   free(comm);
-}
-
-
-comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket* is)
-{
-  comm_t temp;
-  unsigned int cpt = 0;
-  
-  xbt_dynar_foreach(comm_list, cpt, temp)
-  {
-    struct infos_socket* socket = temp->info[0].socket;
-    if(socket->ip_local == ip &&  socket->port_local == port)
-    {
-      //Now verify if it's the good one we want
-      if(is->ip_local == temp->remote_ip && is->port_local == temp->remote_port) 
-        return temp;
-    }
-  }
-  printf("No communication found\n");
-  return NULL;
-}
-
-void comm_join(comm_t comm, struct infos_socket* socket)
-{
-  socket->comm = comm;
-  comm->info[1].socket = socket;
 }
 
 struct infos_socket* comm_get_peer(struct infos_socket* is)
@@ -142,7 +111,7 @@ void comm_set_listen(comm_t comm)
   printf("Listen do %d\n", comm->state & COMM_LISTEN);
 }
 
-int comm_ask_connect(unsigned int ip, int port, pid_t tid)
+int comm_ask_connect(unsigned int ip, int port, pid_t tid, int fd)
 {
   comm_t temp;
   unsigned int cpt = 0;
@@ -158,8 +127,9 @@ int comm_ask_connect(unsigned int ip, int port, pid_t tid)
         //Now verify if it's a listening socket
         if(temp->state & COMM_LISTEN)
         {
-          printf("Add to connection asking queue\n");
-          xbt_dynar_push(temp->conn_wait, &tid);
+          printf("Add to connection asking queue %d\n", socket->proc->pid);
+          comm_t comm = comm_new(get_infos_socket(tid, fd));
+          xbt_dynar_push(temp->conn_wait, &comm);
           return socket->proc->pid;
         }
       }
@@ -169,16 +139,32 @@ int comm_ask_connect(unsigned int ip, int port, pid_t tid)
   return 0;
 }
 
+void comm_join_on_accept(struct infos_socket *is, pid_t pid, int fd_listen)
+{
+  struct infos_socket *sock_listen = get_infos_socket(pid, fd_listen);
+  comm_t comm = sock_listen->comm;
+  if(comm==NULL)
+    THROW_IMPOSSIBLE;
+  
+  comm_t comm_conn;
+  xbt_dynar_shift(comm->conn_wait, &comm_conn);
+  
+  comm_conn->info[1].socket = is;
+  is->comm = comm_conn;
+}
+
 pid_t comm_accept_connect(struct infos_socket* is)
 {
   comm_t comm = is->comm;
-  pid_t tid;
   if(comm==NULL)
     THROW_IMPOSSIBLE;
   if(xbt_dynar_is_empty(comm->conn_wait))
     return 0;
-  xbt_dynar_shift(comm->conn_wait, &tid);
-  return tid;
+  comm_t comm_conn;
+  xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
+
+//   printf("Accept connection from %d\n", comm_conn->info[0].socket->fd);
+  return comm_conn->info[0].socket->proc->pid;
 }
 
 int comm_has_connect_waiting(struct infos_socket* is)

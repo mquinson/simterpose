@@ -312,7 +312,7 @@ int socket_netlink(pid_t pid, int fd) {
   
   if (is != NULL )
   {
-    printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
+//     printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
     return is->domain == 16;
   }
   return 0;
@@ -323,7 +323,7 @@ int socket_network(pid_t pid, int fd)
   struct infos_socket* is = get_infos_socket(pid, fd);
   if (is != NULL )
   {
-    printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
+//     printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
     return is->domain != 16 && is->domain != 2;
   }
   return 0;
