@@ -1,5 +1,5 @@
 OBJS = server client server_select client_select client_simple server_simple server_poll\
-	server_poll_multi server_close client_sbr server_sbr
+	server_poll_multi server_close client_sbr server_sbr fcntl_ex
 CC = gcc 
 CFLAGS = -Wall -g
 
@@ -10,6 +10,9 @@ server : server.c
 
 client : client.c
 	gcc -o client client.c
+
+fcntl_ex: fcntl_ex.c
+	gcc -o fcntl_ex fcntl_ex.c
 
 server_select: server_select.c
 	gcc -o server_select server_select.c

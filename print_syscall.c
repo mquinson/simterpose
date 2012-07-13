@@ -536,3 +536,57 @@ void print_select_syscall(pid_t pid, syscall_arg_u* sysarg)
   
 }
 
+void print_fcntl_cmd(int cmd)
+{
+  switch(cmd)
+  {
+    case F_DUPFD:
+      printf("F_DUPFD");
+      break;
+      
+    case F_DUPFD_CLOEXEC:
+      printf("F_DUPFD_CLOEXEC");
+      break;
+    
+    case F_GETFD:
+      printf("F_GETFD");
+      break;
+    
+    case F_SETFD:
+      printf("F_SETFD");
+      break;
+      
+    case F_GETFL:
+      printf("F_GETFL");
+      break;
+      
+    case F_SETFL:
+      printf("F_SETFL");
+      break;
+      
+    case F_SETLK:
+      printf("F_SETLK");
+      break;
+      
+    case F_SETLKW:
+      printf("F_SETLKW");
+      break;
+      
+    case F_GETLK:
+      printf("F_GETLK");
+      break;
+      
+    default:
+      printf("Unknown command");
+      break;
+  }
+}
+
+void print_fcntl_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  fcntl_arg_t arg = &(sysarg->fcntl);
+  printf("[%d] fcntl( %d, ", pid, arg->fd);
+  print_fcntl_cmd(arg->cmd);
+  printf(" , %d) = %d\n", arg->arg, arg->ret);
+}
+

@@ -689,6 +689,11 @@ int process_handle(pid_t pid, int stat)
               
               
           #if defined(__x86_64)  
+        case SYS_fcntl:
+          get_args_fcntl(pid, &arg, &sysarg);
+          print_fcntl_syscall(pid, &sysarg);
+          break;
+          
           
         case SYS_select: 
           THROW_IMPOSSIBLE;

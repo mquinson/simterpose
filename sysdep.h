@@ -25,6 +25,7 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <netdb.h>
+#include <fcntl.h>
 
 #include <netinet/in.h>
 #include <arpa/inet.h>

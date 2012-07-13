@@ -35,4 +35,6 @@ void print_poll_syscall(pid_t pid, syscall_arg_u* sysarg);
 
 void print_select_syscall(pid_t pid, syscall_arg_u* sysarg);
 
+void print_fcntl_syscall(pid_t pid, syscall_arg_u* sysarg);
+
 #endif
