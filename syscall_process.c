@@ -1,4 +1,5 @@
 #include "syscall_process.h"
+#include "syscall_data.h"
 #include "insert_trace.h"
 #include "sockets.h"
 #include "run_trace.h"

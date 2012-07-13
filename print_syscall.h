@@ -1,7 +1,7 @@
 #ifndef INCLUDED_PRINT_SYSCALL_H
 #define INCLUDED_PRINT_SYSCALL_H
 
-#include "args_trace.h"
+#include "syscall_data.h"
 
 #include <sys/types.h>
 
