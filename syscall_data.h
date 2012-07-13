@@ -149,7 +149,7 @@ struct getsockopt_arg_s{
 struct fcntl_arg_s{
   int fd;
   int cmd;
-  int arg;
+  int arg;//TODO put an union to handle various type of argument
   int ret;
 };
 

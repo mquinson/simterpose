@@ -443,6 +443,23 @@ int process_listen_call(pid_t pid, syscall_arg_u* sysarg)
   return 0;
 }
 
+void process_fcntl_call(pid_t pid, syscall_arg_u* sysarg)
+{
+  fcntl_arg_t arg = &(sysarg->fcntl);
+  
+  switch(arg->cmd)
+  {
+    case F_SETFL:
+      socket_set_flags(pid, arg->fd , arg->arg);
+      return;
+      break;
+    
+    default:
+      return;
+      break;
+  }
+}
+
 
 
 int process_handle(pid_t pid, int stat)
@@ -692,6 +709,7 @@ int process_handle(pid_t pid, int stat)
         case SYS_fcntl:
           get_args_fcntl(pid, &arg, &sysarg);
           print_fcntl_syscall(pid, &sysarg);
+          process_fcntl_call(pid, &sysarg);
           break;
           
           

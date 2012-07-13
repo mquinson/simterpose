@@ -31,6 +31,7 @@ struct infos_socket{
   int protocol;
   unsigned int ip_local;
   int port_local;
+  int flags;
 };
 
 recv_information* recv_information_new();
@@ -78,5 +79,7 @@ int socket_read_event(pid_t pid, int fd);
 void socket_close(pid_t pid, int fd);
 
 int socket_network(pid_t pid, int fd);
+
+void socket_set_flags(pid_t pid, int fd, int flags);
 
 #endif

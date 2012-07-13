@@ -55,10 +55,21 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   is->protocol=protocol;
   is->ip_local=-1;
   is->port_local=0;
+  
+  is->flags = O_RDWR;
 
   xbt_dynar_push(all_sockets, &is);
   
   return is;
+}
+
+void socket_set_flags(pid_t pid, int fd, int flags)
+{
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  
+  if(is == NULL)
+    return;
+  is->flags = flags;
 }
 
 void delete_socket(pid_t pid, int fd) {
