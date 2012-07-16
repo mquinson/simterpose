@@ -5,8 +5,10 @@
 #include <stdio.h>
 
 
-void print_accept_syscall(pid_t pid, accept_arg_t arg)
+void print_accept_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
+  accept_arg_t arg = &(sysarg->accept);
+  
   int domain = get_domain_socket(pid,arg->sockfd);
   printf("[%d] accept( ", pid);
   
@@ -30,8 +32,10 @@ void print_accept_syscall(pid_t pid, accept_arg_t arg)
 }
 
 
-void print_connect_syscall(pid_t pid, connect_arg_t arg)
+void print_connect_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
+  connect_arg_t arg = &(sysarg->connect);
+  
   int domain = get_domain_socket(pid,arg->sockfd);
   
   printf("[%d] connect( ", pid);

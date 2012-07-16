@@ -566,7 +566,7 @@ int process_handle(pid_t pid, int stat)
       {
         printf("[%d] connect_in\n", pid);
         get_args_bind_connect(pid, 0, &arg, &sysarg);
-        print_connect_syscall(pid, &(sysarg.connect));
+        print_connect_syscall(pid, &sysarg);
         if(process_connect_in_call(pid, &sysarg))
           return PROCESS_IDLE_STATE;
       }
@@ -575,7 +575,7 @@ int process_handle(pid_t pid, int stat)
       {
         printf("[%d] accept_in\n", pid);
         get_args_accept(pid, &arg, &sysarg);
-        print_accept_syscall(pid, &(sysarg.accept));
+        print_accept_syscall(pid, &sysarg);
         pid_t conn_pid = process_accept_in_call(pid, &sysarg);
         if(!conn_pid)
           return PROCESS_IDLE_STATE;
@@ -731,14 +731,14 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_connect:
           get_args_bind_connect(pid, 1, &arg, &sysarg);
-          print_connect_syscall(pid, &(sysarg.connect));
+          print_connect_syscall(pid, &sysarg);
           process_connect_out_call(pid, &sysarg);
           process_set_state(pid, PROC_NO_STATE);
           break;
           
         case SYS_accept:
           get_args_accept(pid, &arg, &sysarg);
-          print_accept_syscall(pid, &sysarg.accept);
+          print_accept_syscall(pid, &sysarg);
           process_accept_out_call(pid, &sysarg);
           add_to_sched_list(pid);
           return PROCESS_NO_TASK_FOUND;
