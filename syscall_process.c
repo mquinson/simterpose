@@ -27,13 +27,13 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
   if (socket_registered(pid,arg->sockfd) != -1) {
     if (!socket_netlink(pid,arg->sockfd))
     {
-      printf("This is not a netlink socket\n");
+//       printf("%d This is not a netlink socket\n", arg->sockfd);
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
-      
+//       printf("Sending data(%d) to %d on socket %d\n", arg->ret, s->proc->pid, s->fd);
       int peer_stat = process_get_state(s->proc->pid);
-      if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL)
+      if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL || peer_stat == PROC_RECV_IN)
         add_to_sched_list(s->proc->pid);
       
       handle_new_send(is,  arg->ret);
@@ -49,15 +49,16 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
     THROW_IMPOSSIBLE;
 }
 
-int process_recv_call(int pid, int sockfd, int ret)
+int process_recv_call(int pid, syscall_arg_u* sysarg)
 {
-  if (socket_registered(pid,sockfd) != -1) {
-    if (!socket_netlink(pid,sockfd))
+  recv_arg_t arg = &(sysarg->recv);
+  if (socket_registered(pid,arg->sockfd) != -1) {
+    if (!socket_netlink(pid,arg->sockfd))
     {
       calculate_computation_time(pid);
       
       //if handle_new_receive return 1, there is a task found
-      if(handle_new_receive(pid, sockfd, ret))
+      if(handle_new_receive(pid, arg->sockfd, arg->ret))
         return PROCESS_TASK_FOUND;
       else
         return PROCESS_NO_TASK_FOUND;
@@ -239,6 +240,7 @@ int process_handle_active(pid_t pid)
 int process_recv_in_call(int pid, int fd)
 {
   process_descriptor *proc = process_get_descriptor(pid);
+//   printf("Try to see if socket %d recv something\n", fd);
   if(proc->fd_list[fd]==NULL)
     return 0;
   
@@ -511,7 +513,8 @@ int process_handle(pid_t pid, int stat)
           if(!process_recv_in_call(pid, arg.arg1))
           {
             process_set_state(pid, PROC_RECV_IN);
-            ptrace_resume_process(pid);
+            process_descriptor *proc = process_get_descriptor(pid);
+            proc->sysarg.read = sysarg.read;
             return PROCESS_IDLE_STATE;
           }
         }
@@ -603,6 +606,8 @@ int process_handle(pid_t pid, int stat)
         if(!process_recv_in_call(pid, sysarg.recv.sockfd))
         {
           process_set_state(pid, PROC_RECV_IN);
+          process_descriptor *proc = process_get_descriptor(pid);
+          proc->sysarg.recvfrom = sysarg.recvfrom;
           return PROCESS_IDLE_STATE;
         }
       }
@@ -614,6 +619,8 @@ int process_handle(pid_t pid, int stat)
         if(!process_recv_in_call(pid, sysarg.recvmsg.sockfd))
         {
           process_set_state(pid, PROC_RECV_IN);
+          process_descriptor *proc = process_get_descriptor(pid);
+          proc->sysarg.recvmsg = sysarg.recvmsg;
           return PROCESS_IDLE_STATE;
         }
       }
@@ -637,7 +644,7 @@ int process_handle(pid_t pid, int stat)
           get_args_read(pid, &arg, &sysarg);
           print_read_syscall(pid, &sysarg);
           if (socket_registered(pid, sysarg.read.fd) != -1) {
-            if(process_recv_call(pid, arg.arg1, arg.ret) == PROCESS_TASK_FOUND)
+            if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
               return PROCESS_TASK_FOUND;
           }
           break;
@@ -753,7 +760,7 @@ int process_handle(pid_t pid, int stat)
         case SYS_recvfrom:
           get_args_sendto_recvfrom(pid, 2, &arg, &sysarg);
           print_recvfrom_syscall(pid, &sysarg);
-          if(process_recv_call(pid, sysarg.recvfrom.sockfd, sysarg.recvfrom.ret) == PROCESS_TASK_FOUND)
+          if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
             return PROCESS_TASK_FOUND;
           break;
           
@@ -767,7 +774,7 @@ int process_handle(pid_t pid, int stat)
         case SYS_recvmsg:
           get_args_send_recvmsg(pid, &arg, &sysarg);
           print_recvmsg_syscall(pid, &sysarg);
-          if(process_recv_call(pid, sysarg.recvmsg.sockfd, sysarg.recvmsg.ret) == PROCESS_TASK_FOUND)
+          if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
             return PROCESS_TASK_FOUND;
           break;
           

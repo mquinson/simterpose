@@ -345,7 +345,7 @@ int socket_network(pid_t pid, int fd)
   struct infos_socket* is = get_infos_socket(pid, fd);
   if (is != NULL )
   {
-    printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
+//     printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
     return is->domain != 16 && is->domain != 0 && is->domain != 1;
   }
   return 0;
@@ -430,6 +430,7 @@ void handle_new_send(struct infos_socket *is,  int length)
 
   xbt_fifo_push(recv->send_fifo, buf);
   xbt_fifo_push(recv->send_fifo, size);
+//   printf("New queue size %d\n", xbt_fifo_size(recv->send_fifo));
 }
 
 

@@ -11,9 +11,9 @@
 #define PROCESS_TASK_FOUND 3
 #define PROCESS_NO_TASK_FOUND 4
 
-int process_send_call(pid_t pid, syscall_arg_u* arg);
+int process_send_call(pid_t pid, syscall_arg_u* sysarg);
 
-int process_recv_call(pid_t pid, int sockfd, int ret);
+int process_recv_call(pid_t pid, syscall_arg_u* sysarg);
 
 int process_fork_call(pid_t pid);
 

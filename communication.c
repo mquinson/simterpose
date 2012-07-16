@@ -19,7 +19,7 @@ comm_t comm_new(struct infos_socket* socket)
   comm_t res = malloc(sizeof(comm_s));
   
   socket->comm=res;
-   printf("New communication init by %d\n", socket->proc->pid); 
+//    printf("New communication init by %d\n", socket->proc->pid); 
   res->info[0].socket = socket;
   res->info[0].recv = recv_information_new();
   res->info[1].socket = NULL;
@@ -83,7 +83,7 @@ void comm_set_close(comm_t comm)
 
 void comm_close(struct infos_socket* is)
 {
-  printf("Closing communication\n");
+//   printf("Closing communication\n");
   comm_t comm = is->comm;
   if(comm == NULL)
     return;
