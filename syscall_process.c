@@ -21,24 +21,24 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process lo
 
 //TODO test the possibility to remove incomplete checking
 //There is no need to return value because send always bring a task
-int process_send_call(int pid, int sockfd, int ret)
+int process_send_call(int pid, syscall_arg_u* sysarg)
 {
-
-  if (socket_registered(pid,sockfd) != -1) {
-    if (!socket_netlink(pid,sockfd))
+  send_arg_t arg = &(sysarg->send);
+  if (socket_registered(pid,arg->sockfd) != -1) {
+    if (!socket_netlink(pid,arg->sockfd))
     {
       printf("This is not a netlink socket\n");
       calculate_computation_time(pid);
-      struct infos_socket *is = get_infos_socket(pid,sockfd);
+      struct infos_socket *is = get_infos_socket(pid,arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
       
       int peer_stat = process_get_state(s->proc->pid);
       if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL)
         add_to_sched_list(s->proc->pid);
       
-      handle_new_send(is,  ret);
+      handle_new_send(is,  arg->ret);
 
-      SD_task_t task = create_send_communication_task(pid, is, ret);
+      SD_task_t task = create_send_communication_task(pid, is, arg->ret);
 
       schedule_comm_task(is->proc->station, s->proc->station, task);
       return 1;
@@ -628,7 +628,7 @@ int process_handle(pid_t pid, int stat)
           get_args_write(pid, &arg, &sysarg);
           print_write_syscall(pid, &sysarg);
           if (socket_registered(pid, sysarg.write.fd) != -1) {
-            if(process_send_call(pid, arg.arg1, arg.ret))
+            if(process_send_call(pid, &sysarg))
               return PROCESS_TASK_FOUND;
           }
           break;
@@ -746,7 +746,7 @@ int process_handle(pid_t pid, int stat)
         case SYS_sendto:
           get_args_sendto_recvfrom(pid, 1, &arg, &sysarg);
           print_sendto_syscall(pid, &sysarg);
-          if(process_send_call(pid, sysarg.sendto.sockfd, sysarg.sendto.ret))
+          if(process_send_call(pid, &sysarg))
             return PROCESS_TASK_FOUND;
           break;
           
@@ -760,7 +760,7 @@ int process_handle(pid_t pid, int stat)
         case SYS_sendmsg:
           get_args_send_recvmsg(pid, &arg, &sysarg);
           print_sendmsg_syscall(pid, &sysarg);
-          if(process_send_call(pid, sysarg.sendmsg.sockfd, sysarg.sendmsg.ret))
+          if(process_send_call(pid, &sysarg))
             return PROCESS_TASK_FOUND;
           break;
           

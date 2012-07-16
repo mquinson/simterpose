@@ -94,6 +94,7 @@ struct poll_arg_s{
 
 struct sendto_arg_s{
   int sockfd;
+  int ret;
   int len;
   int flags;
   int addrlen;
@@ -103,7 +104,6 @@ struct sendto_arg_s{
     struct sockaddr_un sau;
     struct sockaddr_nl snl;
   };
-  int ret;
 };
 
 struct connect_bind_arg_s{

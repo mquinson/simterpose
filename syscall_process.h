@@ -3,6 +3,7 @@
 
 #include <sys/types.h> //for pid_t
 #include "ptrace_utils.h"
+#include "syscall_data.h"
 
 #define PROCESS_DEAD 0
 #define PROCESS_GROUP_DEAD 1
@@ -10,7 +11,7 @@
 #define PROCESS_TASK_FOUND 3
 #define PROCESS_NO_TASK_FOUND 4
 
-int process_send_call(pid_t pid, int sockfd, int ret);
+int process_send_call(pid_t pid, syscall_arg_u* arg);
 
 int process_recv_call(pid_t pid, int sockfd, int ret);
 
