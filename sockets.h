@@ -2,8 +2,9 @@
 #define __SOCKETS_H
 
 /*Declaration of state for socket*/
-#define SOCKET_READ_OK 0x000001
-#define SOCKET_CLOSED  0x000002
+#define SOCKET_READ_OK  0x0001
+#define SOCKET_CLOSED   0x0002
+#define SOCKET_WR_NBLK  0x0003
 
 /*Decalration of all typedef of structure declared below*/
 typedef struct recv_information recv_information;
@@ -81,5 +82,7 @@ void socket_close(pid_t pid, int fd);
 int socket_network(pid_t pid, int fd);
 
 void socket_set_flags(pid_t pid, int fd, int flags);
+
+int socket_get_flags(pid_t pid, int fd);
 
 #endif

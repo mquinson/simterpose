@@ -180,6 +180,7 @@ int comm_get_socket_state(struct infos_socket* is)
     THROW_IMPOSSIBLE;
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
+  struct infos_socket* peer = comm_get_peer(is);
 
   if(xbt_fifo_size(recv->send_fifo))
     res = res | SOCKET_READ_OK;
@@ -187,6 +188,9 @@ int comm_get_socket_state(struct infos_socket* is)
     res = res | SOCKET_READ_OK;
   if(comm->state == COMM_CLOSED)
     res = res | SOCKET_CLOSED;
+  if(peer != NULL)
+    res = res | SOCKET_WR_NBLK;
+  
   
   return res;
 }

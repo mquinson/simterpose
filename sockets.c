@@ -63,6 +63,16 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   return is;
 }
 
+int socket_get_flags(pid_t pid, int fd)
+{
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  
+  if(is==NULL)
+    return 0;
+  
+  return is->flags;
+}
+
 void socket_set_flags(pid_t pid, int fd, int flags)
 {
   struct infos_socket* is = get_infos_socket(pid, fd);

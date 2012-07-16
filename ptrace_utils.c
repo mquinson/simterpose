@@ -37,8 +37,10 @@ void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
 
 void ptrace_resume_process(const pid_t pid)
 {
+//   printf("Resume process %d\n", pid);
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
     fprintf(stderr, " [%d] ptrace syscall %s\n", pid, strerror(errno));
+    THROW_IMPOSSIBLE;
     xbt_die("Impossible to continue\n");
   }
 }

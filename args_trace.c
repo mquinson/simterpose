@@ -376,7 +376,7 @@ void get_args_poll(pid_t child, reg_s* reg, syscall_arg_u* sysarg) {
   
   void * src = (void*)reg->arg1;
   arg->nbfd = reg->arg2;
-  arg->timeout = reg->arg3/1000;//the timeout is in millisecond
+  arg->timeout = reg->arg3/1000.;//the timeout is in millisecond
 
   if (src!=0) {
     arg->fd_list = malloc(sizeof(arg->nbfd)* sizeof(struct pollfd));

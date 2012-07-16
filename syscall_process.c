@@ -96,7 +96,12 @@ int process_select_call(pid_t pid)
     struct infos_socket* is = process_get_fd(pid, i);
     //if i is NULL that means that i is not a socket
     if(is == NULL)
+    {
+      FD_CLR(i, &(fd_rd));
+      FD_CLR(i, &(fd_wr));
       continue;
+    }
+
     int sock_status = socket_get_state(is);
     if(FD_ISSET(i, &(fd_rd)))
     {
@@ -107,8 +112,10 @@ int process_select_call(pid_t pid)
     }
     if(FD_ISSET(i, &(fd_wr)))
     {
-      ++match;
-      XBT_WARN("Mediation for writing states on socket are not support yet\n");
+      if(sock_status & SOCKET_WR_NBLK)
+        ++match;
+      else
+        FD_CLR(i, &(fd_wr));
     }
     if(FD_ISSET(i, &(fd_ex)))
     {
@@ -117,7 +124,7 @@ int process_select_call(pid_t pid)
   }
   if(match > 0)
   {
-    
+    printf("match for select\n");
     arg->fd_read = fd_rd;
     arg->fd_write = fd_wr;
     arg->fd_except = fd_ex;
@@ -128,7 +135,7 @@ int process_select_call(pid_t pid)
   
   if(proc->in_timeout == PROC_TIMEOUT_EXPIRE)
   {
-//     printf("Timeout for select\n");
+    printf("Timeout for select\n");
     
     FD_ZERO(&fd_rd);
     FD_ZERO(&fd_wr);
@@ -258,14 +265,22 @@ int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
   if(comm_has_connect_waiting(get_infos_socket(pid, acc->sockfd)))
   {
     pid_t conn_pid = comm_accept_connect(get_infos_socket(pid, acc->sockfd));
-    ptrace_resume_process(conn_pid);
-    process_set_state(conn_pid, PROC_CONNECT_DONE);
+    
+    int conn_state = process_get_state(conn_pid);
+    if(conn_state == PROC_CONNECT)
+    {
+      ptrace_resume_process(conn_pid);
+      add_to_sched_list(conn_pid);
+      process_set_state(conn_pid, PROC_CONNECT_DONE);
+    }
     return conn_pid;
   }
   else
   {
     printf("Communication wait\n");
     process_set_state(pid, PROC_ACCEPT_IN);
+    process_descriptor* proc = process_get_descriptor(pid);
+    proc->sysarg.accept = sysarg->accept;
     return 0;
   }
 }
@@ -376,17 +391,17 @@ int process_clone_call(pid_t pid, reg_s *arg)
 }
 
 //This function check if the communication already have been set. Means that 
-int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
+int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
 {
-  connect_arg_t conn = &(arg->connect);
-  int domain = get_domain_socket(pid, conn->sockfd);
+  connect_arg_t arg = &(sysarg->connect);
+  int domain = get_domain_socket(pid, arg->sockfd);
   
   if(domain == 2)//PF_INET
   {
-    struct sockaddr_in *sai = &(arg->connect.sai);
+    struct sockaddr_in *sai = &(arg->sai);
     
     //We ask for a connection on the socket
-    int acc_pid = comm_ask_connect(sai->sin_addr.s_addr, ntohs(sai->sin_port), pid, conn->sockfd);
+    int acc_pid = comm_ask_connect(sai->sin_addr.s_addr, ntohs(sai->sin_port), pid, arg->sockfd);
     
     //if someone waiting for connection we add him to shedule list
     if(acc_pid)
@@ -397,6 +412,12 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *arg)
     }
     else
       THROW_IMPOSSIBLE;
+    
+    //Now we try to see if the socket is blocking of not
+    int flags = socket_get_flags(pid, arg->sockfd);
+    if(flags & O_NONBLOCK)
+      return 0;
+    
     //now mark the process as waiting for conn
     process_set_state(pid, PROC_CONNECT);
     return 1;
@@ -476,6 +497,8 @@ int process_handle(pid_t pid, int stat)
 
       ptrace_get_register(pid, &arg);
       
+//       printf("[%d] Syscall %s_in(%lu \n", pid, syscall_list[arg.reg_orig], arg.arg1);
+      
       if(arg.reg_orig == SYS_read)
       {
         if (socket_registered(pid, arg.arg1) != -1) {
@@ -546,16 +569,8 @@ int process_handle(pid_t pid, int stat)
         get_args_accept(pid, &arg, &sysarg);
         print_accept_syscall(pid, &(sysarg.accept));
         pid_t conn_pid = process_accept_in_call(pid, &sysarg);
-        //if we no process wait for connection we have to put process in idle and save arguments
         if(!conn_pid)
-        {
-
-          process_descriptor* proc = process_get_descriptor(pid);
-          proc->sysarg.accept = sysarg.accept;
           return PROCESS_IDLE_STATE;
-        }
-        else//  We don't need to check conn_pid state because it must be in a connect
-          add_to_sched_list(conn_pid);
       }
       
       else if(arg.reg_orig == SYS_select)
@@ -926,7 +941,6 @@ int process_handle(pid_t pid, int stat)
     
     //waitpid sur le fils
     waitpid(pid, &status, 0);
-    //printf("tempppid = %d\n", temppid);
   }
   
   THROW_IMPOSSIBLE; //There's no way to quit the loop
