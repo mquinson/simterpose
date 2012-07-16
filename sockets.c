@@ -98,6 +98,7 @@ void socket_close(pid_t pid, int fd)
   struct infos_socket* is = get_infos_socket(pid, fd);
   if(is!=NULL)
   {
+    printf("Close socket\n");
     if(socket_network(pid, fd))
       comm_close(is);
     delete_socket(pid, fd);
@@ -344,8 +345,8 @@ int socket_network(pid_t pid, int fd)
   struct infos_socket* is = get_infos_socket(pid, fd);
   if (is != NULL )
   {
-//     printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
-    return is->domain != 16 && is->domain != 2;
+    printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
+    return is->domain != 16 && is->domain != 0 && is->domain != 1;
   }
   return 0;
 }

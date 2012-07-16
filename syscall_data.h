@@ -55,12 +55,17 @@ typedef recvmsg_arg_s* recvmsg_arg_t;
 typedef struct fcntl_arg_s fcntl_arg_s;
 typedef struct fcntl_arg_s* fcntl_arg_t;
 
+typedef struct write_arg_s write_arg_s;
+typedef write_arg_s* write_arg_t;
+
+typedef struct write_arg_s read_arg_s;
+typedef read_arg_s* read_arg_t;
 
 struct recv_arg_s{
   int sockfd;
   int ret;
-  int flags;
   size_t len;
+  int flags;
 };
 
 struct recvmsg_arg_s{
@@ -153,6 +158,12 @@ struct fcntl_arg_s{
   int ret;
 };
 
+struct write_arg_s{
+  int fd;
+  int ret;
+  int count;
+};
+
 typedef union{
   connect_arg_s connect;
   bind_arg_s bind;
@@ -170,6 +181,8 @@ typedef union{
   poll_arg_s poll;
   select_arg_s select;
   fcntl_arg_s fcntl;
+  read_arg_s read;
+  write_arg_s write;
 } syscall_arg_u;
 
 

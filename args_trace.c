@@ -399,3 +399,19 @@ void get_args_fcntl(pid_t pid, reg_s* reg,syscall_arg_u* sysarg)
   
 }
 
+void get_args_read(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
+{
+  read_arg_t arg = &(sysarg->read);
+  arg->fd = reg->arg1;
+  arg->ret = reg->ret;
+  arg->count = reg->arg3;
+}
+
+void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
+{
+  read_arg_t arg = &(sysarg->read);
+  arg->fd = reg->arg1;
+  arg->ret = reg->ret;
+  arg->count = reg->arg3;
+}
+

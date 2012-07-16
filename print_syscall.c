@@ -112,29 +112,29 @@ void print_socket_syscall(pid_t pid, syscall_arg_u* sysarg)
         default : printf("PROTOCOL UNKNOWN (%d)", arg->protocol); break;
       }  
       break;
-        case 16 : 
-          printf("PF_NETLINK, ");
-          switch (arg->type) {
-            case 1: printf("SOCK_STREAM, "); break;
-            case 2: printf("SOCK_DGRAM, "); break;
-            case 3: printf("SOCK_RAW, "); break;
-            case 4: printf("SOCK_RDM, "); break;
-            case 5: printf("SOCK_SEQPACKET, "); break;
-            case 6: printf("SOCK_DCCP, "); break;
-            case 10: printf("SOCK_PACKET, "); break;
-            default : printf("TYPE UNKNOWN (%d), ",arg->type); break;
-          }
-          switch (arg->protocol) {
-            case 0: printf("NETLINK_ROUTE"); break;
-            case 1: printf("NETLINK_UNUSED"); break;
-            case 2: printf("NETLINK_USERSOCK"); break;
-            case 3: printf("NETLINK_FIREWALL"); break;
-            case 4: printf("NETLINK_INET_DIAG"); break;
-            default : printf("PROTOCOL UNKNOWN (%d)", arg->protocol); break;
-          }  
-          break;
-            default :
-              printf("DOMAIN UNKNOWN (%d), ",arg->domain); break;
+    case 16 : 
+      printf("PF_NETLINK, ");
+      switch (arg->type) {
+        case 1: printf("SOCK_STREAM, "); break;
+        case 2: printf("SOCK_DGRAM, "); break;
+        case 3: printf("SOCK_RAW, "); break;
+        case 4: printf("SOCK_RDM, "); break;
+        case 5: printf("SOCK_SEQPACKET, "); break;
+        case 6: printf("SOCK_DCCP, "); break;
+        case 10: printf("SOCK_PACKET, "); break;
+        default : printf("TYPE UNKNOWN (%d), ",arg->type); break;
+      }
+      switch (arg->protocol) {
+        case 0: printf("NETLINK_ROUTE"); break;
+        case 1: printf("NETLINK_UNUSED"); break;
+        case 2: printf("NETLINK_USERSOCK"); break;
+        case 3: printf("NETLINK_FIREWALL"); break;
+        case 4: printf("NETLINK_INET_DIAG"); break;
+        default : printf("PROTOCOL UNKNOWN (%d)", arg->protocol); break;
+      }  
+      break;
+    default :
+      printf("DOMAIN UNKNOWN (%d), ",arg->domain); break;
   }
   printf(" ) = %d\n", arg->ret);
 }
@@ -588,5 +588,17 @@ void print_fcntl_syscall(pid_t pid, syscall_arg_u* sysarg)
   printf("[%d] fcntl( %d, ", pid, arg->fd);
   print_fcntl_cmd(arg->cmd);
   printf(" , %d) = %d\n", arg->arg, arg->ret);
+}
+
+void print_read_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  read_arg_t arg = &(sysarg->read);
+  printf("[%d] read(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
+}
+
+void print_write_syscall(pid_t pid, syscall_arg_u* sysarg)
+{
+  write_arg_t arg = &(sysarg->read);
+  printf("[%d] write(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
 }
 

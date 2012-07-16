@@ -19,7 +19,7 @@ comm_t comm_new(struct infos_socket* socket)
   comm_t res = malloc(sizeof(comm_s));
   
   socket->comm=res;
-//   printf("New communication init by %d\n", socket->proc->pid); 
+   printf("New communication init by %d\n", socket->proc->pid); 
   res->info[0].socket = socket;
   res->info[0].recv = recv_information_new();
   res->info[1].socket = NULL;
@@ -83,6 +83,7 @@ void comm_set_close(comm_t comm)
 
 void comm_close(struct infos_socket* is)
 {
+  printf("Closing communication\n");
   comm_t comm = is->comm;
   if(comm == NULL)
     return;
@@ -181,7 +182,7 @@ int comm_get_socket_state(struct infos_socket* is)
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);
-
+//   printf("Comm state %d %d %d\n", xbt_fifo_size(recv->send_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
   if(xbt_fifo_size(recv->send_fifo))
     res = res | SOCKET_READ_OK;
   if(!xbt_dynar_is_empty(comm->conn_wait))

@@ -35,5 +35,9 @@ void get_args_send_recvmsg(pid_t child, reg_s* reg, syscall_arg_u* sysarg);
 
 void get_args_fcntl(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
 
+void get_args_read(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
+
+void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
+
 #endif
 

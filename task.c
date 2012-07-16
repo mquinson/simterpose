@@ -45,6 +45,7 @@ void create_computation_task(pid_t pid, double amount)
 //We can factorize because receiver task are only here for scheduling
 void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_task_t task)
 {
+  printf("Entering schedule_comm_task\n");
   double* comm_amount = malloc(sizeof(double)*4);
   comm_amount[1]=SD_task_get_amount(task);
   comm_amount[2]=0.0;

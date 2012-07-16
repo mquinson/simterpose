@@ -105,14 +105,14 @@ int process_select_call(pid_t pid)
     int sock_status = socket_get_state(is);
     if(FD_ISSET(i, &(fd_rd)))
     {
-      if(sock_status & SOCKET_READ_OK)
+      if(sock_status & SOCKET_READ_OK || sock_status & SOCKET_CLOSED)
         ++match;
       else
         FD_CLR(i, &(fd_rd));
     }
     if(FD_ISSET(i, &(fd_wr)))
     {
-      if(sock_status & SOCKET_WR_NBLK)
+      if(sock_status & SOCKET_WR_NBLK && !(sock_status & SOCKET_CLOSED))
         ++match;
       else
         FD_CLR(i, &(fd_wr));
@@ -238,22 +238,16 @@ int process_handle_active(pid_t pid)
 
 int process_recv_in_call(int pid, int fd)
 {
-   
-//   printf("[%d] Recvmsg in %d\n",pid,  fd);
   process_descriptor *proc = process_get_descriptor(pid);
   if(proc->fd_list[fd]==NULL)
     return 0;
   
-  if(socket_netlink(pid, fd))
-  {
-//     printf("Netlink socket found\n");
+  if(!socket_network(pid, fd))
     return 1;
-  }
-  int status =comm_get_socket_state(get_infos_socket(pid, fd));
-  
-//   printf("socket %d : %d\n", fd, status);
-  
-  return (status & SOCKET_READ_OK);
+
+  int status = comm_get_socket_state(get_infos_socket(pid, fd));
+//   printf("socket status %d\n", status);
+  return (status & SOCKET_READ_OK || status & SOCKET_CLOSED);
 }
 
 
@@ -351,12 +345,22 @@ int process_handle_idle(pid_t pid)
       //We have to add conn_pid to the schedule list
       add_to_sched_list(conn_pid);
       //Here process is like an active process so we launch it like that
-      return process_handle_active(pid);;
+      return process_handle_active(pid);
     }
     else
       return PROCESS_IDLE_STATE;
   }
-  
+  else if(proc_state & PROC_RECV_IN)
+  {
+    process_descriptor* proc = process_get_descriptor(pid);
+    if(process_recv_in_call(pid, proc->sysarg.recv.sockfd))
+    {
+      process_set_state(pid, PROC_NO_STATE);
+      return process_handle_active(pid);
+    }
+    else
+      return PROCESS_IDLE_STATE;
+  }
   else
   {
 //     printf("No special idling state\n");
@@ -501,14 +505,16 @@ int process_handle(pid_t pid, int stat)
       
       if(arg.reg_orig == SYS_read)
       {
+        get_args_read(pid, &arg, &sysarg);
+        print_read_syscall(pid, &sysarg);
         if (socket_registered(pid, arg.arg1) != -1) {
           if(!process_recv_in_call(pid, arg.arg1))
           {
+            process_set_state(pid, PROC_RECV_IN);
             ptrace_resume_process(pid);
             return PROCESS_IDLE_STATE;
           }
         }
-        
       }
       
       if(arg.reg_orig == SYS_poll)
@@ -553,7 +559,6 @@ int process_handle(pid_t pid, int stat)
         }
       }
       
-      #if defined(__x86_64)
       if(arg.reg_orig == SYS_connect)
       {
         printf("[%d] connect_in\n", pid);
@@ -597,7 +602,7 @@ int process_handle(pid_t pid, int stat)
         get_args_sendto_recvfrom(pid,2, &arg, &sysarg);
         if(!process_recv_in_call(pid, sysarg.recv.sockfd))
         {
-          ptrace_resume_process(pid);
+          process_set_state(pid, PROC_RECV_IN);
           return PROCESS_IDLE_STATE;
         }
       }
@@ -608,39 +613,10 @@ int process_handle(pid_t pid, int stat)
         get_args_send_recvmsg(pid, &arg, &sysarg);
         if(!process_recv_in_call(pid, sysarg.recvmsg.sockfd))
         {
-          ptrace_resume_process(pid);
+          process_set_state(pid, PROC_RECV_IN);
           return PROCESS_IDLE_STATE;
         }
       }
-      #else
-
-      if(arg.reg_orig == SYS_socketcall)
-      {
-        if(arg.arg1 == SYS_accept_32)
-        {
-          printf("[%d] accept_in\n");
-          ptrace_resume_process(pid);
-          return PROCESS_IDLE_STATE;
-        }
-        
-        else if(arg.arg1 == SYS_select_32)
-        {
-//           double timeout = get_args_select(pid,&arg);
-//           add_launching_time(pid, timeout + SD_get_clock());
-//           ptrace_neutralize_syscall(pid);
-//           ptrace_resume_process(pid);
-//           process_set_out_syscall(pid);
-//           return PROCESS_IDLE_STATE;
-        }
-
-        else if(arg.arg1 == SYS_recv_32 || arg.arg1 == SYS_recvfrom_32 || arg.arg1 == SYS_recvmsg_32)
-        {
-          printf("[%d] recvfrom_in\n",pid);
-          ptrace_resume_process(pid);
-          return PROCESS_IDLE_STATE;
-        }
-      }
-      #endif
     }
     else
     {
@@ -649,16 +625,18 @@ int process_handle(pid_t pid, int stat)
       switch (arg.reg_orig) {
         
         case SYS_write:
-          printf("[%d] write(%ld, ... , %d) = %ld\n",pid, arg.arg1,(int)arg.arg3, arg.ret);
-          if (socket_registered(pid, arg.arg1) != -1) {
+          get_args_write(pid, &arg, &sysarg);
+          print_write_syscall(pid, &sysarg);
+          if (socket_registered(pid, sysarg.write.fd) != -1) {
             if(process_send_call(pid, arg.arg1, arg.ret))
               return PROCESS_TASK_FOUND;
           }
           break;
 
         case SYS_read:
-          printf("[%d] read(%ld, ..., %ld) = %ld\n",pid, arg.arg1, arg.arg3, arg.ret);
-          if (socket_registered(pid, arg.arg1) != -1) {
+          get_args_read(pid, &arg, &sysarg);
+          print_read_syscall(pid, &sysarg);
+          if (socket_registered(pid, sysarg.read.fd) != -1) {
             if(process_recv_call(pid, arg.arg1, arg.ret) == PROCESS_TASK_FOUND)
               return PROCESS_TASK_FOUND;
           }

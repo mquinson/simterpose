@@ -7,6 +7,9 @@
 #define PROC_CONNECT            0x00004
 #define PROC_ACCEPT_IN          0x00008
 #define PROC_CONNECT_DONE       0x00010
+#define PROC_RECV_IN            0x00020
+
+#define PROC_IDLE_IN_TASK       0x00100
 
 #define PROC_NO_IDLE            0
 #define PROC_IDLE               1
