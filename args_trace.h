@@ -39,5 +39,7 @@ void get_args_read(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
 
 void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
 
+void get_args_shutdown(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
+
 #endif
 

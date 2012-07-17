@@ -61,6 +61,9 @@ typedef write_arg_s* write_arg_t;
 typedef struct write_arg_s read_arg_s;
 typedef read_arg_s* read_arg_t;
 
+typedef struct shutdown_arg_s shutdown_arg_s;
+typedef shutdown_arg_s* shutdown_arg_t;
+
 struct recv_arg_s{
   int sockfd;
   int ret;
@@ -164,6 +167,12 @@ struct write_arg_s{
   int count;
 };
 
+struct shutdown_arg_s{
+  int fd;
+  int how;
+  int ret;
+};
+
 typedef union{
   connect_arg_s connect;
   bind_arg_s bind;
@@ -183,6 +192,7 @@ typedef union{
   fcntl_arg_s fcntl;
   read_arg_s read;
   write_arg_s write;
+  shutdown_arg_s shutdown;
 } syscall_arg_u;
 
 

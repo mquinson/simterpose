@@ -308,7 +308,7 @@ int process_recv_in_call(int pid, int fd)
 
   int status = comm_get_socket_state(get_infos_socket(pid, fd));
   printf("socket status %d %d\n", status, status & SOCKET_READ_OK || status & SOCKET_CLOSED);
-  return (status & SOCKET_READ_OK || status & SOCKET_CLOSED);
+  return (status & SOCKET_READ_OK || status & SOCKET_CLOSED || status & SOCKET_SHUT);
 }
 
 
@@ -354,6 +354,15 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
     comm_join_on_accept(is, pid, arg->sockfd);
   }
   process_set_state(pid, PROC_NO_STATE);
+}
+
+void process_shutdown_call(pid_t pid, syscall_arg_u* sysarg)
+{
+  shutdown_arg_t arg = &(sysarg->shutdown);
+  struct infos_socket *is = get_infos_socket(pid, arg->fd);
+  if(is == NULL)
+    return;
+  comm_shutdown(is);
 }
 
 
@@ -505,10 +514,14 @@ int process_handle(pid_t pid, int stat)
         if (socket_registered(pid, arg.arg1) != -1) {
           if(!process_recv_in_call(pid, arg.arg1))
           {
-            process_set_state(pid, PROC_RECV_IN);
-            process_descriptor *proc = process_get_descriptor(pid);
-            proc->sysarg.read = sysarg.read;
-            state =  PROCESS_ON_MEDIATION;
+            int flags = socket_get_flags(pid, arg.arg1);
+            if(!(flags & O_NONBLOCK))
+            {
+              process_set_state(pid, PROC_RECV_IN);
+              process_descriptor *proc = process_get_descriptor(pid);
+              proc->sysarg.read = sysarg.read;
+              state =  PROCESS_ON_MEDIATION;
+            }
           }
         }
       }
@@ -598,10 +611,14 @@ int process_handle(pid_t pid, int stat)
         get_args_sendto_recvfrom(pid,2, &arg, &sysarg);
         if(!process_recv_in_call(pid, sysarg.recv.sockfd))
         {
-          process_set_state(pid, PROC_RECV_IN);
-          process_descriptor *proc = process_get_descriptor(pid);
-          proc->sysarg.recvfrom = sysarg.recvfrom;
-          state = PROCESS_ON_MEDIATION;
+          int flags = socket_get_flags(pid, arg.arg1);
+          if(!(flags & O_NONBLOCK))
+          {
+            process_set_state(pid, PROC_RECV_IN);
+            process_descriptor *proc = process_get_descriptor(pid);
+            proc->sysarg.recvfrom = sysarg.recvfrom;
+            state = PROCESS_ON_MEDIATION;
+          }
         }
       }
       
@@ -611,10 +628,14 @@ int process_handle(pid_t pid, int stat)
         get_args_send_recvmsg(pid, &arg, &sysarg);
         if(!process_recv_in_call(pid, sysarg.recvmsg.sockfd))
         {
-          process_set_state(pid, PROC_RECV_IN);
-          process_descriptor *proc = process_get_descriptor(pid);
-          proc->sysarg.recvmsg = sysarg.recvmsg;
-          state = PROCESS_ON_MEDIATION;
+          int flags = socket_get_flags(pid, arg.arg1);
+          if(!(flags & O_NONBLOCK))
+          {
+            process_set_state(pid, PROC_RECV_IN);
+            process_descriptor *proc = process_get_descriptor(pid);
+            proc->sysarg.recvmsg = sysarg.recvmsg;
+            state = PROCESS_ON_MEDIATION;
+          }
         }
       }
       //No verify if we have compuation task to simulate.
@@ -782,17 +803,9 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_shutdown:
-          printf("[%d] shutdown( %ld, ",pid, arg.arg1);
-          //Is it really important to know close mode?
-    //       char *how=malloc(10);;
-    //       switch(arg2){
-    //         case 0: strcpy(how,"SHUT_RD"); break;
-    //         case 1: strcpy(how,"SHUT_WR"); break;
-    //         case 2: strcpy(how,"SHUT_RDWR"); break;
-    //       }
-    //       printf("%s) = %ld\n",how,ret);
-    //       free(how);
-          printf(") = %ld\n",arg.ret);
+          get_args_shutdown(pid, &arg, &sysarg);
+          print_shutdown_syscall(pid, &sysarg);
+          process_shutdown_call(pid, &sysarg);
           break;
               
         case SYS_getsockopt:

@@ -50,6 +50,8 @@ void comm_set_state(comm_t comm, int new_state);
 
 void comm_set_close(comm_t comm);
 
+void comm_shutdown(struct infos_socket *is);
+
 void comm_set_listen(comm_t comm);
 
 int comm_ask_connect(unsigned int ip, int port, pid_t tid, int fd);

@@ -415,3 +415,11 @@ void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
   arg->count = reg->arg3;
 }
 
+void get_args_shutdown(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
+{
+  shutdown_arg_t arg = &(sysarg->shutdown);
+  arg->fd = reg->arg1;
+  arg->how = reg->arg2;
+  arg->ret = reg->ret;
+}
+

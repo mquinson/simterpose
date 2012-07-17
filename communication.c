@@ -190,7 +190,7 @@ int comm_get_socket_state(struct infos_socket* is)
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);
-//   printf("Comm state %d %d %d\n", xbt_fifo_size(recv->send_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
+  printf("Comm state %d %d %d\n", xbt_fifo_size(recv->send_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
   if(xbt_fifo_size(recv->send_fifo))
     res = res | SOCKET_READ_OK;
   if(!xbt_dynar_is_empty(comm->conn_wait))
@@ -199,6 +199,9 @@ int comm_get_socket_state(struct infos_socket* is)
     res = res | SOCKET_CLOSED;
   if(peer != NULL)
     res = res | SOCKET_WR_NBLK;
+  if(comm->state == COMM_SHUT)
+    res = res | SOCKET_SHUT;
+  
   
   
   return res;

@@ -606,3 +606,26 @@ void print_write_syscall(pid_t pid, syscall_arg_u* sysarg)
   printf("[%d] write(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
 }
 
+void print_shutdown_option(int how)
+{
+  switch(how)
+  {
+    case 0: 
+      printf("SHUT_RD"); 
+      break;
+    case 1: 
+      printf("SHUT_WR"); 
+      break;
+    case 2: 
+      printf("SHUT_RDWR"); 
+      break;
+  }
+}
+
+void print_shutdown_syscall(pid_t pid, syscall_arg_u *sysarg)
+{
+  shutdown_arg_t arg = &(sysarg->shutdown);
+  printf("[%d] shutdown (%d, ", pid, arg->fd);
+  print_shutdown_option(arg->how);
+  printf(") = %d\n", arg->ret);
+}
