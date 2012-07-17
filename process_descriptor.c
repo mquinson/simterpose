@@ -28,6 +28,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->in_timeout = PROC_NO_TIMEOUT;
   result->scheduled = 0;
   result->idle_list = 0;
+  result->on_simulation = 0;
   
   int i;
   for(i=0; i<MAX_FD ; ++i)
@@ -208,3 +209,8 @@ void process_die(pid_t pid)
   global_data->process_desc[pid]=NULL;
 }
 
+void process_on_simulation(pid_t pid, int val)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  proc->on_simulation = val;
+}

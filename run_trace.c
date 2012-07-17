@@ -54,7 +54,7 @@ void add_to_idle(pid_t pid)
 void add_to_sched_list(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
-  if(proc->scheduled)
+  if(proc->scheduled || proc->on_simulation)
     return;
   
   proc->scheduled =1;
@@ -111,7 +111,10 @@ int main(int argc, char *argv[]) {
       int* data = (int *)SD_task_get_data(task_over);
       //If data is null, we schedule the process
       if(data != NULL)
+      {
+        process_on_simulation(*data, 0);
         add_to_sched_list(*data);
+      }
     }
     
 //     printf("Handle idle task\n");

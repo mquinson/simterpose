@@ -44,6 +44,7 @@ struct process_descriptor{
   unsigned int in_timeout :2;
   unsigned int scheduled  :1;
   unsigned int idle_list  :1;
+  unsigned int on_simulation :1;
 
   
   int state;
@@ -88,5 +89,7 @@ int process_is_connect_done(pid_t pid);
 void process_mark_connect_do(pid_t pid);
 
 void process_die(pid_t pid);
+
+void process_on_simulation(pid_t pid, int val);
 
 #endif

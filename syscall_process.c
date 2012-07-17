@@ -45,6 +45,7 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
       SD_task_t task = create_send_communication_task(pid, is, arg->ret);
 
       schedule_comm_task(is->proc->station, s->proc->station, task);
+      is->proc->on_simulation = 1;
       return 1;
     }
     return 0;
