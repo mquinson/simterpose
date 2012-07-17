@@ -28,8 +28,24 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 }
 
 
+void schedule_computation_task(pid_t pid)
+{
+  printf("Adding compuation task to process\n");
+  process_descriptor *proc = process_get_descriptor(pid);
+  double comp_size = SD_task_get_amount(proc->last_computation_task);
+  double comm_amount = 0;
+  SD_workstation_t work_list = proc->station;
+  
+  SD_task_watch(proc->last_computation_task, SD_DONE);
+  
+  SD_task_set_data(proc->last_computation_task, &(proc->pid));
+  SD_task_schedule(proc->last_computation_task, 1, &work_list, &comp_size, &comm_amount, -1);
+  proc->last_computation_task = NULL;
+}
 
-void create_computation_task(pid_t pid, double amount)
+
+
+SD_task_t create_computation_task(pid_t pid, double amount)
 {
   printf("ENTERING create_computation_task\n");
   process_descriptor *proc = process_get_descriptor(pid);
@@ -39,7 +55,7 @@ void create_computation_task(pid_t pid, double amount)
   if(proc->last_computation_task != NULL)
     schedule_last_computation_task(pid, task, "calculation sequence");
 
-  proc->last_computation_task=task;
+  return task;
 }
 
 //We can factorize because receiver task are only here for scheduling

@@ -3,9 +3,10 @@
 
 #define UNDECLARED_PGID -1
 
-#define COMM_OPEN     0x000
-#define COMM_CLOSED   ~COMM_OPEN
-#define COMM_LISTEN   0x001
+#define COMM_OPEN       0x001
+#define COMM_CLOSED     0x002
+#define COMM_LISTEN     0x004
+#define COMM_SHUT       0x008
 
 typedef struct comm_s comm_s;
 typedef comm_s *comm_t;

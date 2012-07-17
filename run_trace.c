@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
   do{
     //We calculate the time of simulation.
     time_to_simulate= get_next_start_time() - SD_get_clock();
-//     printf("Next simulation time %lf\n", time_to_simulate);
+    printf("Next simulation time %lf\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
     printf("NEW TURN %lf\n", SD_get_clock());
     

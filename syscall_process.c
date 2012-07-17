@@ -299,7 +299,7 @@ int process_handle_active(pid_t pid)
 int process_recv_in_call(int pid, int fd)
 {
   process_descriptor *proc = process_get_descriptor(pid);
-//   printf("Try to see if socket %d recv something\n", fd);
+  printf("Try to see if socket %d recv something\n", fd);
   if(proc->fd_list[fd]==NULL)
     return 0;
   
@@ -490,14 +490,14 @@ int process_handle(pid_t pid, int stat)
   syscall_arg_u sysarg;
   while(1)
   {
-    printf("New trap\n");
+//     printf("New trap\n");
     if (process_in_syscall(pid)==0) {
       process_set_in_syscall(pid);
 
       ptrace_get_register(pid, &arg);
       
 //       printf("[%d] Syscall %s_in(%lu \n", pid, syscall_list[arg.reg_orig], arg.arg1);
-      
+      int state = -1;
       if(arg.reg_orig == SYS_read)
       {
         get_args_read(pid, &arg, &sysarg);
@@ -508,7 +508,7 @@ int process_handle(pid_t pid, int stat)
             process_set_state(pid, PROC_RECV_IN);
             process_descriptor *proc = process_get_descriptor(pid);
             proc->sysarg.read = sysarg.read;
-            return PROCESS_ON_MEDIATION;
+            state =  PROCESS_ON_MEDIATION;
           }
         }
       }
@@ -528,7 +528,7 @@ int process_handle(pid_t pid, int stat)
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_POLL);
         proc->sysarg.poll = sysarg.poll;
-        return PROCESS_ON_MEDIATION;
+        state =  PROCESS_ON_MEDIATION;
       }
       
       if(arg.reg_orig == SYS_exit_group)
@@ -561,7 +561,7 @@ int process_handle(pid_t pid, int stat)
         get_args_bind_connect(pid, 0, &arg, &sysarg);
         print_connect_syscall(pid, &sysarg);
         if(process_connect_in_call(pid, &sysarg))
-          return PROCESS_ON_MEDIATION;
+          state = PROCESS_ON_MEDIATION;
       }
        
       if(arg.reg_orig == SYS_accept)
@@ -571,7 +571,7 @@ int process_handle(pid_t pid, int stat)
         print_accept_syscall(pid, &sysarg);
         pid_t conn_pid = process_accept_in_call(pid, &sysarg);
         if(!conn_pid)
-          return PROCESS_ON_MEDIATION;
+          state =  PROCESS_ON_MEDIATION;
       }
       
       else if(arg.reg_orig == SYS_select)
@@ -589,7 +589,7 @@ int process_handle(pid_t pid, int stat)
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_SELECT);
         proc->sysarg.select = sysarg.select;
-        return PROCESS_ON_MEDIATION;
+        state =  PROCESS_ON_MEDIATION;
       }
       
       else if(arg.reg_orig == SYS_recvfrom)
@@ -601,9 +601,8 @@ int process_handle(pid_t pid, int stat)
           process_set_state(pid, PROC_RECV_IN);
           process_descriptor *proc = process_get_descriptor(pid);
           proc->sysarg.recvfrom = sysarg.recvfrom;
-          return PROCESS_ON_MEDIATION;
+          state = PROCESS_ON_MEDIATION;
         }
-        printf("lala\n");
       }
       
       else if(arg.reg_orig == SYS_recvmsg)
@@ -615,9 +614,18 @@ int process_handle(pid_t pid, int stat)
           process_set_state(pid, PROC_RECV_IN);
           process_descriptor *proc = process_get_descriptor(pid);
           proc->sysarg.recvmsg = sysarg.recvmsg;
-          return PROCESS_ON_MEDIATION;
+          state = PROCESS_ON_MEDIATION;
         }
       }
+      //No verify if we have compuation task to simulate.
+      if(calculate_computation_time(pid))
+      {
+        //if we have computation to simulate
+        schedule_computation_task(pid);
+        state = PROCESS_ON_COMPUTATION;
+      }
+      if(state >= 0)
+        return state;
     }
     else
     {

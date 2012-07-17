@@ -14,7 +14,9 @@ struct task_comm_info{
 };
 
 
-void create_computation_task(pid_t pid, double amount);
+SD_task_t create_computation_task(pid_t pid, double amount);
+
+void schedule_computation_task(pid_t pid);
 
 SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *recv, double amount);
 

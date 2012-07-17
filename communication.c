@@ -83,7 +83,7 @@ void comm_set_close(comm_t comm)
 
 void comm_close(struct infos_socket* is)
 {
-//   printf("Closing communication\n");
+  printf("Closing communication\n");
   comm_t comm = is->comm;
   if(comm == NULL)
     return;
@@ -103,6 +103,14 @@ void comm_close(struct infos_socket* is)
     else
       comm->state = COMM_CLOSED;
   }
+}
+
+void comm_shutdown(struct infos_socket *is)
+{
+  comm_t comm = is->comm;
+  if(comm == NULL)
+    return;
+  comm->state = COMM_SHUT;
 }
 
 

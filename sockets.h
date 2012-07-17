@@ -5,6 +5,7 @@
 #define SOCKET_READ_OK  0x0001
 #define SOCKET_CLOSED   0x0002
 #define SOCKET_WR_NBLK  0x0004
+#define SOCKET_SHUT     0x0008
 
 /*Decalration of all typedef of structure declared below*/
 typedef struct recv_information recv_information;
