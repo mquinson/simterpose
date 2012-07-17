@@ -5,11 +5,12 @@
 #include "ptrace_utils.h"
 #include "syscall_data.h"
 
-#define PROCESS_DEAD 0
-#define PROCESS_GROUP_DEAD 1
-#define PROCESS_IDLE_STATE 2
-#define PROCESS_TASK_FOUND 3
-#define PROCESS_NO_TASK_FOUND 4
+#define PROCESS_DEAD            0
+#define PROCESS_GROUP_DEAD      1
+#define PROCESS_IDLE_STATE      2
+#define PROCESS_TASK_FOUND      3
+#define PROCESS_NO_TASK_FOUND   4
+#define PROCESS_ON_MEDIATION    5
 
 int process_send_call(pid_t pid, syscall_arg_u* sysarg);
 

@@ -19,6 +19,10 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process log");
 
+int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg);
+int process_recv_in_call(int pid, int fd);
+
+
 //TODO test the possibility to remove incomplete checking
 //There is no need to return value because send always bring a task
 int process_send_call(int pid, syscall_arg_u* sysarg)
@@ -176,7 +180,7 @@ int process_poll_call(pid_t pid)
       int sock_status = socket_get_state(is);
       if(temp->events & POLLIN)
       {
-        if(sock_status & SOCKET_READ_OK)
+        if(sock_status & SOCKET_READ_OK || sock_status & SOCKET_CLOSED)
         {
           temp->revents = temp->revents | POLLIN;
           ++match;
@@ -184,6 +188,18 @@ int process_poll_call(pid_t pid)
         else
         {
           temp->revents = temp->revents & ~POLLIN;
+        }
+      }
+      else if(temp->events & POLLOUT)
+      {
+        if(sock_status & SOCKET_WR_NBLK)
+        {
+          temp->revents = temp->revents | POLLOUT;
+          ++match;
+        }
+        else
+        {
+          temp->revents = temp->revents & ~POLLOUT;
         }
       }
       else
@@ -217,14 +233,56 @@ int process_handle_active(pid_t pid)
   int proc_state = process_get_state(pid);
   if(proc_state & PROC_SELECT)
   {
-    process_select_call(pid);
-    process_set_state(pid, PROC_NO_STATE);
+    //if the select match changment we have to run the child
+    if(process_select_call(pid))
+    {
+      process_descriptor* proc = process_get_descriptor(pid);
+      if(proc->timeout != NULL)
+        remove_timeout(pid);
+      process_set_state(pid, PROC_NO_STATE);
+    }
+    else
+      return PROCESS_ON_MEDIATION;
   }
-  if(proc_state & PROC_POLL)
+  else if(proc_state & PROC_POLL)
   {
-    process_poll_call(pid);
-    process_set_state(pid, PROC_NO_STATE);
+    if(process_poll_call(pid))
+    {
+      process_descriptor* proc = process_get_descriptor(pid);
+      if(proc->timeout != NULL)
+        remove_timeout(pid);
+      process_set_state(pid, PROC_NO_STATE);
+    }
+    else
+      return PROCESS_ON_MEDIATION;
   }
+  else if(proc_state & PROC_CONNECT)
+  {
+    return PROCESS_ON_MEDIATION;
+  }
+  else if(proc_state & PROC_CONNECT_DONE)
+  {
+    waitpid(pid, &status, 0);
+    return process_handle(pid, status);
+  }
+  else if(proc_state & PROC_ACCEPT_IN)
+  {
+    process_descriptor* proc = process_get_descriptor(pid);
+    pid_t conn_pid = process_accept_in_call(pid, &proc->sysarg);
+    if(conn_pid)
+      add_to_sched_list(conn_pid); //We have to add conn_pid to the schedule list
+    else
+      return PROCESS_ON_MEDIATION;
+  }
+  else if(proc_state & PROC_RECV_IN)
+  {
+    process_descriptor* proc = process_get_descriptor(pid);
+    if(process_recv_in_call(pid, proc->sysarg.recv.sockfd))
+      process_set_state(pid, PROC_NO_STATE);
+    else
+      return PROCESS_ON_MEDIATION;
+  }
+  
   ptrace_resume_process(pid);
   
   if(waitpid(pid, &status, 0) < 0)
@@ -248,7 +306,7 @@ int process_recv_in_call(int pid, int fd)
     return 1;
 
   int status = comm_get_socket_state(get_infos_socket(pid, fd));
-//   printf("socket status %d\n", status);
+  printf("socket status %d %d\n", status, status & SOCKET_READ_OK || status & SOCKET_CLOSED);
   return (status & SOCKET_READ_OK || status & SOCKET_CLOSED);
 }
 
@@ -302,75 +360,10 @@ int process_handle_idle(pid_t pid)
 {
 //   printf("Handle idling process %d\n", pid);
   int status;
-  int proc_state = process_get_state(pid);
-  
-  if(proc_state & PROC_SELECT)
-  {
-    //if the select match changment we have to run the child
-    if(process_select_call(pid))
-    {
-      process_descriptor* proc = process_get_descriptor(pid);
-      if(proc->timeout != NULL)
-        remove_timeout(pid);
-      process_set_state(pid, PROC_NO_STATE);
-      return process_handle_active(pid);
-    }
-    else
-      return PROCESS_IDLE_STATE;
-  }
-  
-  if(proc_state & PROC_CONNECT)
-  {
-    return PROCESS_IDLE_STATE;
-  }
-  
-  else if(proc_state & PROC_POLL)
-  {
-    if(process_poll_call(pid))
-    {
-      process_descriptor* proc = process_get_descriptor(pid);
-      if(proc->timeout != NULL)
-        remove_timeout(pid);
-      process_set_state(pid, PROC_NO_STATE);
-      return process_handle_active(pid);
-    }
-    else
-      return PROCESS_IDLE_STATE;
-  }
-  
-  else if(proc_state & PROC_ACCEPT_IN)
-  {
-    process_descriptor* proc = process_get_descriptor(pid);
-    pid_t conn_pid = process_accept_in_call(pid, &proc->sysarg);
-    if(conn_pid)
-    {
-      //We have to add conn_pid to the schedule list
-      add_to_sched_list(conn_pid);
-      //Here process is like an active process so we launch it like that
-      return process_handle_active(pid);
-    }
-    else
-      return PROCESS_IDLE_STATE;
-  }
-  else if(proc_state & PROC_RECV_IN)
-  {
-    process_descriptor* proc = process_get_descriptor(pid);
-    if(process_recv_in_call(pid, proc->sysarg.recv.sockfd))
-    {
-      process_set_state(pid, PROC_NO_STATE);
-      return process_handle_active(pid);
-    }
-    else
-      return PROCESS_IDLE_STATE;
-  }
+  if(waitpid(pid, &status, WNOHANG))
+    return process_handle( pid, status);
   else
-  {
-//     printf("No special idling state\n");
-    if(waitpid(pid, &status, WNOHANG))
-      return process_handle( pid, status);
-    else
-      return PROCESS_IDLE_STATE;
-  }
+    return PROCESS_IDLE_STATE;
 }
 
 int process_clone_call(pid_t pid, reg_s *arg)
@@ -496,9 +489,8 @@ int process_handle(pid_t pid, int stat)
   syscall_arg_u sysarg;
   while(1)
   {
-
+    printf("New trap\n");
     if (process_in_syscall(pid)==0) {
-      
       process_set_in_syscall(pid);
 
       ptrace_get_register(pid, &arg);
@@ -515,7 +507,7 @@ int process_handle(pid_t pid, int stat)
             process_set_state(pid, PROC_RECV_IN);
             process_descriptor *proc = process_get_descriptor(pid);
             proc->sysarg.read = sysarg.read;
-            return PROCESS_IDLE_STATE;
+            return PROCESS_ON_MEDIATION;
           }
         }
       }
@@ -535,7 +527,7 @@ int process_handle(pid_t pid, int stat)
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_POLL);
         proc->sysarg.poll = sysarg.poll;
-        return PROCESS_IDLE_STATE;
+        return PROCESS_ON_MEDIATION;
       }
       
       if(arg.reg_orig == SYS_exit_group)
@@ -568,7 +560,7 @@ int process_handle(pid_t pid, int stat)
         get_args_bind_connect(pid, 0, &arg, &sysarg);
         print_connect_syscall(pid, &sysarg);
         if(process_connect_in_call(pid, &sysarg))
-          return PROCESS_IDLE_STATE;
+          return PROCESS_ON_MEDIATION;
       }
        
       if(arg.reg_orig == SYS_accept)
@@ -578,7 +570,7 @@ int process_handle(pid_t pid, int stat)
         print_accept_syscall(pid, &sysarg);
         pid_t conn_pid = process_accept_in_call(pid, &sysarg);
         if(!conn_pid)
-          return PROCESS_IDLE_STATE;
+          return PROCESS_ON_MEDIATION;
       }
       
       else if(arg.reg_orig == SYS_select)
@@ -596,7 +588,7 @@ int process_handle(pid_t pid, int stat)
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_SELECT);
         proc->sysarg.select = sysarg.select;
-        return PROCESS_IDLE_STATE;
+        return PROCESS_ON_MEDIATION;
       }
       
       else if(arg.reg_orig == SYS_recvfrom)
@@ -608,8 +600,9 @@ int process_handle(pid_t pid, int stat)
           process_set_state(pid, PROC_RECV_IN);
           process_descriptor *proc = process_get_descriptor(pid);
           proc->sysarg.recvfrom = sysarg.recvfrom;
-          return PROCESS_IDLE_STATE;
+          return PROCESS_ON_MEDIATION;
         }
+        printf("lala\n");
       }
       
       else if(arg.reg_orig == SYS_recvmsg)
@@ -621,7 +614,7 @@ int process_handle(pid_t pid, int stat)
           process_set_state(pid, PROC_RECV_IN);
           process_descriptor *proc = process_get_descriptor(pid);
           proc->sysarg.recvmsg = sysarg.recvmsg;
-          return PROCESS_IDLE_STATE;
+          return PROCESS_ON_MEDIATION;
         }
       }
     }
@@ -758,6 +751,7 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_recvfrom:
+          printf("lalal\n");
           get_args_sendto_recvfrom(pid, 2, &arg, &sysarg);
           print_recvfrom_syscall(pid, &sysarg);
           if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
@@ -932,9 +926,3 @@ int process_handle(pid_t pid, int stat)
   
   return 0;
 }
-
-
-
-
-
-
