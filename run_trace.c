@@ -14,7 +14,7 @@
 #include "communication.h"
 #include "syscall_process.h"
 
-#define equal_d(X, Y) (fabs(X-Y) < FLT_EPSILON)
+#define equal_d(X, Y) (fabs(X-Y) < 1e-9)
 
 #define BUFFER_SIZE 512
 
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
   do{
     //We calculate the time of simulation.
     time_to_simulate= get_next_start_time() - SD_get_clock();
-    if(fabs(time_to_simulate) < FLT_EPSILON)
+    if(fabs(time_to_simulate) < 1e-9)
       time_to_simulate =0.;
     printf("Next simulation time %lf\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);

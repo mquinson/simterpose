@@ -8,10 +8,13 @@
 #include "benchmark.h"
 #include "calc_times_proc.h"
 #include "init.h"
+#include <xbt/config.h>
 
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+extern xbt_cfg_t _surf_cfg_set;
 
 void usage(char* progName) {
   printf("usage : %s [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
@@ -78,6 +81,7 @@ void simterpose_init(int argc, char** argv)
   init_cputime();
   
   SD_init(&argc, argv);
+  xbt_cfg_set_parse(_surf_cfg_set,"maxmin/precision:1e-9");
   SD_create_environment(argv[optind]);
   
   parse_deployment_file(argv[optind+1]);
