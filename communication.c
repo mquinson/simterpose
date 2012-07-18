@@ -39,6 +39,14 @@ void comm_destroy(comm_t comm)
   recv_information_destroy(comm->info[0].recv);
   recv_information_destroy(comm->info[1].recv);
   xbt_dynar_free(&comm->conn_wait);
+  xbt_ex_t e;
+  TRY{
+    int i= xbt_dynar_search(comm_list, &comm);
+    xbt_dynar_remove_at(comm_list, i, NULL);
+  }
+  CATCH(e){
+    printf("Communication not found\n");
+  } 
   free(comm);
 }
 

@@ -85,7 +85,8 @@ void socket_set_flags(pid_t pid, int fd, int flags)
 void delete_socket(pid_t pid, int fd) {
   xbt_ex_t e;
   TRY{
-    int i= xbt_dynar_search(all_sockets, get_infos_socket(pid, fd));
+    struct infos_socket *is = get_infos_socket(pid, fd);
+    int i= xbt_dynar_search(all_sockets, &is);
     xbt_dynar_remove_at(all_sockets, i, NULL);
   }
   CATCH(e){
