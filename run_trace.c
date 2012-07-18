@@ -1,4 +1,6 @@
 #include <unistd.h>
+#include <float.h>
+#include <math.h>
 
 #include "args_trace.h"
 #include "calc_times_proc.h"
@@ -12,6 +14,8 @@
 #include "communication.h"
 #include "syscall_process.h"
 
+#define equal_d(X, Y) (fabs(X-Y) < FLT_EPSILON)
+
 #define BUFFER_SIZE 512
 
 XBT_LOG_NEW_CATEGORY(SIMTERPOSE, "Simterpose log");
@@ -21,8 +25,10 @@ void print_trace_header(FILE* trace)
 {
   fprintf(trace,"%8s %12s %8s %10s %10s %21s %21s\n","pidX", "syscall", "pidY", "return","diff_cpu","local_addr:port", "remote_addr:port");
 }
+
 xbt_dynar_t idle_process;
 xbt_dynar_t sched_list;
+xbt_dynar_t mediate_list;
 
 
 void remove_from_idle_list(pid_t pid)
@@ -39,15 +45,43 @@ void remove_from_idle_list(pid_t pid)
   } 
 }
 
+void remove_from_mediate_list(pid_t pid)
+{
+  xbt_ex_t e;
+  TRY{
+    int i= xbt_dynar_search(mediate_list, &pid);
+    xbt_dynar_remove_at(mediate_list, i, NULL);
+    process_descriptor *proc = process_get_descriptor(pid);
+    proc->on_mediation=0;
+  }
+  CATCH(e){
+    xbt_die("Pid not found in list. Inconsistance found in model");
+  } 
+}
+
 
 void add_to_idle(pid_t pid)
 {
   process_descriptor* proc = process_get_descriptor(pid);
   if(proc->idle_list)
     return;
+  if(proc->on_mediation)
+    THROW_IMPOSSIBLE;
   proc->idle_list=1;
 //   printf("Add process %d to idle list\n", pid);
   xbt_dynar_push_as(idle_process, pid_t, pid);
+}
+
+void add_to_mediate(pid_t pid)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  if(proc->on_mediation)
+    return;
+  if(proc->idle_list)
+    THROW_IMPOSSIBLE;
+  proc->on_mediation=1;
+  
+  xbt_dynar_push_as(mediate_list, pid_t, pid);
 }
 
 //Verify is the process is not already schedule before adding
@@ -63,6 +97,8 @@ void add_to_sched_list(pid_t pid)
 //   printf("Add process %d to sched_list\n", pid);
   if(proc->idle_list)
     remove_from_idle_list(pid);
+  else if(proc->on_mediation)
+    remove_from_mediate_list(pid);
 }
 
 
@@ -76,7 +112,22 @@ void move_idle_to_sched()
     
     proc->idle_list = 0;
 //     printf("Move process %d on sched_list\n", pid);
-    proc->scheduled =1;
+    proc->scheduled = 1;
+    xbt_dynar_push_as(sched_list, pid_t, pid);
+  }
+}
+
+void move_mediate_to_sched()
+{
+  pid_t pid;
+  while(!xbt_dynar_is_empty(mediate_list))
+  {
+    xbt_dynar_shift(mediate_list, &pid);
+    process_descriptor *proc = process_get_descriptor(pid);
+    
+    proc->on_mediation = 0;
+    proc->scheduled = 1;
+    
     xbt_dynar_push_as(sched_list, pid_t, pid);
   }
 }
@@ -90,12 +141,14 @@ int main(int argc, char *argv[]) {
   double time_to_simulate=0;
   
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
-  xbt_dynar_reset(idle_process);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
+  mediate_list = xbt_dynar_new(sizeof(pid_t), NULL);
   
   do{
     //We calculate the time of simulation.
     time_to_simulate= get_next_start_time() - SD_get_clock();
+    if(fabs(time_to_simulate) < FLT_EPSILON)
+      time_to_simulate =0.;
     printf("Next simulation time %lf\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
     printf("NEW TURN %lf\n", SD_get_clock());
@@ -120,12 +173,13 @@ int main(int argc, char *argv[]) {
 //     printf("Handle idle task\n");
     //Now adding all idle process to the scheduled list
     move_idle_to_sched();
+    move_mediate_to_sched();
 
     while(has_sleeping_to_launch())
     {
 //       printf("Trying to add in wait process\n");
       //if we have to launch them to this turn
-      if(SD_get_clock() == get_next_start_time())
+      if(equal_d(SD_get_clock(),get_next_start_time()))
       {
         int temp_pid = pop_next_pid();
         add_to_sched_list(temp_pid);
@@ -166,6 +220,10 @@ int main(int argc, char *argv[]) {
       {
         process_die(pid);
         --global_data->child_amount;
+      }
+      else if(status == PROCESS_ON_MEDIATION)
+      {
+        add_to_mediate(pid);
       }
       else
         process_set_idle(pid, PROC_NO_IDLE);

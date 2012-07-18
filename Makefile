@@ -4,7 +4,7 @@ OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o socket
 CFLAGS = -Wall -g 
 CC=gcc
 
-LDFLAGS= -lsimgrid
+LDFLAGS= -lsimgrid -lm
 
 all : run_trace launcher
 

@@ -45,6 +45,7 @@ struct process_descriptor{
   unsigned int scheduled  :1;
   unsigned int idle_list  :1;
   unsigned int on_simulation :1;
+  unsigned int on_mediation :1;
 
   
   int state;
