@@ -87,7 +87,6 @@ void simterpose_init(int argc, char** argv)
   parse_deployment_file(argv[optind+1]);
   
   init_all_process();
-
 }
 
 
@@ -235,7 +234,8 @@ void init_all_process()
       
       ++amount_process_launch;
     }
-    
+    parser_free_all();
+    fclose(launcher_pipe);
   }
   
   //Now we detach launcher because we don't need it anymore

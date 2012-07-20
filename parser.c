@@ -18,6 +18,7 @@ void destruct_process_descriptor(launcher_procdesc* proc)
   for(i=0; i< proc->argument_nbr-1; ++i)
     free(proc->command_line_argument[i]);
   free(proc->command_line_argument);
+  free(proc);
   //We don't free executable because it is already free when freeing command_line member
 }
 
@@ -116,4 +117,15 @@ int parser_get_amount()
 double parser_get_start_time(int numero)
 {
   return proc_list[numero]->launching_time; 
+}
+
+
+void parser_free_all()
+{
+  int i;
+  for(i=0; i<proc_amount ; ++i)
+  {
+    destruct_process_descriptor(proc_list[i]);
+  }
+  free(proc_list);
 }

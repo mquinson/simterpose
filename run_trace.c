@@ -20,6 +20,13 @@
 
 XBT_LOG_NEW_CATEGORY(SIMTERPOSE, "Simterpose log");
 
+void sig_int(int sig)
+{
+  fprintf(stderr, "Interruption request by user\n");
+  fprintf(stderr, "Current time of simulation %lf\n", SD_get_clock());
+  exit(0);
+}
+
 
 void print_trace_header(FILE* trace)
 {
@@ -138,7 +145,15 @@ int main(int argc, char *argv[]) {
   
   simterpose_init(argc, argv);
 
+  struct sigaction nvt, old;
+  memset(&nvt, 0, sizeof(nvt));
+  nvt.sa_handler = &sig_int;
+  
+  sigaction(SIGINT, &nvt, &old);
+  
   double time_to_simulate=0;
+  
+  int indice = 10000;
   
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
@@ -149,9 +164,9 @@ int main(int argc, char *argv[]) {
     time_to_simulate= get_next_start_time() - SD_get_clock();
     if(fabs(time_to_simulate) < 1e-9)
       time_to_simulate =0.;
-    printf("Next simulation time %lf\n", time_to_simulate);
+//     printf("Next simulation time %lf\n", time_to_simulate);
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
-    printf("NEW TURN %lf\n", SD_get_clock());
+//     printf("NEW TURN %lf\n", SD_get_clock());
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
@@ -165,10 +180,13 @@ int main(int argc, char *argv[]) {
       //If data is null, we schedule the process
       if(data != NULL)
       {
+//         printf("End of task for %d\n", *data);
         process_on_simulation(*data, 0);
         add_to_sched_list(*data);
       }
+//       SD_task_destroy(task_over);
     }
+    xbt_dynar_free(&arr);
     
 //     printf("Handle idle task\n");
     //Now adding all idle process to the scheduled list
@@ -228,9 +246,14 @@ int main(int argc, char *argv[]) {
       else
         process_set_idle(pid, PROC_NO_IDLE);
     }
-    
-    printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
-  }while(global_data->child_amount);
+    --indice;
+    if(!indice)
+    {
+      printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+      indice = 10000;
+    }
+      
+    }while(global_data->child_amount);
   
 
   finish_cputime();
@@ -239,5 +262,11 @@ int main(int argc, char *argv[]) {
   
   SD_exit();
   destroy_global_data();
+  xbt_dynar_free(&sched_list);
+  xbt_dynar_free(&idle_process);
+  xbt_dynar_free(&mediate_list);
+  comm_exit();
+  socket_exit();
+  finish_cputime();
   return 0;
 }

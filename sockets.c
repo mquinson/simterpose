@@ -24,6 +24,11 @@ void init_socket_gestion()
   all_sockets = xbt_dynar_new(sizeof(struct infos_socket*), NULL);
 }
 
+void socket_exit()
+{
+  xbt_dynar_free(&all_sockets);
+}
+
 recv_information* recv_information_new()
 {
   recv_information* res = malloc(sizeof(recv_information));
@@ -103,6 +108,7 @@ void socket_close(pid_t pid, int fd)
     if(socket_network(pid, fd))
       comm_close(is);
     delete_socket(pid, fd);
+    free(is);
     process_descriptor* proc = global_data->process_desc[pid];
     proc->fd_list[fd]=NULL;
   }
@@ -125,7 +131,7 @@ void update_socket(pid_t pid, int fd) {
 
   if (is->domain == 2) { // PF_INET
     get_addr_port_sock(pid, fd, LOCAL);
-    print_infos_socket(is);
+//     print_infos_socket(is);
   }
 }
 
@@ -136,7 +142,7 @@ void set_localaddr_port_socket(pid_t pid, int fd, char *ip, int port) {
   struct in_addr t;
   is->ip_local = inet_aton(ip, &t);
   is->port_local = port;
-  print_infos_socket(is);
+//   print_infos_socket(is);
 }
 
 
@@ -147,7 +153,7 @@ void get_localaddr_port_socket(pid_t pid, int fd) {
   if (is->domain == 2) { // PF_INET
     if (!get_addr_port_sock(pid, fd, 1))
       printf("Failed reading locale addr:port after bind\n");
-    print_infos_socket(is);
+//     print_infos_socket(is);
   }
 }
 
@@ -359,7 +365,7 @@ struct infos_socket* getSocketInfoFromContext(unsigned int ip_local, int port_lo
   unsigned int cpt=0;
   
   xbt_dynar_foreach(all_sockets, cpt, temp_is){
-    print_infos_socket(temp_is);
+//     print_infos_socket(temp_is);
     if ((temp_is->ip_local == ip_local) && (temp_is->port_local==port_local))
     {
       return temp_is;

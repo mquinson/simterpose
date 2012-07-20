@@ -25,5 +25,7 @@ double parser_get_start_time(int numero);
 
 int parser_get_amount();
 
+void parser_free_all();
+
 
 #endif

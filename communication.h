@@ -32,6 +32,8 @@ struct comm_s{
 
 void init_comm();
 
+void comm_exit();
+
 //Create a new communication and register socket passed into
 comm_t comm_new(struct infos_socket* socket);
 

@@ -13,6 +13,11 @@ void init_comm()
   comm_list = xbt_dynar_new(sizeof(comm_t), NULL); 
 }
 
+void comm_exit()
+{
+  xbt_dynar_free(&comm_list);
+}
+
 comm_t comm_new(struct infos_socket* socket)
 {
 //   printf("Creating new communication with peer %d %d\n", remote_ip, remote_port);
@@ -95,7 +100,12 @@ void comm_close(struct infos_socket* is)
   comm_t comm = is->comm;
   if(comm == NULL)
     return;
-  if( comm->info[0].socket == is)
+  if(comm->state & COMM_LISTEN)
+  {
+    comm_destroy(comm);
+  }
+  
+  else if( comm->info[0].socket == is)
   {
     comm->info[0].socket = NULL;
     if(comm->state == COMM_CLOSED || comm->state == COMM_LISTEN)
@@ -192,13 +202,16 @@ int comm_has_connect_waiting(struct infos_socket* is)
 
 int comm_get_socket_state(struct infos_socket* is)
 {
+  
   comm_t comm = is->comm;
   if(comm == NULL)
     THROW_IMPOSSIBLE;
   int res=0;
+  if(is->port_local==2222)
+    printf("Comm state for tracker listening socket %d\n", !xbt_dynar_is_empty(comm->conn_wait));
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);
-  printf("Comm state %d %d %d\n", xbt_fifo_size(recv->send_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
+//   printf("Comm state %d %d %d\n", xbt_fifo_size(recv->send_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
   if(xbt_fifo_size(recv->send_fifo))
     res = res | SOCKET_READ_OK;
   if(!xbt_dynar_is_empty(comm->conn_wait))

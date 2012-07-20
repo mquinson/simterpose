@@ -30,7 +30,7 @@ double get_next_start_time()
     return -1;
   
   time_desc** t = (time_desc**)xbt_dynar_get_ptr(global_data->launching_time, 0);
-  printf("Next start_time %lf\n", (*t)->start_time);
+//   printf("Next start_time %lf\n", (*t)->start_time);
   return (*t)->start_time;
 }
 
@@ -83,7 +83,7 @@ void add_timeout(pid_t pid, double start_time)
   
   if(start_time == SD_get_clock())
     start_time += 0.0001;
-  printf("Add new timeout of %lf for %d\n", start_time, pid);
+//   printf("Add new timeout of %lf for %d\n", start_time, pid);
   time_desc* t = malloc(sizeof(time_desc));
   t->pid = pid;
   t->start_time = start_time;

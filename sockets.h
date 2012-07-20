@@ -42,6 +42,8 @@ void recv_information_destroy(recv_information *recv);
 
 void init_socket_gestion();
 
+void socket_exit();
+
 int handle_new_receive(int pid, int sockfd, int length);
 
 void handle_new_send(struct infos_socket *is,  int length);
