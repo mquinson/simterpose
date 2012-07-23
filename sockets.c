@@ -380,9 +380,11 @@ struct infos_socket* getSocketInfoFromContext(unsigned int ip_local, int port_lo
 }
 
 
-int handle_new_receive(int pid, int sockfd, int length)
+int handle_new_receive(int pid, syscall_arg_u* sysarg)
 {
-  struct infos_socket* is = get_infos_socket(pid, sockfd);
+  recvfrom_arg_t arg = &(sysarg->recvfrom);
+  struct infos_socket* is = get_infos_socket(pid, arg->sockfd);
+  int length = arg->len;
   
   recv_information* recv = comm_get_own_recv(is);
   
@@ -397,7 +399,6 @@ int handle_new_receive(int pid, int sockfd, int length)
   
   while(1)
   {
-    printf("New loop\n");
     int size =0;
     
     if(length < ds->size - recv->quantity_recv)
@@ -446,7 +447,8 @@ int handle_new_receive(int pid, int sockfd, int length)
   if(result)
     task_schedule_receive(is, pid);
   
-  printf("return %d receiving %d bytes : %s\n", result, global_size, data_recv);
+  arg->ret = global_size;
+  arg->data = data_recv;
   return result;
 }
 

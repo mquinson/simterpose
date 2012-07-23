@@ -66,8 +66,11 @@ int process_recv_call(int pid, syscall_arg_u* sysarg)
       calculate_computation_time(pid);
       
       //if handle_new_receive return 1, there is a task found
-      if(handle_new_receive(pid, arg->sockfd, arg->ret))
+      if(handle_new_receive(pid, sysarg))
+      {
+        print_recvfrom_syscall(pid, sysarg);
         return PROCESS_TASK_FOUND;
+      }
       else
         return PROCESS_NO_TASK_FOUND;
     }

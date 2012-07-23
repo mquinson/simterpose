@@ -45,7 +45,7 @@ void init_socket_gestion();
 
 void socket_exit();
 
-int handle_new_receive(int pid, int sockfd, int length);
+int handle_new_receive(int pid, syscall_arg_u* sysarg);
 
 void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg);
 
