@@ -326,7 +326,19 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
   int domain = get_domain_socket(pid,arg->sockfd);
   
   printf("[%d] sendto( ", pid);
-  printf("%d, \"...\", %d, ",arg->sockfd, arg->len);
+  
+  char buff[20];
+  if(arg->len<20)
+  {
+    memcpy(buff, arg->data, arg->len);
+    printf("%d, \"%s\" , %d, ",arg->sockfd, buff, arg->len);
+  }
+  else
+  {
+    memcpy(buff, arg->data, 20);
+    printf("%d, \"%s...\" , %d, ",arg->sockfd, buff, arg->len);
+  }
+  
   
   if (arg->flags>0) {
     print_flags_send(arg->flags); 
@@ -367,6 +379,7 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   int domain = get_domain_socket(pid,arg->sockfd);
   
   printf("[%d] recvfrom( ", pid);
+  
   printf("%d, \"...\", %d, ",arg->sockfd, arg->len);
   
   if (arg->flags>0) {

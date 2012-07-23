@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
   
   double time_to_simulate=0;
   
-  int indice = 10000;
+//   int indice = 10000;
   
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
         process_on_simulation(*data, 0);
         add_to_sched_list(*data);
       }
-//       SD_task_destroy(task_over);
+      SD_task_destroy(task_over);
     }
     xbt_dynar_free(&arr);
     
@@ -219,7 +219,7 @@ int main(int argc, char *argv[]) {
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
       proc->scheduled = 0;
-//       printf("Scheduling process %d\n", pid);    
+      fprintf(stderr, "\rScheduling process %d", pid);    
       int status;
       
       if(process_get_idle(pid) == PROC_IDLE)
@@ -246,12 +246,12 @@ int main(int argc, char *argv[]) {
       else
         process_set_idle(pid, PROC_NO_IDLE);
     }
-    --indice;
-    if(!indice)
-    {
-      printf("End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
-      indice = 10000;
-    }
+//     --indice;
+//     if(!indice)
+//     {
+      fprintf(stderr, "End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+//       indice = 10000;
+//     }
       
     }while(global_data->child_amount);
   

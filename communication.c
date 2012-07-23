@@ -100,6 +100,8 @@ void comm_close(struct infos_socket* is)
   comm_t comm = is->comm;
   if(comm == NULL)
     return;
+  if(is->port_local==2222)
+    fprintf(stderr, "Tracker close a connection\n");
   if(comm->state & COMM_LISTEN)
   {
     comm_destroy(comm);
@@ -190,7 +192,7 @@ pid_t comm_accept_connect(struct infos_socket* is)
   comm_t comm_conn;
   xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
 
-//   printf("Accept connection from %d\n", comm_conn->info[0].socket->fd);
+  fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->proc->pid);
   return comm_conn->info[0].socket->proc->pid;
 }
 
@@ -207,8 +209,8 @@ int comm_get_socket_state(struct infos_socket* is)
   if(comm == NULL)
     THROW_IMPOSSIBLE;
   int res=0;
-  if(is->port_local==2222)
-    printf("Comm state for tracker listening socket %d\n", !xbt_dynar_is_empty(comm->conn_wait));
+  if(is->port_local==2222 && !xbt_dynar_is_empty(comm->conn_wait))
+    fprintf(stderr, "Comm state for tracker listening socket %d\n", !xbt_dynar_is_empty(comm->conn_wait));
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);
 //   printf("Comm state %d %d %d\n", xbt_fifo_size(recv->send_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);

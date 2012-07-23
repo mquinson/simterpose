@@ -99,6 +99,7 @@ struct sendto_arg_s{
   int sockfd;
   int ret;
   int len;
+  void* data;
   int flags;
   int addrlen;
   int is_addr;//indicate if struct sockadrr is null or not

@@ -418,6 +418,8 @@ int handle_new_receive(int pid, int sockfd, int length)
 {
   struct infos_socket* is = get_infos_socket(pid, sockfd);
 
+  if(is->port_local == 2222)
+    fprintf(stderr, "Receive information on tracker\n");
   recv_information* recv = comm_get_own_recv(is);
   recv->quantity_recv += length;
   

@@ -29,7 +29,9 @@ void get_args_poll(pid_t child, reg_s* arg, syscall_arg_u* sysarg);
 
 void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u *sysarg);
 
-void get_args_sendto_recvfrom(pid_t child, int syscall, reg_s* reg, syscall_arg_u* sysarg);
+void get_args_sendto(pid_t child, reg_s* reg, syscall_arg_u* sysarg);
+
+void get_args_recvfrom(pid_t child, reg_s* reg, syscall_arg_u* sysarg);
 
 void get_args_send_recvmsg(pid_t child, reg_s* reg, syscall_arg_u* sysarg);
 

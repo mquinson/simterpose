@@ -5,16 +5,18 @@
 void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) {   
 
   size_t i = 0;
+  int size_copy =0;
 
-  while (i < len / sizeof(long)) {
+  while (size_copy < len) {
     long ret;
     errno = 0;
     ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
     if (ret == -1 && errno != 0) {
-      printf("ptrace peekdata in %s\n",syscall);
-      xbt_die("Impossible to continue\n");
+      printf("%s : ptrace peekdata in %s\n",strerror(errno), syscall);
+      THROW_IMPOSSIBLE;
     }
     ((long *)dst)[i] = ret;
+    size_copy += sizeof(long);
     i++;
   }
 }
