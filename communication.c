@@ -209,12 +209,10 @@ int comm_get_socket_state(struct infos_socket* is)
   if(comm == NULL)
     THROW_IMPOSSIBLE;
   int res=0;
-  if(is->port_local==2222 && !xbt_dynar_is_empty(comm->conn_wait))
-    fprintf(stderr, "Comm state for tracker listening socket %d\n", !xbt_dynar_is_empty(comm->conn_wait));
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);
 //   printf("Comm state %d %d %d\n", xbt_fifo_size(recv->send_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
-  if(xbt_fifo_size(recv->send_fifo))
+  if(xbt_fifo_size(recv->data_fifo))
     res = res | SOCKET_READ_OK;
   if(!xbt_dynar_is_empty(comm->conn_wait))
     res = res | SOCKET_READ_OK;

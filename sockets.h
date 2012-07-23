@@ -17,10 +17,11 @@ struct infos_socket;
 #include "xbt/fifo.h"
 #include "run_trace.h"
 #include "communication.h"
+#include "syscall_data.h"
 
 
 struct recv_information{
-  xbt_fifo_t send_fifo;
+  xbt_fifo_t data_fifo;
   xbt_fifo_t recv_task;
   int quantity_recv;
 };
@@ -46,11 +47,9 @@ void socket_exit();
 
 int handle_new_receive(int pid, int sockfd, int length);
 
-void handle_new_send(struct infos_socket *is,  int length);
+void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg);
 
 int close_all_communication(int pid);
-
-int handle_communication_stat(struct infos_socket* is, pid_t pid);
 
 struct infos_socket* register_socket(pid_t pid, int sockfd, int domain, int protocol);
 

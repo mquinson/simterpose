@@ -43,7 +43,7 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
       if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL || peer_stat == PROC_RECV_IN)
         add_to_sched_list(s->proc->pid);
       
-      handle_new_send(is,  arg->ret);
+      handle_new_send(is,  sysarg);
 
       SD_task_t task = create_send_communication_task(pid, is, arg->ret);
 
@@ -785,11 +785,7 @@ int process_handle(pid_t pid, int stat)
           get_args_sendto(pid, &arg, &sysarg);
           print_sendto_syscall(pid, &sysarg);
           if(process_send_call(pid, &sysarg))
-          {
-            free(sysarg.sendto.data);
             return PROCESS_TASK_FOUND;
-          }
-          free(sysarg.sendto.data);
           break;
           
         case SYS_recvfrom:

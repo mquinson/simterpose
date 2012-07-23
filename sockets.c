@@ -5,6 +5,7 @@
 #include "sysdep.h"
 #include "simdag/simdag.h"
 #include "xbt.h"
+#include "syscall_data.h"
 
 #define LOCAL 1
 #define REMOTE 2
@@ -12,6 +13,11 @@
 #define TCP_PROTOCOL 0
 #define UDP_PROTOCOL 1
 #define RAW_PROTOCOL 2
+
+typedef struct{
+  void* data;
+  int size;
+}data_send_s;
 
 xbt_dynar_t all_sockets;
 int nb_sockets = 0;
@@ -33,16 +39,15 @@ recv_information* recv_information_new()
 {
   recv_information* res = malloc(sizeof(recv_information));
   res->quantity_recv=0;
-  res->send_fifo = xbt_fifo_new();
   res->recv_task = xbt_fifo_new();
-  
+  res->data_fifo = xbt_fifo_new();
   return res;
 }
 
 void recv_information_destroy(recv_information *recv)
 {
-  xbt_fifo_free(recv->send_fifo);
   xbt_fifo_free(recv->recv_task);
+  xbt_fifo_free(recv->data_fifo);
   free(recv);
 }
 
@@ -374,71 +379,90 @@ struct infos_socket* getSocketInfoFromContext(unsigned int ip_local, int port_lo
   return NULL;
 }
 
-//FIXME what happen when there's to sending akwnowledgement in the same turn
-//maybe use an global ghost task which have every recv task in dependencies and use last_computation task mecanism
-int handle_communication_stat(struct infos_socket* is, pid_t pid)
-{
-  int result=0;
-  recv_information* recv = comm_get_own_recv(is);
-  int *size = (int*)xbt_fifo_shift(recv->send_fifo);
-  if(size==NULL)
-    return 0;
-  
-  //if size == -1 , that mean that we start a new recv and we have to make a new task
-  if(*size == -1)
-  {
-//     insert_trace_comm(is->proc->pid, is->fd, "recv", 0);
-    task_schedule_receive(is, pid);
-    free(size);
-    result = 1;
-    size = (int*)xbt_fifo_shift(recv->send_fifo);
-  }
-  
-  if(recv->quantity_recv < *size)
-  {
-    xbt_fifo_unshift(recv->send_fifo, size);
-  }
-  else
-  {
-    recv->quantity_recv -= *size;
-    free(size);
-    //til we acknowledge sending, we continue
-    if(recv->quantity_recv > 0)
-    {
-      result = 1;
-      handle_communication_stat(is, pid);
-    }
-  }
-  
-  return result;
-}
-
 
 int handle_new_receive(int pid, int sockfd, int length)
 {
   struct infos_socket* is = get_infos_socket(pid, sockfd);
-
-  if(is->port_local == 2222)
-    fprintf(stderr, "Receive information on tracker\n");
-  recv_information* recv = comm_get_own_recv(is);
-  recv->quantity_recv += length;
   
-  return handle_communication_stat(is, pid);
+  recv_information* recv = comm_get_own_recv(is);
+  
+  char* data_recv = NULL;
+  int enough=0;
+  int global_size=0;
+  int result=0;
+  
+  data_send_s* ds = xbt_fifo_shift(recv->data_fifo);
+  if(recv->quantity_recv==0)
+    result=1;
+  
+  while(1)
+  {
+    printf("New loop\n");
+    int size =0;
+    
+    if(length < ds->size - recv->quantity_recv)
+    {
+      size=length;
+      enough =1;
+    }
+    else
+    {
+      size = ds->size-recv->quantity_recv;
+      enough=0;
+    }
+    data_recv = realloc(data_recv, global_size+size);
+    memcpy(data_recv+global_size, (ds->data) +recv->quantity_recv, size);
+    global_size += size;
+    
+    if(enough)
+    {
+      recv->quantity_recv += length;
+      xbt_fifo_unshift(recv->data_fifo, ds);
+      break;
+    }
+    else
+    {
+      result=1;
+      recv->quantity_recv=0;
+      free(ds->data);
+      free(ds);
+      length -= size;
+      if(length)
+      {
+        ds = xbt_fifo_shift(recv->data_fifo);
+        if(ds==NULL)
+          break;
+        else //In this case we have to pop the older recv task because we will execute e new one
+        {
+          task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
+          SD_task_destroy(tci->task);
+          free(tci);
+        }
+      }
+      else
+        break;
+    }
+  }
+  if(result)
+    task_schedule_receive(is, pid);
+  
+  printf("return %d receiving %d bytes : %s\n", result, global_size, data_recv);
+  return result;
 }
 
 
 //TODO simplify handling 
-void handle_new_send(struct infos_socket *is,  int length)
+void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg)
 {
-  recv_information* recv = comm_get_peer_recv(is);
-  int *size = malloc(sizeof(int));
-  *size=length;
+  sendto_arg_t arg = &(sysarg->sendto);
   
-  int *buf = malloc(sizeof(int));
-  *buf=-1;
+  recv_information* recv = comm_get_peer_recv(is);
+  
+  data_send_s* ds = malloc(sizeof(data_send_s));
+  ds->data = arg->data;
+  ds->size = arg->len;
 
-  xbt_fifo_push(recv->send_fifo, buf);
-  xbt_fifo_push(recv->send_fifo, size);
+  xbt_fifo_push(recv->data_fifo, ds);
 //   printf("New queue size %d\n", xbt_fifo_size(recv->send_fifo));
 }
 
@@ -453,14 +477,6 @@ int close_all_communication(int pid){
     {
       recv_information* recv = comm_get_own_recv(proc->fd_list[i]);
       
-      xbt_fifo_t sl = recv->send_fifo;
-      int *size;
-      while(xbt_fifo_size(sl))
-      {
-        size = (int*)xbt_fifo_shift(sl);
-        free(size);
-      }
-      
       xbt_fifo_t tl = recv->recv_task;
       task_comm_info* tci;
       while(xbt_fifo_size(tl))
@@ -469,6 +485,16 @@ int close_all_communication(int pid){
         SD_task_destroy(tci->task);
         free(tci);
       }
+
+      xbt_fifo_t dl = recv->data_fifo;
+      data_send_s* ds;
+      while(xbt_fifo_size(dl))
+      {
+        ds = (data_send_s*)xbt_fifo_shift(dl);
+        free(ds->data);
+        free(ds);
+      }
+      
       socket_close(pid, i);
       proc->fd_list[i]=NULL;
     }
