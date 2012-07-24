@@ -170,12 +170,13 @@ int main(int argc, char *argv[]) {
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
-//     printf("Handle task end\n");
     while(!xbt_dynar_is_empty(arr))
     {
       xbt_dynar_shift(arr, &task_over);
+//       printf("(%d) A task is returned %s (%d)\n",xbt_dynar_length(arr), SD_task_get_name(task_over), SD_task_get_state(task_over));
       if(SD_task_get_state(task_over) != SD_DONE)
         continue;
+//       printf("A task is over %s\n", SD_task_get_name(task_over));
       int* data = (int *)SD_task_get_data(task_over);
       //If data is null, we schedule the process
       if(data != NULL)
@@ -222,7 +223,9 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "\rScheduling process %d", pid);    
       int status;
       
-      if(process_get_idle(pid) == PROC_IDLE)
+      if(proc->mediate_state)
+        status = process_handle_mediate(pid);
+      else if(process_get_idle(pid) == PROC_IDLE)
         status = process_handle_idle(pid);
         
       else

@@ -16,6 +16,7 @@
 
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* name)
 {
+//   printf("Scheduling last computation\n");
   process_descriptor *proc = process_get_descriptor(pid);
   
   double comp_size = SD_task_get_amount(proc->last_computation_task);
@@ -30,6 +31,7 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 
 void schedule_computation_task(pid_t pid)
 {
+//   printf("Scheduling computation\n");
 //   fprintf(stderr,"Adding compuation task to process %d\n", pid);
   process_descriptor *proc = process_get_descriptor(pid);
   double comp_size = SD_task_get_amount(proc->last_computation_task);
@@ -61,7 +63,7 @@ SD_task_t create_computation_task(pid_t pid, double amount)
 //We can factorize because receiver task are only here for scheduling
 void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_task_t task)
 {
-  printf("Entering schedule_comm_task\n");
+//   printf("Entering schedule_comm_task %s\n", SD_task_get_name(task));
   double* comm_amount = malloc(sizeof(double)*4);
   comm_amount[1]=SD_task_get_amount(task);
   comm_amount[2]=0.0;
@@ -131,5 +133,5 @@ void task_schedule_receive(struct infos_socket* is, pid_t pid)
   proc_receiver->on_simulation = 1;
   free(tci);
   
-  printf("Leaving task_schedule_receive\n");
+//   printf("Leaving task_schedule_receive\n");
 }

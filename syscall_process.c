@@ -21,6 +21,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process lo
 
 int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg);
 int process_recv_in_call(int pid, int fd);
+void process_recvfrom_out_call(int pid);
 
 
 //TODO test the possibility to remove incomplete checking
@@ -35,8 +36,6 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
-      if(2222 == is->port_local)
-        fprintf(stderr, "[%d] tracker respond to %d (%d)\n", pid, s->proc->pid, arg->ret);
 
 //       printf("Sending data(%d) to %d on socket %d\n", arg->ret, s->proc->pid, s->fd);
       int peer_stat = process_get_state(s->proc->pid);
@@ -44,6 +43,7 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
         add_to_sched_list(s->proc->pid);
       
       handle_new_send(is,  sysarg);
+      printf("Sending %d bytes\n", arg->ret);
 
       SD_task_t task = create_send_communication_task(pid, is, arg->ret);
 
@@ -291,7 +291,14 @@ int process_handle_active(pid_t pid)
     else
       return PROCESS_ON_MEDIATION;
   }
-  
+  else if(proc_state & PROC_RECVFROM_OUT)
+  {
+    process_recvfrom_out_call(pid);
+  }
+  else if(proc_state & PROC_RECVFROM_IN)
+  {
+    THROW_IMPOSSIBLE;
+  }
   ptrace_resume_process(pid);
   
   if(waitpid(pid, &status, 0) < 0)
@@ -317,6 +324,20 @@ int process_recv_in_call(int pid, int fd)
   int status = comm_get_socket_state(get_infos_socket(pid, fd));
 //   printf("socket status %d %d\n", status, status & SOCKET_READ_OK || status & SOCKET_CLOSED);
   return (status & SOCKET_READ_OK || status & SOCKET_CLOSED || status & SOCKET_SHUT);
+}
+
+void process_recvfrom_out_call(int pid)
+{
+  process_descriptor *proc = process_get_descriptor(pid);
+  recvfrom_arg_t arg = &(proc->sysarg.recvfrom);
+  //   fprintf(stderr, "[%d]Try to see if socket %d recv something\n", pid, fd);
+  if(proc->fd_list[arg->sockfd]==NULL)
+    return;
+  
+  if(!socket_network(pid, arg->sockfd))
+    return;
+  
+  sys_build_recvfrom(pid, &(proc->sysarg));
 }
 
 
@@ -500,6 +521,34 @@ void process_fcntl_call(pid_t pid, syscall_arg_u* sysarg)
 
 
 
+int process_handle_mediate(pid_t pid)
+{
+  process_descriptor *proc = process_get_descriptor(pid);
+  int state = process_get_state(pid);
+  int status;
+  
+  if(state & PROC_RECVFROM_IN)
+  {
+    if(process_recv_in_call(pid, proc->sysarg.recvfrom.sockfd))
+    {
+      if(process_recv_call(pid, &(proc->sysarg)) == PROCESS_TASK_FOUND)
+      {
+        ptrace_neutralize_syscall(pid);
+        ptrace_resume_process(pid);
+        waitpid(pid, &status, 0);
+        process_set_out_syscall(pid);
+        process_set_state(pid, PROC_RECVFROM_OUT);
+        process_end_mediation(pid);
+        return PROCESS_TASK_FOUND;
+      }
+    }
+  }
+  
+  return PROCESS_ON_MEDIATION;
+}
+
+
+
 int process_handle(pid_t pid, int stat)
 {  
   int status = stat;
@@ -515,139 +564,186 @@ int process_handle(pid_t pid, int stat)
       
 //       printf("[%d] Syscall %s_in(%lu \n", pid, syscall_list[arg.reg_orig], arg.arg1);
       int state = -1;
-      if(arg.reg_orig == SYS_read)
-      {
-        get_args_read(pid, &arg, &sysarg);
-        print_read_syscall(pid, &sysarg);
-        if (socket_registered(pid, arg.arg1) != -1) {
-          if(!process_recv_in_call(pid, arg.arg1))
+      switch(arg.reg_orig){
+        case SYS_read:
+        {
+          get_args_read(pid, &arg, &sysarg);
+          print_read_syscall(pid, &sysarg);
+          if (socket_registered(pid, arg.arg1) != -1) {
+            if(!process_recv_in_call(pid, arg.arg1))
+            {
+              int flags = socket_get_flags(pid, arg.arg1);
+              if(!(flags & O_NONBLOCK))
+              {
+                process_set_state(pid, PROC_RECV_IN);
+                process_descriptor *proc = process_get_descriptor(pid);
+                proc->sysarg.read = sysarg.read;
+                state =  PROCESS_ON_MEDIATION;
+              }
+            }
+          }
+        }
+        break;
+        
+        case SYS_poll:
+        {
+          get_args_poll(pid, &arg, &sysarg);
+          print_poll_syscall(pid, &sysarg);
+          process_descriptor* proc = process_get_descriptor(pid);
+          if(sysarg.poll.timeout >=0)
+            add_timeout(pid, sysarg.poll.timeout + SD_get_clock());
+          else
+            proc->in_timeout = 1;
+          ptrace_neutralize_syscall(pid);
+          ptrace_resume_process(pid);
+          waitpid(pid, &status, 0);
+          process_set_out_syscall(pid);
+          process_set_state(pid, PROC_POLL);
+          proc->sysarg.poll = sysarg.poll;
+          state =  PROCESS_ON_MEDIATION;
+        }
+        break;
+        
+        case SYS_exit_group:
+        {
+          printf("[%d] exit_group(%ld) called \n",pid, arg.arg1);
+          ptrace_detach_process(pid);
+          return PROCESS_DEAD;
+        }
+        break;
+        
+        case SYS_exit:
+        {
+          printf("[%d] exit(%ld) called \n", pid, arg.arg1);
+          ptrace_detach_process(pid);
+          return PROCESS_DEAD;
+        }
+        break;
+        
+        case SYS_futex:
+        {
+          printf("[%d] futex_in %p %d\n", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
+          //TODO add real gestion of timeout
+          if(arg.arg2 == FUTEX_WAIT)
+          {
+            ptrace_resume_process(pid);
+            return PROCESS_IDLE_STATE;
+          }
+        }
+        break;
+        
+        case SYS_connect:
+        {
+  //         fprintf(stderr, "New connection\n");
+          printf("[%d] connect_in\n", pid);
+          get_args_bind_connect(pid, 0, &arg, &sysarg);
+          print_connect_syscall(pid, &sysarg);
+          if(process_connect_in_call(pid, &sysarg))
+            state = PROCESS_ON_MEDIATION;
+        }
+        break;
+        
+        case SYS_accept:
+        {
+          printf("[%d] accept_in\n", pid);
+          get_args_accept(pid, &arg, &sysarg);
+          print_accept_syscall(pid, &sysarg);
+          pid_t conn_pid = process_accept_in_call(pid, &sysarg);
+          if(!conn_pid)
+            state =  PROCESS_ON_MEDIATION;
+        }
+        break;
+        
+        case SYS_select:
+        {
+          get_args_select(pid,&arg, &sysarg);
+          print_select_syscall(pid, &sysarg);
+          process_descriptor* proc = process_get_descriptor(pid);
+          if(sysarg.select.timeout >=0)
+            add_timeout(pid, sysarg.select.timeout + SD_get_clock());
+          else
+            proc->in_timeout = 1;
+          ptrace_neutralize_syscall(pid);
+          ptrace_resume_process(pid);
+          waitpid(pid, &status, 0);
+          process_set_out_syscall(pid);
+          process_set_state(pid, PROC_SELECT);
+          proc->sysarg.select = sysarg.select;
+          state =  PROCESS_ON_MEDIATION;
+        }
+        break;
+        
+        case SYS_recvfrom:
+        {
+          printf("[%d] recvfrom_in\n",pid);
+          get_args_recvfrom(pid, &arg, &sysarg);
+  //         fprintf(stderr, "[%d] Seeing if %d receive something\n", pid, (int)arg.arg1);
+          
+          if(!process_recv_in_call(pid, sysarg.recvfrom.sockfd))
+          {
+            int flags = socket_get_flags(pid, arg.arg1);
+            if(flags & O_NONBLOCK)
+            {
+              THROW_UNIMPLEMENTED;
+            }
+            else
+            {
+              printf("Passing here\n");
+              process_set_state(pid, PROC_RECVFROM_IN);
+              process_on_mediation(pid);
+              process_descriptor *proc = process_get_descriptor(pid);
+              proc->sysarg.recvfrom = sysarg.recvfrom;
+              state = PROCESS_ON_MEDIATION;
+//               THROW_IMPOSSIBLE;
+            }
+          }
+          else
+          if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
+          {
+            ptrace_neutralize_syscall(pid);
+            ptrace_resume_process(pid);
+            waitpid(pid, &status, 0);
+            process_set_out_syscall(pid);
+            process_set_state(pid, PROC_RECVFROM_OUT);
+            process_descriptor *proc = process_get_descriptor(pid);
+            proc->sysarg.recvfrom = sysarg.recvfrom;
+            return PROCESS_TASK_FOUND;
+          }
+        }
+        break;
+        
+        case SYS_recvmsg:
+        {
+          printf("[%d] recvmsg_in\n",pid);
+          get_args_send_recvmsg(pid, &arg, &sysarg);
+          if(!process_recv_in_call(pid, sysarg.recvmsg.sockfd))
           {
             int flags = socket_get_flags(pid, arg.arg1);
             if(!(flags & O_NONBLOCK))
             {
               process_set_state(pid, PROC_RECV_IN);
               process_descriptor *proc = process_get_descriptor(pid);
-              proc->sysarg.read = sysarg.read;
-              state =  PROCESS_ON_MEDIATION;
+              proc->sysarg.recvmsg = sysarg.recvmsg;
+              state = PROCESS_ON_MEDIATION;
             }
           }
         }
-      }
-      
-      if(arg.reg_orig == SYS_poll)
-      {
-        get_args_poll(pid, &arg, &sysarg);
-        print_poll_syscall(pid, &sysarg);
-        process_descriptor* proc = process_get_descriptor(pid);
-        if(sysarg.poll.timeout >=0)
-          add_timeout(pid, sysarg.poll.timeout + SD_get_clock());
-        else
-          proc->in_timeout = 1;
-        ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        waitpid(pid, &status, 0);
-        process_set_out_syscall(pid);
-        process_set_state(pid, PROC_POLL);
-        proc->sysarg.poll = sysarg.poll;
-        state =  PROCESS_ON_MEDIATION;
-      }
-      
-      if(arg.reg_orig == SYS_exit_group)
-      {
-        printf("[%d] exit_group(%ld) called \n",pid, arg.arg1);
-        ptrace_detach_process(pid);
-        return PROCESS_DEAD;
-      }
-      if(arg.reg_orig == SYS_exit)
-      {
-        printf("[%d] exit(%ld) called \n", pid, arg.arg1);
-        ptrace_detach_process(pid);
-        return PROCESS_DEAD;
-      }
-      
-      if(arg.reg_orig == SYS_futex)
-      {
-        printf("[%d] futex_in %p %d\n", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
-        //TODO add real gestion of timeout
-        if(arg.arg2 == FUTEX_WAIT)
-        {
-          ptrace_resume_process(pid);
-          return PROCESS_IDLE_STATE;
-        }
-      }
-      
-      if(arg.reg_orig == SYS_connect)
-      {
-//         fprintf(stderr, "New connection\n");
-        printf("[%d] connect_in\n", pid);
-        get_args_bind_connect(pid, 0, &arg, &sysarg);
-        print_connect_syscall(pid, &sysarg);
-        if(process_connect_in_call(pid, &sysarg))
-          state = PROCESS_ON_MEDIATION;
-      }
-       
-      if(arg.reg_orig == SYS_accept)
-      {
-        printf("[%d] accept_in\n", pid);
-        get_args_accept(pid, &arg, &sysarg);
-        print_accept_syscall(pid, &sysarg);
-        pid_t conn_pid = process_accept_in_call(pid, &sysarg);
-        if(!conn_pid)
-          state =  PROCESS_ON_MEDIATION;
-      }
-      
-      else if(arg.reg_orig == SYS_select)
-      {
-        get_args_select(pid,&arg, &sysarg);
-        print_select_syscall(pid, &sysarg);
-        process_descriptor* proc = process_get_descriptor(pid);
-        if(sysarg.select.timeout >=0)
-          add_timeout(pid, sysarg.select.timeout + SD_get_clock());
-        else
-          proc->in_timeout = 1;
-        ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        waitpid(pid, &status, 0);
-        process_set_out_syscall(pid);
-        process_set_state(pid, PROC_SELECT);
-        proc->sysarg.select = sysarg.select;
-        state =  PROCESS_ON_MEDIATION;
-      }
-      
-      else if(arg.reg_orig == SYS_recvfrom)
-      {
-        printf("[%d] recvfrom_in\n",pid);
-        get_args_recvfrom(pid, &arg, &sysarg);
-        fprintf(stderr, "[%d] Seeing if %d receive something\n", pid, (int)arg.arg1);
-        if(!process_recv_in_call(pid, sysarg.recvfrom.sockfd))
-        {
-          int flags = socket_get_flags(pid, arg.arg1);
-          if(!(flags & O_NONBLOCK))
+        break;
+        
+        case SYS_sendto:
+          get_args_sendto(pid, &arg, &sysarg);
+          if(process_send_call(pid, &sysarg))
           {
-            process_set_state(pid, PROC_RECV_IN);
-            process_descriptor *proc = process_get_descriptor(pid);
-            proc->sysarg.recvfrom = sysarg.recvfrom;
-            fprintf(stderr, "[%d] save socket %d\n", pid, proc->sysarg.recv.sockfd);
-            state = PROCESS_ON_MEDIATION;
+            ptrace_neutralize_syscall(pid);
+            ptrace_resume_process(pid);
+            waitpid(pid, &status, 0);
+            sys_build_sendto(pid, &sysarg);
+            print_sendto_syscall(pid, &sysarg);
+            process_set_out_syscall(pid);
+            return PROCESS_TASK_FOUND;
           }
-        }
-      }
-      
-      else if(arg.reg_orig == SYS_recvmsg)
-      {
-        printf("[%d] recvmsg_in\n",pid);
-        get_args_send_recvmsg(pid, &arg, &sysarg);
-        if(!process_recv_in_call(pid, sysarg.recvmsg.sockfd))
-        {
-          int flags = socket_get_flags(pid, arg.arg1);
-          if(!(flags & O_NONBLOCK))
-          {
-            process_set_state(pid, PROC_RECV_IN);
-            process_descriptor *proc = process_get_descriptor(pid);
-            proc->sysarg.recvmsg = sysarg.recvmsg;
-            state = PROCESS_ON_MEDIATION;
-          }
-        }
+          print_sendto_syscall(pid, &sysarg);
+          break;
       }
       //No verify if we have compuation task to simulate.
       if(calculate_computation_time(pid))
@@ -739,7 +835,6 @@ int process_handle(pid_t pid, int stat)
           break;
               
               
-          #if defined(__x86_64)  
         case SYS_fcntl:
           get_args_fcntl(pid, &arg, &sysarg);
           print_fcntl_syscall(pid, &sysarg);
@@ -785,18 +880,10 @@ int process_handle(pid_t pid, int stat)
           break;
               
         case SYS_sendto:
-          get_args_sendto(pid, &arg, &sysarg);
-          print_sendto_syscall(pid, &sysarg);
-          if(process_send_call(pid, &sysarg))
-            return PROCESS_TASK_FOUND;
           break;
           
         case SYS_recvfrom:
-//           printf("lalal\n");
-          get_args_recvfrom(pid, &arg, &sysarg);
-          print_recvfrom_syscall(pid, &sysarg);
-          if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
-            return PROCESS_TASK_FOUND;
+          THROW_IMPOSSIBLE;
           break;
           
         case SYS_sendmsg:
@@ -829,119 +916,6 @@ int process_handle(pid_t pid, int stat)
           print_setsockopt_syscall(pid, &sysarg);
           break;
                 
-          #else
-          
-        case SYS__newselect:
-          THROW_IMPOSSIBLE;
-          break;
-          
-        case SYS_socketcall:
-          switch (arg.arg1) {
-            
-            case SYS_socket_32:
-              printf("[%d] socket( ", pid);
-              get_args_socket(pid, &arg);
-              printf(" ) = %ld\n", arg.ret);
-              break;
-              
-            case SYS_bind_32:
-              printf("[%d] bind( ", pid);
-              get_args_bind_connect(pid, 0, &arg, &sysarg);
-              printf(" ) = %ld\n",arg.ret);
-              break;
-              
-            case SYS_connect_32:
-              printf("[%d] connect( ", pid);
-              get_args_bind_connect(pid, 1, &arg, &sysarg);
-              printf(" ) = %ld\n", arg.ret);
-              if (ret<0)
-                printf("%s\n",strerror(-arg.ret));
-              ptrace_resume_process(pid);
-              return PROCESS_IDLE_STATE;
-              break;
-                    
-            case SYS_listen_32: 
-              //TODO add listen mark
-              printf("[%d] listen( ", pid); 
-              get_args_listen(pid, &arg;
-              printf(" ) = %ld\n", arg.ret);
-              break;
-              
-            case SYS_accept_32:
-              printf("[%d] accept( ", pid);
-              get_args_accept(pid, &arg);
-              printf(" ) = %ld\n", arg.ret);
-              ptrace_resume_process(pid);
-              return PROCESS_IDLE_STATE;
-              break;
-              
-            case SYS_send_32:
-              printf("[%d] send( ", pid);
-              sockfd=get_args_send_recv(pid, 1, &arg);
-              printf(" ) = %ld\n", arg.ret);
-              process_send_call(pid, sockfd, arg.ret);
-              return PROCESS_TASK_FOUND;
-              break;
-              
-            case SYS_recv_32:
-              printf("[%d] recv( ", pid);
-              sockfd=get_args_send_recv(pid, 2, &arg);
-              printf(" ) = %ld\n", arg.ret);
-              if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
-                return PROCESS_TASK_FOUND;
-              break;
-              
-            case SYS_sendto_32:
-              printf("[%d] sendto(", pid);
-              sockfd=get_args_sendto_recvfrom(pid, 1, &arg);
-              printf(" ) = %ld\n", arg.ret); 
-              process_send_call(pid, sockfd, arg.ret);
-              return PROCESS_TASK_FOUND;
-              break;
-                    
-            case SYS_recvfrom_32:
-              printf("[%d] recvfrom(", pid);
-              sockfd=get_args_sendto_recvfrom(pid, 2, &arg);
-              printf(" ) = %ld\n", arg.ret);
-              if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
-                return PROCESS_TASK_FOUND;
-              break;
-              
-            case SYS_shutdown_32:
-              printf("shutdown\n");
-              break;
-              
-            case SYS_setsockopt_32:
-              printf("[%d] setsockopt(", pid);
-              get_args_get_setsockopt(pid, 2, &arg, &sysarg);
-              printf("%d\n", (int)arg.ret);
-              break;
-              
-            case SYS_getsockopt_32:
-              printf("[%d] getsockopt(", pid);
-              get_args_get_setsockopt(pid, 1, &arg, &sysarg);
-              printf("%d\n", (int)arg.ret);
-              break;
-                    
-            case SYS_sendmsg_32:
-              printf("[%d] sendmsg(", pid);
-              sockfd=get_args_send_recvmsg(pid, 1, &arg);
-              printf(" ) = %ld\n", ret);
-              process_send_call(pid, sockfd, arg.ret);
-              return PROCESS_TASK_FOUND;
-              break;
-              
-            case SYS_recvmsg_32:
-              printf("[%d] recvmsg(", pid);
-              sockfd=get_args_send_recvmsg(pid, 2, &arg);
-              printf(" ) = %ld\n", ret);
-              if(process_recv_call(pid, sockfd, arg.ret) == PROCESS_TASK_FOUND)
-                return PROCESS_TASK_FOUND;
-              break;
-          }
-        break;
-                
-        #endif
         
         default :
           printf("[%d] Unhandle syscall %s = %ld\n", pid, syscall_list[arg.reg_orig], arg.ret);

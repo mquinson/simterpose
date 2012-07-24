@@ -25,6 +25,8 @@ int process_handle_active(pid_t pid);
 
 int process_handle_idle(pid_t pid);
 
+int process_handle_mediate(pid_t pid);
+
 int process_clone_call(pid_t pid, reg_s *arg);
 
 #endif

@@ -465,6 +465,8 @@ void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg)
   ds->size = arg->len;
 
   xbt_fifo_push(recv->data_fifo, ds);
+  
+  arg->ret = arg->len;
 //   printf("New queue size %d\n", xbt_fifo_size(recv->send_fifo));
 }
 

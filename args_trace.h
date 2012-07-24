@@ -25,6 +25,10 @@ void sys_build_select(pid_t pid, int match);
 
 void sys_build_poll(pid_t pid, int match);
 
+void sys_build_recvfrom(pid_t pid, syscall_arg_u* sysarg);
+
+void sys_build_sendto(pid_t pid, syscall_arg_u* sysarg);
+
 void get_args_poll(pid_t child, reg_s* arg, syscall_arg_u* sysarg);
 
 void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u *sysarg);

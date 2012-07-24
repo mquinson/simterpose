@@ -102,6 +102,7 @@ struct sendto_arg_s{
   void* data;
   int flags;
   int addrlen;
+  void* dest; //address in processus of data
   int is_addr;//indicate if struct sockadrr is null or not
   union{
     struct sockaddr_in sai;

@@ -24,8 +24,9 @@ void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) 
 void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
 {
   size_t i = 0;
+  int size_copy =0;
   
-  while (i < len / sizeof(long)) {
+  while (size_copy < len) {
     long ret;
     errno = 0;
     ret = ptrace(PTRACE_POKEDATA, pid, dst + i * sizeof(long), *((long*)(src + i * sizeof(long))));
@@ -34,6 +35,7 @@ void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
       xbt_die("Impossible to continue\n");
     }
     i++;
+    size_copy += sizeof(long);
   }
 }
 
@@ -66,7 +68,6 @@ void ptrace_get_register(const pid_t pid, reg_s* arg)
     xbt_die("Impossible to continue\n");
   }
   /* ---- test archi for registers ---- */
-  #if defined(__x86_64) || defined(amd64)
   arg->reg_orig=regs.orig_rax;
   arg->ret=regs.rax;
   arg->arg1=regs.rdi;
@@ -75,13 +76,6 @@ void ptrace_get_register(const pid_t pid, reg_s* arg)
   arg->arg4=regs.r10;
   arg->arg5=regs.r8;
   arg->arg6=regs.r9;
-  #elif defined(i386)
-  arg->reg_orig=regs.orig_eax;
-  arg->ret=regs.eax;
-  arg->arg1=regs.ebx;
-  arg->arg2=regs.ecx;
-  arg->arg3=regs.edx;
-  #endif
 }
 
 void ptrace_set_register(const pid_t pid)

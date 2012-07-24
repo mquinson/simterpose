@@ -1,13 +1,15 @@
 #ifndef __TIME_PROC_H_ 
 #define __TIME_PROC_H_
 
-#define PROC_NO_STATE           0x00000
-#define PROC_SELECT             0x00001
-#define PROC_POLL               0x00002
-#define PROC_CONNECT            0x00004
-#define PROC_ACCEPT_IN          0x00008
-#define PROC_CONNECT_DONE       0x00010
-#define PROC_RECV_IN            0x00020
+#define PROC_NO_STATE           0x000000
+#define PROC_SELECT             0x000010
+#define PROC_POLL               0x000020
+#define PROC_CONNECT            0x000040
+#define PROC_ACCEPT_IN          0x000080
+#define PROC_CONNECT_DONE       0x000100
+#define PROC_RECV_IN            0x000200
+#define PROC_RECVFROM_IN        0x000400
+#define PROC_RECVFROM_OUT       0x000800
 
 #define PROC_IDLE_IN_TASK       0x00100
 
@@ -32,6 +34,7 @@ struct process_descriptor{
   pid_t pid;
   pid_t tgid;
   int idle;
+  int mediate_state;
   int syscall_in;
   long long int cpu_time;
   char* name;
@@ -92,5 +95,9 @@ void process_mark_connect_do(pid_t pid);
 void process_die(pid_t pid);
 
 void process_on_simulation(pid_t pid, int val);
+
+void process_on_mediation(pid_t pid);
+
+void process_end_mediation(pid_t pid);
 
 #endif

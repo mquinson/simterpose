@@ -22,6 +22,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->syscall_in = 0;
   result->idle=0;
   result->state = 0;
+  result->mediate_state=0;
   result->last_computation_task = NULL;
   result->timeout= NULL;
   
@@ -214,4 +215,16 @@ void process_on_simulation(pid_t pid, int val)
 {
   process_descriptor* proc = process_get_descriptor(pid);
   proc->on_simulation = val;
+}
+
+void process_end_mediation(pid)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  proc->mediate_state=0;
+}
+
+void process_on_mediation(pid)
+{
+  process_descriptor* proc = process_get_descriptor(pid);
+  proc->mediate_state=1;
 }
