@@ -22,6 +22,8 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process lo
 int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg);
 int process_recv_in_call(int pid, int fd);
 void process_recvfrom_out_call(int pid);
+void process_read_out_call(pid_t pid);
+
 
 
 //TODO test the possibility to remove incomplete checking
@@ -43,7 +45,6 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
         add_to_sched_list(s->proc->pid);
       
       handle_new_send(is,  sysarg);
-      printf("Sending %d bytes\n", arg->ret);
 
       SD_task_t task = create_send_communication_task(pid, is, arg->ret);
 
@@ -67,10 +68,7 @@ int process_recv_call(int pid, syscall_arg_u* sysarg)
       
       //if handle_new_receive return 1, there is a task found
       if(handle_new_receive(pid, sysarg))
-      {
-        print_recvfrom_syscall(pid, sysarg);
         return PROCESS_TASK_FOUND;
-      }
       else
         return PROCESS_NO_TASK_FOUND;
     }
@@ -292,13 +290,17 @@ int process_handle_active(pid_t pid)
       return PROCESS_ON_MEDIATION;
   }
   else if(proc_state & PROC_RECVFROM_OUT)
-  {
     process_recvfrom_out_call(pid);
-  }
+  
+  else if(proc_state & PROC_READ_OUT)
+    process_read_out_call(pid);
+  
   else if(proc_state & PROC_RECVFROM_IN)
-  {
     THROW_IMPOSSIBLE;
-  }
+
+  else if(proc_state & PROC_READ_IN)
+    THROW_IMPOSSIBLE;
+  
   ptrace_resume_process(pid);
   
   if(waitpid(pid, &status, 0) < 0)
@@ -338,6 +340,14 @@ void process_recvfrom_out_call(int pid)
     return;
   
   sys_build_recvfrom(pid, &(proc->sysarg));
+}
+
+void process_read_out_call(pid_t pid)
+{
+  process_descriptor *proc = process_get_descriptor(pid);
+//   read_arg_t arg = &(proc->sysarg.read);
+  
+  sys_build_read(pid, &(proc->sysarg));
 }
 
 
@@ -533,11 +543,30 @@ int process_handle_mediate(pid_t pid)
     {
       if(process_recv_call(pid, &(proc->sysarg)) == PROCESS_TASK_FOUND)
       {
+        print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
         ptrace_resume_process(pid);
         waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_RECVFROM_OUT);
+        process_end_mediation(pid);
+        return PROCESS_TASK_FOUND;
+      }
+    }
+  }
+  
+  else if(state & PROC_READ_IN)
+  {
+    if(process_recv_in_call(pid, proc->sysarg.recvfrom.sockfd))
+    {
+      if(process_recv_call(pid, &(proc->sysarg)) == PROCESS_TASK_FOUND)
+      {
+        print_read_syscall(pid, &(proc->sysarg));
+        ptrace_neutralize_syscall(pid);
+        ptrace_resume_process(pid);
+        waitpid(pid, &status, 0);
+        process_set_out_syscall(pid);
+        process_set_state(pid, PROC_READ_OUT);
         process_end_mediation(pid);
         return PROCESS_TASK_FOUND;
       }
@@ -568,20 +597,40 @@ int process_handle(pid_t pid, int stat)
         case SYS_read:
         {
           get_args_read(pid, &arg, &sysarg);
-          print_read_syscall(pid, &sysarg);
           if (socket_registered(pid, arg.arg1) != -1) {
             if(!process_recv_in_call(pid, arg.arg1))
             {
               int flags = socket_get_flags(pid, arg.arg1);
-              if(!(flags & O_NONBLOCK))
+              if(flags & O_NONBLOCK)
               {
-                process_set_state(pid, PROC_RECV_IN);
+                THROW_UNIMPLEMENTED;
+              }
+              else
+              {
+                process_set_state(pid, PROC_READ_IN);
+                process_on_mediation(pid);
                 process_descriptor *proc = process_get_descriptor(pid);
                 proc->sysarg.read = sysarg.read;
-                state =  PROCESS_ON_MEDIATION;
+                state = PROCESS_ON_MEDIATION;
+              }
+            }
+            else
+            {
+              if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
+              {
+                print_read_syscall(pid, &sysarg);
+                ptrace_neutralize_syscall(pid);
+                ptrace_resume_process(pid);
+                waitpid(pid, &status, 0);
+                process_set_out_syscall(pid);
+                process_set_state(pid, PROC_READ_OUT);
+                process_descriptor *proc = process_get_descriptor(pid);
+                proc->sysarg.read = sysarg.read;
+                return PROCESS_TASK_FOUND;
               }
             }
           }
+          print_read_syscall(pid, &sysarg);
         }
         break;
         
@@ -688,7 +737,6 @@ int process_handle(pid_t pid, int stat)
             }
             else
             {
-              printf("Passing here\n");
               process_set_state(pid, PROC_RECVFROM_IN);
               process_on_mediation(pid);
               process_descriptor *proc = process_get_descriptor(pid);

@@ -10,6 +10,8 @@
 #define PROC_RECV_IN            0x000200
 #define PROC_RECVFROM_IN        0x000400
 #define PROC_RECVFROM_OUT       0x000800
+#define PROC_READ_IN            0x001000
+#define PROC_READ_OUT           0x002000
 
 #define PROC_IDLE_IN_TASK       0x00100
 

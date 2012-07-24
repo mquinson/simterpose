@@ -167,6 +167,8 @@ struct write_arg_s{
   int fd;
   int ret;
   int count;
+  void* data;
+  void* dest;
 };
 
 struct shutdown_arg_s{

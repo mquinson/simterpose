@@ -293,10 +293,20 @@ void get_args_fcntl(pid_t pid, reg_s* reg,syscall_arg_u* sysarg)
   
 }
 
+void sys_build_read(pid_t pid, syscall_arg_u* sysarg)
+{
+  read_arg_t arg = &(sysarg->read);
+  ptrace_restore_syscall(pid, SYS_recvfrom, arg->ret);
+  
+  ptrace_poke(pid, (void*)arg->dest, arg->data, arg->ret);
+  free(arg->data);
+}
+
 void get_args_read(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg1;
+  arg->dest = (void*)reg->arg2;
   arg->ret = reg->ret;
   arg->count = reg->arg3;
 }
