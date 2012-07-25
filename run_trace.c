@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
     }
     xbt_dynar_free(&arr);
     
-//     printf("Handle idle task\n");
+    printf("Handle idle task\n");
     //Now adding all idle process to the scheduled list
     move_idle_to_sched();
     move_mediate_to_sched();
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
       else
         break;
     }
-//     printf("Size of sched_list %ldu\n", xbt_dynar_length(sched_list));
+    printf("Size of sched_list %ldu\n", xbt_dynar_length(sched_list));
     
     //Now we have global list of process_data, we have to handle them
     while(!xbt_dynar_is_empty(sched_list))
@@ -220,7 +220,8 @@ int main(int argc, char *argv[]) {
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
       proc->scheduled = 0;
-      fprintf(stderr, "\rScheduling process %d", pid);    
+      fprintf(stderr, "\rScheduling process %d", pid);
+      printf("Strating treatment\n");
       int status;
       
       if(proc->mediate_state)
@@ -232,6 +233,7 @@ int main(int argc, char *argv[]) {
         status = process_handle_active(pid);
       
 
+      printf("End of treatment\n");
       if(status == PROCESS_IDLE_STATE)
       {
         process_set_idle(pid, PROC_IDLE);

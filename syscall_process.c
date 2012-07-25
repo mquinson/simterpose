@@ -70,7 +70,17 @@ int process_recv_call(int pid, syscall_arg_u* sysarg)
       if(handle_new_receive(pid, sysarg))
         return PROCESS_TASK_FOUND;
       else
+      {
+        if(!socket_network(pid, arg->sockfd))
+          return PROCESS_NO_TASK_FOUND;
+        
+        struct infos_socket* is = process_get_fd(pid, arg->sockfd);
+        int sock_status = socket_get_state(is);
+        if(sock_status & SOCKET_CLOSED)
+          return RECV_CLOSE;
+        
         return PROCESS_NO_TASK_FOUND;
+      }
     }
   }
   else
@@ -238,6 +248,7 @@ int process_handle_active(pid_t pid)
   int status;
   
   int proc_state = process_get_state(pid);
+  printf("Starting hanlde process %d\n", proc_state);
   if(proc_state & PROC_SELECT)
   {
     //if the select match changment we have to run the child
@@ -339,6 +350,7 @@ void process_recvfrom_out_call(int pid)
   if(!socket_network(pid, arg->sockfd))
     return;
   
+  process_set_state(pid, PROC_NO_STATE);
   sys_build_recvfrom(pid, &(proc->sysarg));
 }
 
@@ -346,7 +358,7 @@ void process_read_out_call(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
 //   read_arg_t arg = &(proc->sysarg.read);
-  
+  process_set_state(pid, PROC_NO_STATE);
   sys_build_read(pid, &(proc->sysarg));
 }
 
@@ -616,7 +628,9 @@ int process_handle(pid_t pid, int stat)
             }
             else
             {
-              if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
+              printf("Passing Here\n");
+              int res = process_recv_call(pid, &sysarg);
+              if(res == PROCESS_TASK_FOUND)
               {
                 print_read_syscall(pid, &sysarg);
                 ptrace_neutralize_syscall(pid);
@@ -627,6 +641,17 @@ int process_handle(pid_t pid, int stat)
                 process_descriptor *proc = process_get_descriptor(pid);
                 proc->sysarg.read = sysarg.read;
                 return PROCESS_TASK_FOUND;
+              }
+              else if( res == RECV_CLOSE)
+              {
+                print_read_syscall(pid, &sysarg);
+                ptrace_neutralize_syscall(pid);
+                ptrace_resume_process(pid);
+                waitpid(pid, &status, 0);
+                process_set_out_syscall(pid);
+                process_descriptor *proc = process_get_descriptor(pid);
+                proc->sysarg.read = sysarg.read;
+                process_read_out_call(pid);
               }
             }
           }
@@ -739,7 +764,6 @@ int process_handle(pid_t pid, int stat)
         
         case SYS_recvfrom:
         {
-          printf("[%d] recvfrom_in\n",pid);
           get_args_recvfrom(pid, &arg, &sysarg);
   //         fprintf(stderr, "[%d] Seeing if %d receive something\n", pid, (int)arg.arg1);
           
@@ -761,16 +785,30 @@ int process_handle(pid_t pid, int stat)
             }
           }
           else
-          if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
           {
-            ptrace_neutralize_syscall(pid);
-            ptrace_resume_process(pid);
-            waitpid(pid, &status, 0);
-            process_set_out_syscall(pid);
-            process_set_state(pid, PROC_RECVFROM_OUT);
-            process_descriptor *proc = process_get_descriptor(pid);
-            proc->sysarg.recvfrom = sysarg.recvfrom;
-            return PROCESS_TASK_FOUND;
+            int res = process_recv_call(pid, &sysarg);
+            if(res == PROCESS_TASK_FOUND)
+            {
+              ptrace_neutralize_syscall(pid);
+              ptrace_resume_process(pid);
+              waitpid(pid, &status, 0);
+              process_set_out_syscall(pid);
+              process_set_state(pid, PROC_RECVFROM_OUT);
+              process_descriptor *proc = process_get_descriptor(pid);
+              proc->sysarg.recvfrom = sysarg.recvfrom;
+              return PROCESS_TASK_FOUND;
+            }
+            else if( res == RECV_CLOSE)
+            {
+              print_read_syscall(pid, &sysarg);
+              ptrace_neutralize_syscall(pid);
+              ptrace_resume_process(pid);
+              waitpid(pid, &status, 0);
+              process_set_out_syscall(pid);
+              process_descriptor *proc = process_get_descriptor(pid);
+              proc->sysarg.read = sysarg.read;
+              process_recvfrom_out_call(pid);
+            }
           }
         }
         break;
@@ -809,6 +847,7 @@ int process_handle(pid_t pid, int stat)
         
         case SYS_sendto:
           get_args_sendto(pid, &arg, &sysarg);
+          
           if(process_send_call(pid, &sysarg))
           {
             ptrace_neutralize_syscall(pid);
@@ -953,6 +992,8 @@ int process_handle(pid_t pid, int stat)
           break;
               
         case SYS_sendto:
+          get_args_sendto(pid, &arg, &sysarg);
+          print_sendto_syscall(pid, &sysarg);
           break;
           
         case SYS_recvfrom:
@@ -962,8 +1003,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_sendmsg:
           get_args_send_recvmsg(pid, &arg, &sysarg);
           print_sendmsg_syscall(pid, &sysarg);
-          if(process_send_call(pid, &sysarg))
-            return PROCESS_TASK_FOUND;
           break;
           
         case SYS_recvmsg:

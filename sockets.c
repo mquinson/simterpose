@@ -394,6 +394,15 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   int result=0;
   
   data_send_s* ds = xbt_fifo_shift(recv->data_fifo);
+  
+  //Here if ds is null, that means that we have an ending connection
+  if(ds == NULL)
+  {
+    arg->ret=0;
+    arg->data=0;
+    return 0;
+  }
+  
   if(recv->quantity_recv==0)
     result=1;
   

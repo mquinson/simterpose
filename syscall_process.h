@@ -13,6 +13,9 @@
 #define PROCESS_ON_MEDIATION    5
 #define PROCESS_ON_COMPUTATION  6
 
+
+#define RECV_CLOSE              10
+
 int process_send_call(pid_t pid, syscall_arg_u* sysarg);
 
 int process_recv_call(pid_t pid, syscall_arg_u* sysarg);
