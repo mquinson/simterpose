@@ -679,7 +679,15 @@ int process_handle(pid_t pid, int stat)
               int flags = socket_get_flags(pid, arg.arg1);
               if(flags & O_NONBLOCK)
               {
-                THROW_UNIMPLEMENTED;
+                sysarg.recvfrom.ret=0;
+                print_read_syscall(pid, &sysarg);
+                ptrace_neutralize_syscall(pid);
+                ptrace_resume_process(pid);
+                waitpid(pid, &status, 0);
+                process_set_out_syscall(pid);
+                process_descriptor *proc = process_get_descriptor(pid);
+                proc->sysarg.read = sysarg.read;
+                process_recvmsg_out_call(pid);
               }
               else
               {
@@ -835,7 +843,15 @@ int process_handle(pid_t pid, int stat)
             int flags = socket_get_flags(pid, arg.arg1);
             if(flags & O_NONBLOCK)
             {
-              THROW_UNIMPLEMENTED;
+              sysarg.recvfrom.ret=0;
+              print_read_syscall(pid, &sysarg);
+              ptrace_neutralize_syscall(pid);
+              ptrace_resume_process(pid);
+              waitpid(pid, &status, 0);
+              process_set_out_syscall(pid);
+              process_descriptor *proc = process_get_descriptor(pid);
+              proc->sysarg.recvfrom = sysarg.recvfrom;
+              process_recvmsg_out_call(pid);
             }
             else
             {
@@ -894,12 +910,20 @@ int process_handle(pid_t pid, int stat)
         {
           get_args_recvmsg(pid, &arg, &sysarg);
           
-          if(!process_recv_in_call(pid, sysarg.recvfrom.sockfd))
+          if(!process_recv_in_call(pid, sysarg.recvmsg.sockfd))
           {
             int flags = socket_get_flags(pid, arg.arg1);
             if(flags & O_NONBLOCK)
             {
-              THROW_UNIMPLEMENTED;
+              sysarg.recvmsg.ret=0;
+              print_read_syscall(pid, &sysarg);
+              ptrace_neutralize_syscall(pid);
+              ptrace_resume_process(pid);
+              waitpid(pid, &status, 0);
+              process_set_out_syscall(pid);
+              process_descriptor *proc = process_get_descriptor(pid);
+              proc->sysarg.recvmsg = sysarg.recvmsg;
+              process_recvmsg_out_call(pid);
             }
             else
             {
@@ -1126,7 +1150,7 @@ int process_handle(pid_t pid, int stat)
                 
         
         default :
-          printf("[%d] Unhandle syscall %s = %ld\n", pid, syscall_list[arg.reg_orig], arg.ret);
+//           printf("[%d] Unhandle syscall %s = %ld\n", pid, syscall_list[arg.reg_orig], arg.ret);
           break;
             
       }

@@ -417,6 +417,7 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
     }
     else
     {
+      printf("[%d](%d) Not enough data in stack, %d rest after reading\n",pid, result,  ds->size-recv->quantity_recv);
       size = ds->size-recv->quantity_recv;
       enough=0;
     }
@@ -432,7 +433,6 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
     }
     else
     {
-      result=1;
       recv->quantity_recv=0;
       free(ds->data);
       free(ds);
@@ -442,12 +442,13 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
         ds = xbt_fifo_shift(recv->data_fifo);
         if(ds==NULL)
           break;
-        else //In this case we have to pop the older recv task because we will execute e new one
-        {
-          task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
-          SD_task_destroy(tci->task);
-          free(tci);
-        }
+        
+        
+        result=1;
+        task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
+        SD_task_destroy(tci->task);
+        free(tci);
+
       }
       else
         break;
