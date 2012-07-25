@@ -238,12 +238,21 @@ void get_args_recvfrom(pid_t child, reg_s* reg, syscall_arg_u* sysarg)
 }
 
 
-void get_args_send_recvmsg(pid_t child, reg_s* reg, syscall_arg_u *sysarg) {
+void get_args_recvmsg(pid_t pid, reg_s* reg, syscall_arg_u *sysarg) {
   recvmsg_arg_t arg = &(sysarg->recvmsg);
 
   arg->sockfd=(int)reg->arg1;
   arg->flags=(int)reg->arg3;
-  ptrace_cpy(child, &arg->msg, (void *)reg->arg2, sizeof(struct msghdr),"sendmsg ou recvmsg");  
+  ptrace_cpy(pid, &arg->msg, (void *)reg->arg2, sizeof(struct msghdr),"recvmsg");
+  
+  arg->len=0;
+  int i;
+  for(i=0; i<arg->msg.msg_iovlen; ++i)
+  {
+    struct iovec temp;
+    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i*sizeof(struct iovec), sizeof(struct iovec),"recvmsg");
+    arg->len += temp.iov_len;
+  }
 }
 
 
@@ -271,6 +280,33 @@ void sys_build_sendmsg(pid_t pid, syscall_arg_u* sysarg)
 {
   sendmsg_arg_t arg = &(sysarg->sendmsg);
   ptrace_restore_syscall(pid, SYS_sendmsg, arg->ret);
+}
+
+void sys_build_recvmsg(pid_t pid, syscall_arg_u* sysarg)
+{
+  recvmsg_arg_t arg = &(sysarg->recvmsg);
+  ptrace_restore_syscall(pid, SYS_recvmsg, arg->ret);
+    
+  int length = arg->ret;
+  int global_size=0;
+  int i;
+  for(i=0; i<arg->msg.msg_iovlen; ++i)
+  {
+    if(length <0)
+      break;
+    
+    struct iovec temp;
+    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i*sizeof(struct iovec), sizeof(struct iovec),"recvmsg");
+    
+    if(length < temp.iov_len)
+      temp.iov_len = length;
+    
+    ptrace_poke(pid, arg->msg.msg_iov + i*sizeof(struct iovec), &temp, sizeof(struct iovec));
+    
+    ptrace_poke(pid, temp.iov_base,  arg->data + global_size, temp.iov_len);
+    
+  }
+  free(arg->data);
 }
 
 

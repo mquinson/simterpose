@@ -12,6 +12,8 @@
 #define PROC_RECVFROM_OUT       0x000800
 #define PROC_READ_IN            0x001000
 #define PROC_READ_OUT           0x002000
+#define PROC_RECVMSG_IN         0x004000
+#define PROC_RECVMSG_OUT        0x008000
 
 #define PROC_IDLE_IN_TASK       0x00100
 

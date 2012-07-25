@@ -16,7 +16,7 @@
 
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* name)
 {
-//   printf("Scheduling last computation\n");
+  printf("Scheduling last computation\n");
   process_descriptor *proc = process_get_descriptor(pid);
   
   double comp_size = SD_task_get_amount(proc->last_computation_task);
@@ -31,7 +31,7 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 
 void schedule_computation_task(pid_t pid)
 {
-//   printf("Scheduling computation\n");
+  printf("Scheduling computation\n");
 //   fprintf(stderr,"Adding compuation task to process %d\n", pid);
   process_descriptor *proc = process_get_descriptor(pid);
   double comp_size = SD_task_get_amount(proc->last_computation_task);
