@@ -450,7 +450,21 @@ void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
   printf("[%d] sendmsg( ", pid);
   printf("%d, ",arg->sockfd);
   
-  printf(", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen,(int)arg->msg.msg_controllen,arg->msg.msg_flags);
+  char buff[20];
+  if(arg->len<20)
+  {
+    memcpy(buff, arg->data, arg->len);
+    printf(", {msg_namelen=%d, msg_iovlen=%d, \"%s\", msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen,buff, (int)arg->msg.msg_controllen,arg->msg.msg_flags);
+  }
+  else
+  {
+    memcpy(buff, arg->data, 20);
+    buff[19]='\0';
+    
+    printf(", {msg_namelen=%d, msg_iovlen=%d, \"%s...\", msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen,buff, (int)arg->msg.msg_controllen,arg->msg.msg_flags);
+  }
+  
+  
   
   if (arg->flags>0) {
     print_flags_recv(arg->flags);

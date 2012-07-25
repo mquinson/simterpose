@@ -74,6 +74,8 @@ struct recv_arg_s{
 struct recvmsg_arg_s{
   int sockfd;
   int ret;
+  int len;
+  void* data;
   int flags;
   struct msghdr msg;
 };

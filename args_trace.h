@@ -25,6 +25,8 @@ void sys_build_select(pid_t pid, int match);
 
 void sys_build_poll(pid_t pid, int match);
 
+void sys_build_sendmsg(pid_t pid, syscall_arg_u* sysarg);
+
 void sys_build_recvfrom(pid_t pid, syscall_arg_u* sysarg);
 
 void sys_build_sendto(pid_t pid, syscall_arg_u* sysarg);
@@ -48,6 +50,8 @@ void get_args_read(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
 void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
 
 void get_args_shutdown(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
+
+void get_args_sendmsg(pid_t child, reg_s* reg, syscall_arg_u *sysarg);
 
 #endif
 

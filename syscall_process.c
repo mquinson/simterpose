@@ -630,9 +630,24 @@ int process_handle(pid_t pid, int stat)
               }
             }
           }
-          print_read_syscall(pid, &sysarg);
         }
         break;
+        
+        case SYS_write:
+          get_args_write(pid, &arg, &sysarg);
+          if (socket_registered(pid, sysarg.write.fd) != -1) {
+            if(process_send_call(pid, &sysarg))
+            {
+              ptrace_neutralize_syscall(pid);
+              ptrace_resume_process(pid);
+              waitpid(pid, &status, 0);
+              sys_build_sendto(pid, &sysarg);
+              print_write_syscall(pid, &sysarg);
+              process_set_out_syscall(pid);
+              return PROCESS_TASK_FOUND;
+            }
+          }
+          break;
         
         case SYS_poll:
         {
@@ -760,6 +775,20 @@ int process_handle(pid_t pid, int stat)
         }
         break;
         
+        case SYS_sendmsg:
+          get_args_sendmsg(pid, &arg, &sysarg);
+          if(process_send_call(pid, &sysarg))
+          {
+            ptrace_neutralize_syscall(pid);
+            ptrace_resume_process(pid);
+            waitpid(pid, &status, 0);
+            sys_build_sendmsg(pid, &sysarg);
+            print_sendmsg_syscall(pid, &sysarg);
+            process_set_out_syscall(pid);
+            return PROCESS_TASK_FOUND;
+          }
+          break;
+        
         case SYS_recvmsg:
         {
           printf("[%d] recvmsg_in\n",pid);
@@ -812,10 +841,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_write:
           get_args_write(pid, &arg, &sysarg);
           print_write_syscall(pid, &sysarg);
-          if (socket_registered(pid, sysarg.write.fd) != -1) {
-            if(process_send_call(pid, &sysarg))
-              return PROCESS_TASK_FOUND;
-          }
           break;
 
         case SYS_read:

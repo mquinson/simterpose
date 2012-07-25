@@ -1,6 +1,6 @@
 OBJS = server client server_select client_select client_simple server_simple server_poll\
 	server_poll_multi server_close client_sbr server_sbr fcntl_ex server_read \
-	client_write
+	client_write client_msg
 CC = gcc 
 CFLAGS = -Wall -g
 
@@ -47,6 +47,9 @@ client_write : client_write.c
 
 client_sbr : client_sbr.c
 	gcc -o client_sbr client_sbr.c
+
+client_msg : client_msg.c
+	gcc -o client_msg client_msg.c
 
 clean:
 	rm $(OBJS)

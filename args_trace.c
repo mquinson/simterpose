@@ -2,7 +2,8 @@
 #include "ptrace_utils.h"
 #include "process_descriptor.h"
 #include "communication.h"
-
+#include "sockets.h"
+#include <sys/uio.h>
 
 void get_args_socket(pid_t child, reg_s *reg, syscall_arg_u * sysarg) { 
 
@@ -236,13 +237,40 @@ void get_args_recvfrom(pid_t child, reg_s* reg, syscall_arg_u* sysarg)
     arg->addrlen=0;
 }
 
+
 void get_args_send_recvmsg(pid_t child, reg_s* reg, syscall_arg_u *sysarg) {
   recvmsg_arg_t arg = &(sysarg->recvmsg);
-
 
   arg->sockfd=(int)reg->arg1;
   arg->flags=(int)reg->arg3;
   ptrace_cpy(child, &arg->msg, (void *)reg->arg2, sizeof(struct msghdr),"sendmsg ou recvmsg");  
+}
+
+
+void get_args_sendmsg(pid_t pid, reg_s* reg, syscall_arg_u *sysarg) {
+  sendmsg_arg_t arg = &(sysarg->sendmsg);
+  
+  arg->sockfd=(int)reg->arg1;
+  arg->flags=(int)reg->arg3;
+  ptrace_cpy(pid, &arg->msg, (void *)reg->arg2, sizeof(struct msghdr),"sendmsg");
+  arg->len = 0;
+  arg->data = NULL;
+  
+  int i;
+  for(i=0; i<arg->msg.msg_iovlen; ++i)
+  {
+    struct iovec temp;
+    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i*sizeof(struct iovec), sizeof(struct iovec),"sendmsg");
+    arg->data = realloc(arg->data, arg->len + temp.iov_len);
+    ptrace_cpy(pid, arg->data + arg->len, temp.iov_base, temp.iov_len,"sendmsg");
+    arg->len += temp.iov_len;
+  }
+}
+
+void sys_build_sendmsg(pid_t pid, syscall_arg_u* sysarg)
+{
+  sendmsg_arg_t arg = &(sysarg->sendmsg);
+  ptrace_restore_syscall(pid, SYS_sendmsg, arg->ret);
 }
 
 
@@ -315,8 +343,17 @@ void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg1;
+  arg->dest = (void*)reg->arg2;  
   arg->ret = reg->ret;
   arg->count = reg->arg3;
+  if(socket_registered(pid, arg->fd))
+  {
+    if(socket_network(pid, arg->fd))
+    {
+      arg->data = malloc(arg->count);
+      ptrace_cpy(pid, arg->data,  (void *)reg->arg2, arg->count, "write");
+    }
+  }
 }
 
 void get_args_shutdown(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
