@@ -41,7 +41,7 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
       struct infos_socket *s = comm_get_peer(is);
 
 //       printf("Sending data(%d) to %d on socket %d\n", arg->ret, s->proc->pid, s->fd);
-      int peer_stat = process_get_state(s->proc->pid);
+      int peer_stat = process_get_state(s->proc);
       if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL || peer_stat == PROC_RECV_IN)
         add_to_sched_list(s->proc->pid);
       
@@ -75,7 +75,7 @@ int process_recv_call(int pid, syscall_arg_u* sysarg)
         if(!socket_network(pid, arg->sockfd))
           return PROCESS_NO_TASK_FOUND;
         
-        struct infos_socket* is = process_get_fd(pid, arg->sockfd);
+        struct infos_socket* is = get_infos_socket(pid, arg->sockfd);
         int sock_status = socket_get_state(is);
         if(sock_status & SOCKET_CLOSED)
           return RECV_CLOSE;
@@ -114,7 +114,7 @@ int process_select_call(pid_t pid)
   
   for(i=0 ; i < arg->maxfd ; ++i)
   {
-    struct infos_socket* is = process_get_fd(pid, i);
+    struct infos_socket* is = get_infos_socket(pid, i);
     //if i is NULL that means that i is not a socket
     if(is == NULL)
     {
@@ -245,19 +245,18 @@ int process_poll_call(pid_t pid)
 
 int process_handle_active(pid_t pid)
 {
-//   printf("Handle active process\n");
   int status;
+  process_descriptor* proc = process_get_descriptor(pid);
+  int proc_state = process_get_state(proc);
   
-  int proc_state = process_get_state(pid);
   if(proc_state & PROC_SELECT)
   {
     //if the select match changment we have to run the child
     if(process_select_call(pid))
     {
-      process_descriptor* proc = process_get_descriptor(pid);
       if(proc->timeout != NULL)
         remove_timeout(pid);
-      process_set_state(pid, PROC_NO_STATE);
+      process_reset_state(proc);
     }
     else
       return PROCESS_ON_MEDIATION;
@@ -266,10 +265,9 @@ int process_handle_active(pid_t pid)
   {
     if(process_poll_call(pid))
     {
-      process_descriptor* proc = process_get_descriptor(pid);
       if(proc->timeout != NULL)
         remove_timeout(pid);
-      process_set_state(pid, PROC_NO_STATE);
+      process_reset_state(proc);
     }
     else
       return PROCESS_ON_MEDIATION;
@@ -280,23 +278,16 @@ int process_handle_active(pid_t pid)
   }
   else if(proc_state & PROC_CONNECT_DONE)
   {
+    printf("Here to\n");
     waitpid(pid, &status, 0);
     return process_handle(pid, status);
   }
   else if(proc_state & PROC_ACCEPT_IN)
   {
-    process_descriptor* proc = process_get_descriptor(pid);
+    printf("Here\n");
     pid_t conn_pid = process_accept_in_call(pid, &proc->sysarg);
     if(conn_pid)
       add_to_sched_list(conn_pid); //We have to add conn_pid to the schedule list
-    else
-      return PROCESS_ON_MEDIATION;
-  }
-  else if(proc_state & PROC_RECV_IN)
-  {
-    process_descriptor* proc = process_get_descriptor(pid);
-    if(process_recv_in_call(pid, proc->sysarg.recv.sockfd))
-      process_set_state(pid, PROC_NO_STATE);
     else
       return PROCESS_ON_MEDIATION;
   }
@@ -306,18 +297,19 @@ int process_handle_active(pid_t pid)
   else if(proc_state & PROC_READ_OUT)
     process_read_out_call(pid);
   
-  else if(proc_state & PROC_RECVFROM_IN)
+  else if(proc_state == PROC_RECVFROM_IN)
     THROW_IMPOSSIBLE;
 
-  else if(proc_state & PROC_READ_IN)
+  else if(proc_state == PROC_READ_IN)
     THROW_IMPOSSIBLE;
   
-  else if(proc_state & PROC_RECVMSG_IN)
+  else if(proc_state == PROC_RECVMSG_IN)
     THROW_IMPOSSIBLE;
     
   else if(proc_state & PROC_RECVMSG_OUT)
     process_recvmsg_out_call(pid);
   
+  printf("lala\n");
   ptrace_resume_process(pid);
   
   if(waitpid(pid, &status, 0) < 0)
@@ -325,7 +317,7 @@ int process_handle_active(pid_t pid)
     fprintf(stderr, " [%d] waitpid %s %d\n", pid, strerror(errno), errno);
     exit(1);
   }
-  
+  printf("lala2\n");
   return process_handle( pid, status);
 }
 
@@ -356,15 +348,17 @@ void process_recvfrom_out_call(int pid)
   if(!socket_network(pid, arg->sockfd))
     return;
   
-  process_set_state(pid, PROC_NO_STATE);
+  process_reset_state(proc);
+  print_recvfrom_syscall(pid, &(proc->sysarg));
   sys_build_recvfrom(pid, &(proc->sysarg));
+  
 }
 
 void process_read_out_call(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
 //   read_arg_t arg = &(proc->sysarg.read);
-  process_set_state(pid, PROC_NO_STATE);
+  process_reset_state(proc);
   sys_build_read(pid, &(proc->sysarg));
 }
 
@@ -372,33 +366,35 @@ void process_recvmsg_out_call(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
   sys_build_recvmsg(pid, &(proc->sysarg));
-  process_set_state(pid, PROC_NO_STATE);
+  process_reset_state(proc);
 }
 
 
 //Return 0 if nobody wait or the pid of the one who wait
 int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
 {
+  
   accept_arg_t acc = &(sysarg->accept);
   //We try to find here if there's a connection to accept
   if(comm_has_connect_waiting(get_infos_socket(pid, acc->sockfd)))
   {
     pid_t conn_pid = comm_accept_connect(get_infos_socket(pid, acc->sockfd));
+    process_descriptor* conn_proc = process_get_descriptor(conn_pid);
     
-    int conn_state = process_get_state(conn_pid);
-    if(conn_state == PROC_CONNECT)
+    int conn_state = process_get_state(conn_proc);
+    if(conn_state & PROC_CONNECT)
     {
       ptrace_resume_process(conn_pid);
       add_to_sched_list(conn_pid);
-      process_set_state(conn_pid, PROC_CONNECT_DONE);
+      process_set_state(conn_proc, PROC_CONNECT_DONE);
     }
     return conn_pid;
   }
   else
   {
-//     printf("Communication wait\n");
-    process_set_state(pid, PROC_ACCEPT_IN);
     process_descriptor* proc = process_get_descriptor(pid);
+//     printf("Communication wait\n");
+    process_set_state(proc, PROC_ACCEPT_IN);
     proc->sysarg.accept = sysarg->accept;
     return 0;
   }
@@ -417,7 +413,8 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
     update_socket(pid, arg->ret);
     comm_join_on_accept(is, pid, arg->sockfd);
   }
-  process_set_state(pid, PROC_NO_STATE);
+  process_descriptor *proc = process_get_descriptor(pid);
+  process_reset_state(proc);
 }
 
 void process_shutdown_call(pid_t pid, syscall_arg_u* sysarg)
@@ -440,28 +437,28 @@ int process_handle_idle(pid_t pid)
     return PROCESS_IDLE_STATE;
 }
 
-int process_clone_call(pid_t pid, reg_s *arg)
-{
-  unsigned long tid = arg->ret;
-  unsigned long flags = arg->arg1;
-  
-  //Now create new process in model
-  process_clone(tid, pid, flags);
-  
-  //Now add it to the launching time table to be the next process to be launch
-  set_next_launchment(tid);
-  
-  int status;
-  
-  //wait for clone
-  waitpid(tid, &status, 0);
-  ptrace_resume_process(tid);
-  //place process to te first call after clone
-  waitpid(tid, &status, 0);
-  process_set_in_syscall(tid);
-  
-  return 0;
-}
+// int process_clone_call(pid_t pid, reg_s *arg)
+// {
+//   unsigned long tid = arg->ret;
+//   unsigned long flags = arg->arg1;
+//   
+//   //Now create new process in model
+//   process_clone(tid, pid, flags);
+//   
+//   //Now add it to the launching time table to be the next process to be launch
+//   set_next_launchment(tid);
+//   
+//   int status;
+//   
+//   //wait for clone
+//   waitpid(tid, &status, 0);
+//   ptrace_resume_process(tid);
+//   //place process to te first call after clone
+//   waitpid(tid, &status, 0);
+//   process_set_in_syscall(tid);
+//   
+//   return 0;
+// }
 
 //This function check if the communication already have been set. Means that 
 int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
@@ -471,6 +468,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
   
   if(domain == 2)//PF_INET
   {
+//     process_descriptor *proc = process_get_descriptor(pid);
     struct sockaddr_in *sai = &(arg->sai);
     
     //We ask for a connection on the socket
@@ -479,7 +477,8 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
     //if someone waiting for connection we add him to shedule list
     if(acc_pid)
     {
-      int status = process_get_state(acc_pid);
+      process_descriptor *acc_proc = process_get_descriptor(acc_pid);
+      int status = process_get_state(acc_proc);
       if(status == PROC_ACCEPT_IN || status == PROC_SELECT || status == PROC_POLL)
         add_to_sched_list(acc_pid);
     }
@@ -492,7 +491,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
       return 0;
     
     //now mark the process as waiting for conn
-    process_set_state(pid, PROC_CONNECT);
+    process_set_state(process_get_descriptor(pid), PROC_CONNECT);
     return 1;
   }
   else
@@ -508,7 +507,8 @@ void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
   {
     update_socket(pid, conn->sockfd);
   }
-  process_set_state(pid, PROC_NO_STATE);
+  process_descriptor *proc = process_get_descriptor(pid);
+  process_reset_state(proc);
 }
 
 int process_bind_call(pid_t pid, syscall_arg_u *arg)
@@ -559,7 +559,7 @@ void process_fcntl_call(pid_t pid, syscall_arg_u* sysarg)
 int process_handle_mediate(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
-  int state = process_get_state(pid);
+  int state = process_get_state(proc);
   
   if(state & PROC_RECVFROM_IN)
   {
@@ -570,17 +570,15 @@ int process_handle_mediate(pid_t pid)
       {
         print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        process_set_out_syscall(pid);
-        process_set_state(pid, PROC_RECVFROM_OUT);
-        process_end_mediation(pid);
+        process_set_out_syscall(proc);
+        process_end_mediation(proc);
         return PROCESS_TASK_FOUND;
       }
       else if(res == RECV_CLOSE)
       {
         print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        process_set_out_syscall(pid);
-        process_set_state(pid, PROC_RECVFROM_OUT);
+        process_set_out_syscall(proc);
         return process_handle_active(pid);
       }
     }
@@ -595,17 +593,15 @@ int process_handle_mediate(pid_t pid)
       {
         print_read_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        process_set_out_syscall(pid);
-        process_set_state(pid, PROC_READ_OUT);
-        process_end_mediation(pid);
+        process_set_out_syscall(proc);
+        process_end_mediation(proc);
         return PROCESS_TASK_FOUND;
       }
       else if(res == RECV_CLOSE)
       {
         print_read_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        process_set_out_syscall(pid);
-        process_set_state(pid, PROC_READ_OUT);
+        process_set_out_syscall(proc);
         return process_handle_active(pid);
       }
     }
@@ -620,17 +616,15 @@ int process_handle_mediate(pid_t pid)
       {
         print_recvmsg_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        process_set_out_syscall(pid);
-        process_set_state(pid, PROC_RECVMSG_OUT);
-        process_end_mediation(pid);
+        process_set_out_syscall(proc);
+        process_end_mediation(proc);
         return PROCESS_TASK_FOUND;
       }
       else if(res == RECV_CLOSE)
       {
         print_recvmsg_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        process_set_out_syscall(pid);
-        process_set_state(pid, PROC_RECVMSG_OUT);
+        process_set_out_syscall(proc);
         return process_handle_active(pid);
       }
     }
@@ -649,13 +643,11 @@ int process_handle(pid_t pid, int stat)
   syscall_arg_u *sysarg = &(proc->sysarg);
   while(1)
   {
-//     printf("New trap\n");
-    if (process_in_syscall(pid)==0) {
-      process_set_in_syscall(pid);
+    if (process_in_syscall(proc)==0) {
+      process_set_in_syscall(proc);
 
       ptrace_get_register(pid, &arg);
       
-//       printf("[%d] Syscall %s_in(%lu \n", pid, syscall_list[arg.reg_orig], arg.arg1);
       int state = -1;
       switch(arg.reg_orig){
         case SYS_read:
@@ -670,13 +662,13 @@ int process_handle(pid_t pid, int stat)
                 sysarg->recvfrom.ret=0;
                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
-                process_set_out_syscall(pid);
+                process_set_out_syscall(proc);
                 process_recvmsg_out_call(pid);
               }
               else
               {
-                process_set_state(pid, PROC_READ_IN);
-                process_on_mediation(pid);
+                process_set_state(proc, PROC_READ);
+                process_on_mediation(proc);
                 state = PROCESS_ON_MEDIATION;
               }
             }
@@ -687,15 +679,15 @@ int process_handle(pid_t pid, int stat)
               {
                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
-                process_set_out_syscall(pid);
-                process_set_state(pid, PROC_READ_OUT);
+                process_set_out_syscall(proc);
+                process_set_state(proc, PROC_READ);
                 return PROCESS_TASK_FOUND;
               }
               else if( res == RECV_CLOSE)
               {
                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
-                process_set_out_syscall(pid);
+                process_set_out_syscall(proc);
                 process_read_out_call(pid);
               }
             }
@@ -711,7 +703,7 @@ int process_handle(pid_t pid, int stat)
               ptrace_neutralize_syscall(pid);
               sys_build_sendto(pid, sysarg);
               print_write_syscall(pid, sysarg);
-              process_set_out_syscall(pid);
+              process_set_out_syscall(proc);
               return PROCESS_TASK_FOUND;
             }
           }
@@ -727,8 +719,8 @@ int process_handle(pid_t pid, int stat)
           else
             proc->in_timeout = 1;
           ptrace_neutralize_syscall(pid);
-          process_set_out_syscall(pid);
-          process_set_state(pid, PROC_POLL);
+          process_set_out_syscall(proc);
+          process_set_state(proc, PROC_POLL);
           state =  PROCESS_ON_MEDIATION;
         }
         break;
@@ -793,8 +785,8 @@ int process_handle(pid_t pid, int stat)
           else
             proc->in_timeout = 1;
           ptrace_neutralize_syscall(pid);
-          process_set_out_syscall(pid);
-          process_set_state(pid, PROC_SELECT);
+          process_set_out_syscall(proc);
+          process_set_state(proc, PROC_SELECT);
           state =  PROCESS_ON_MEDIATION;
         }
         break;
@@ -812,13 +804,13 @@ int process_handle(pid_t pid, int stat)
               sysarg->recvfrom.ret=0;
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(pid);
+              process_set_out_syscall(proc);
               process_recvmsg_out_call(pid);
             }
             else
             {
-              process_set_state(pid, PROC_RECVFROM_IN);
-              process_on_mediation(pid);
+              process_set_state(proc, PROC_RECVFROM);
+              process_on_mediation(proc);
               state = PROCESS_ON_MEDIATION;
 //               THROW_IMPOSSIBLE;
             }
@@ -829,15 +821,15 @@ int process_handle(pid_t pid, int stat)
             if(res == PROCESS_TASK_FOUND)
             {
               ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(pid);
-              process_set_state(pid, PROC_RECVFROM_OUT);
+              process_set_out_syscall(proc);
+              process_set_state(proc, PROC_RECVFROM);
               return PROCESS_TASK_FOUND;
             }
             else if(res == RECV_CLOSE)
             {
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(pid);
+              process_set_out_syscall(proc);
               process_recvfrom_out_call(pid);
             }
           }
@@ -851,7 +843,7 @@ int process_handle(pid_t pid, int stat)
             ptrace_neutralize_syscall(pid);
             sys_build_sendmsg(pid, sysarg);
             print_sendmsg_syscall(pid, sysarg);
-            process_set_out_syscall(pid);
+            process_set_out_syscall(proc);
             return PROCESS_TASK_FOUND;
           }
           break;
@@ -868,13 +860,13 @@ int process_handle(pid_t pid, int stat)
               sysarg->recvmsg.ret=0;
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(pid);
+              process_set_out_syscall(proc);
               process_recvmsg_out_call(pid);
             }
             else
             {
-              process_set_state(pid, PROC_RECVMSG_IN);
-              process_on_mediation(pid);
+              process_set_state(proc, PROC_RECVMSG);
+              process_on_mediation(proc);
               state = PROCESS_ON_MEDIATION;
               //               THROW_IMPOSSIBLE;
             }
@@ -885,15 +877,15 @@ int process_handle(pid_t pid, int stat)
             if(res == PROCESS_TASK_FOUND)
             {
               ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(pid);
-              process_set_state(pid, PROC_RECVMSG_OUT);
+              process_set_out_syscall(proc);
+              process_set_state(proc, PROC_RECVMSG);
               return PROCESS_TASK_FOUND;
             }
             else if( res == RECV_CLOSE)
             {
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(pid);
+              process_set_out_syscall(proc);
               process_recvmsg_out_call(pid);
             }
           }
@@ -908,7 +900,7 @@ int process_handle(pid_t pid, int stat)
             ptrace_neutralize_syscall(pid);
             sys_build_sendto(pid, sysarg);
             print_sendto_syscall(pid, sysarg);
-            process_set_out_syscall(pid);
+            process_set_out_syscall(proc);
             return PROCESS_TASK_FOUND;
           }
           print_sendto_syscall(pid, sysarg);
@@ -919,7 +911,7 @@ int process_handle(pid_t pid, int stat)
       {
         //if we have computation to simulate
         schedule_computation_task(pid);
-        process_on_simulation(pid, 1);
+        process_on_simulation(proc, 1);
         state = PROCESS_ON_COMPUTATION;
       }
       if(state >= 0)
@@ -927,7 +919,7 @@ int process_handle(pid_t pid, int stat)
     }
     else
     {
-      process_set_out_syscall(pid);
+      process_set_out_syscall(proc);
       ptrace_get_register(pid, &arg);
       switch (arg.reg_orig) {
         
@@ -977,7 +969,7 @@ int process_handle(pid_t pid, int stat)
             return PROCESS_IDLE_STATE;
           }
           else
-            process_set_in_syscall(pid);
+            process_set_in_syscall(proc);
           break;
           
         case SYS_close: 
@@ -1028,7 +1020,7 @@ int process_handle(pid_t pid, int stat)
           get_args_bind_connect(pid, 1, &arg, sysarg);
           print_connect_syscall(pid, sysarg);
           process_connect_out_call(pid, sysarg);
-          process_set_state(pid, PROC_NO_STATE);
+          process_reset_state(proc);
           break;
           
         case SYS_accept:
@@ -1084,7 +1076,7 @@ int process_handle(pid_t pid, int stat)
                 
         
         default :
-//           printf("[%d] Unhandle syscall %s = %ld\n", pid, syscall_list[arg.reg_orig], arg.ret);
+          printf("[%d] Unhandle syscall %s = %ld\n", pid, syscall_list[arg.reg_orig], arg.ret);
           break;
             
       }

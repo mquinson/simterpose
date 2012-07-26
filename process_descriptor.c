@@ -19,7 +19,6 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
   result->pid=pid;
   result->tgid = pid; //By default, we consider that process is the first of this pgid
   result->cpu_time=0; 
-  result->syscall_in = 0;
   result->idle=0;
   result->state = 0;
   result->mediate_state=0;
@@ -77,33 +76,28 @@ void process_set_descriptor(pid_t pid, process_descriptor* proc)
 }
 
 
-int process_update_cputime(pid_t pid, long long int new_cputime) {
+int process_update_cputime(process_descriptor *proc, long long int new_cputime) {
   
-  process_descriptor *proc = process_get_descriptor(pid);
   int result = new_cputime - proc->cpu_time;
   proc->cpu_time = new_cputime;
   return result;
 }
 
-
-long long int process_get_last_cputime(pid_t pid) {
-  process_descriptor *proc = process_get_descriptor(pid);
-  return proc->cpu_time;
+int process_in_syscall(process_descriptor *proc) {
+  return (proc->state & 0x1);
 }
 
-int process_in_syscall(pid_t pid) {
-  process_descriptor *proc = process_get_descriptor(pid);
-  return proc->syscall_in;
+void process_set_in_syscall(process_descriptor *proc) {
+  proc->state= proc->state^0x1;
 }
 
-void process_set_in_syscall(pid_t pid) {
-  process_descriptor *proc = process_get_descriptor(pid);
-  proc->syscall_in=1;
+void process_set_out_syscall(process_descriptor *proc) {
+  proc->state= proc->state^0x1;
 }
 
-void process_set_out_syscall(pid_t pid) {
-  process_descriptor *proc = process_get_descriptor(pid);
-  proc->syscall_in=0;
+void process_reset_state(process_descriptor* proc)
+{
+  proc->state = proc->state & (~STATE_MASK);
 }
 
 //Create and set a new file descriptor
@@ -117,7 +111,6 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
   result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
   result->pid=new_pid;
   result->cpu_time=0;
-  result->syscall_in = 0;
   result->idle=0;
   result->last_computation_task = NULL;
   int i;
@@ -137,7 +130,6 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
   
   result->pid=new_pid;
   result->cpu_time=0;
-  result->syscall_in = 0;
   result->idle=0;
   result->last_computation_task = NULL;
   result->station = cloned->station;
@@ -164,43 +156,17 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
   global_data->process_desc[new_pid] = result;
 }
 
-
-void process_exec(pid_t pid)
+void process_set_state(process_descriptor *proc, int state)
 {
-  //TODO add mecanism to socket to know when close them on exec (witho SOCK_CLOEXEC on type)
-  //   for(i=0; i<MAX_FD ; ++i)
-  //     result->fd_list[i]=NULL;
+//   printf("%x %x %x\n", proc->state, state, (state | (proc->state & 0x1)));
+  proc->state = (state | (proc->state & 0x1));
+//   printf("Set new state to %d : %x\n", tid, proc->state);
 }
 
-void process_set_state(pid_t tid, int state)
+int process_get_state(process_descriptor *proc)
 {
-  process_descriptor* proc = process_get_descriptor(tid);
-  proc->state = state;
-//   printf("Set new state to %d : %d\n", tid, state);
-}
-
-int process_get_state(pid_t pid)
-{
-  process_descriptor* proc = process_get_descriptor(pid);
+//   printf("get : %x %x %d\n", proc->state, STATE_MASK, (proc->state & STATE_MASK));
   return proc->state;
-}
-
-int process_is_connect_done(pid_t pid)
-{
-  process_descriptor* proc = process_get_descriptor(pid);
-  return  proc->state & PROC_CONNECT_DONE;
-}
-
-void process_mark_connect_do(pid_t pid)
-{
-  process_descriptor* proc = process_get_descriptor(pid);
-  proc->state = proc->state | PROC_CONNECT_DONE;
-}
-
-struct infos_socket* process_get_fd(pid_t pid, int num)
-{
-  process_descriptor* proc = process_get_descriptor(pid);
-  return proc->fd_list[num];
 }
 
 void process_die(pid_t pid)
@@ -211,20 +177,17 @@ void process_die(pid_t pid)
   global_data->process_desc[pid]=NULL;
 }
 
-void process_on_simulation(pid_t pid, int val)
+void process_on_simulation(process_descriptor *proc, int val)
 {
-  process_descriptor* proc = process_get_descriptor(pid);
   proc->on_simulation = val;
 }
 
-void process_end_mediation(pid)
+void process_end_mediation(process_descriptor *proc)
 {
-  process_descriptor* proc = process_get_descriptor(pid);
   proc->mediate_state=0;
 }
 
-void process_on_mediation(pid)
+void process_on_mediation(process_descriptor *proc)
 {
-  process_descriptor* proc = process_get_descriptor(pid);
   proc->mediate_state=1;
 }

@@ -44,7 +44,7 @@ int main (int argc, char** argv)
   while(numero)
   {
     char** cmd_line = get_command_line();
-    print_command_line(cmd_line);
+//     print_command_line(cmd_line);
     if(fork() == 0)
     {
       fclose(comm_sim);

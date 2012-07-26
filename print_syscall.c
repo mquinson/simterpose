@@ -381,22 +381,27 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   printf("[%d] recvfrom( ", pid);
   
-  char buff[20];
-  if(arg->len <= 20)
+  if(arg->ret)
   {
-    memcpy(buff, arg->data, arg->ret);
-    printf("%d, \"%s\" , %d, ",arg->sockfd, buff, arg->len);
+    char buff[20];
+    if(arg->ret <= 20)
+    {
+      memcpy(buff, arg->data, arg->ret);
+      printf("%d, \"%s\" , %d, ",arg->sockfd, buff, arg->len);
+    }
+    else
+    {
+      memcpy(buff, arg->data, 20);
+      buff[19]='\0';
+      printf("%d, \"%s...\" , %d, ",arg->sockfd, buff, arg->len);
+    }  
+    if (arg->flags>0) {
+      print_flags_send(arg->flags); 
+    } else
+      printf("0, ");
   }
   else
-  {
-    memcpy(buff, arg->data, 20);
-    buff[19]='\0';
-    printf("%d, \"%s...\" , %d, ",arg->sockfd, buff, arg->len);
-  }  
-  if (arg->flags>0) {
-    print_flags_send(arg->flags); 
-  } else
-    printf("0, ");
+    printf("%d, \"\" , %d, ",arg->sockfd, arg->len);
   
   if (domain == 2 ) { // PF_INET
     if (arg->is_addr) {

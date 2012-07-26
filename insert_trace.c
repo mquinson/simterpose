@@ -13,19 +13,20 @@ long long int times_syscall[3];
 
 int calculate_computation_time(int pid)
 {
+  
   if (ask_time(pid, times_syscall)) {
     perror("Error ask_time");
     exit(1);
   } else {
-    
+    process_descriptor *proc = process_get_descriptor(pid);
     long long int diff_cpu=0;
 
-    if((diff_cpu=process_update_cputime(pid,times_syscall[1]+times_syscall[2])) > 0)
+    if((diff_cpu=process_update_cputime(proc,times_syscall[1]+times_syscall[2])) > 0)
     {
       //process_descriptor* proc = process_get_descriptor(pid);
       double amount = (diff_cpu/global_data->micro_s_per_flop);
       //fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
-      process_descriptor *proc = process_get_descriptor(pid);
+      
       SD_task_t comp_task = create_computation_task(pid, amount);
       proc->last_computation_task = comp_task;
       return 1;

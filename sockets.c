@@ -417,7 +417,7 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
     }
     else
     {
-      printf("[%d](%d) Not enough data in stack, %d rest after reading\n",pid, result,  ds->size-recv->quantity_recv);
+      printf("[%d](%d) Not enough data in stack, %d rest after reading (%d , %d)\n",pid, result,  ds->size-recv->quantity_recv, ds->size ,recv->quantity_recv );
       size = ds->size-recv->quantity_recv;
       enough=0;
     }
@@ -459,6 +459,8 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   
   arg->ret = global_size;
   arg->data = data_recv;
+  
+  printf("Receive %d bytes -> %d\n", global_size, result);
   return result;
 }
 

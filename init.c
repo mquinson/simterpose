@@ -228,7 +228,7 @@ void init_all_process()
       ptrace_resume_process(launcherpid);
       
       run_until_exec(new_pid);
-      process_set_in_syscall(new_pid);
+      process_set_in_syscall(global_data->process_desc[new_pid]);
       
       add_launching_time(new_pid, parser_get_start_time(amount_process_launch));
       

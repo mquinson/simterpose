@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
       if(data != NULL)
       {
 //         printf("End of task for %d\n", *data);
-        process_on_simulation(*data, 0);
+        process_on_simulation(process_get_descriptor(*data), 0);
         add_to_sched_list(*data);
       }
       SD_task_destroy(task_over);
@@ -220,7 +220,7 @@ int main(int argc, char *argv[]) {
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
       proc->scheduled = 0;
-      fprintf(stderr, "\rScheduling process %d", pid);
+      fprintf(stderr, "Scheduling process %d\n", pid);
 //       printf("Strating treatment\n");
       int status;
       
