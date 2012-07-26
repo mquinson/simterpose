@@ -560,7 +560,6 @@ int process_handle_mediate(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
   int state = process_get_state(pid);
-  int status;
   
   if(state & PROC_RECVFROM_IN)
   {
@@ -571,8 +570,6 @@ int process_handle_mediate(pid_t pid)
       {
         print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_RECVFROM_OUT);
         process_end_mediation(pid);
@@ -582,8 +579,6 @@ int process_handle_mediate(pid_t pid)
       {
         print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_RECVFROM_OUT);
         return process_handle_active(pid);
@@ -600,8 +595,6 @@ int process_handle_mediate(pid_t pid)
       {
         print_read_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_READ_OUT);
         process_end_mediation(pid);
@@ -611,8 +604,6 @@ int process_handle_mediate(pid_t pid)
       {
         print_read_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_READ_OUT);
         return process_handle_active(pid);
@@ -629,8 +620,6 @@ int process_handle_mediate(pid_t pid)
       {
         print_recvmsg_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_RECVMSG_OUT);
         process_end_mediation(pid);
@@ -640,8 +629,6 @@ int process_handle_mediate(pid_t pid)
       {
         print_recvmsg_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        ptrace_resume_process(pid);
-        waitpid(pid, &status, 0);
         process_set_out_syscall(pid);
         process_set_state(pid, PROC_RECVMSG_OUT);
         return process_handle_active(pid);
@@ -683,8 +670,6 @@ int process_handle(pid_t pid, int stat)
                 sysarg->recvfrom.ret=0;
                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
-                ptrace_resume_process(pid);
-                waitpid(pid, &status, 0);
                 process_set_out_syscall(pid);
                 process_recvmsg_out_call(pid);
               }
@@ -702,8 +687,6 @@ int process_handle(pid_t pid, int stat)
               {
                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
-                ptrace_resume_process(pid);
-                waitpid(pid, &status, 0);
                 process_set_out_syscall(pid);
                 process_set_state(pid, PROC_READ_OUT);
                 return PROCESS_TASK_FOUND;
@@ -712,8 +695,6 @@ int process_handle(pid_t pid, int stat)
               {
                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
-                ptrace_resume_process(pid);
-                waitpid(pid, &status, 0);
                 process_set_out_syscall(pid);
                 process_read_out_call(pid);
               }
@@ -728,8 +709,6 @@ int process_handle(pid_t pid, int stat)
             if(process_send_call(pid, sysarg))
             {
               ptrace_neutralize_syscall(pid);
-              ptrace_resume_process(pid);
-              waitpid(pid, &status, 0);
               sys_build_sendto(pid, sysarg);
               print_write_syscall(pid, sysarg);
               process_set_out_syscall(pid);
@@ -748,8 +727,6 @@ int process_handle(pid_t pid, int stat)
           else
             proc->in_timeout = 1;
           ptrace_neutralize_syscall(pid);
-          ptrace_resume_process(pid);
-          waitpid(pid, &status, 0);
           process_set_out_syscall(pid);
           process_set_state(pid, PROC_POLL);
           state =  PROCESS_ON_MEDIATION;
@@ -816,8 +793,6 @@ int process_handle(pid_t pid, int stat)
           else
             proc->in_timeout = 1;
           ptrace_neutralize_syscall(pid);
-          ptrace_resume_process(pid);
-          waitpid(pid, &status, 0);
           process_set_out_syscall(pid);
           process_set_state(pid, PROC_SELECT);
           state =  PROCESS_ON_MEDIATION;
@@ -837,8 +812,6 @@ int process_handle(pid_t pid, int stat)
               sysarg->recvfrom.ret=0;
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
-              ptrace_resume_process(pid);
-              waitpid(pid, &status, 0);
               process_set_out_syscall(pid);
               process_recvmsg_out_call(pid);
             }
@@ -856,8 +829,6 @@ int process_handle(pid_t pid, int stat)
             if(res == PROCESS_TASK_FOUND)
             {
               ptrace_neutralize_syscall(pid);
-              ptrace_resume_process(pid);
-              waitpid(pid, &status, 0);
               process_set_out_syscall(pid);
               process_set_state(pid, PROC_RECVFROM_OUT);
               return PROCESS_TASK_FOUND;
@@ -866,8 +837,6 @@ int process_handle(pid_t pid, int stat)
             {
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
-              ptrace_resume_process(pid);
-              waitpid(pid, &status, 0);
               process_set_out_syscall(pid);
               process_recvfrom_out_call(pid);
             }
@@ -880,8 +849,6 @@ int process_handle(pid_t pid, int stat)
           if(process_send_call(pid, sysarg))
           {
             ptrace_neutralize_syscall(pid);
-            ptrace_resume_process(pid);
-            waitpid(pid, &status, 0);
             sys_build_sendmsg(pid, sysarg);
             print_sendmsg_syscall(pid, sysarg);
             process_set_out_syscall(pid);
@@ -901,8 +868,6 @@ int process_handle(pid_t pid, int stat)
               sysarg->recvmsg.ret=0;
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
-              ptrace_resume_process(pid);
-              waitpid(pid, &status, 0);
               process_set_out_syscall(pid);
               process_recvmsg_out_call(pid);
             }
@@ -920,8 +885,6 @@ int process_handle(pid_t pid, int stat)
             if(res == PROCESS_TASK_FOUND)
             {
               ptrace_neutralize_syscall(pid);
-              ptrace_resume_process(pid);
-              waitpid(pid, &status, 0);
               process_set_out_syscall(pid);
               process_set_state(pid, PROC_RECVMSG_OUT);
               return PROCESS_TASK_FOUND;
@@ -930,8 +893,6 @@ int process_handle(pid_t pid, int stat)
             {
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
-              ptrace_resume_process(pid);
-              waitpid(pid, &status, 0);
               process_set_out_syscall(pid);
               process_recvmsg_out_call(pid);
             }
@@ -945,8 +906,6 @@ int process_handle(pid_t pid, int stat)
           if(process_send_call(pid, sysarg))
           {
             ptrace_neutralize_syscall(pid);
-            ptrace_resume_process(pid);
-            waitpid(pid, &status, 0);
             sys_build_sendto(pid, sysarg);
             print_sendto_syscall(pid, sysarg);
             process_set_out_syscall(pid);

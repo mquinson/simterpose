@@ -98,23 +98,22 @@ void ptrace_set_register(const pid_t pid)
 
 }
 
-//TODO add 32 bit gestion
 
 void ptrace_neutralize_syscall(const pid_t pid)
 {
   struct user_regs_struct regs;
-  
+  int status;
   if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
     xbt_die("Impossible to continue\n");
   }
-
   regs.orig_rax = 184;
-  
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
     xbt_die("Impossible to continue\n");
   }
+  ptrace_resume_process(pid);
+  waitpid(pid, &status, 0);
 }
 
 void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long result)
