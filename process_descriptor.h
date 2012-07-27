@@ -121,4 +121,6 @@ void process_on_mediation(process_descriptor *proc);
 
 void process_end_mediation(process_descriptor *proc);
 
+int process_get_free_fd(process_descriptor *proc);
+
 #endif

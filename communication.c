@@ -186,6 +186,7 @@ pid_t comm_accept_connect(struct infos_socket* is)
 {
   comm_t comm = is->comm;
   if(comm==NULL)
+    
     THROW_IMPOSSIBLE;
   if(xbt_dynar_is_empty(comm->conn_wait))
     return 0;

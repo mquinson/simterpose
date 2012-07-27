@@ -16,6 +16,14 @@ void get_args_socket(pid_t child, reg_s *reg, syscall_arg_u * sysarg) {
 }
 
 
+void sys_build_connect(pid_t pid, syscall_arg_u *sysarg)
+{
+  connect_arg_t arg = &(sysarg->connect);
+  ptrace_restore_syscall(pid, SYS_connect, arg->ret);
+}
+
+
+
 void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sysarg) {
   
   connect_arg_t arg = &(sysarg->connect);
@@ -35,6 +43,14 @@ void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *
   if (domain == 16) // PF_NETLINK
     ptrace_cpy(child, &arg->sau, (void *)reg->arg2, sizeof(struct sockaddr_in),"bind ou connect");
 }
+
+
+void sys_build_accept(pid_t pid, syscall_arg_u *sysarg)
+{
+  accept_arg_t arg = &(sysarg->accept);
+  ptrace_restore_syscall(pid, SYS_accept, arg->ret);
+}
+
 
 void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
   

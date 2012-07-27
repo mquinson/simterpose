@@ -6,6 +6,8 @@
 #include "simdag/simdag.h"
 #include "xbt.h"
 #include "syscall_data.h"
+#include "process_descriptor.h"
+#include "run_trace.h"
 
 #define LOCAL 1
 #define REMOTE 2
@@ -57,7 +59,7 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   
   struct infos_socket *is = malloc(sizeof(struct infos_socket));
   proc->fd_list[sockfd]= (fd_s*)is;
-  is->fd.type = FD_SOCKET_TYPE;
+  is->fd.type = FD_SOCKET;
   is->fd.fd = sockfd;
   is->fd.proc = proc;
   
@@ -331,7 +333,7 @@ int socket_registered(pid_t pid, int fd) {
 struct infos_socket* get_infos_socket(pid_t pid, int fd) {
   //printf("Info socket %d %d\n", pid, fd);
   fd_s* file_desc = global_data->process_desc[pid]->fd_list[fd];
-  if(file_desc == NULL || file_desc->type != FD_SOCKET_TYPE)
+  if(file_desc == NULL || file_desc->type != FD_SOCKET)
     return NULL;
   
   return (struct infos_socket*) file_desc;
@@ -465,7 +467,6 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   arg->ret = global_size;
   arg->data = data_recv;
   
-  printf("Receive %d bytes -> %d\n", global_size, result);
   return result;
 }
 
@@ -495,7 +496,7 @@ int close_all_communication(int pid){
   for(i=0; i<MAX_FD ; ++i)
   {
     fd_s *file_desc = proc->fd_list[i];
-    if (file_desc!=NULL && file_desc->type == FD_SOCKET_TYPE)
+    if (file_desc!=NULL && file_desc->type == FD_SOCKET)
     {
       recv_information* recv = comm_get_own_recv((struct infos_socket *)file_desc);
       

@@ -197,3 +197,14 @@ void process_on_mediation(process_descriptor *proc)
 {
   proc->mediate_state=1;
 }
+
+int process_get_free_fd(process_descriptor *proc)
+{
+  int i;
+  for(i=0; i< MAX_FD ; ++i)
+  {
+    if(proc->fd_list[i] == NULL)
+      return i;
+  }
+  return -1;
+}
