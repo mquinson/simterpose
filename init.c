@@ -205,6 +205,7 @@ void init_all_process()
     //Now we launch all process and let them blocked on the first syscall following the exec
     while(amount_process_launch < amount)
     {
+      process_descriptor *proc;
       fprint_array(launcher_pipe, parser_get_commandline(amount_process_launch));
 
       int forked = 0;
@@ -220,7 +221,8 @@ void init_all_process()
     
 	if (stat16== PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16== PTRACE_EVENT_CLONE) {
 	  new_pid = ptrace_get_pid_fork(launcherpid);
-	  global_data->process_desc[new_pid] = process_descriptor_new(parser_get_workstation(amount_process_launch), new_pid);
+          proc = process_descriptor_new(parser_get_workstation(amount_process_launch), new_pid);
+	  global_data->process_desc[new_pid] = proc;
 	  forked=1;
 	}
       }
@@ -228,7 +230,26 @@ void init_all_process()
       ptrace_resume_process(launcherpid);
       
       run_until_exec(new_pid);
-      process_set_in_syscall(global_data->process_desc[new_pid]);
+      process_set_in_syscall(proc);
+      
+      
+      fd_s *file_desc = malloc(sizeof(fd_s));
+      file_desc->type = FD_STDIN;
+      file_desc->proc = proc;
+      file_desc->fd = 0;
+      proc->fd_list[0]=file_desc;
+      
+      file_desc = malloc(sizeof(fd_s));
+      file_desc->type = FD_STDOUT;
+      file_desc->proc = proc;
+      file_desc->fd = 1;
+      proc->fd_list[1]=file_desc;
+      
+      file_desc = malloc(sizeof(fd_s));
+      file_desc->type = FD_STDERR;
+      file_desc->proc = proc;
+      file_desc->fd = 2;
+      proc->fd_list[2]=file_desc;
       
       add_launching_time(new_pid, parser_get_start_time(amount_process_launch));
       

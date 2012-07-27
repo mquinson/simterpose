@@ -34,7 +34,13 @@
 #define PROC_IN_TIMEOUT         1
 #define PROC_TIMEOUT_EXPIRE     2
 
-#define FD_SOCKET_TYPE          1
+
+#define FD_STDIN                0x00
+#define FD_STDOUT               0x01
+#define FD_STDERR               0x02
+#define FD_CLASSIC              0x04
+#define FD_SOCKET               0x08
+
 
 typedef struct process_descriptor process_descriptor;
 typedef struct fd_s fd_s;
@@ -64,7 +70,7 @@ struct process_descriptor{
   time_desc* timeout;//point to the next timeout of process, NULL there is not timeout
   SD_workstation_t station;
   SD_task_t last_computation_task;
-  struct infos_socket** fd_list;
+  fd_s** fd_list;
   
   unsigned int idle     :1;
   unsigned int in_timeout :2;

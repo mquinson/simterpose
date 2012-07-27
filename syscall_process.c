@@ -554,6 +554,21 @@ void process_fcntl_call(pid_t pid, syscall_arg_u* sysarg)
   }
 }
 
+void process_close_call(pid_t pid, int fd)
+{
+  printf("Entering close_porcessing\n");
+  process_descriptor *proc = process_get_descriptor(pid);
+  fd_s *file_desc = proc->fd_list[fd];
+  if(file_desc->type == FD_SOCKET)
+    socket_close(pid, fd);
+  else
+  {
+    printf("Freeing fd %d\n", fd);
+    free(file_desc);
+    proc->fd_list[fd] = NULL;
+  }
+}
+
 
 
 int process_handle_mediate(pid_t pid)
@@ -947,17 +962,23 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_open:
         {
-//           char *flags = malloc(9);
-//           switch (arg.arg2) {
-//             case 0: strcpy(flags,"O_RDONLY"); break;
-//             case 1: strcpy(flags,"O_WRONLY"); break;
-//             case 2: strcpy(flags,"O_RDWR"); break;
-//           }
-//           if (strlen(flags)>0)
-//             printf("[%d] open(\"...\", %s) = %ld\n",pid, flags, arg.ret);
-//           else
-//             printf("[%d] open(\"...\", no_flags) = %ld\n",pid, arg.ret);
-//           free(flags);
+          printf("[%d] open(\"...\",", pid);
+          switch (arg.arg2) {
+            case 0: printf("O_RDONLY"); break;
+            case 1: printf("O_WRONLY"); break;
+            case 2: printf("O_RDWR"); break;
+            default :printf("no_flags");break;
+          }    
+          printf(") = %ld\n", arg.ret);
+          if((int)arg.ret >= 0)
+          {
+            printf("Create fd for %ld\n", arg.ret);
+            fd_s *file_desc = malloc(sizeof(fd_s));
+            file_desc->fd=(int)arg.ret;
+            file_desc->proc=proc;
+            file_desc->type = FD_CLASSIC;
+            proc->fd_list[(int)arg.ret]=file_desc;
+          }
         }
         break;
         
@@ -974,7 +995,7 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_close: 
           printf("[%d] close(%ld) = %ld\n",pid, arg.arg1,arg.ret);
-          socket_close(pid,(int)arg.arg1);
+          process_close_call(pid, (int)arg.arg1);
           break;
           
         case SYS_dup:
