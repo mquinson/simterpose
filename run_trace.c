@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
       
       if(proc->mediate_state)
         status = process_handle_mediate(pid);
-      else if(process_get_idle(pid) == PROC_IDLE)
+      else if(process_get_idle(proc) == PROC_IDLE)
         status = process_handle_idle(pid);
         
       else
@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
 //       printf("End of treatment %d\n", status);
       if(status == PROCESS_IDLE_STATE)
       {
-        process_set_idle(pid, PROC_IDLE);
+        process_set_idle(proc, PROC_IDLE);
         add_to_idle(pid);
       }
       else if( status == PROCESS_DEAD)
@@ -248,8 +248,6 @@ int main(int argc, char *argv[]) {
       {
         add_to_mediate(pid);
       }
-      else
-        process_set_idle(pid, PROC_NO_IDLE);
     }
 //     --indice;
 //     if(!indice)

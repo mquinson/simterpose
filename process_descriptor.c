@@ -59,14 +59,14 @@ process_descriptor *process_get_descriptor(pid_t pid)
   return global_data->process_desc[pid];
 }
 
-void process_set_idle(int pid, int idle_state)
+void process_set_idle(process_descriptor *proc, int idle_state)
 {
-  global_data->process_desc[pid]->idle = idle_state;
+  proc->idle = idle_state;
 }
 
-int process_get_idle(int pid)
+int process_get_idle(process_descriptor *proc)
 {
-  return global_data->process_desc[pid]->idle;
+  return proc->idle;
 }
 
 

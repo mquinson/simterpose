@@ -1,10 +1,10 @@
 OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o run_trace.o benchmark.o syscall_process.o replay.o\
 	data_utils.o task.o parser.o init.o communication.o print_syscall.o
 
-CFLAGS = -Wall -g
-CC=gcc
+CFLAGS = -Wall -g -O3
+CC=gcc 
 
-LDFLAGS= -lsimgrid -lm
+LDFLAGS= -lsimgrid -lm -O3
 
 all : run_trace launcher
 

@@ -156,10 +156,10 @@ int comm_ask_connect(unsigned int ip, int port, pid_t tid, int fd)
         //Now verify if it's a listening socket
         if(temp->state & COMM_LISTEN)
         {
-          printf("Add to connection asking queue %d\n", socket->proc->pid);
+          printf("Add to connection asking queue %d\n", socket->fd.proc->pid);
           comm_t comm = comm_new(get_infos_socket(tid, fd));
           xbt_dynar_push(temp->conn_wait, &comm);
-          return socket->proc->pid;
+          return socket->fd.proc->pid;
         }
       }
     }
@@ -192,8 +192,8 @@ pid_t comm_accept_connect(struct infos_socket* is)
   comm_t comm_conn;
   xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
 
-  fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->proc->pid);
-  return comm_conn->info[0].socket->proc->pid;
+  fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->fd.proc->pid);
+  return comm_conn->info[0].socket->fd.proc->pid;
 }
 
 int comm_has_connect_waiting(struct infos_socket* is)

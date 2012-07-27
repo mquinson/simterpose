@@ -18,6 +18,7 @@ struct infos_socket;
 #include "run_trace.h"
 #include "communication.h"
 #include "syscall_data.h"
+#include "process_descriptor.h"
 
 
 struct recv_information{
@@ -27,9 +28,8 @@ struct recv_information{
 };
 
 struct infos_socket{
+  fd_s fd;
   comm_t comm;//point to the communication which socket involved in
-  process_descriptor* proc;//contain information of proc which handle the socket
-  int fd;
   int domain;
   int protocol;
   unsigned int ip_local;

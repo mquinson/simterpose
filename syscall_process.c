@@ -41,16 +41,16 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
       struct infos_socket *s = comm_get_peer(is);
 
 //       printf("Sending data(%d) to %d on socket %d\n", arg->ret, s->proc->pid, s->fd);
-      int peer_stat = process_get_state(s->proc);
+      int peer_stat = process_get_state(s->fd.proc);
       if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL || peer_stat == PROC_RECV_IN)
-        add_to_sched_list(s->proc->pid);
+        add_to_sched_list(s->fd.proc->pid);
       
       handle_new_send(is,  sysarg);
 
       SD_task_t task = create_send_communication_task(pid, is, arg->ret);
 
-      schedule_comm_task(is->proc->station, s->proc->station, task);
-      is->proc->on_simulation = 1;
+      schedule_comm_task(is->fd.proc->station, s->fd.proc->station, task);
+      is->fd.proc->on_simulation = 1;
       return 1;
     }
     return 0;

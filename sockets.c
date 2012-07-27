@@ -57,10 +57,11 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   
   struct infos_socket *is = malloc(sizeof(struct infos_socket));
   proc->fd_list[sockfd]=is;
-  is->fd= sockfd;
+  is->fd.type = FD_SOCKET_TYPE;
+  is->fd.fd = sockfd;
+  is->fd.proc = proc;
   
   is->comm = NULL;
-  is->proc=proc;
   is->domain=domain;
   is->protocol=protocol;
   is->ip_local=-1;
@@ -165,11 +166,11 @@ void get_localaddr_port_socket(pid_t pid, int fd) {
 
 void print_infos_socket(struct infos_socket *is) {
   fprintf(stdout,"\n%5s %5s %10s %10s %21s\n","pid","fd","domain","protocol","locale_ip:port");
-    if(is->proc != NULL){
+    if(is->fd.proc != NULL){
 
   fprintf(stdout,"%5d %5d %10d %10d %15d:%5d\n",
-	  is->proc->pid,
-	  is->fd,
+	  is->fd.proc->pid,
+	  is->fd.fd,
 	  is->domain,
 	  is->protocol,
 	  is->ip_local,

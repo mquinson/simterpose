@@ -4,12 +4,12 @@
 
 void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) {   
 
-  size_t i = 0;
-  int size_copy =0;
+  int i = 0;
+  long size_copy =0;
 
+  errno = 0;
+  long ret;
   while (size_copy < len) {
-    long ret;
-    errno = 0;
     ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
     if (ret == -1 && errno != 0) {
       printf("%s : ptrace peekdata in %s\n",strerror(errno), syscall);
@@ -23,18 +23,15 @@ void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) 
 
 void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
 {
-  size_t i = 0;
-  int size_copy =0;
-  
+  size_t size_copy =0;
+  long ret;
+  errno = 0;
   while (size_copy < len) {
-    long ret;
-    errno = 0;
-    ret = ptrace(PTRACE_POKEDATA, pid, dst + i * sizeof(long), *((long*)(src + i * sizeof(long))));
+    ret = ptrace(PTRACE_POKEDATA, pid, dst +size_copy, *((long*)(src + size_copy)));
     if (ret == -1 && errno != 0) {
       perror("ptrace pokedata");
       xbt_die("Impossible to continue\n");
     }
-    i++;
     size_copy += sizeof(long);
   }
 }

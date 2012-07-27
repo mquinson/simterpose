@@ -34,7 +34,16 @@
 #define PROC_IN_TIMEOUT         1
 #define PROC_TIMEOUT_EXPIRE     2
 
+#define FD_SOCKET_TYPE          1
+
 typedef struct process_descriptor process_descriptor;
+typedef struct fd_s fd_s;
+
+struct fd_s{
+  int type;
+  process_descriptor* proc;
+  int fd;
+};
 
 #include "args_trace.h"
 #include "simdag/simdag.h"
@@ -44,10 +53,10 @@ typedef struct process_descriptor process_descriptor;
 #include <sys/types.h>
 
 
+
 struct process_descriptor{
   pid_t pid;
   pid_t tgid;
-  int idle;
   int mediate_state;
   long long int cpu_time;
   char* name;
@@ -57,6 +66,7 @@ struct process_descriptor{
   SD_task_t last_computation_task;
   struct infos_socket** fd_list;
   
+  unsigned int idle     :1;
   unsigned int in_timeout :2;
   unsigned int scheduled  :1;
   unsigned int idle_list  :1;
@@ -75,9 +85,9 @@ process_descriptor *process_get_descriptor(pid_t pid);
 
 void process_set_descriptor(pid_t pid, process_descriptor* proc);
 
-void process_set_idle(int pid, int idle_state);
+void process_set_idle(process_descriptor *proc, int idle_state);
 
-int process_get_idle(int pid);
+int process_get_idle(process_descriptor *proc);
 
 void process_fork(pid_t new_pid, pid_t pid_fork);
 
