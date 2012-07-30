@@ -22,6 +22,11 @@ void sys_build_connect(pid_t pid, syscall_arg_u *sysarg)
   ptrace_restore_syscall(pid, SYS_connect, arg->ret);
 }
 
+void sys_build_bind(pid_t pid, syscall_arg_u *sysarg)
+{
+  bind_arg_t arg = &(sysarg->bind);
+  ptrace_restore_syscall(pid, SYS_bind, arg->ret);
+}
 
 
 void get_args_bind_connect(pid_t child, int syscall, reg_s *reg, syscall_arg_u *sysarg) {

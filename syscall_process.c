@@ -515,21 +515,19 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
 
 void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
 {
-//   connect_arg_t conn = &(sysarg->connect);
-  
-//   int domain = get_domain_socket(pid, conn->sockfd);
-//   if(domain ==2 && conn->ret >= 0)
-//   {
-//     update_socket(pid, conn->sockfd);
-//   }
   process_descriptor *proc = process_get_descriptor(pid);
   process_reset_state(proc);
 }
 
-int process_bind_call(pid_t pid, syscall_arg_u *arg)
+int process_bind_call(pid_t pid, syscall_arg_u *sysarg)
 {
-  connect_arg_t conn = &(arg->connect);
-  set_localaddr_port_socket(pid,conn->sockfd,inet_ntoa(conn->sai.sin_addr),ntohs(conn->sai.sin_port));
+  bind_arg_t arg = &(sysarg->bind);
+  set_localaddr_port_socket(pid,arg->sockfd,inet_ntoa(arg->sai.sin_addr),ntohs(arg->sai.sin_port));
+  arg->ret=0;
+  
+  ptrace_neutralize_syscall(pid);
+  sys_build_bind(pid, sysarg);
+  process_set_out_syscall(process_get_descriptor(pid));
   return 0;
 }
 
@@ -791,6 +789,12 @@ int process_handle(pid_t pid, int stat)
           get_args_listen(pid, &arg, sysarg);
           process_listen_call(pid, sysarg);
           print_listen_syscall(pid, sysarg);
+          break;
+          
+        case SYS_bind:
+          get_args_bind_connect(pid, 0, &arg, sysarg);
+          process_bind_call(pid, sysarg);
+          print_bind_syscall(pid, sysarg);
           break;
         
         case SYS_connect:
@@ -1056,7 +1060,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_bind:
           get_args_bind_connect(pid, 0, &arg, sysarg);
           print_bind_syscall(pid, sysarg);
-          process_bind_call(pid, sysarg);
           break;
           
         case SYS_connect:

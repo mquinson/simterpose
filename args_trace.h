@@ -25,6 +25,8 @@ void sys_build_select(pid_t pid, int match);
 
 void sys_build_poll(pid_t pid, int match);
 
+void sys_build_bind(pid_t pid, syscall_arg_u *sysarg);
+
 void sys_build_recvmsg(pid_t pid, syscall_arg_u* sysarg);
 
 void sys_build_sendmsg(pid_t pid, syscall_arg_u* sysarg);
