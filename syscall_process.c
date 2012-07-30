@@ -539,6 +539,47 @@ int process_socket_call(pid_t pid, syscall_arg_u *arg)
   return 0;
 }
 
+void process_setsockopt_syscall(pid_t pid, syscall_arg_u *sysarg)
+{
+  setsockopt_arg_t arg = &(sysarg->setsockopt);
+  //TODO real gestion of setsockopt with warn
+  arg->ret=0;
+ 
+  if(arg->optname == SO_REUSEADDR)
+    socket_set_option(pid, arg->sockfd, SOCK_OPT_REUSEADDR, *((int*)arg->optval));
+  else
+    XBT_WARN("Option non supported by Simterpose.\n");
+  
+  
+  ptrace_neutralize_syscall(pid);
+  sys_build_setsockopt(pid, sysarg);
+  process_set_out_syscall(process_get_descriptor(pid));
+}
+
+
+void process_getsockopt_syscall(pid_t pid, syscall_arg_u *sysarg)
+{
+  getsockopt_arg_t arg = &(sysarg->getsockopt);
+  
+  arg->ret = 0;
+  if(arg->optname == SO_REUSEADDR)
+  {
+    arg->optlen = sizeof(int);
+    arg->optval = malloc(arg->optlen);
+    *((int*)arg->optval)=socket_get_option(pid, arg->sockfd, SOCK_OPT_REUSEADDR);
+  }
+  else
+  {
+    XBT_WARN("Option non supported by Simterpose.\n");
+    arg->optlen = 0;
+    arg->optval = NULL;
+  }
+  
+  ptrace_neutralize_syscall(pid);
+  sys_build_getsockopt(pid, sysarg);
+  process_set_out_syscall(process_get_descriptor(pid));
+}
+
 
 int process_listen_call(pid_t pid, syscall_arg_u* sysarg)
 {
@@ -571,6 +612,10 @@ void process_fcntl_call(pid_t pid, syscall_arg_u* sysarg)
       return;
       break;
   }
+  
+  ptrace_neutralize_syscall(pid);
+  sys_build_fcntl(pid, sysarg);
+  process_set_out_syscall(process_get_descriptor(pid));
 }
 
 void process_close_call(pid_t pid, int fd)
@@ -819,6 +864,25 @@ int process_handle(pid_t pid, int stat)
         }
         break;
         
+        case SYS_getsockopt:
+          get_args_getsockopt(pid, &arg, sysarg);
+          process_getsockopt_syscall(pid, sysarg);
+          print_getsockopt_syscall(pid, sysarg);
+          break;
+          
+        case SYS_setsockopt:
+          get_args_setsockopt(pid, &arg, sysarg);
+          process_setsockopt_syscall(pid, sysarg);
+          print_setsockopt_syscall(pid, sysarg);
+          free(sysarg->setsockopt.optval);
+          break;
+        
+        case SYS_fcntl:
+          get_args_fcntl(pid, &arg, sysarg);
+          print_fcntl_syscall(pid, sysarg);
+          process_fcntl_call(pid, sysarg);
+          break;
+          
         case SYS_select:
         {
           get_args_select(pid,&arg, sysarg);
@@ -1043,7 +1107,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_fcntl:
           get_args_fcntl(pid, &arg, sysarg);
           print_fcntl_syscall(pid, sysarg);
-          process_fcntl_call(pid, sysarg);
           break;
           
           
@@ -1104,12 +1167,12 @@ int process_handle(pid_t pid, int stat)
           break;
               
         case SYS_getsockopt:
-          get_args_get_setsockopt(pid, 1, &arg, sysarg);
+          get_args_getsockopt(pid, &arg, sysarg);
           print_getsockopt_syscall(pid, sysarg);
           break;
           
         case SYS_setsockopt:
-          get_args_get_setsockopt(pid, 0, &arg, sysarg);
+          get_args_setsockopt(pid, &arg, sysarg);
           print_setsockopt_syscall(pid, sysarg);
           break;
                 

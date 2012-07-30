@@ -35,5 +35,8 @@ void ptrace_neutralize_syscall(const pid_t pid);
 
 void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long result);
 
+//Call this when you are in syscall
+int ptrace_record_socket(pid_t pid);
+
 #endif
 

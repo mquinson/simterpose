@@ -68,6 +68,7 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   is->protocol=protocol;
   is->ip_local=-1;
   is->port_local=0;
+  is->option =0;
   
   is->flags = O_RDWR;
 
@@ -82,7 +83,6 @@ int socket_get_flags(pid_t pid, int fd)
   
   if(is==NULL)
     return 0;
-  
   return is->flags;
 }
 
@@ -93,6 +93,27 @@ void socket_set_flags(pid_t pid, int fd, int flags)
   if(is == NULL)
     return;
   is->flags = flags;
+}
+
+int socket_get_option(pid_t pid, int fd, int option)
+{
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  
+  if(is==NULL)
+    return 0;
+  return is->option & option;
+}
+
+void socket_set_option(pid_t pid, int fd, int option, int value)
+{
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  
+  if(is==NULL)
+    return;
+  if(value)
+    is->option = is->option | option;
+  else
+    is->option = is->option & ~option;
 }
 
 void delete_socket(pid_t pid, int fd) {

@@ -55,12 +55,55 @@ void ptrace_detach_process(const pid_t pid)
 }
 
 
+int ptrace_record_socket(pid_t pid)
+{
+  struct user_regs_struct save_reg, reg;
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &save_reg) == -1) {
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &reg) == -1) {
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+  
+  reg.orig_rax = SYS_socket;
+  reg.rdi = AF_INET;
+  reg.rsi = SOCK_STREAM;
+  reg.rdx = 0;
+  
+  if (ptrace(PTRACE_SETREGS, pid,NULL, &reg)==-1) {
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+  ptrace_resume_process(pid);
+  
+  int status;
+  waitpid(pid, &status, 0);
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &reg) == -1) {
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+  int res = (int)reg.rax;
+ 
+  
+  if (ptrace(PTRACE_SETREGS, pid,NULL, &reg)==-1) {
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+  ptrace_rewind_syscalls(pid);
+  
+  return res;
+}
+
+
 void ptrace_get_register(const pid_t pid, reg_s* arg)
 {
   struct user_regs_struct regs;
-  int r;
   
-  if (( r = ptrace(PTRACE_GETREGS, pid,NULL, &regs)) == -1) {
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs) == -1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
     xbt_die("Impossible to continue\n");
   }
@@ -84,9 +127,7 @@ void ptrace_set_register(const pid_t pid)
     xbt_die("Impossible to continue\n");
   }
   //regs.rax=184;
-  regs.orig_rax = 184;
-  printf("eip = %lu\n", regs.rip);
-  
+  regs.orig_rax = 184;  
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));

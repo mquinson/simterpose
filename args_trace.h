@@ -43,9 +43,17 @@ void sys_build_accept(pid_t pid, syscall_arg_u *sysarg);
 
 void sys_build_listen(pid_t pid, syscall_arg_u* sysarg);
 
+void sys_build_setsockopt(pid_t pid, syscall_arg_u *sysarg);
+
+void sys_build_getsockopt(pid_t pid, syscall_arg_u *sysarg);
+
+void sys_build_fcntl(pid_t pid, syscall_arg_u* sysarg);
+
 void get_args_poll(pid_t child, reg_s* arg, syscall_arg_u* sysarg);
 
-void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u *sysarg);
+void get_args_setsockopt(pid_t pid, reg_s *reg, syscall_arg_u *sysarg);
+
+void get_args_getsockopt(pid_t child, reg_s* reg, syscall_arg_u *sysarg);
 
 void get_args_sendto(pid_t child, reg_s* reg, syscall_arg_u* sysarg);
 

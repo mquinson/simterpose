@@ -12,6 +12,9 @@ typedef struct recv_information recv_information;
 typedef struct process_info process_info;
 struct infos_socket;
 
+#define SOCK_OPT_REUSEADDR      0x0001
+
+
 #include "sysdep.h"
 #include "xbt.h"
 #include "xbt/fifo.h"
@@ -35,6 +38,7 @@ struct infos_socket{
   unsigned int ip_local;
   int port_local;
   int flags;
+  int option;
 };
 
 recv_information* recv_information_new();
@@ -86,5 +90,9 @@ int socket_network(pid_t pid, int fd);
 void socket_set_flags(pid_t pid, int fd, int flags);
 
 int socket_get_flags(pid_t pid, int fd);
+
+void socket_set_option(pid_t pid, int fd, int option, int value);
+
+int socket_get_option(pid_t pid, int fd, int option);
 
 #endif

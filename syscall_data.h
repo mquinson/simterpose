@@ -153,9 +153,11 @@ struct getsockopt_arg_s{
   int sockfd;
   int level;
   int optname;
-  //void *optval;
+  void *optval;
   socklen_t optlen;
   int ret;
+  void *dest;
+  void *dest_optlen;
 };
 
 struct fcntl_arg_s{

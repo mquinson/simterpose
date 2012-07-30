@@ -168,8 +168,41 @@ void sys_build_select(pid_t pid, int match)
 }
 
 
+void sys_build_setsockopt(pid_t pid, syscall_arg_u *sysarg)
+{
+  setsockopt_arg_t arg = &(sysarg->setsockopt);
+  ptrace_restore_syscall(pid, SYS_setsockopt, arg->ret);
+}
 
-void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u *sysarg) {
+void get_args_setsockopt(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
+{
+  setsockopt_arg_t arg = &(sysarg->setsockopt);
+  
+  arg->ret = (int)reg->ret;
+  arg->sockfd = (int)reg->arg1;
+  arg->level = (int) reg->arg2;
+  arg->optname = (int)reg->arg3;
+  arg->dest=(void *)reg->arg4;
+  arg->optlen=reg->arg5;
+  
+  arg->optval = malloc(arg->optlen);
+  ptrace_cpy(pid, arg->optval, (void *)arg->dest, arg->optlen, "setsockopt");
+}
+
+
+void sys_build_getsockopt(pid_t pid, syscall_arg_u *sysarg)
+{
+  getsockopt_arg_t arg = &(sysarg->getsockopt);
+  ptrace_restore_syscall(pid, SYS_getsockopt, arg->ret);
+  
+    if(arg->optname == SO_REUSEADDR)
+    {
+      ptrace_poke(pid, (void*)arg->dest, &(arg->optval), sizeof(arg->optlen));
+      ptrace_poke(pid, (void*)arg->dest_optlen, &(arg->optlen), sizeof(socklen_t));
+    }
+}
+
+void get_args_getsockopt(pid_t child, reg_s* reg, syscall_arg_u *sysarg) {
 
   getsockopt_arg_t arg = &(sysarg->getsockopt);
 
@@ -177,12 +210,10 @@ void get_args_get_setsockopt(pid_t child, int syscall, reg_s* reg, syscall_arg_u
   arg->sockfd=(int)reg->arg1;
   arg->level=(int)reg->arg2;
   arg->optname=(int)reg->arg3;
-  //optval=(void *)arg->arg4;
+  arg->dest=(void *)reg->arg4;
+  arg->dest_optlen = (void*) reg->arg5;
 
-  if (syscall == 1) // getsockopt
-    ptrace_cpy(child,&arg->optlen,(void *)reg->arg5,sizeof(socklen_t),"getsockopt ou setsockopt");
-  else  // setsockopt
-    arg->optlen=reg->arg5;
+  ptrace_cpy(child,&arg->optlen,(void *)reg->arg5,sizeof(socklen_t),"getsockopt ou setsockopt");
 }
 
 void sys_build_sendto(pid_t pid, syscall_arg_u* sysarg)
@@ -369,6 +400,12 @@ void get_args_poll(pid_t child, reg_s* reg, syscall_arg_u* sysarg) {
   } 
   else
     arg->fd_list = NULL;
+}
+
+void sys_build_fcntl(pid_t pid, syscall_arg_u* sysarg)
+{
+  fcntl_arg_t arg = &(sysarg->fcntl);
+  ptrace_restore_syscall(pid, SYS_fcntl, arg->ret);
 }
 
 void get_args_fcntl(pid_t pid, reg_s* reg,syscall_arg_u* sysarg)
