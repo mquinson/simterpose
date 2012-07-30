@@ -112,7 +112,6 @@ void socket_close(pid_t pid, int fd)
   struct infos_socket* is = get_infos_socket(pid, fd);
   if(is!=NULL)
   {
-    printf("Close socket\n");
     if(socket_network(pid, fd))
       comm_close(is);
     delete_socket(pid, fd);

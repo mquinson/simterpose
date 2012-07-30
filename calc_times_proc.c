@@ -24,8 +24,7 @@ struct msgtemplate {
   struct nlmsghdr n;
   struct genlmsghdr g;
   char buf[MAX_MSG_SIZE];
-};
-
+}msg;
 
 /*
  * Create a raw netlink socket and bind
@@ -61,8 +60,6 @@ int send_cmd(int sd, __u16 nlmsg_type, __u32 nlmsg_pid,
   int r, buflen;
   char *buf;
 
-  struct msgtemplate msg;
-  memset(&msg, 0, sizeof(struct msgtemplate));
 
   msg.n.nlmsg_len = NLMSG_LENGTH(GENL_HDRLEN);
   msg.n.nlmsg_type = nlmsg_type;
@@ -139,6 +136,7 @@ int init_cputime() {
     return -1;
   }
   _id = get_family_id(_nl_sd);
+  memset(&msg, 0, sizeof(struct msgtemplate));
   if (!_id) {
     err("Error getting family id, errno %d\n", errno);
     return -1;

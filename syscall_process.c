@@ -544,10 +544,16 @@ int process_socket_call(pid_t pid, syscall_arg_u *arg)
 
 int process_listen_call(pid_t pid, syscall_arg_u* sysarg)
 {
-  listen_arg_t list = &(sysarg->listen);
-  struct infos_socket* is = get_infos_socket(pid, list->sockfd);
+  //TODO make gestion of back_log
+  listen_arg_t arg = &(sysarg->listen);
+  struct infos_socket* is = get_infos_socket(pid, arg->sockfd);
   comm_t comm = comm_new(is);
   comm_set_listen(comm);
+  arg->ret=0;
+  
+  ptrace_neutralize_syscall(pid);
+  sys_build_listen(pid, sysarg);
+  process_set_out_syscall(process_get_descriptor(pid));
   
   return 0;
 }
@@ -780,6 +786,12 @@ int process_handle(pid_t pid, int stat)
           }
         }
         break;
+        
+        case SYS_listen:
+          get_args_listen(pid, &arg, sysarg);
+          process_listen_call(pid, sysarg);
+          print_listen_syscall(pid, sysarg);
+          break;
         
         case SYS_connect:
         {
@@ -1058,9 +1070,7 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_listen:
-          get_args_listen(pid, &arg, sysarg);
-          print_listen_syscall(pid, sysarg);
-          process_listen_call(pid, sysarg);
+          THROW_IMPOSSIBLE;
           break;
               
         case SYS_sendto:

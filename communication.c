@@ -30,7 +30,6 @@ comm_t comm_new(struct infos_socket* socket)
   res->info[1].socket = NULL;
   res->info[1].recv = recv_information_new();
   
-  //TODO do a real gestion of communication state
   res->state = COMM_OPEN;
   res->conn_wait = xbt_dynar_new(sizeof(comm_t), NULL);
   
@@ -87,21 +86,12 @@ void comm_set_state(comm_t comm, int new_state)
   comm->state = new_state; 
 }
 
-void comm_set_close(comm_t comm)
-{
-  //Here we have to make an and.
-  comm->state = comm->state & COMM_CLOSED;
-}
-
-
 void comm_close(struct infos_socket* is)
 {
-  printf("Closing communication\n");
+//   printf("Closing communication\n");
   comm_t comm = is->comm;
   if(comm == NULL)
     return;
-  if(is->port_local==2222)
-    fprintf(stderr, "Tracker close a connection\n");
   if(comm->state & COMM_LISTEN)
   {
     comm_destroy(comm);
@@ -137,7 +127,7 @@ void comm_shutdown(struct infos_socket *is)
 void comm_set_listen(comm_t comm)
 {
   comm->state =  comm->state | COMM_LISTEN;
-  printf("Listen do %d\n", comm->state & COMM_LISTEN);
+//   printf("Listen do %d\n", comm->state & COMM_LISTEN);
 }
 
 int comm_ask_connect(unsigned int ip, int port, pid_t tid, int fd)
@@ -150,13 +140,13 @@ int comm_ask_connect(unsigned int ip, int port, pid_t tid, int fd)
     if(temp->state & COMM_LISTEN)
     {
       struct infos_socket* socket = temp->info[0].socket;
-      printf("Checking %d %d\n", socket->ip_local, socket->port_local);
+//       printf("Checking %d %d\n", socket->ip_local, socket->port_local);
       if((socket->ip_local == ip || socket->ip_local == 1)&&  socket->port_local == port)
       {
         //Now verify if it's a listening socket
         if(temp->state & COMM_LISTEN)
         {
-          printf("Add to connection asking queue %d\n", socket->fd.proc->pid);
+//           printf("Add to connection asking queue %d\n", socket->fd.proc->pid);
           comm_t comm = comm_new(get_infos_socket(tid, fd));
           xbt_dynar_push(temp->conn_wait, &comm);
           return socket->fd.proc->pid;
@@ -164,7 +154,7 @@ int comm_ask_connect(unsigned int ip, int port, pid_t tid, int fd)
       }
     }
   }
-  printf("Don't found listened socket %ud %d\n", ip, port);
+//   printf("Don't found listened socket %ud %d\n", ip, port);
   return 0;
 }
 
@@ -193,7 +183,7 @@ pid_t comm_accept_connect(struct infos_socket* is)
   comm_t comm_conn;
   xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
 
-  fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->fd.proc->pid);
+//   fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->fd.proc->pid);
   return comm_conn->info[0].socket->fd.proc->pid;
 }
 

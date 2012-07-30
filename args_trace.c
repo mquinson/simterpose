@@ -72,9 +72,14 @@ void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
   ptrace_cpy(child,&arg->addrlen, (void*)reg->arg3,sizeof(socklen_t),"accept");
 }
 
+void sys_build_listen(pid_t pid, syscall_arg_u* sysarg)
+{
+  listen_arg_t arg = &(sysarg->listen);
+  ptrace_restore_syscall(pid, SYS_listen, arg->ret);
+}
+
 void get_args_listen(pid_t pid, reg_s *reg, syscall_arg_u *sysarg) {
   listen_arg_t arg = &(sysarg->listen);
-
 
   arg->sockfd=(int)reg->arg1;
   arg->backlog=(int)reg->arg2;

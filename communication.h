@@ -50,8 +50,6 @@ recv_information* comm_get_peer_recv(struct infos_socket* is);
 
 void comm_set_state(comm_t comm, int new_state);
 
-void comm_set_close(comm_t comm);
-
 void comm_shutdown(struct infos_socket *is);
 
 void comm_set_listen(comm_t comm);
