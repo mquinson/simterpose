@@ -86,14 +86,18 @@ int ptrace_record_socket(pid_t pid)
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
     xbt_die("Impossible to continue\n");
   }
+  
   int res = (int)reg.rax;
  
   
-  if (ptrace(PTRACE_SETREGS, pid,NULL, &reg)==-1) {
+  if (ptrace(PTRACE_SETREGS, pid,NULL, &save_reg)==-1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
     xbt_die("Impossible to continue\n");
   }
   ptrace_rewind_syscalls(pid);
+  ptrace_resume_process(pid);
+  
+  waitpid(pid, &status, 0);
   
   return res;
 }

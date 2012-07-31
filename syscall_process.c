@@ -382,7 +382,8 @@ int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
     
     //Now we rebuild the syscall.
     process_descriptor* proc = process_get_descriptor(pid);
-    int new_fd = process_get_free_fd(proc);
+    int new_fd = ptrace_record_socket(pid);
+    printf("New socket %d\n", new_fd);
     arg->ret = new_fd;
     ptrace_neutralize_syscall(pid);
     process_set_out_syscall(proc);
@@ -1133,6 +1134,7 @@ int process_handle(pid_t pid, int stat)
         case SYS_accept:
           get_args_accept(pid, &arg, sysarg);
           print_accept_syscall(pid, sysarg);
+          printf("Here\n");
           break;
           
         case SYS_listen:
