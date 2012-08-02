@@ -45,4 +45,6 @@ unsigned int get_ip_of_station(SD_workstation_t station);
 
 SD_workstation_t get_station_by_ip(unsigned int ip);
 
+int get_random_port(SD_workstation_t station);
+
 #endif

@@ -57,7 +57,7 @@ void comm_set_listen(comm_t comm);
 
 int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int device);
 
-pid_t comm_accept_connect(struct infos_socket* is);
+pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in);
 
 int comm_get_socket_state(struct infos_socket* is);
 

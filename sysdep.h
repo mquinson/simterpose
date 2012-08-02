@@ -35,7 +35,6 @@
 #include <linux/cgroupstats.h>
 #include <linux/netlink.h>
 
-#define SIZE_PARAM_TRACE 1024
 #define MAX_PROCS 512
 
 

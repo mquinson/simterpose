@@ -3,6 +3,7 @@
 #include "process_descriptor.h"
 #include "communication.h"
 #include "sockets.h"
+#include "sysdep.h"
 #include <sys/uio.h>
 
 void get_args_socket(pid_t child, reg_s *reg, syscall_arg_u * sysarg) { 
@@ -54,6 +55,9 @@ void sys_build_accept(pid_t pid, syscall_arg_u *sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
   ptrace_restore_syscall(pid, SYS_accept, arg->ret);
+  
+  ptrace_poke(pid, arg->addr_dest, &(arg->sai), sizeof(struct sockaddr_in));
+  ptrace_poke(pid, arg->len_dest, &(arg->addrlen), sizeof(socklen_t));
 }
 
 
@@ -75,6 +79,9 @@ void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
     ptrace_cpy(child, &arg->snl, (void*)reg->arg2, sizeof(struct sockaddr_in),"accept");
 
   ptrace_cpy(child,&arg->addrlen, (void*)reg->arg3,sizeof(socklen_t),"accept");
+  
+  arg->addr_dest = (void*)reg->arg2;
+  arg->len_dest = (void*)reg->arg3;
 }
 
 void sys_build_listen(pid_t pid, syscall_arg_u* sysarg)

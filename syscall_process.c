@@ -370,7 +370,11 @@ int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
   //We try to find here if there's a connection to accept
   if(comm_has_connect_waiting(get_infos_socket(pid, arg->sockfd)))
   {
-    pid_t conn_pid = comm_accept_connect(get_infos_socket(pid, arg->sockfd));
+    struct sockaddr_in in;
+    pid_t conn_pid = comm_accept_connect(get_infos_socket(pid, arg->sockfd), &in);
+    arg->sai = in;
+    
+    printf("Accepting connection from %s:%d", inet_ntoa(in.sin_addr), in.sin_port);
     process_descriptor* conn_proc = process_get_descriptor(conn_pid);
     
     int conn_state = process_get_state(conn_proc);
@@ -383,13 +387,14 @@ int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
     //Now we rebuild the syscall.
     process_descriptor* proc = process_get_descriptor(pid);
     int new_fd = ptrace_record_socket(pid);
-    printf("New socket %d\n", new_fd);
+
     arg->ret = new_fd;
     ptrace_neutralize_syscall(pid);
     process_set_out_syscall(proc);
     sys_build_accept(pid, sysarg);
     
     process_accept_out_call(pid, sysarg);
+    print_accept_syscall(pid, sysarg);
     
     return conn_pid;
   }
@@ -406,6 +411,7 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
   
+  process_descriptor *proc = process_get_descriptor(pid);
   if(arg->ret >= 0)
   {
     int domain = get_domain_socket(pid, arg->sockfd);
@@ -413,8 +419,28 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
     
     struct infos_socket* is = register_socket(pid, arg->ret, domain, protocol);
     comm_join_on_accept(is, pid, arg->sockfd);
+    
+    struct infos_socket *s = get_infos_socket(pid, arg->sockfd);
+    register_port(proc->station, s->port_local);
+    
+    struct in_addr in;
+    if(s->ip_local == 0)
+    {
+      struct infos_socket *temp = is->comm->info[0].socket;
+      struct in_addr in1 = {temp->ip_local};
+      printf("Receive connection from %s\n", inet_ntoa(in1));
+      if(temp->ip_local == inet_addr("127.0.0.1"))
+        in.s_addr = inet_addr("127.0.0.1");
+      else
+        in.s_addr = get_ip_of_station(proc->station);
+    }
+    else
+      in.s_addr = s->ip_local;
+    
+    printf("set address %s:%d\n", inet_ntoa(in), s->port_local);
+    set_localaddr_port_socket(pid, arg->ret, inet_ntoa(in), s->port_local);
   }
-  process_descriptor *proc = process_get_descriptor(pid);
+  
   process_reset_state(proc);
 }
 
@@ -474,14 +500,17 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
     
     SD_workstation_t station;
     int device;
+    struct in_addr in;
     
     if(sai->sin_addr.s_addr == inet_addr("127.0.0.1"))
     {
+      in.s_addr = inet_addr("127.0.0.1");
       device = PORT_LOCAL;
       station = proc->station;
     }
     else
     {
+      in.s_addr = get_ip_of_station(proc->station);
       device = PORT_REMOTE;
       station = get_station_by_ip(sai->sin_addr.s_addr);
     }
@@ -496,6 +525,12 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
       int status = process_get_state(acc_proc);
       if(status == PROC_ACCEPT_IN || status == PROC_SELECT || status == PROC_POLL)
         add_to_sched_list(acc_pid);
+      
+      //Now attribute ip and port to the socket.
+      int port = get_random_port(proc->station);
+
+      set_localaddr_port_socket(pid, arg->sockfd, inet_ntoa(in), port);
+      printf("Free port found %s:%d\n",inet_ntoa(in),  port);
     }
     else
       THROW_IMPOSSIBLE;
@@ -536,7 +571,6 @@ void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
 
 int process_bind_call(pid_t pid, syscall_arg_u *sysarg)
 {
-  printf("Process bien call\n");
   bind_arg_t arg = &(sysarg->bind);
   process_descriptor *proc = process_get_descriptor(pid);
   
@@ -552,7 +586,7 @@ int process_bind_call(pid_t pid, syscall_arg_u *sysarg)
       device = PORT_LOCAL;
     else
       device = PORT_REMOTE;
-    printf("Binding on device %d", device);
+
     set_port_on_binding(proc->station, ntohs(arg->sai.sin_port), is, device);
     
     set_localaddr_port_socket(pid,arg->sockfd,inet_ntoa(arg->sai.sin_addr),ntohs(arg->sai.sin_port));

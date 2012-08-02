@@ -145,18 +145,29 @@ int is_port_in_use(SD_workstation_t station, int port)
 
 void register_port(SD_workstation_t station, int port)
 {
-  port_desc *temp = malloc(sizeof(port_desc));
-  temp->port_num = port;
-  temp->option=0;
-  temp->amount_socket=1;
-  temp->bind_socket=NULL;
-  
+  //try to see if port isn't already use.
+  simterpose_station *station_desc = (simterpose_station*)xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
   char buff[6];
   sprintf(buff, "%d", port);
+  port_desc *temp = NULL;
   
-  simterpose_station *station_desc = (simterpose_station*)xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
   
-  xbt_dict_set(station_desc->port, buff, temp, NULL);
+  if((temp = (port_desc*)xbt_dict_get_or_null(station_desc->port, buff)))
+  {
+    ++(temp->amount_socket);
+  }
+  else
+  {
+    temp = malloc(sizeof(port_desc));
+    temp->port_num = port;
+    temp->option=0;
+    temp->amount_socket=1;
+    temp->bind_socket=NULL;
+    
+    xbt_dict_set(station_desc->port, buff, temp, NULL);
+  }
+  
+  
 }
 
 int get_port_option(SD_workstation_t station, int port)
@@ -247,5 +258,24 @@ SD_workstation_t get_station_by_ip(unsigned int ip)
     return NULL;
   
   return SD_workstation_get_by_name(name);
+}
+
+int get_random_port(SD_workstation_t station)
+{
+  simterpose_station *temp = (simterpose_station*)xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  unsigned short port = 0;
+  --port;
+  
+  while(1)
+  {
+    char buff[6];
+    sprintf(buff, "%d", port);
+    if(xbt_dict_get_or_null(temp->port, buff))
+      --port;
+    else
+      break;
+  }
+  
+  return port;
 }
 

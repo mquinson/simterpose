@@ -4,6 +4,7 @@
 #include "task.h"
 #include "data_utils.h"
 #include "simdag/simdag.h"
+#include "sysdep.h"
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -134,13 +135,10 @@ void comm_set_listen(comm_t comm)
 
 int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int device)
 {
-  printf("Enter here\n"); 
-  
   struct infos_socket *conn = get_binding_socket_workstation(station, port, device);
   if(!conn)
     return 0;
   
-  printf("Socket for connection found\n");
   comm_t comm = comm_new(get_infos_socket(tid, fd));
   xbt_dynar_push(conn->comm->conn_wait, &comm);
   return conn->fd.proc->pid;
@@ -160,7 +158,7 @@ void comm_join_on_accept(struct infos_socket *is, pid_t pid, int fd_listen)
   is->comm = comm_conn;
 }
 
-pid_t comm_accept_connect(struct infos_socket* is)
+pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in)
 {
   comm_t comm = is->comm;
   if(comm==NULL)
@@ -170,6 +168,11 @@ pid_t comm_accept_connect(struct infos_socket* is)
     return 0;
   comm_t comm_conn;
   xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
+  
+  //Store ip and port of process which wait for connect
+  struct infos_socket *s = comm_conn->info[0].socket;
+  in->sin_addr.s_addr = s->ip_local;
+  in->sin_port = s->port_local;
 
 //   fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->fd.proc->pid);
   return comm_conn->info[0].socket->fd.proc->pid;

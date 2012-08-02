@@ -133,6 +133,8 @@ struct accept_arg_s{
     struct sockaddr_nl snl;
   };
   socklen_t addrlen;
+  void *addr_dest;
+  void *len_dest;
 };
 
 
