@@ -29,7 +29,7 @@ void init_station_list()
   xbt_dynar_t no_ip_list = xbt_dynar_new(sizeof(int), NULL);
   xbt_dynar_t ip_list = xbt_dynar_new(sizeof(unsigned int), NULL);
   
-  SD_workstation_t *work_list = SD_workstation_get_list();
+  const SD_workstation_t *work_list = SD_workstation_get_list();
   int i;
   
   int size = SD_workstation_get_number();

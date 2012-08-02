@@ -8,6 +8,7 @@
 #include "syscall_data.h"
 #include "process_descriptor.h"
 #include "run_trace.h"
+#include "data_utils.h"
 
 #define LOCAL 1
 #define REMOTE 2
@@ -69,6 +70,7 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   is->ip_local=-1;
   is->port_local=0;
   is->option =0;
+  is->binded = 0;
   
   is->flags = O_RDWR;
 
@@ -135,6 +137,7 @@ void socket_close(pid_t pid, int fd)
   {
     if(socket_network(pid, fd))
       comm_close(is);
+    unset_socket(pid, is);
     delete_socket(pid, fd);
     free(is);
     process_descriptor* proc = global_data->process_desc[pid];
@@ -555,5 +558,17 @@ int socket_read_event(pid_t pid, int fd)
 int socket_get_state(struct infos_socket* is)
 {
   return comm_get_socket_state(is);
+}
+
+void socket_set_bind(pid_t pid, int fd, int val)
+{
+  struct infos_socket *is = get_infos_socket(pid, fd);
+  is->binded = val;
+}
+
+int socket_is_binded(pid_t pid, int fd)
+{
+  struct infos_socket *is = get_infos_socket(pid, fd);
+  return is->binded;
 }
 

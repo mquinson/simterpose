@@ -374,7 +374,6 @@ int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
     pid_t conn_pid = comm_accept_connect(get_infos_socket(pid, arg->sockfd), &in);
     arg->sai = in;
     
-    printf("Accepting connection from %s:%d", inet_ntoa(in.sin_addr), in.sin_port);
     process_descriptor* conn_proc = process_get_descriptor(conn_pid);
     
     int conn_state = process_get_state(conn_proc);
@@ -427,8 +426,7 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
     if(s->ip_local == 0)
     {
       struct infos_socket *temp = is->comm->info[0].socket;
-      struct in_addr in1 = {temp->ip_local};
-      printf("Receive connection from %s\n", inet_ntoa(in1));
+
       if(temp->ip_local == inet_addr("127.0.0.1"))
         in.s_addr = inet_addr("127.0.0.1");
       else
@@ -437,7 +435,6 @@ void process_accept_out_call(pid_t pid, syscall_arg_u* sysarg)
     else
       in.s_addr = s->ip_local;
     
-    printf("set address %s:%d\n", inet_ntoa(in), s->port_local);
     set_localaddr_port_socket(pid, arg->ret, inet_ntoa(in), s->port_local);
   }
   
@@ -530,6 +527,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
       int port = get_random_port(proc->station);
 
       set_localaddr_port_socket(pid, arg->sockfd, inet_ntoa(in), port);
+      register_port(proc->station, port);
       printf("Free port found %s:%d\n",inet_ntoa(in),  port);
     }
     else
@@ -588,6 +586,8 @@ int process_bind_call(pid_t pid, syscall_arg_u *sysarg)
       device = PORT_REMOTE;
 
     set_port_on_binding(proc->station, ntohs(arg->sai.sin_port), is, device);
+    
+    is->binded = 1;
     
     set_localaddr_port_socket(pid,arg->sockfd,inet_ntoa(arg->sai.sin_addr),ntohs(arg->sai.sin_port));
     arg->ret=0;

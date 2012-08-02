@@ -186,9 +186,7 @@ void ptrace_rewind_syscalls(const pid_t pid)
   }
 
   regs.rax = regs.orig_rax;
-  regs.rip -= 2;
-  printf("eip = %lu (%lu)\n", regs.rip, regs.rax);
-  
+  regs.rip -= 2;  
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
     fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));

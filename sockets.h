@@ -39,6 +39,7 @@ struct infos_socket{
   int port_local;
   int flags;
   int option;
+  int binded;
 };
 
 recv_information* recv_information_new();
@@ -94,5 +95,9 @@ int socket_get_flags(pid_t pid, int fd);
 void socket_set_option(pid_t pid, int fd, int option, int value);
 
 int socket_get_option(pid_t pid, int fd, int option);
+
+void socket_set_bind(pid_t pid, int fd, int val);
+
+int socket_is_binded(pid_t pid, int fd);
 
 #endif

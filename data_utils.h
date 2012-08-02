@@ -47,4 +47,6 @@ SD_workstation_t get_station_by_ip(unsigned int ip);
 
 int get_random_port(SD_workstation_t station);
 
+void unset_socket(pid_t pid, struct infos_socket* is);
+
 #endif

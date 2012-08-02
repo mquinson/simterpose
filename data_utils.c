@@ -32,7 +32,6 @@ void destroy_global_data()
 void destroy_simterpose_station(void *data)
 {
   simterpose_station* station = (simterpose_station*)data;
-  printf("Call to destroy_simterpose_station %p\n", data);
   xbt_dict_free(&(station->port));
   free(station);
 }
@@ -139,7 +138,6 @@ int is_port_in_use(SD_workstation_t station, int port)
   simterpose_station *temp = (simterpose_station*)xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
   char buff[6];
   sprintf(buff, "%d", port);
-  printf("Try to see if port %s is use\n", buff);
   return (xbt_dict_get_or_null(temp->port, buff) != NULL);
 }
 
@@ -277,5 +275,29 @@ int get_random_port(SD_workstation_t station)
   }
   
   return port;
+}
+
+void unset_socket(pid_t pid, struct infos_socket* is)
+{
+  process_descriptor *proc = process_get_descriptor(pid);
+  SD_workstation_t station = proc->station;
+  simterpose_station *temp = (simterpose_station*)xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  
+  char buff[6];
+  sprintf(buff, "%d", is->port_local);
+  
+  port_desc* desc = xbt_dict_get_or_null(temp->port, buff);
+  if(!desc)
+    return;
+  
+  if(is == desc->bind_socket)
+    desc->bind_socket = NULL;
+  
+  --desc->amount_socket;
+  if(desc->amount_socket)
+    return;
+  
+  //if this is the last socket to use te port, we have to remove it from dict
+  xbt_dict_remove(temp->port, buff);
 }
 
