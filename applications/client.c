@@ -32,8 +32,8 @@ int main(){
     
     struct sockaddr_in cli_addr;
     memset(&cli_addr,0,sizeof(struct sockaddr_in));
-    host_addr=inet_addr("127.0.0.1");
-    serverHostEnt=gethostbyname("127.0.0.1");
+    host_addr=inet_addr("162.32.43.1");
+    serverHostEnt=gethostbyname("162.32.43.1");
     memcpy(&(cli_addr.sin_addr),serverHostEnt->h_addr,serverHostEnt->h_length);
     port=SERV_PORT;
     cli_addr.sin_family=AF_INET;
@@ -80,8 +80,8 @@ int main(){
     
     struct sockaddr_in cli_addr;
     memset(&cli_addr,0,sizeof(struct sockaddr_in));
-    host_addr=inet_addr("127.0.0.1");
-    serverHostEnt=gethostbyname("127.0.0.1");
+    host_addr=inet_addr("162.32.43.1");
+    serverHostEnt=gethostbyname("162.32.43.1");
     memcpy(&(cli_addr.sin_addr),serverHostEnt->h_addr,serverHostEnt->h_length);
     port=SERV_PORT;
     cli_addr.sin_family=AF_INET;

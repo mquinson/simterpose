@@ -2,6 +2,8 @@
 #include "communication.h"
 #include "xbt.h"
 #include "task.h"
+#include "data_utils.h"
+#include "simdag/simdag.h"
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -130,32 +132,18 @@ void comm_set_listen(comm_t comm)
 //   printf("Listen do %d\n", comm->state & COMM_LISTEN);
 }
 
-int comm_ask_connect(unsigned int ip, int port, pid_t tid, int fd)
+int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int device)
 {
-  comm_t temp;
-  unsigned int cpt = 0;
+  printf("Enter here\n"); 
   
-  xbt_dynar_foreach(comm_list, cpt, temp)
-  {
-    if(temp->state & COMM_LISTEN)
-    {
-      struct infos_socket* socket = temp->info[0].socket;
-//       printf("Checking %d %d\n", socket->ip_local, socket->port_local);
-      if((socket->ip_local == ip || socket->ip_local == 1)&&  socket->port_local == port)
-      {
-        //Now verify if it's a listening socket
-        if(temp->state & COMM_LISTEN)
-        {
-//           printf("Add to connection asking queue %d\n", socket->fd.proc->pid);
-          comm_t comm = comm_new(get_infos_socket(tid, fd));
-          xbt_dynar_push(temp->conn_wait, &comm);
-          return socket->fd.proc->pid;
-        }
-      }
-    }
-  }
-//   printf("Don't found listened socket %ud %d\n", ip, port);
-  return 0;
+  struct infos_socket *conn = get_binding_socket_workstation(station, port, device);
+  if(!conn)
+    return 0;
+  
+  printf("Socket for connection found\n");
+  comm_t comm = comm_new(get_infos_socket(tid, fd));
+  xbt_dynar_push(conn->comm->conn_wait, &comm);
+  return conn->fd.proc->pid;
 }
 
 void comm_join_on_accept(struct infos_socket *is, pid_t pid, int fd_listen)

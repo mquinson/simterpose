@@ -167,8 +167,7 @@ void update_socket(pid_t pid, int fd) {
 
 void set_localaddr_port_socket(pid_t pid, int fd, char *ip, int port) {
   struct infos_socket* is = get_infos_socket(pid, fd);
-  struct in_addr t;
-  is->ip_local = inet_aton(ip, &t);
+  is->ip_local = inet_addr(ip);
   is->port_local = port;
 //   print_infos_socket(is);
 }

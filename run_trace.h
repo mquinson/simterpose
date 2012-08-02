@@ -6,9 +6,16 @@
 #define MAX_FD 1024
 #define MAX_PID 32768  
 
+#define PORT_BIND       0x1
+#define PORT_LOCAL      0x2
+#define PORT_REMOTE     0x4
+
 typedef struct time_desc time_desc;
+typedef struct simterpose_station simterpose_station;
+typedef struct port_desc port_desc;
 
 #include "process_descriptor.h"
+#include "sockets.h"
 #include "xbt.h"
 
 //For num syscall see 
@@ -24,10 +31,23 @@ struct time_desc{
   double start_time;
 };
 
+struct port_desc{
+  int port_num;
+  int option;
+  int amount_socket;
+  struct infos_socket* bind_socket;
+};
+
+struct simterpose_station{
+  unsigned int ip;
+  xbt_dict_t port;
+};
 
 struct simterpose_data{
   xbt_dynar_t launching_time;
   process_descriptor *process_desc[MAX_PID];
+  xbt_dict_t list_station;
+  xbt_dict_t list_ip;
   int child_amount;
   float flops_per_second;
   float micro_s_per_flop;

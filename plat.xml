@@ -2,10 +2,19 @@
 <!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid.dtd">
 <platform version="3">
   <AS  id="AS0"  routing="Full">
-    <host id="Tremblay" power="1e7"/>
-    <host id="Jupiter" power="1e7"/>
-    <host id="Fafard" power="1e7"/>
-    <host id="Fafard2" power="1e7"/>
+    <host id="Tremblay" power="1e7">
+      <prop id="ip" value="162.32.43.1"/>
+    </host>
+    <host id="Jupiter" power="1e7">
+      <prop id="ip" value="162.32.43.4"/>
+    </host>
+    <host id="Fafard" power="1e7">
+      <prop id="ip" value="162.32.43.17"/>
+    </host>
+    <host id="Fafard2" power="1e7">
+    <prop id="ip" value="162.32.43.45"/>
+    </host>
+    
     <link id="0" bandwidth="1e9" latency="5e-4"/>
     <link id="1" bandwidth="1e9" latency="5e-4"/>
     <link id="2" bandwidth="1e9" latency="5e-4"/>

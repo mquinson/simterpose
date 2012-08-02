@@ -469,11 +469,25 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
   
   if(domain == 2)//PF_INET
   {
-//     process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor *proc = process_get_descriptor(pid);
     struct sockaddr_in *sai = &(arg->sai);
     
+    SD_workstation_t station;
+    int device;
+    
+    if(sai->sin_addr.s_addr == inet_addr("127.0.0.1"))
+    {
+      device = PORT_LOCAL;
+      station = proc->station;
+    }
+    else
+    {
+      device = PORT_REMOTE;
+      station = get_station_by_ip(sai->sin_addr.s_addr);
+    }
+    
     //We ask for a connection on the socket
-    int acc_pid = comm_ask_connect(sai->sin_addr.s_addr, ntohs(sai->sin_port), pid, arg->sockfd);
+    int acc_pid = comm_ask_connect(station, ntohs(sai->sin_port), pid, arg->sockfd, device);
     
     //if the processus waiting for connection, we add it to schedule list
     if(acc_pid)
@@ -507,7 +521,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
     if(flags & O_NONBLOCK)
       return 0;
 
-    process_set_state(process_get_descriptor(pid), PROC_CONNECT);
+    process_set_state(proc, PROC_CONNECT);
     return 1;
   }
   else
@@ -522,9 +536,32 @@ void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
 
 int process_bind_call(pid_t pid, syscall_arg_u *sysarg)
 {
+  printf("Process bien call\n");
   bind_arg_t arg = &(sysarg->bind);
-  set_localaddr_port_socket(pid,arg->sockfd,inet_ntoa(arg->sai.sin_addr),ntohs(arg->sai.sin_port));
-  arg->ret=0;
+  process_descriptor *proc = process_get_descriptor(pid);
+  
+  if(!is_port_in_use(proc->station, ntohs(arg->sai.sin_port)))
+  {
+    register_port(proc->station, ntohs(arg->sai.sin_port));
+    
+    struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
+    int device=0;
+    if(arg->sai.sin_addr.s_addr == INADDR_ANY)
+      device = (PORT_LOCAL | PORT_REMOTE);
+    else if(arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
+      device = PORT_LOCAL;
+    else
+      device = PORT_REMOTE;
+    printf("Binding on device %d", device);
+    set_port_on_binding(proc->station, ntohs(arg->sai.sin_port), is, device);
+    
+    set_localaddr_port_socket(pid,arg->sockfd,inet_ntoa(arg->sai.sin_addr),ntohs(arg->sai.sin_port));
+    arg->ret=0;
+  }
+  else
+  {
+    arg->ret=-98;
+  }
   
   ptrace_neutralize_syscall(pid);
   sys_build_bind(pid, sysarg);
@@ -578,6 +615,7 @@ void process_getsockopt_syscall(pid_t pid, syscall_arg_u *sysarg)
   
   ptrace_neutralize_syscall(pid);
   sys_build_getsockopt(pid, sysarg);
+  free(arg->optval);
   process_set_out_syscall(process_get_descriptor(pid));
 }
 
@@ -1180,11 +1218,12 @@ int process_handle(pid_t pid, int stat)
                 
         
         default :
-          printf("[%d] Unhandle syscall %s = %ld\n", pid, syscall_list[arg.reg_orig], arg.ret);
+          printf("[%d] Unhandle syscall (%ld) %s = %ld\n", pid,arg.reg_orig, syscall_list[arg.reg_orig], arg.ret);
           break;
             
       }
     }
+    
     ptrace_resume_process(pid);
     
     //waitpid sur le fils

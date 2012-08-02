@@ -8,6 +8,7 @@
 #include "benchmark.h"
 #include "calc_times_proc.h"
 #include "init.h"
+#include "sysdep.h"
 #include <xbt/config.h>
 
 #include <stdio.h>
@@ -18,6 +19,74 @@ extern xbt_cfg_t _surf_cfg_set;
 
 void usage(char* progName) {
   printf("usage : %s [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
+}
+
+void init_station_list()
+{
+  xbt_dict_t list_s = global_data->list_station;
+  xbt_dict_t list_ip = global_data->list_ip;
+  
+  xbt_dynar_t no_ip_list = xbt_dynar_new(sizeof(int), NULL);
+  xbt_dynar_t ip_list = xbt_dynar_new(sizeof(unsigned int), NULL);
+  
+  SD_workstation_t *work_list = SD_workstation_get_list();
+  int i;
+  
+  int size = SD_workstation_get_number();
+  
+  for( i=0; i<size; ++i)
+  {
+    //simterpose_station *temp = malloc(sizeof(simterpose_station));
+    const char* prop = SD_workstation_get_property_value(work_list[i], "ip");
+    //if there are no ip set, we store them to attribute one after.
+    if(prop==NULL)
+    {
+      xbt_dynar_push_as(no_ip_list, int, i);
+      continue;
+    }
+    else
+    {
+      simterpose_station *temp = malloc(sizeof(simterpose_station));
+      temp->ip = inet_addr(prop);
+      temp->port = xbt_dict_new_homogeneous(free);
+      xbt_dict_set(list_s, SD_workstation_get_name(work_list[i]), temp, NULL);
+      xbt_dict_set(list_ip, prop, strdup( SD_workstation_get_name(work_list[i])), NULL);
+      xbt_dynar_push_as(ip_list, unsigned int, temp->ip);
+    }
+  }
+  
+  unsigned int temp_ip=1;
+  xbt_ex_t e;
+  //Now we have to attribute ip to workstation which haven't have one
+  while(!xbt_dynar_is_empty(no_ip_list))
+  {
+    int i;
+    xbt_dynar_shift(no_ip_list, &i);
+    
+    //Now verify that ip address is not already use
+    int found=1;
+    while(found)
+    {
+      TRY{
+        xbt_dynar_search(ip_list, &temp_ip);
+        ++temp_ip;
+      }
+      CATCH(e){
+        xbt_ex_free(e);
+        found=0;
+      }
+    }
+    struct in_addr in = {temp_ip};
+    simterpose_station *temp = malloc(sizeof(simterpose_station));
+    temp->ip = temp_ip;
+    temp->port = xbt_dict_new_homogeneous(NULL);
+    xbt_dict_set(list_s, SD_workstation_get_name(work_list[i]), temp, NULL);
+    xbt_dict_set(list_ip, inet_ntoa(in), strdup( SD_workstation_get_name(work_list[i])), NULL);
+    xbt_dynar_push_as(ip_list, unsigned int, temp->ip);
+  }
+  
+  xbt_dynar_free(&ip_list);
+  xbt_dynar_free(&no_ip_list);
 }
 
 float str_to_double(const char *string)
@@ -84,8 +153,11 @@ void simterpose_init(int argc, char** argv)
   xbt_cfg_set_parse(_surf_cfg_set,"maxmin/precision:1e-9");
   SD_create_environment(argv[optind]);
   
+  
+  
   parse_deployment_file(argv[optind+1]);
   
+  init_station_list();
   init_all_process();
 }
 
