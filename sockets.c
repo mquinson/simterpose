@@ -522,6 +522,9 @@ int close_all_communication(int pid){
     {
       recv_information* recv = comm_get_own_recv((struct infos_socket *)file_desc);
       
+      if(!recv)
+        continue;
+      
       xbt_fifo_t tl = recv->recv_task;
       task_comm_info* tci;
       while(xbt_fifo_size(tl))

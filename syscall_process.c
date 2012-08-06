@@ -73,8 +73,8 @@ int process_recv_call(int pid, syscall_arg_u* sysarg)
         return PROCESS_TASK_FOUND;
       else
       {
-        if(!socket_network(pid, arg->sockfd))
-          return PROCESS_NO_TASK_FOUND;
+//         if(!socket_network(pid, arg->sockfd))
+//           return PROCESS_NO_TASK_FOUND;
         
         struct infos_socket* is = get_infos_socket(pid, arg->sockfd);
         int sock_status = socket_get_state(is);
@@ -332,16 +332,16 @@ int process_recv_in_call(int pid, int fd)
 void process_recvfrom_out_call(int pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
-  recvfrom_arg_t arg = &(proc->sysarg.recvfrom);
+//   recvfrom_arg_t arg = &(proc->sysarg.recvfrom);
   //   fprintf(stderr, "[%d]Try to see if socket %d recv something\n", pid, fd);
-  if(proc->fd_list[arg->sockfd]==NULL)
-    return;
-  
-  if(!socket_network(pid, arg->sockfd))
-    return;
+//   if(proc->fd_list[arg->sockfd]==NULL)
+//     return;
+//   
+//   if(!socket_network(pid, arg->sockfd))
+//     return;
   
   process_reset_state(proc);
-  print_recvfrom_syscall(pid, &(proc->sysarg));
+//   print_recvfrom_syscall(pid, &(proc->sysarg));
   sys_build_recvfrom(pid, &(proc->sysarg));
   
 }
@@ -531,7 +531,14 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
       printf("Free port found %s:%d\n",inet_ntoa(in),  port);
     }
     else
-      THROW_IMPOSSIBLE;
+    {
+      printf("No peer found\n");
+      arg->ret = -ECONNREFUSED;
+      ptrace_neutralize_syscall(pid);
+      process_set_out_syscall(process_get_descriptor(pid));
+      sys_build_connect(pid, sysarg);
+      return 0;
+    }
     
     
    //Now we construct the syscall result
@@ -809,11 +816,11 @@ int process_handle(pid_t pid, int stat)
               int flags = socket_get_flags(pid, arg.arg1);
               if(flags & O_NONBLOCK)
               {
-                sysarg->recvfrom.ret=0;
+                sysarg->read.ret=0;
                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
                 process_set_out_syscall(proc);
-                process_recvmsg_out_call(pid);
+                process_read_out_call(pid);
               }
               else
               {
@@ -835,6 +842,7 @@ int process_handle(pid_t pid, int stat)
               }
               else if( res == RECV_CLOSE)
               {
+                sysarg->read.ret=0;
                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
                 process_set_out_syscall(proc);
@@ -1006,6 +1014,7 @@ int process_handle(pid_t pid, int stat)
             }
             else if(res == RECV_CLOSE)
             {
+              sysarg->recvfrom.ret=0;
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
               process_set_out_syscall(proc);
@@ -1062,6 +1071,7 @@ int process_handle(pid_t pid, int stat)
             }
             else if( res == RECV_CLOSE)
             {
+              sysarg->recvmsg.ret=0;
               print_read_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
               process_set_out_syscall(proc);
@@ -1110,10 +1120,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_read:
           get_args_read(pid, &arg, sysarg);
           print_read_syscall(pid, sysarg);
-          if (socket_registered(pid, sysarg->read.fd) != -1) {
-            if(process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
-              return PROCESS_TASK_FOUND;
-          }
           break;
 
         case SYS_fork: 
@@ -1206,7 +1212,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_accept:
           get_args_accept(pid, &arg, sysarg);
           print_accept_syscall(pid, sysarg);
-          printf("Here\n");
           break;
           
         case SYS_listen:
@@ -1219,7 +1224,8 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_recvfrom:
-          THROW_IMPOSSIBLE;
+          get_args_recvfrom(pid, &arg, sysarg);
+          print_recvfrom_syscall(pid, sysarg);
           break;
           
         case SYS_sendmsg:
@@ -1230,8 +1236,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_recvmsg:
           get_args_recvmsg(pid, &arg, sysarg);
           print_recvmsg_syscall(pid, sysarg);
-          if(process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
-            return PROCESS_TASK_FOUND;
           break;
           
         case SYS_shutdown:
