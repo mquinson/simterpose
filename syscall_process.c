@@ -446,7 +446,7 @@ int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
 #else
       ptrace_resume_process(conn_pid);
       add_to_sched_list(conn_pid);
-      process_set_state(conn_pid, PROC_CONNECT_DONE);
+      process_set_state(conn_proc, PROC_CONNECT_DONE);
 #endif
     }
     
@@ -630,7 +630,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
       return 0;
     
     //now mark the process as waiting for conn
-      process_set_state(pid, PROC_CONNECT);
+      process_set_state(proc, PROC_CONNECT);
       return 1;
 #endif
   }
@@ -656,15 +656,17 @@ void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
 int process_bind_call(pid_t pid, syscall_arg_u *sysarg)
 {
   bind_arg_t arg = &(sysarg->bind);
-#ifndef no_full_mediate
+
   if(socket_registered(pid, arg->sockfd))
   {
     if(socket_network(pid, arg->sockfd))
     {
+
       process_descriptor *proc = process_get_descriptor(pid);
-      
+
       if(!is_port_in_use(proc->station, ntohs(arg->sai.sin_port)))
       {
+        printf("Port %d is free\n", ntohs(arg->sai.sin_port));
         register_port(proc->station, ntohs(arg->sai.sin_port));
         
         struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
@@ -682,22 +684,32 @@ int process_bind_call(pid_t pid, syscall_arg_u *sysarg)
         
         set_localaddr_port_socket(pid,arg->sockfd,inet_ntoa(arg->sai.sin_addr),ntohs(arg->sai.sin_port));
         arg->ret=0;
+#ifdef no_full_mediate
+        int port = ptrace_find_free_binding_port(pid);
+        printf("Free port find %d\n", port);
+        process_set_out_syscall(proc);
+        set_real_port(proc->station, ntohs(arg->sai.sin_port), port);
+        add_new_translation(port, ntohs(arg->sai.sin_port), get_ip_of_station(proc->station));
+        return 0;
+#endif
       }
       else
       {
+        printf("Port %d isn't free\n", ntohs(arg->sai.sin_port));
         arg->ret=-98;
+        ptrace_neutralize_syscall(pid);
+        sys_build_bind(pid, sysarg);
+        process_set_out_syscall(process_get_descriptor(pid));
+        return 0;
       }
-      
+#ifndef no_full_mediate
       ptrace_neutralize_syscall(pid);
       sys_build_bind(pid, sysarg);
       process_set_out_syscall(process_get_descriptor(pid));
+#endif
     }
   }
   return 0;
-#else
-  set_localaddr_port_socket(pid,conn->sockfd,inet_ntoa(conn->sai.sin_addr),ntohs(conn->sai.sin_port));
-  return 0;
-#endif
 }
 
 int process_socket_call(pid_t pid, syscall_arg_u *arg)
@@ -1076,13 +1088,13 @@ int process_handle(pid_t pid, int stat)
           break;
 #endif
           
-#ifndef no_full_mediate
+// #ifndef no_full_mediate
         case SYS_bind:
           get_args_bind_connect(pid, 0, &arg, sysarg);
           process_bind_call(pid, sysarg);
           print_bind_syscall(pid, sysarg);
           break;
-#endif
+// #endif
         
         case SYS_connect:
         {
@@ -1287,8 +1299,8 @@ int process_handle(pid_t pid, int stat)
           }
           print_sendto_syscall(pid, sysarg);
           break;
-      }
 #endif
+      }
       //No verify if we have compuation task to simulate.
       if(calculate_computation_time(pid))
       {
@@ -1310,8 +1322,8 @@ int process_handle(pid_t pid, int stat)
           get_args_write(pid, &arg, sysarg);
           print_write_syscall(pid, sysarg);
 #ifdef no_full_mediate
-          if (socket_registered(pid, sysarg.write.fd) != -1) {
-            if(process_send_call(pid, &sysarg))
+          if (socket_registered(pid, sysarg->write.fd) != -1) {
+            if(process_send_call(pid, sysarg))
               return PROCESS_TASK_FOUND;
           }
 #endif
@@ -1321,8 +1333,8 @@ int process_handle(pid_t pid, int stat)
           get_args_read(pid, &arg, sysarg);
           print_read_syscall(pid, sysarg);
 #ifdef no_full_mediate
-          if (socket_registered(pid, sysarg.read.fd) != -1) {
-            if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
+          if (socket_registered(pid, sysarg->read.fd) != -1) {
+            if(process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
               return PROCESS_TASK_FOUND;
           }
 #endif
@@ -1406,7 +1418,7 @@ int process_handle(pid_t pid, int stat)
           get_args_fcntl(pid, &arg, sysarg);
           print_fcntl_syscall(pid, sysarg);
 #ifdef no_full_mediate
-          process_fcntl_call(pid, &sysarg);
+          process_fcntl_call(pid, sysarg);
 #endif
           break;
           
@@ -1424,9 +1436,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_bind:
           get_args_bind_connect(pid, 0, &arg, sysarg);
           print_bind_syscall(pid, sysarg);
-#ifdef no_full_mediate
-          process_bind_call(pid, &sysarg);
-#endif
+// #ifdef no_full_mediate
+//           process_bind_call(pid, sysarg);
+// #endif
           break;
           
         case SYS_connect:
@@ -1441,15 +1453,18 @@ int process_handle(pid_t pid, int stat)
           get_args_accept(pid, &arg, sysarg);
           print_accept_syscall(pid, sysarg);
 #ifdef no_full_mediate
-          process_accept_out_call(pid, &sysarg);
+          process_accept_out_call(pid, sysarg);
           add_to_sched_list(pid);
 #endif
           break;
           
         case SYS_listen:
-          THROW_IMPOSSIBLE;
 #ifdef no_full_mediate
-          process_listen_call(pid, &sysarg);
+          get_args_listen(pid, &arg, sysarg);
+          process_listen_call(pid, sysarg);
+          print_listen_syscall(pid, sysarg);
+#else
+          THROW_IMPOSSIBLE;
 #endif
           break;
               
@@ -1457,7 +1472,7 @@ int process_handle(pid_t pid, int stat)
           get_args_sendto(pid, &arg, sysarg);
           print_sendto_syscall(pid, sysarg);
 #ifdef no_full_mediate
-          if(process_send_call(pid, &sysarg))
+          if(process_send_call(pid, sysarg))
             return PROCESS_TASK_FOUND;
 #endif
           break;
@@ -1466,7 +1481,7 @@ int process_handle(pid_t pid, int stat)
           get_args_recvfrom(pid, &arg, sysarg);
           print_recvfrom_syscall(pid, sysarg);
 #ifdef no_full_mediate
-          if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
+          if(process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
             return PROCESS_TASK_FOUND;
 #endif
           break;
@@ -1475,7 +1490,7 @@ int process_handle(pid_t pid, int stat)
           get_args_sendmsg(pid, &arg, sysarg);
           print_sendmsg_syscall(pid, sysarg);
 #ifdef no_full_mediate
-          if(process_send_call(pid, &sysarg))
+          if(process_send_call(pid, sysarg))
             return PROCESS_TASK_FOUND;
 #endif
           break;
@@ -1484,7 +1499,7 @@ int process_handle(pid_t pid, int stat)
           get_args_recvmsg(pid, &arg, sysarg);
           print_recvmsg_syscall(pid, sysarg);
 #ifdef no_full_mediate
-          if(process_recv_call(pid, &sysarg) == PROCESS_TASK_FOUND)
+          if(process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
             return PROCESS_TASK_FOUND;
 #endif
           break;

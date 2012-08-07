@@ -13,6 +13,7 @@ void init_global_data()
   global_data->launching_time = xbt_dynar_new(sizeof(time_desc*), NULL);
   global_data->list_station = xbt_dict_new_homogeneous(&destroy_simterpose_station);
   global_data->list_ip = xbt_dict_new_homogeneous(&free);
+  global_data->list_translate = xbt_dict_new_homogeneous(&free);
   global_data->init_time = time(NULL);
   
   int i;
@@ -27,6 +28,7 @@ void destroy_global_data()
   xbt_dynar_free(&(global_data->launching_time));
   xbt_dict_free(&(global_data->list_station));
   xbt_dict_free(&(global_data->list_ip));
+  xbt_dict_free(&(global_data->list_translate));
   free(global_data);
 }
 
@@ -243,6 +245,19 @@ struct infos_socket *get_binding_socket_workstation(SD_workstation_t station , i
   return desc->bind_socket;
 }
 
+void set_real_port(SD_workstation_t station, int port, int real_port)
+{
+  simterpose_station *temp = (simterpose_station*)xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  char buff[6];
+  sprintf(buff, "%d", port);
+  port_desc* desc = xbt_dict_get_or_null(temp->port, buff);
+  
+  if(desc == NULL)
+    return ;
+  
+  desc->real_port = real_port;
+}
+
 unsigned int get_ip_of_station(SD_workstation_t station)
 {
   simterpose_station *temp = (simterpose_station*)xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
@@ -306,4 +321,16 @@ void unset_socket(pid_t pid, struct infos_socket* is)
 time_t get_simulated_timestamp()
 {
   return global_data->init_time + SD_get_clock();
+}
+
+void add_new_translation(int real_port, int translated_port, unsigned int translated_ip)
+{
+  translate_desc *temp = malloc(sizeof(translate_desc));
+  temp->port_num = translated_port;
+  temp->ip = translated_ip;
+  
+  char buff[6];
+  sprintf(buff, "%d", real_port);
+  
+  xbt_dict_set(global_data->list_translate, buff, temp, NULL);
 }

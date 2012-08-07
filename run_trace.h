@@ -1,6 +1,8 @@
 #ifndef INCLUDE_RUN_TRACE_H
 #define INCLUDE_RUN_TRACE_H
 
+#define no_full_mediate
+
 #include <sys/types.h>
 
 #define MAX_FD 1024
@@ -13,6 +15,7 @@
 typedef struct time_desc time_desc;
 typedef struct simterpose_station simterpose_station;
 typedef struct port_desc port_desc;
+typedef struct translate_desc translate_desc;
 
 #include "process_descriptor.h"
 #include "sockets.h"
@@ -33,9 +36,15 @@ struct time_desc{
 
 struct port_desc{
   int port_num;
+  int real_port;
   int option;
   int amount_socket;
   struct infos_socket* bind_socket;
+};
+
+struct translate_desc{
+  int port_num;
+  unsigned int ip;
 };
 
 struct simterpose_station{
@@ -48,6 +57,7 @@ struct simterpose_data{
   process_descriptor *process_desc[MAX_PID];
   xbt_dict_t list_station;
   xbt_dict_t list_ip;
+  xbt_dict_t list_translate;
   time_t init_time;
   int child_amount;
   float flops_per_second;

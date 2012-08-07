@@ -51,4 +51,8 @@ void unset_socket(pid_t pid, struct infos_socket* is);
 
 time_t get_simulated_timestamp();
 
+void set_real_port(SD_workstation_t station, int port, int real_port);
+
+void add_new_translation(int real_port, int translated_port, unsigned int translated_ip);
+
 #endif

@@ -204,3 +204,52 @@ unsigned long ptrace_get_pid_fork(const pid_t pid)
   }
   return new_pid;
 }
+
+int ptrace_find_free_binding_port(const pid_t pid)
+{
+  struct user_regs_struct save_reg;
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &save_reg)==-1) {
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+  
+  struct user_regs_struct reg;
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &reg)==-1) {
+    fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+  struct sockaddr_in in;
+  struct sockaddr_in temp;
+  ptrace_cpy(pid, &in, (void*)reg.rsi, reg.rdx, "");
+  temp=in;
+  
+  unsigned short port = 0;
+  --port;
+  int status;
+  
+  while(1)
+  {
+    temp.sin_port = htons(port);
+    temp.sin_addr.s_addr = inet_addr("127.0.0.1");
+    ptrace_poke(pid, (void*)reg.rsi, &temp, reg.rdx);
+    ptrace_resume_process(pid);
+    waitpid(pid, &status, 0);
+    if (ptrace(PTRACE_GETREGS, pid,NULL, &reg)==-1) {
+      fprintf(stderr, " [%d] ptrace getregs %s\n", pid, strerror(errno));
+      xbt_die("Impossible to continue\n");
+    }
+    if(reg.rax == 0)
+      break;
+    
+    --port;
+    ptrace_rewind_syscalls(pid);
+    ptrace_resume_process(pid);
+    waitpid(pid, &status, 0);
+  }
+  ptrace_poke(pid, (void*)reg.rsi, &in, reg.rdx);
+  
+  return port;
+}
+

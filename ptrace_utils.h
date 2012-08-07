@@ -38,5 +38,7 @@ void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long resu
 //Call this when you are in syscall
 int ptrace_record_socket(pid_t pid);
 
+int ptrace_find_free_binding_port(const pid_t pid);
+
 #endif
 
