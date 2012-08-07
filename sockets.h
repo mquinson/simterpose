@@ -100,4 +100,6 @@ void socket_set_bind(pid_t pid, int fd, int val);
 
 int socket_is_binded(pid_t pid, int fd);
 
+void register_accepting_socket(struct infos_socket *is, pid_t pid, int sockfd);
+
 #endif

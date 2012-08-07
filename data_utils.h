@@ -49,4 +49,6 @@ int get_random_port(SD_workstation_t station);
 
 void unset_socket(pid_t pid, struct infos_socket* is);
 
+time_t get_simulated_timestamp();
+
 #endif

@@ -64,6 +64,12 @@ typedef read_arg_s* read_arg_t;
 typedef struct shutdown_arg_s shutdown_arg_s;
 typedef shutdown_arg_s* shutdown_arg_t;
 
+typedef struct getpeername_arg_s getpeername_arg_s;
+typedef getpeername_arg_s* getpeername_arg_t;
+
+typedef struct time_arg_s time_arg_s;
+typedef time_arg_s *time_arg_t;
+
 struct recv_arg_s{
   int sockfd;
   int ret;
@@ -183,6 +189,22 @@ struct shutdown_arg_s{
   int ret;
 };
 
+struct getpeername_arg_s{
+  int sockfd;
+  struct sockaddr_in in;
+  void* sockaddr_dest;
+  socklen_t len;
+  void* len_dest;
+  int ret;
+};
+
+
+struct time_arg_s{
+  time_t t;
+  void * t_dest;
+  time_t ret;
+};
+
 typedef union{
   connect_arg_s connect;
   bind_arg_s bind;
@@ -203,6 +225,8 @@ typedef union{
   read_arg_s read;
   write_arg_s write;
   shutdown_arg_s shutdown;
+  getpeername_arg_s getpeername;
+  time_arg_s time;
 } syscall_arg_u;
 
 

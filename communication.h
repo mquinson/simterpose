@@ -70,4 +70,6 @@ void comm_send_data(struct infos_socket *is, task_comm_info *tci);
 
 task_comm_info* comm_get_send(struct infos_socket* is);
 
+int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t* sock);
+
 #endif

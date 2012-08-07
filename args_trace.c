@@ -470,3 +470,45 @@ void get_args_shutdown(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
   arg->ret = reg->ret;
 }
 
+void sys_build_getpeername(pid_t pid, syscall_arg_u *sysarg)
+{
+  getpeername_arg_t arg = &(sysarg->getpeername);
+  
+  ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
+  if(arg->ret == 0)
+  {
+    ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
+    ptrace_poke(pid, arg->sockaddr_dest , &(arg->in), sizeof(struct sockaddr_in));
+  }
+}
+
+void get_args_getpeername(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
+{
+  getpeername_arg_t arg = &(sysarg->getpeername);
+  
+  arg->ret = reg->ret;
+  arg->sockfd = reg->arg1;
+  arg->sockaddr_dest = (void*)reg->arg2;
+  arg->len_dest = (void*)reg->arg3;
+  
+  ptrace_cpy(pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
+}
+
+
+void get_args_time(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
+{
+  time_arg_t arg = &(sysarg->time);
+  
+  arg->ret = reg->ret;
+  arg->t_dest = (void*) reg->arg1;
+}
+
+void sys_build_time(pid_t pid, syscall_arg_u *sysarg)
+{
+  time_arg_t arg = &(sysarg->time);
+  
+  ptrace_restore_syscall(pid, SYS_time, arg->ret);
+  if(arg->t_dest)
+    ptrace_poke(pid, arg->t_dest, &(arg->ret), sizeof(time_t));
+}
+

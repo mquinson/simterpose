@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <errno.h>
 
 
 #define SERV_PORT 2227
@@ -33,15 +32,15 @@ int main(){
     
     struct sockaddr_in cli_addr;
     memset(&cli_addr,0,sizeof(struct sockaddr_in));
-    host_addr=inet_addr("127.0.0.1");/*162.32.43.1*/
-    serverHostEnt=gethostbyname("127.0.0.1");
+    host_addr=inet_addr("162.32.43.1");
+    serverHostEnt=gethostbyname("162.32.43.1");
     memcpy(&(cli_addr.sin_addr),serverHostEnt->h_addr,serverHostEnt->h_length);
     port=SERV_PORT;
     cli_addr.sin_family=AF_INET;
     cli_addr.sin_port=htons(port);
 
     if(connect(clientSocket,(struct sockaddr *)&cli_addr,sizeof(cli_addr))<0){
-      printf("%s : echec demande de connexion\n", strerror(errno));
+      printf("echec demande de connexion\n");
       exit(0);
     }else{
       printf("Connexion avec le serveur établie\n");
@@ -89,7 +88,7 @@ int main(){
     cli_addr.sin_port=htons(port);
     
     if(connect(clientSocket,(struct sockaddr *)&cli_addr,sizeof(cli_addr))<0){
-      printf("%s : echec demande de connexion\n", strerror(errno));
+      printf("echec demande de connexion\n");
       exit(0);
     }else{
       printf("Connexion avec le serveur établie\n");

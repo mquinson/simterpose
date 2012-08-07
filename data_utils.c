@@ -13,6 +13,7 @@ void init_global_data()
   global_data->launching_time = xbt_dynar_new(sizeof(time_desc*), NULL);
   global_data->list_station = xbt_dict_new_homogeneous(&destroy_simterpose_station);
   global_data->list_ip = xbt_dict_new_homogeneous(&free);
+  global_data->init_time = time(NULL);
   
   int i;
   for(i=0; i<MAX_PID; ++i)
@@ -301,3 +302,8 @@ void unset_socket(pid_t pid, struct infos_socket* is)
   xbt_dict_remove(temp->port, buff);
 }
 
+
+time_t get_simulated_timestamp()
+{
+  return global_data->init_time + SD_get_clock();
+}

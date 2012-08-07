@@ -327,16 +327,17 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   printf("[%d] sendto( ", pid);
   
-  char buff[20];
-  if(arg->len<20)
+  char buff[200];
+  if(arg->len<200)
   {
     memcpy(buff, arg->data, arg->len);
+    buff[arg->ret] = '\0';
     printf("%d, \"%s\" , %d, ",arg->sockfd, buff, arg->len);
   }
   else
   {
-    memcpy(buff, arg->data, 20);
-    buff[19]='\0';
+    memcpy(buff, arg->data, 200);
+    buff[199]='\0';
     printf("%d, \"%s...\" , %d, ",arg->sockfd, buff, arg->len);
   }
   
@@ -383,16 +384,17 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   if(arg->ret)
   {
-    char buff[20];
-    if(arg->ret <= 20)
+    char buff[500];
+    if(arg->ret <= 500)
     {
       memcpy(buff, arg->data, arg->ret);
+      buff[arg->ret] = '\0';
       printf("%d, \"%s\" , %d, ",arg->sockfd, buff, arg->len);
     }
     else
     {
-      memcpy(buff, arg->data, 20);
-      buff[19]='\0';
+      memcpy(buff, arg->data, 500);
+      buff[499]='\0';
       printf("%d, \"%s...\" , %d, ",arg->sockfd, buff, arg->len);
     }  
     if (arg->flags>0) {
@@ -671,4 +673,19 @@ void print_shutdown_syscall(pid_t pid, syscall_arg_u *sysarg)
   printf("[%d] shutdown (%d, ", pid, arg->fd);
   print_shutdown_option(arg->how);
   printf(") = %d\n", arg->ret);
+}
+
+
+void print_getpeername_syscall(pid_t pid, syscall_arg_u *sysarg)
+{
+  getpeername_arg_t arg = &(sysarg->getpeername);
+  printf("[%d] getpeername (%d, ", pid, arg->sockfd);
+  printf("{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",arg->in.sin_port,inet_ntoa(arg->in.sin_addr));
+  printf("%d ) = %d\n", arg->len, arg->ret);
+}
+
+void print_time_syscall(pid_t pid, syscall_arg_u *sysarg)
+{
+  time_arg_t arg = &(sysarg->time);
+  printf("[%d] time = %ld\n", pid, arg->ret);
 }

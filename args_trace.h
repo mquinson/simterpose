@@ -49,6 +49,10 @@ void sys_build_getsockopt(pid_t pid, syscall_arg_u *sysarg);
 
 void sys_build_fcntl(pid_t pid, syscall_arg_u* sysarg);
 
+void sys_build_getpeername(pid_t pid, syscall_arg_u *sysarg);
+
+void sys_build_time(pid_t pid, syscall_arg_u *sysarg);
+
 void get_args_poll(pid_t child, reg_s* arg, syscall_arg_u* sysarg);
 
 void get_args_setsockopt(pid_t pid, reg_s *reg, syscall_arg_u *sysarg);
@@ -70,6 +74,10 @@ void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
 void get_args_shutdown(pid_t pid, reg_s* reg, syscall_arg_u* sysarg);
 
 void get_args_sendmsg(pid_t child, reg_s* reg, syscall_arg_u *sysarg);
+
+void get_args_getpeername(pid_t pid, reg_s *reg, syscall_arg_u *sysarg);
+
+void get_args_time(pid_t pid, reg_s *reg, syscall_arg_u *sysarg);
 
 #endif
 

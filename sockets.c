@@ -54,6 +54,21 @@ void recv_information_destroy(recv_information *recv)
   free(recv);
 }
 
+void register_accepting_socket(struct infos_socket *is, pid_t pid, int sockfd)
+{
+  process_descriptor* proc = global_data->process_desc[pid];
+  proc->fd_list[sockfd]= (fd_s*)is;
+  is->fd.type = FD_SOCKET;
+  is->fd.fd = sockfd;
+  is->fd.proc = proc;
+  
+  is->option =0;
+  is->binded = 0;
+  is->flags = O_RDWR;
+  
+  xbt_dynar_push(all_sockets, &is);
+}
+
 struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol) {
 
   process_descriptor* proc = global_data->process_desc[pid];

@@ -43,4 +43,8 @@ void print_write_syscall(pid_t pid, syscall_arg_u* sysarg);
 
 void print_shutdown_syscall(pid_t pid, syscall_arg_u *sysarg);
 
+void print_getpeername_syscall(pid_t pid, syscall_arg_u *sysarg);
+
+void print_time_syscall(pid_t pid, syscall_arg_u *sysarg);
+
 #endif

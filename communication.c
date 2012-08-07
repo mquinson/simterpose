@@ -144,6 +144,23 @@ int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int 
   
   comm_t comm = comm_new(get_infos_socket(tid, fd));
   xbt_dynar_push(conn->comm->conn_wait, &comm);
+  
+  struct infos_socket *is = get_infos_socket(tid, fd);
+  
+  if(conn->ip_local ==0)
+  {
+    if(conn->fd.proc == is->fd.proc)
+      comm->remote_ip = inet_addr("127.0.0.1");
+    else
+      comm->remote_ip = get_ip_of_station(conn->fd.proc->station);
+  }
+  else
+    comm->remote_ip = conn->ip_local;
+  comm->remote_port = conn->port_local;
+  
+  struct in_addr in = {comm->remote_ip};
+  printf("%s:%d\n", inet_ntoa(in), comm->remote_port);
+  
   return conn->fd.proc->pid;
 }
 
@@ -165,8 +182,8 @@ pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in)
 {
   comm_t comm = is->comm;
   if(comm==NULL)
-    
     THROW_IMPOSSIBLE;
+  
   if(xbt_dynar_is_empty(comm->conn_wait))
     return 0;
   comm_t comm_conn;
@@ -179,6 +196,34 @@ pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in)
 
 //   fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->fd.proc->pid);
   return comm_conn->info[0].socket->fd.proc->pid;
+}
+
+
+int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t* sock)
+{
+  comm_t comm = is->comm;
+  if(comm==NULL)
+    return -1;
+  
+  struct infos_socket *peer = comm_get_peer(is);
+  
+  if(!peer)
+  {
+    struct in_addr in2 = {comm->remote_ip};
+    printf("%s:%d\n", inet_ntoa(in2), comm->remote_port);
+    
+    in->sin_addr.s_addr = comm->remote_ip;
+    in->sin_port = comm->remote_port;
+    in->sin_family = AF_INET;
+    *sock = sizeof(struct sockaddr_in);
+    return 0;
+  }
+  
+  in->sin_addr.s_addr = peer->ip_local;
+  in->sin_port = peer->port_local;
+  in->sin_family = AF_INET;
+  *sock = sizeof(struct sockaddr_in);
+  return 0;
 }
 
 int comm_has_connect_waiting(struct infos_socket* is)

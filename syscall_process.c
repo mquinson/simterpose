@@ -243,6 +243,35 @@ int process_poll_call(pid_t pid)
   return match;
 }
 
+void process_getpeername_call(pid_t pid, syscall_arg_u *sysarg)
+{
+  getpeername_arg_t arg = &(sysarg->getpeername);
+  
+  if(socket_registered(pid, arg->sockfd))
+  {
+    if(socket_network(pid, arg->sockfd))
+    {
+      struct infos_socket *is = get_infos_socket(pid,arg->sockfd);
+      struct sockaddr_in in;
+      socklen_t size=0;
+      if(!comm_getpeername(is, &in, &size))
+      {
+        if(size < arg->len)
+          arg->len = size;
+        arg->in = in;
+        arg->ret=0;
+      }
+      else
+        arg->ret=-107;
+      
+      ptrace_neutralize_syscall(pid);
+      process_set_out_syscall(process_get_descriptor(pid));
+      sys_build_getpeername(pid, sysarg);
+      print_getpeername_syscall(pid, sysarg);
+    }
+  }
+}
+
 
 int process_handle_active(pid_t pid)
 {
@@ -322,7 +351,7 @@ int process_recv_in_call(int pid, int fd)
     return 0;
   
   if(!socket_network(pid, fd))
-    return 1;
+    return 0;
 
   int status = comm_get_socket_state(get_infos_socket(pid, fd));
 //   printf("socket status %d %d\n", status, status & SOCKET_READ_OK || status & SOCKET_CLOSED);
@@ -341,7 +370,7 @@ void process_recvfrom_out_call(int pid)
 //     return;
   
   process_reset_state(proc);
-//   print_recvfrom_syscall(pid, &(proc->sysarg));
+  print_recvfrom_syscall(pid, &(proc->sysarg));
   sys_build_recvfrom(pid, &(proc->sysarg));
   
 }
@@ -528,7 +557,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
 
       set_localaddr_port_socket(pid, arg->sockfd, inet_ntoa(in), port);
       register_port(proc->station, port);
-      printf("Free port found %s:%d\n",inet_ntoa(in),  port);
+      printf("Free port found on station %s (%s:%d)\n",SD_workstation_get_name(proc->station), inet_ntoa(in),  port);
     }
     else
     {
@@ -577,36 +606,43 @@ void process_connect_out_call(pid_t pid, syscall_arg_u *sysarg)
 int process_bind_call(pid_t pid, syscall_arg_u *sysarg)
 {
   bind_arg_t arg = &(sysarg->bind);
-  process_descriptor *proc = process_get_descriptor(pid);
   
-  if(!is_port_in_use(proc->station, ntohs(arg->sai.sin_port)))
+  if(socket_registered(pid, arg->sockfd))
   {
-    register_port(proc->station, ntohs(arg->sai.sin_port));
-    
-    struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
-    int device=0;
-    if(arg->sai.sin_addr.s_addr == INADDR_ANY)
-      device = (PORT_LOCAL | PORT_REMOTE);
-    else if(arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
-      device = PORT_LOCAL;
-    else
-      device = PORT_REMOTE;
+    if(socket_network(pid, arg->sockfd))
+    {
+      process_descriptor *proc = process_get_descriptor(pid);
+      
+      if(!is_port_in_use(proc->station, ntohs(arg->sai.sin_port)))
+      {
+        register_port(proc->station, ntohs(arg->sai.sin_port));
+        
+        struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
+        int device=0;
+        if(arg->sai.sin_addr.s_addr == INADDR_ANY)
+          device = (PORT_LOCAL | PORT_REMOTE);
+        else if(arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
+          device = PORT_LOCAL;
+        else
+          device = PORT_REMOTE;
 
-    set_port_on_binding(proc->station, ntohs(arg->sai.sin_port), is, device);
-    
-    is->binded = 1;
-    
-    set_localaddr_port_socket(pid,arg->sockfd,inet_ntoa(arg->sai.sin_addr),ntohs(arg->sai.sin_port));
-    arg->ret=0;
+        set_port_on_binding(proc->station, ntohs(arg->sai.sin_port), is, device);
+        
+        is->binded = 1;
+        
+        set_localaddr_port_socket(pid,arg->sockfd,inet_ntoa(arg->sai.sin_addr),ntohs(arg->sai.sin_port));
+        arg->ret=0;
+      }
+      else
+      {
+        arg->ret=-98;
+      }
+      
+      ptrace_neutralize_syscall(pid);
+      sys_build_bind(pid, sysarg);
+      process_set_out_syscall(process_get_descriptor(pid));
+    }
   }
-  else
-  {
-    arg->ret=-98;
-  }
-  
-  ptrace_neutralize_syscall(pid);
-  sys_build_bind(pid, sysarg);
-  process_set_out_syscall(process_get_descriptor(pid));
   return 0;
 }
 
@@ -804,6 +840,7 @@ int process_handle(pid_t pid, int stat)
       process_set_in_syscall(proc);
 
       ptrace_get_register(pid, &arg);
+//       printf("New in %s\n", syscall_list[arg.reg_orig]);
       
       int state = -1;
       switch(arg.reg_orig){
@@ -899,6 +936,15 @@ int process_handle(pid_t pid, int stat)
         }
         break;
         
+        case SYS_time:
+          get_args_time(pid, &arg, sysarg);
+          ptrace_neutralize_syscall(pid);
+          sysarg->time.ret = get_simulated_timestamp();
+          sys_build_time(pid, sysarg);
+          process_set_out_syscall(proc);
+          print_time_syscall(pid, sysarg);
+          break;
+        
         case SYS_futex:
         {
           printf("[%d] futex_in %p %d\n", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
@@ -910,6 +956,12 @@ int process_handle(pid_t pid, int stat)
           }
         }
         break;
+        
+        
+        case SYS_getpeername:
+          get_args_getpeername(pid, &arg, sysarg);
+          process_getpeername_call(pid, sysarg);
+          break;
         
         case SYS_listen:
           get_args_listen(pid, &arg, sysarg);
@@ -1042,6 +1094,12 @@ int process_handle(pid_t pid, int stat)
           
           if(!process_recv_in_call(pid, sysarg->recvmsg.sockfd))
           {
+            printf("Nothing recv\n");
+            if(socket_registered(pid, sysarg->recvmsg.sockfd))
+              if(!socket_network(pid, sysarg->recvmsg.sockfd))
+                break;
+            
+            printf("Mediation on a recvmsg\n");
             int flags = socket_get_flags(pid, arg.arg1);
             if(flags & O_NONBLOCK)
             {
@@ -1056,7 +1114,6 @@ int process_handle(pid_t pid, int stat)
               process_set_state(proc, PROC_RECVMSG);
               process_on_mediation(proc);
               state = PROCESS_ON_MEDIATION;
-              //               THROW_IMPOSSIBLE;
             }
           }
           else
@@ -1140,6 +1197,19 @@ int process_handle(pid_t pid, int stat)
             default :printf("no_flags");break;
           }    
           printf(") = %ld\n", arg.ret);
+          if((int)arg.ret >= 0)
+          {
+            fd_s *file_desc = malloc(sizeof(fd_s));
+            file_desc->fd=(int)arg.ret;
+            file_desc->proc=proc;
+            file_desc->type = FD_CLASSIC;
+            proc->fd_list[(int)arg.ret]=file_desc;
+          }
+        }
+        break;
+        
+        case SYS_creat:
+        {
           if((int)arg.ret >= 0)
           {
             fd_s *file_desc = malloc(sizeof(fd_s));
@@ -1261,7 +1331,7 @@ int process_handle(pid_t pid, int stat)
             
       }
     }
-    
+//     printf("Resume syscall\n");
     ptrace_resume_process(pid);
     
     //waitpid sur le fils

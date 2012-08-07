@@ -48,6 +48,7 @@ struct simterpose_data{
   process_descriptor *process_desc[MAX_PID];
   xbt_dict_t list_station;
   xbt_dict_t list_ip;
+  time_t init_time;
   int child_amount;
   float flops_per_second;
   float micro_s_per_flop;
