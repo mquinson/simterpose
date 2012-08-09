@@ -257,7 +257,7 @@ int comm_get_socket_state(struct infos_socket* is)
   
   comm_t comm = is->comm;
   if(comm == NULL)
-    THROW_IMPOSSIBLE;
+    return 0;
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);

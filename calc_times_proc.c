@@ -26,6 +26,8 @@ struct msgtemplate {
   char buf[MAX_MSG_SIZE];
 }msg;
 
+pid_t pid;
+
 /*
  * Create a raw netlink socket and bind
  */
@@ -135,6 +137,7 @@ int init_cputime() {
     err("error creating Netlink socket\n");
     return -1;
   }
+  pid = getpid();
   _id = get_family_id(_nl_sd);
   memset(&msg, 0, sizeof(struct msgtemplate));
   if (!_id) {
@@ -156,11 +159,11 @@ int ask_time(int tid, long long int* times)
   struct msgtemplate msg;
   int rep_len;
   struct nlattr *na;
-  int mypid = getpid();
+  int pid = getpid();
   int cmd_type = TASKSTATS_CMD_ATTR_PID;
   struct taskstats* stats;
   
-  int rc = send_cmd(_nl_sd, _id, mypid, TASKSTATS_CMD_GET,
+  int rc = send_cmd(_nl_sd, _id, pid, TASKSTATS_CMD_GET,
 		    cmd_type, &tid, sizeof(__u32));
   if (rc < 0) {
     fprintf(stderr, "error sending tid/tgid cmd\n");

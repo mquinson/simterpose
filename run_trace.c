@@ -143,7 +143,6 @@ void move_mediate_to_sched()
 
 
 int main(int argc, char *argv[]) { 
-  
   simterpose_init(argc, argv);
 
   struct sigaction nvt, old;
@@ -159,6 +158,8 @@ int main(int argc, char *argv[]) {
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
   mediate_list = xbt_dynar_new(sizeof(pid_t), NULL);
+  
+  int child_amount=0;
   
   do{
     //We calculate the time of simulation.
@@ -204,7 +205,7 @@ int main(int argc, char *argv[]) {
         add_to_sched_list(temp_pid);
         process_descriptor* proc = process_get_descriptor(temp_pid);
         if(proc->in_timeout == PROC_NO_TIMEOUT)
-          ++global_data->child_amount;
+          ++child_amount;
 //         printf("In_timeout = %d\n", proc->in_timeout);
       }
       else
@@ -219,7 +220,7 @@ int main(int argc, char *argv[]) {
       pid_t pid;
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
-      fprintf(stdout, "Scheduling process %d\n", pid);
+//       fprintf(stdout, "Scheduling process %d\n", pid);
       proc->scheduled = 0;
       
 //       printf("Strating treatment\n");
@@ -243,7 +244,7 @@ int main(int argc, char *argv[]) {
       else if( status == PROCESS_DEAD)
       {
         process_die(pid);
-        --global_data->child_amount;
+        --child_amount;
       }
       else if(status == PROCESS_ON_MEDIATION)
       {
@@ -257,7 +258,7 @@ int main(int argc, char *argv[]) {
 //       indice = 10000;
 //     }
       
-    }while(global_data->child_amount);
+    }while(child_amount);
   
 
   finish_cputime();

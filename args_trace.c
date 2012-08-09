@@ -194,8 +194,10 @@ void get_args_setsockopt(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
   arg->dest=(void *)reg->arg4;
   arg->optlen=reg->arg5;
   
+#ifndef no_full_mediate
   arg->optval = malloc(arg->optlen);
   ptrace_cpy(pid, arg->optval, (void *)arg->dest, arg->optlen, "setsockopt");
+#endif
 }
 
 
@@ -222,7 +224,7 @@ void get_args_getsockopt(pid_t child, reg_s* reg, syscall_arg_u *sysarg) {
   arg->dest=(void *)reg->arg4;
   arg->dest_optlen = (void*) reg->arg5;
 
-  ptrace_cpy(child,&arg->optlen,(void *)reg->arg5,sizeof(socklen_t),"getsockopt ou setsockopt");
+  ptrace_cpy(child,&arg->optlen,(void *)reg->arg5,sizeof(socklen_t),"getsockopt");
 }
 
 void sys_build_sendto(pid_t pid, syscall_arg_u* sysarg)
@@ -439,7 +441,7 @@ void get_args_fcntl(pid_t pid, reg_s* reg,syscall_arg_u* sysarg)
 void sys_build_read(pid_t pid, syscall_arg_u* sysarg)
 {
   read_arg_t arg = &(sysarg->read);
-  ptrace_restore_syscall(pid, SYS_recvfrom, arg->ret);
+  ptrace_restore_syscall(pid, SYS_read, arg->ret);
   
   ptrace_poke(pid, (void*)arg->dest, arg->data, arg->ret);
   free(arg->data);
@@ -461,6 +463,7 @@ void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
   arg->dest = (void*)reg->arg2;  
   arg->ret = reg->ret;
   arg->count = reg->arg3;
+#ifndef no_full_mediate
   if(socket_registered(pid, arg->fd))
   {
     if(socket_network(pid, arg->fd))
@@ -469,6 +472,7 @@ void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
       ptrace_cpy(pid, arg->data,  (void *)reg->arg2, arg->count, "write");
     }
   }
+#endif
 }
 
 void get_args_shutdown(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
@@ -541,7 +545,7 @@ void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg)
     station = get_station_by_ip(arg->sai.sin_addr.s_addr);
   
   set_real_port(station, ntohs(arg->sai.sin_port), ntohs(port));
-  add_new_translation(ntohs(arg->sai.sin_port), ntohs(port), arg->sai.sin_addr.s_addr);
+  add_new_translation(ntohs(port),ntohs(arg->sai.sin_port), arg->sai.sin_addr.s_addr);
   
   ptrace_poke(pid, (void*)reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
@@ -555,7 +559,7 @@ void sys_translate_connect_in(pid_t pid, syscall_arg_u *sysarg)
   
   arg->sai.sin_port = htons(get_real_port(pid, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port)));
   arg->sai.sin_addr.s_addr = inet_addr("127.0.0.1");
-  printf("Try to connect on 127.0.0.1:%d\n", arg->sai.sin_port);
+//   printf("Try to connect on 127.0.0.1:%d\n", arg->sai.sin_port);
   ptrace_poke(pid, (void*)reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
@@ -570,7 +574,7 @@ void sys_translate_connect_out(pid_t pid, syscall_arg_u *sysarg)
   arg->sai.sin_port = htons(td->port_num);
   arg->sai.sin_addr.s_addr = td->ip;
   
-  printf("Restore %s:%d\n", inet_ntoa(arg->sai.sin_addr), td->port_num);
+//   printf("Restore %s:%d\n", inet_ntoa(arg->sai.sin_addr), td->port_num);
   ptrace_poke(pid, (void*)reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
@@ -584,15 +588,15 @@ void sys_translate_sendto_in(pid_t pid, syscall_arg_u *sysarg)
   if(reg.arg5 == 0)
     return;
   
-  struct in_addr in = {arg->sai.sin_addr.s_addr};
-  printf("Translate address %s:%d\n", inet_ntoa(in), ntohs(arg->sai.sin_port));
+//   struct in_addr in = {arg->sai.sin_addr.s_addr};
+//   printf("Translate address %s:%d\n", inet_ntoa(in), ntohs(arg->sai.sin_port));
   
   struct sockaddr_in temp = arg->sai;
-  int port = get_real_port(pid, temp.sin_addr.s_addr, temp.sin_port);
+  int port = get_real_port(pid, temp.sin_addr.s_addr, ntohs(temp.sin_port));
   temp.sin_addr.s_addr = inet_addr("127.0.0.1");
   temp.sin_port = htons(port);
   ptrace_poke(pid, (void*)reg.arg5, &temp, sizeof(struct sockaddr_in));
-  printf("Using 127.0.0.1:%d\n", port);
+//   printf("Using 127.0.0.1:%d\n", port);
 }
 
 void sys_translate_sendto_out(pid_t pid, syscall_arg_u *sysarg)
@@ -605,10 +609,12 @@ void sys_translate_sendto_out(pid_t pid, syscall_arg_u *sysarg)
   if(reg.arg5 == 0)
     return;
   
-  struct sockaddr_in temp = arg->sai;
-  translate_desc* td = get_translation(ntohs(temp.sin_port));
-  struct in_addr in = {td->ip};
-  printf("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
+  translate_desc* td = get_translation(ntohs(arg->sai.sin_port));
+  //   struct in_addr in = {td->ip};
+  //   printf("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
+  arg->sai.sin_port = htons(td->port_num);
+  arg->sai.sin_addr.s_addr = td->ip;
+  ptrace_poke(pid, (void*)reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
 void sys_translate_recvfrom_in(pid_t pid, syscall_arg_u *sysarg)
@@ -627,7 +633,7 @@ void sys_translate_recvfrom_in(pid_t pid, syscall_arg_u *sysarg)
   temp.sin_port = htons(port);
   ptrace_poke(pid, (void*)reg.arg5, &temp, sizeof(struct sockaddr_in));
   arg->sai = temp;
-  printf("Using 127.0.0.1:%d\n", port);
+//   printf("Using 127.0.0.1:%d\n", port);
 }
 
 void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u *sysarg)
@@ -640,8 +646,10 @@ void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u *sysarg)
   if(reg.arg5 == 0)
     return;
   
-  struct sockaddr_in temp = arg->sai;
-  translate_desc* td = get_translation(ntohs(temp.sin_port));
-  struct in_addr in = {td->ip};
-  printf("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
+  translate_desc* td = get_translation(ntohs(arg->sai.sin_port));
+//   struct in_addr in = {td->ip};
+//   printf("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
+  arg->sai.sin_port = htons(td->port_num);
+  arg->sai.sin_addr.s_addr = td->ip;
+  ptrace_poke(pid, (void*)reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));
 }

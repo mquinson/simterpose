@@ -2,7 +2,7 @@ OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o socket
 	data_utils.o task.o parser.o init.o communication.o print_syscall.o
 
 CFLAGS = -Wall -g
-CC=gcc 
+CC=gcc
 
 LDFLAGS= -lsimgrid -lm
 

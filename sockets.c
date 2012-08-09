@@ -553,8 +553,15 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   int length = arg->ret;
   int* ds = xbt_fifo_shift(recv->data_fifo);
   
+  if(!ds)
+    return 0;
+  
+  int receive_new_message = 0;
   if(recv->quantity_recv==0)
+  {
     result=1;
+    receive_new_message=1;
+  }
 
   while(1)
   {
@@ -591,9 +598,13 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
         
         
         result=1;
-        task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
-        SD_task_destroy(tci->task);
-        free(tci);
+        if(receive_new_message)
+        {
+          task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
+          SD_task_destroy(tci->task);
+          free(tci);
+        }
+        receive_new_message=1;
       }
       else
         break;
@@ -604,7 +615,7 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   
   arg->ret = global_size;
 #endif
-  
+  printf("Handle new_receive return %d\n", result);
   return result;
 }
 
