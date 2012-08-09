@@ -94,31 +94,32 @@ void comm_set_state(comm_t comm, int new_state)
 
 void comm_close(struct infos_socket* is)
 {
-//   printf("Closing communication\n");
   comm_t comm = is->comm;
   if(comm == NULL)
     return;
-  if(comm->state & COMM_LISTEN)
+  
+  if(comm->state == COMM_LISTEN)
   {
+    struct infos_socket *is = comm->info[0].socket;
+    unset_socket(is->fd.pid, is);
+    delete_socket(is);
+    free(is);
     comm_destroy(comm);
   }
-  
-  else if( comm->info[0].socket == is)
+  else if (comm->state == COMM_CLOSED)
   {
-    comm->info[0].socket = NULL;
-    if(comm->state == COMM_CLOSED || comm->state == COMM_LISTEN)
-      comm_destroy(comm);
-    else
-      comm->state = COMM_CLOSED;
+    struct infos_socket *is = comm->info[0].socket;
+    unset_socket(is->fd.pid, is);
+    delete_socket(is);
+    free(is);
+    is = comm->info[1].socket;
+    unset_socket(is->fd.pid, is);
+    delete_socket(is);
+    free(is);
+    comm_destroy(comm);
   }
   else
-  {
-    comm->info[1].socket = NULL;
-    if(comm->state == COMM_CLOSED)
-      comm_destroy(comm);
-    else
-      comm->state = COMM_CLOSED;
-  }
+    comm->state = COMM_CLOSED;
 }
 
 void comm_shutdown(struct infos_socket *is)
@@ -132,7 +133,7 @@ void comm_shutdown(struct infos_socket *is)
 
 void comm_set_listen(comm_t comm)
 {
-  comm->state =  comm->state | COMM_LISTEN;
+  comm->state =   COMM_LISTEN;
 //   printf("Listen do %d\n", comm->state & COMM_LISTEN);
 }
 
@@ -178,6 +179,25 @@ void comm_join_on_accept(struct infos_socket *is, pid_t pid, int fd_listen)
   is->comm = comm_conn;
 }
 
+void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in)
+{
+  comm_t comm = is->comm;
+  if(comm==NULL)
+    THROW_IMPOSSIBLE;
+  
+  if(xbt_dynar_is_empty(comm->conn_wait))
+    return;
+  
+  printf("Store connected information\n");
+  comm_t comm_conn;
+  xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
+  
+  //Store ip and port of process which wait for connect
+  struct infos_socket *s = comm_conn->info[0].socket;
+  in->sin_addr.s_addr = s->ip_local;
+  in->sin_port = htons(s->port_local);
+}
+
 pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in)
 {
   comm_t comm = is->comm;
@@ -194,7 +214,7 @@ pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in)
   in->sin_addr.s_addr = s->ip_local;
   in->sin_port = s->port_local;
 
-//   fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->fd.proc->pid);
+  fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->port_local);
   return comm_conn->info[0].socket->fd.proc->pid;
 }
 

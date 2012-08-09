@@ -55,4 +55,8 @@ void set_real_port(SD_workstation_t station, int port, int real_port);
 
 void add_new_translation(int real_port, int translated_port, unsigned int translated_ip);
 
+translate_desc* get_translation(int real_port);
+
+int get_real_port(pid_t pid, unsigned int ip, int port);
+
 #endif

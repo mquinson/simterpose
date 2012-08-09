@@ -79,5 +79,19 @@ void get_args_getpeername(pid_t pid, reg_s *reg, syscall_arg_u *sysarg);
 
 void get_args_time(pid_t pid, reg_s *reg, syscall_arg_u *sysarg);
 
+void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg);
+
+void sys_translate_connect_in(pid_t pid, syscall_arg_u *sysarg);
+
+void sys_translate_connect_out(pid_t pid, syscall_arg_u *sysarg);
+
+void sys_translate_sendto_in(pid_t pid, syscall_arg_u *sysarg);
+
+void sys_translate_sendto_out(pid_t pid, syscall_arg_u *sysarg);
+
+void sys_translate_recvfrom_in(pid_t pid, syscall_arg_u *arg);
+
+void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u *sysarg);
+
 #endif
 

@@ -72,4 +72,6 @@ task_comm_info* comm_get_send(struct infos_socket* is);
 
 int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t* sock);
 
+void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in);
+
 #endif

@@ -22,6 +22,7 @@ struct infos_socket;
 #include "communication.h"
 #include "syscall_data.h"
 #include "process_descriptor.h"
+#include "simdag/simdag.h"
 
 
 struct recv_information{
@@ -33,6 +34,7 @@ struct recv_information{
 struct infos_socket{
   fd_s fd;
   comm_t comm;//point to the communication which socket involved in
+  SD_workstation_t station;
   int domain;
   int protocol;
   unsigned int ip_local;
@@ -43,6 +45,8 @@ struct infos_socket{
 };
 
 recv_information* recv_information_new();
+
+void delete_socket(struct infos_socket *is);
 
 void recv_information_destroy(recv_information *recv);
 
@@ -99,6 +103,8 @@ int socket_get_option(pid_t pid, int fd, int option);
 void socket_set_bind(pid_t pid, int fd, int val);
 
 int socket_is_binded(pid_t pid, int fd);
+
+int socket_get_local_port(pid_t pid, int fd);
 
 void register_accepting_socket(struct infos_socket *is, pid_t pid, int sockfd);
 

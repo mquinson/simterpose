@@ -49,6 +49,7 @@ struct fd_s{
   int type;
   process_descriptor* proc;
   int fd;
+  int pid;
 };
 
 #include "args_trace.h"

@@ -78,7 +78,9 @@ struct infos_socket* confirm_register_socket(pid_t pid, int sockfd, int domain, 
   is->fd.type = FD_SOCKET;
   is->fd.fd = sockfd;
   is->fd.proc = proc;
+  is->fd.pid = pid;
   
+  is->station = proc->station;
   is->comm = NULL;
   is->domain=domain;
   is->protocol=protocol;
@@ -133,10 +135,9 @@ void socket_set_option(pid_t pid, int fd, int option, int value)
     is->option = is->option & ~option;
 }
 
-void delete_socket(pid_t pid, int fd) {
+void delete_socket(struct infos_socket *is) {
   xbt_ex_t e;
   TRY{
-    struct infos_socket *is = get_infos_socket(pid, fd);
     int i= xbt_dynar_search(all_sockets, &is);
     xbt_dynar_remove_at(all_sockets, i, NULL);
   }
@@ -152,9 +153,10 @@ void socket_close(pid_t pid, int fd)
   {
     if(socket_network(pid, fd))
       comm_close(is);
-    unset_socket(pid, is);
-    delete_socket(pid, fd);
-    free(is);
+    else
+    {
+      free(is);
+    }
     process_descriptor* proc = global_data->process_desc[pid];
     proc->fd_list[fd]=NULL;
   }
@@ -187,7 +189,7 @@ void set_localaddr_port_socket(pid_t pid, int fd, char *ip, int port) {
   struct infos_socket* is = get_infos_socket(pid, fd);
   is->ip_local = inet_addr(ip);
   is->port_local = port;
-//   print_infos_socket(is);
+  print_infos_socket(is);
 }
 
 
@@ -346,7 +348,48 @@ int get_addr_port_sock(pid_t pid, int fd, int addr_type) {
   }
 
   return res;
+}
+
+int socket_get_local_port(pid_t pid, int fd)
+{
   
+  struct infos_socket* is = get_infos_socket(pid, fd);
+  int protocol = is->protocol;
+  
+  char path[512];
+  char dest[512];
+  sprintf(path,"/proc/%d/fd/%d", pid, fd);
+  if (readlink(path, dest, 512) == -1) {
+    printf("Failed reading /proc/%d/fd/%d",pid,fd);
+    return -1;
+  }
+  
+  char *token;
+  token = strtok(dest,"["); // left part before socket id
+  token = strtok(NULL,"]"); // socket id 
+  int num_socket = atoi(token);
+  
+  struct sockaddr_in addr_port;
+  
+  int res=0;
+  
+  if (protocol == 1) { // case IPPROTO_ICMP -> protocol unknown -> test TCP
+    res = get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, LOCAL);
+    if (res == -1) { // not tcp -> test UDP
+      res = get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, LOCAL);
+      if (res == -1) // not udp -> test RAW
+        res = get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
+    }
+  }
+  
+  if (protocol == 6 || protocol == 0) // case IPPROTO_TCP ou IPPROTO_IP
+    res=get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, LOCAL);
+  if (protocol == 17 ) // case IPPROTO_UDP 
+    res=get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, LOCAL);
+  if (protocol == 255 ) // case IPPROTO_RAW 
+    res=get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
+  
+  return ntohs(addr_port.sin_port);
 }
 
 
@@ -428,15 +471,16 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   struct infos_socket* is = get_infos_socket(pid, arg->sockfd);
-  int length = arg->len;
   
   recv_information* recv = comm_get_own_recv(is);
   
-  char* data_recv = NULL;
   int enough=0;
   int global_size=0;
   int result=0;
   
+#ifndef no_full_mediate
+  char* data_recv = NULL;
+  int length = arg->len;
   data_send_s* ds = xbt_fifo_shift(recv->data_fifo);
   
   //Here if ds is null, that means that we have an ending connection
@@ -450,8 +494,10 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   if(recv->quantity_recv==0)
     result=1;
   
+
   while(1)
   {
+
     int size =0;
     
     if(length < ds->size - recv->quantity_recv)
@@ -461,7 +507,6 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
     }
     else
     {
-      printf("[%d](%d) Not enough data in stack, %d rest after reading (%d , %d)\n",pid, result,  ds->size-recv->quantity_recv, ds->size ,recv->quantity_recv );
       size = ds->size-recv->quantity_recv;
       enough=0;
     }
@@ -501,20 +546,76 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   if(result)
     task_schedule_receive(is, pid);
   
+  printf("New global size %d\n", global_size);
   arg->ret = global_size;
   arg->data = data_recv;
+#else
+  int length = arg->ret;
+  int* ds = xbt_fifo_shift(recv->data_fifo);
+  
+  if(recv->quantity_recv==0)
+    result=1;
+
+  while(1)
+  {
+    int size =0;
+    
+    if(length < *ds - recv->quantity_recv)
+    {
+      size=length;
+      enough =1;
+    }
+    else
+    {
+      size = *ds -recv->quantity_recv;
+      enough=0;
+    }
+    global_size += size;
+    
+    if(enough)
+    {
+      recv->quantity_recv += length;
+      xbt_fifo_unshift(recv->data_fifo, ds);
+      break;
+    }
+    else
+    {
+      recv->quantity_recv=0;
+      free(ds);
+      length -= size;
+      if(length)
+      {
+        ds = xbt_fifo_shift(recv->data_fifo);
+        if(ds==NULL)
+          break;
+        
+        
+        result=1;
+        task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
+        SD_task_destroy(tci->task);
+        free(tci);
+      }
+      else
+        break;
+    }
+  }
+  if(result)
+    task_schedule_receive(is, pid);
+  
+  arg->ret = global_size;
+#endif
   
   return result;
 }
 
 
-//TODO simplify handling 
 void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
   
   recv_information* recv = comm_get_peer_recv(is);
-  
+
+#ifndef no_full_mediate
   data_send_s* ds = malloc(sizeof(data_send_s));
   ds->data = arg->data;
   ds->size = arg->len;
@@ -522,6 +623,13 @@ void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg)
   xbt_fifo_push(recv->data_fifo, ds);
   
   arg->ret = arg->len;
+#else
+  int *data = malloc(sizeof(int));
+  *data = arg->ret;
+  
+  xbt_fifo_push(recv->data_fifo, data);
+#endif
+  
 //   printf("New queue size %d\n", xbt_fifo_size(recv->send_fifo));
 }
 
@@ -550,14 +658,20 @@ int close_all_communication(int pid){
       }
 
       xbt_fifo_t dl = recv->data_fifo;
+#ifndef no_full_mediate
       data_send_s* ds;
+#else
+      int* ds;
+#endif
       while(xbt_fifo_size(dl))
       {
-        ds = (data_send_s*)xbt_fifo_shift(dl);
-        free(ds->data);
+        ds = xbt_fifo_shift(dl);
+#ifndef no_full_mediate
+        free(((data_send_s*)ds)->data);
+#endif
         free(ds);
       }
-      
+
       socket_close(pid, i);
       proc->fd_list[i]=NULL;
     }

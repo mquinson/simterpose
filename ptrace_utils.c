@@ -2,6 +2,7 @@
 #include "sysdep.h"
 #include "xbt.h"
 
+
 void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) {   
 
   int i = 0;
@@ -30,7 +31,7 @@ void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
     ret = ptrace(PTRACE_POKEDATA, pid, dst +size_copy, *((long*)(src + size_copy)));
     if (ret == -1 && errno != 0) {
       perror("ptrace pokedata");
-      xbt_die("Impossible to continue\n");
+      THROW_IMPOSSIBLE;
     }
     size_copy += sizeof(long);
   }

@@ -1,6 +1,7 @@
 #include "print_syscall.h"
 #include "sysdep.h"
 #include "sockets.h"
+#include "run_trace.h"
 
 #include <stdio.h>
 
@@ -326,7 +327,7 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
   int domain = get_domain_socket(pid,arg->sockfd);
   
   printf("[%d] sendto( ", pid);
-  
+#ifndef no_full_mediate
   char buff[200];
   if(arg->len<200)
   {
@@ -340,8 +341,9 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
     buff[199]='\0';
     printf("%d, \"%s...\" , %d, ",arg->sockfd, buff, arg->len);
   }
-  
-  
+#else
+    printf("%d, \"...\" , %d, ",arg->sockfd, arg->len);
+#endif
   if (arg->flags>0) {
     print_flags_send(arg->flags); 
   } else
@@ -382,6 +384,7 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   printf("[%d] recvfrom( ", pid);
   
+#ifndef no_full_mediate
   if(arg->ret)
   {
     char buff[500];
@@ -404,6 +407,10 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   }
   else
     printf("%d, \"\" , %d, ",arg->sockfd, arg->len);
+#else
+    printf("%d, \"...\" , %d, ",arg->sockfd, arg->len);
+#endif
+    
   
   if (domain == 2 ) { // PF_INET
     if (arg->is_addr) {
@@ -456,7 +463,7 @@ void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   printf("[%d] sendmsg( ", pid);
   printf("%d, ",arg->sockfd);
-  
+#ifndef no_full_mediate
   char buff[20];
   if(arg->len<20)
   {
@@ -470,9 +477,10 @@ void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
     
     printf(", {msg_namelen=%d, msg_iovlen=%d, \"%s...\", msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen,buff, (int)arg->msg.msg_controllen,arg->msg.msg_flags);
   }
-  
-  
-  
+#else
+    printf(", {msg_namelen=%d, msg_iovlen=%d, \"...\", msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen, (int)arg->msg.msg_controllen,arg->msg.msg_flags);
+#endif
+    
   if (arg->flags>0) {
     print_flags_recv(arg->flags);
   } else

@@ -101,7 +101,7 @@ void add_to_sched_list(pid_t pid)
   proc->scheduled =1;
   xbt_dynar_push_as(sched_list, pid_t, pid);
   
-//   printf("Add process %d to sched_list\n", pid);
+  printf("Add process %d to sched_list\n", pid);
   if(proc->idle_list)
     remove_from_idle_list(pid);
   else if(proc->on_mediation)
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
       //If data is null, we schedule the process
       if(data != NULL)
       {
-//         printf("End of task for %d\n", *data);
+        printf("End of task for %d\n", *data);
         process_on_simulation(process_get_descriptor(*data), 0);
         add_to_sched_list(*data);
       }
@@ -219,8 +219,9 @@ int main(int argc, char *argv[]) {
       pid_t pid;
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
+      fprintf(stdout, "Scheduling process %d\n", pid);
       proc->scheduled = 0;
-      fprintf(stderr, "Scheduling process %d\n", pid);
+      
 //       printf("Strating treatment\n");
       int status;
       
