@@ -133,7 +133,7 @@ void comm_shutdown(struct infos_socket *is)
 
 void comm_set_listen(comm_t comm)
 {
-  comm->state =   COMM_LISTEN;
+  comm->state = COMM_LISTEN;
 //   printf("Listen do %d\n", comm->state & COMM_LISTEN);
 }
 
@@ -159,8 +159,8 @@ int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int 
     comm->remote_ip = conn->ip_local;
   comm->remote_port = conn->port_local;
   
-  struct in_addr in = {comm->remote_ip};
-  printf("%s:%d\n", inet_ntoa(in), comm->remote_port);
+//   struct in_addr in = {comm->remote_ip};
+//   printf("%s:%d\n", inet_ntoa(in), comm->remote_port);
   
   return conn->fd.proc->pid;
 }
@@ -188,12 +188,14 @@ void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in)
   if(xbt_dynar_is_empty(comm->conn_wait))
     return;
   
-  printf("Store connected information\n");
+//   printf("Store connected information\n");
   comm_t comm_conn;
   xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
   
   //Store ip and port of process which wait for connect
   struct infos_socket *s = comm_conn->info[0].socket;
+  memset(in, 0, sizeof(struct sockaddr_in));
+  in->sin_family = AF_INET;
   in->sin_addr.s_addr = s->ip_local;
   in->sin_port = htons(s->port_local);
 }
@@ -211,10 +213,12 @@ pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in)
   
   //Store ip and port of process which wait for connect
   struct infos_socket *s = comm_conn->info[0].socket;
+  memset(in, 0, sizeof(struct sockaddr_in));
+  in->sin_family = AF_INET;
   in->sin_addr.s_addr = s->ip_local;
-  in->sin_port = s->port_local;
+  in->sin_port = htons(s->port_local);
 
-  fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->port_local);
+//   fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->port_local);
   return comm_conn->info[0].socket->fd.proc->pid;
 }
 
@@ -229,8 +233,8 @@ int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t*
   
   if(!peer)
   {
-    struct in_addr in2 = {comm->remote_ip};
-    printf("%s:%d\n", inet_ntoa(in2), comm->remote_port);
+//     struct in_addr in2 = {comm->remote_ip};
+//     printf("%s:%d\n", inet_ntoa(in2), comm->remote_port);
     
     in->sin_addr.s_addr = comm->remote_ip;
     in->sin_port = comm->remote_port;
@@ -261,7 +265,7 @@ int comm_get_socket_state(struct infos_socket* is)
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);
-//   printf("Comm state %d %d %d\n", xbt_fifo_size(recv->send_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
+//   printf("[%d](%d) Comm state %d %d %d\n",is->fd.pid, is->fd.fd, xbt_fifo_size(recv->data_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
   if(xbt_fifo_size(recv->data_fifo))
     res = res | SOCKET_READ_OK;
   if(!xbt_dynar_is_empty(comm->conn_wait))

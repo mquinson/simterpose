@@ -101,7 +101,7 @@ void add_to_sched_list(pid_t pid)
   proc->scheduled =1;
   xbt_dynar_push_as(sched_list, pid_t, pid);
   
-  printf("Add process %d to sched_list\n", pid);
+//   printf("Add process %d to sched_list\n", pid);
   if(proc->idle_list)
     remove_from_idle_list(pid);
   else if(proc->on_mediation)
@@ -163,12 +163,24 @@ int main(int argc, char *argv[]) {
   
   do{
     //We calculate the time of simulation.
-    time_to_simulate= get_next_start_time() - SD_get_clock();
+    double next_start_time = get_next_start_time();
+    if(next_start_time != -1)
+      time_to_simulate= next_start_time - SD_get_clock();
+    else
+      time_to_simulate = -1;
+    
     if(fabs(time_to_simulate) < 1e-9)
       time_to_simulate =0.;
-//     printf("Next simulation time %lf\n", time_to_simulate);
+    
+//     fprintf(stderr, "Next simulation time %.9lf (%.9lf - %.9lf)", time_to_simulate, get_next_start_time(), SD_get_clock());
+    if(time_to_simulate < 0 && time_to_simulate != -1)
+    {
+      fprintf(stderr, "Next simulation time going negative, aborting\n");
+      THROW_IMPOSSIBLE;
+    }
+    
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
-//     printf("NEW TURN %lf\n", SD_get_clock());
+//     fprintf(stderr, "NEW TURN %.9lf\n", SD_get_clock());
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
@@ -183,7 +195,7 @@ int main(int argc, char *argv[]) {
       //If data is null, we schedule the process
       if(data != NULL)
       {
-        printf("End of task for %d\n", *data);
+//         printf("End of task for %d\n", *data);
         process_on_simulation(process_get_descriptor(*data), 0);
         add_to_sched_list(*data);
       }
@@ -254,10 +266,11 @@ int main(int argc, char *argv[]) {
 //     --indice;
 //     if(!indice)
 //     {
-      fprintf(stderr, "End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
+//       fprintf(stderr, "End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
 //       indice = 10000;
 //     }
-      
+//       if(SD_get_clock() > 1000)
+//         break;
     }while(child_amount);
   
 

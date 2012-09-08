@@ -3,22 +3,36 @@
 #include "xbt.h"
 
 
-void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall) {   
+void ptrace_cpy(pid_t child, void * dst, void * src, size_t length, char *syscall) {   
 
   int i = 0;
   long size_copy =0;
 
   errno = 0;
   long ret;
+  size_t len = length & ~0x8;
+  long* temp_dest = (long*)dst;
+  
   while (size_copy < len) {
     ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
     if (ret == -1 && errno != 0) {
       printf("%s : ptrace peekdata in %s\n",strerror(errno), syscall);
       THROW_IMPOSSIBLE;
     }
-    ((long *)dst)[i] = ret;
+    *temp_dest = ret;
+    ++temp_dest;
     size_copy += sizeof(long);
     i++;
+  }
+  size_t rest = length & 0x8;
+  if(rest)
+  {
+    ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
+    if (ret == -1 && errno != 0) {
+      printf("%s : ptrace peekdata in %s\n",strerror(errno), syscall);
+      THROW_IMPOSSIBLE;
+    }
+    memcpy(temp_dest, &ret, rest);
   }
 }
 
@@ -30,7 +44,7 @@ void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
   while (size_copy < len) {
     ret = ptrace(PTRACE_POKEDATA, pid, dst +size_copy, *((long*)(src + size_copy)));
     if (ret == -1 && errno != 0) {
-      perror("ptrace pokedata");
+      fprintf(stderr, "[%d] Unable to write at memory address %p\n", pid, dst);
       THROW_IMPOSSIBLE;
     }
     size_copy += sizeof(long);
@@ -226,7 +240,7 @@ int ptrace_find_free_binding_port(const pid_t pid)
   ptrace_cpy(pid, &in, (void*)reg.rsi, reg.rdx, "");
   temp=in;
   
-  unsigned short port = 0;
+  static unsigned short port = 0;
   --port;
   int status;
   

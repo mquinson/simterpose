@@ -16,7 +16,7 @@
 
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* name)
 {
-  printf("Scheduling last computation\n");
+//   printf("Scheduling last computation\n");
   process_descriptor *proc = process_get_descriptor(pid);
   
   double comp_size = SD_task_get_amount(proc->last_computation_task);
@@ -31,7 +31,7 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 
 void schedule_computation_task(pid_t pid)
 {
-  printf("Scheduling computation\n");
+//   printf("Scheduling computation\n");
 //   fprintf(stderr,"Adding compuation task to process %d\n", pid);
   process_descriptor *proc = process_get_descriptor(pid);
   double comp_size = SD_task_get_amount(proc->last_computation_task);
@@ -52,7 +52,7 @@ SD_task_t create_computation_task(pid_t pid, double amount)
 //   printf("ENTERING create_computation_task\n");
   process_descriptor *proc = process_get_descriptor(pid);
 
-  SD_task_t task = SD_task_create("computation", NULL, amount);
+  SD_task_t task = SD_task_create(/*"computation"*/NULL, NULL, amount);
   
   if(proc->last_computation_task != NULL)
     schedule_last_computation_task(pid, task, "calculation sequence");
@@ -63,6 +63,11 @@ SD_task_t create_computation_task(pid_t pid, double amount)
 //We can factorize because receiver task are only here for scheduling
 void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_task_t task)
 {
+  if(SD_task_get_amount(task) < 0)
+  {
+    fprintf(stderr, "Scheduling a negative task comm : abort\n");
+    THROW_IMPOSSIBLE;
+  }
 //   printf("Entering schedule_comm_task %s\n", SD_task_get_name(task));
   double* comm_amount = malloc(sizeof(double)*4);
   comm_amount[1]=SD_task_get_amount(task);
@@ -91,12 +96,12 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
 {
   process_descriptor *proc_sender = process_get_descriptor(pid_sender);
   
-  char buff[256];
-  sprintf(buff, "%s send",proc_sender->name);
+//   char buff[256];
+//   sprintf(buff, "%s send",proc_sender->name);
   
-  SD_task_t task_sending = SD_task_create(buff, &(proc_sender->pid), amount);
+  SD_task_t task_sending = SD_task_create(/*buff*/NULL, &(proc_sender->pid), amount);
   SD_task_watch(task_sending, SD_DONE);
-  SD_task_t task_receiving = SD_task_create("communication recv", NULL, 0);
+  SD_task_t task_receiving = SD_task_create(/*"communication recv"*/NULL, NULL, 0);
   SD_task_watch(task_receiving, SD_DONE);
   
   task_comm_info* temp = malloc(sizeof(task_comm_info));
@@ -107,10 +112,10 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   
   //if last_computation_task is not NULL, that means that we have to do some computation before process syscall
   if(proc_sender->last_computation_task)
-    schedule_last_computation_task(pid_sender, task_sending, "calculation");
+    schedule_last_computation_task(pid_sender, task_sending, NULL/*"calculation"*/);
 
   
-  SD_task_dependency_add("communication", NULL, task_sending, task_receiving);
+  SD_task_dependency_add(/*"communication"*/NULL, NULL, task_sending, task_receiving);
   
   return task_sending;
 }
@@ -127,7 +132,7 @@ void task_schedule_receive(struct infos_socket* is, pid_t pid)
   
   //If we have a computation task in queue, we have to scedule it before doing the other operation
   if(proc_receiver->last_computation_task)
-    schedule_last_computation_task(proc_receiver->pid, tci->task, "calculation");
+    schedule_last_computation_task(proc_receiver->pid, tci->task,NULL /*"calculation"*/);
 
   schedule_comm_task(tci->sender_station, proc_receiver->station, tci->task);
   proc_receiver->on_simulation = 1;

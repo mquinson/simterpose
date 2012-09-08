@@ -255,7 +255,7 @@ void set_real_port(SD_workstation_t station, int port, int real_port)
   
   if(desc == NULL)
     return ;
-  printf("Set correspondance %d <-> %d (real) for %s\n",port, real_port, SD_workstation_get_name(station));
+//   printf("Set correspondance %d <-> %d (real) for %s\n",port, real_port, SD_workstation_get_name(station));
   desc->real_port = real_port;
 }
 
@@ -304,7 +304,10 @@ void unset_socket(pid_t pid, struct infos_socket* is)
   
   port_desc* desc = xbt_dict_get_or_null(temp->port, buff);
   if(!desc)
+  {
+    fprintf(stderr, "No descriptor found for port %s\n", buff);
     return;
+  }
   
   if(is == desc->bind_socket)
     desc->bind_socket = NULL;
@@ -325,7 +328,7 @@ time_t get_simulated_timestamp()
 
 void add_new_translation(int real_port, int translated_port, unsigned int translated_ip)
 {
-  printf("Add new translation %d->%d\n", real_port, translated_port);
+//   printf("Add new translation %d->%d\n", real_port, translated_port);
   translate_desc *temp = malloc(sizeof(translate_desc));
   temp->port_num = translated_port;
   temp->ip = translated_ip;
@@ -339,7 +342,7 @@ void add_new_translation(int real_port, int translated_port, unsigned int transl
 
 translate_desc* get_translation(int real_port)
 {
-  printf("Get translation for port %d\n", real_port);
+//   printf("Get translation for port %d\n", real_port);
   char buff[6];
   sprintf(buff, "%d", real_port);
   
@@ -349,11 +352,11 @@ translate_desc* get_translation(int real_port)
 int get_real_port(pid_t pid, unsigned int ip, int port)
 {
   struct in_addr in = {ip};
-  printf("Searching for ral port of %s:%d\n", inet_ntoa(in), port);
+//   printf("Searching for ral port of %s:%d\n", inet_ntoa(in), port);
   simterpose_station *temp = NULL;
   if(ip == inet_addr("127.0.0.1"))
   {
-    printf("We are on local network %d\n",port);
+//     printf("We are on local network %d\n",port);
     process_descriptor *proc = process_get_descriptor(pid);
     temp = (simterpose_station*)xbt_dict_get(global_data->list_station, SD_workstation_get_name(proc->station));
   }
@@ -366,6 +369,6 @@ int get_real_port(pid_t pid, unsigned int ip, int port)
   if(desc == NULL)
     return -1;
   
-  printf("Return %d\n", desc->real_port);
+//   printf("Return %d\n", desc->real_port);
   return desc->real_port;
 }

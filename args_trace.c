@@ -59,7 +59,7 @@ void sys_build_accept(pid_t pid, syscall_arg_u *sysarg)
   ptrace_restore_syscall(pid, SYS_accept, arg->ret);
   
   ptrace_poke(pid, arg->addr_dest, &(arg->sai), sizeof(struct sockaddr_in));
-  ptrace_poke(pid, arg->len_dest, &(arg->addrlen), sizeof(socklen_t));
+//   ptrace_poke(pid, arg->len_dest, &(arg->addrlen), sizeof(socklen_t));
 }
 
 
@@ -70,7 +70,7 @@ void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
   arg->ret = reg->ret;
 
   arg->sockfd=(int)reg->arg1;
-  printf("Socket for accepting %lu\n", reg->arg1);
+//   printf("Socket for accepting %lu\n", reg->arg1);
 
   int domain = get_domain_socket(child,arg->sockfd);
   if (domain == 2) // PF_INET
@@ -412,7 +412,7 @@ void get_args_poll(pid_t child, reg_s* reg, syscall_arg_u* sysarg) {
   arg->timeout = reg->arg3/1000.;//the timeout is in millisecond
 
   if (src!=0) {
-    arg->fd_list = malloc(sizeof(arg->nbfd)* sizeof(struct pollfd));
+    arg->fd_list = malloc(arg->nbfd * sizeof(struct pollfd));
     ptrace_cpy(child,arg->fd_list, src, arg->nbfd * sizeof( struct pollfd),"poll");
     
   } 
@@ -443,15 +443,20 @@ void sys_build_read(pid_t pid, syscall_arg_u* sysarg)
   read_arg_t arg = &(sysarg->read);
   ptrace_restore_syscall(pid, SYS_read, arg->ret);
   
-  ptrace_poke(pid, (void*)arg->dest, arg->data, arg->ret);
-  free(arg->data);
+  if(arg->ret > 0)
+  {
+    ptrace_poke(pid, (void*)arg->dest, arg->data, arg->ret);
+    free(arg->data);
+  }
 }
 
 void get_args_read(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg1;
+#ifndef no_full_mediate
   arg->dest = (void*)reg->arg2;
+#endif
   arg->ret = reg->ret;
   arg->count = reg->arg3;
 }
@@ -514,6 +519,9 @@ void get_args_time(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
   
   arg->ret = reg->ret;
   arg->t_dest = (void*) reg->arg1;
+//   if(arg->t_dest < (void*)0x100)
+//     arg->t_dest = 0;
+//   fprintf(stderr, "time destination %p\n", arg->t_dest);
 }
 
 void sys_build_time(pid_t pid, syscall_arg_u *sysarg)
@@ -531,7 +539,7 @@ void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg)
   
   reg_s reg;
   ptrace_get_register(pid, &reg);
-  int port = arg->sai.sin_port;
+  int port = ntohs(arg->sai.sin_port);
   struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
   
   comm_get_ip_port_accept(is, &(arg->sai));
@@ -544,8 +552,8 @@ void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg)
   else
     station = get_station_by_ip(arg->sai.sin_addr.s_addr);
   
-  set_real_port(station, ntohs(arg->sai.sin_port), ntohs(port));
-  add_new_translation(ntohs(port),ntohs(arg->sai.sin_port), arg->sai.sin_addr.s_addr);
+  set_real_port(station, ntohs(arg->sai.sin_port), port);
+  add_new_translation(port,ntohs(arg->sai.sin_port), arg->sai.sin_addr.s_addr);
   
   ptrace_poke(pid, (void*)reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }

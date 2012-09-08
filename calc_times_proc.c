@@ -159,7 +159,6 @@ int ask_time(int tid, long long int* times)
   struct msgtemplate msg;
   int rep_len;
   struct nlattr *na;
-  int pid = getpid();
   int cmd_type = TASKSTATS_CMD_ATTR_PID;
   struct taskstats* stats;
   

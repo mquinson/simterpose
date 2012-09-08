@@ -164,7 +164,7 @@ void socket_close(pid_t pid, int fd)
 
 struct infos_socket* register_socket(pid_t pid, int sockfd, int domain, int protocol) {
 //   printf("Registering socket %d for processus %d\n", sockfd, pid);
-  if (socket_registered(pid,sockfd)==1) {
+  if (global_data->process_desc[pid]->fd_list[sockfd] != NULL) {
     xbt_die("Inconsistence found in model. Socket already exist");
   }else{
     return confirm_register_socket(pid,sockfd,domain,protocol);
@@ -189,7 +189,7 @@ void set_localaddr_port_socket(pid_t pid, int fd, char *ip, int port) {
   struct infos_socket* is = get_infos_socket(pid, fd);
   is->ip_local = inet_addr(ip);
   is->port_local = port;
-  print_infos_socket(is);
+//   print_infos_socket(is);
 }
 
 
@@ -469,6 +469,7 @@ struct infos_socket* getSocketInfoFromContext(unsigned int ip_local, int port_lo
 
 int handle_new_receive(int pid, syscall_arg_u* sysarg)
 {
+//   printf("Entering Handle_new_receive\n");
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   struct infos_socket* is = get_infos_socket(pid, arg->sockfd);
   
@@ -477,6 +478,7 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   int enough=0;
   int global_size=0;
   int result=0;
+  int receive_new_message=0;
   
 #ifndef no_full_mediate
   char* data_recv = NULL;
@@ -492,8 +494,10 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   }
   
   if(recv->quantity_recv==0)
+  {
+    receive_new_message = 1;
     result=1;
-  
+  }
 
   while(1)
   {
@@ -534,19 +538,26 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
         
         
         result=1;
-        task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
-        SD_task_destroy(tci->task);
-        free(tci);
-
+        
+        if(receive_new_message)
+        {
+          task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
+          SD_task_destroy(tci->task);
+          free(tci);
+        }
+        receive_new_message=1;
       }
       else
         break;
     }
   }
   if(result)
+  {
+//     printf("New receive data read\n");
     task_schedule_receive(is, pid);
+  }
   
-  printf("New global size %d\n", global_size);
+//   printf("New global size %d\n", global_size);
   arg->ret = global_size;
   arg->data = data_recv;
 #else
@@ -556,7 +567,7 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   if(!ds)
     return 0;
   
-  int receive_new_message = 0;
+//   printf("%d ", xbt_fifo_size(recv->data_fifo));
   if(recv->quantity_recv==0)
   {
     result=1;
@@ -600,6 +611,7 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
         result=1;
         if(receive_new_message)
         {
+//           fprintf(stderr, "Suppress a task_comm_info\n");
           task_comm_info *tci = (task_comm_info*) xbt_fifo_shift(recv->recv_task);
           SD_task_destroy(tci->task);
           free(tci);
@@ -615,7 +627,8 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   
   arg->ret = global_size;
 #endif
-  printf("Handle new_receive return %d\n", result);
+//   printf("->%d ", xbt_fifo_size(recv->data_fifo));
+//   printf("Handle new_receive return %d\n", result);
   return result;
 }
 
@@ -641,7 +654,7 @@ void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg)
   xbt_fifo_push(recv->data_fifo, data);
 #endif
   
-//   printf("New queue size %d\n", xbt_fifo_size(recv->send_fifo));
+//   printf("New queue size %d\n", xbt_fifo_size(recv->data_fifo));
 }
 
 

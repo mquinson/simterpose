@@ -1,7 +1,7 @@
 #ifndef INCLUDE_RUN_TRACE_H
 #define INCLUDE_RUN_TRACE_H
 
-#define no_full_mediate
+//#define no_full_mediate
 
 #include <sys/types.h>
 

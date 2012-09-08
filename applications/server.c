@@ -10,52 +10,12 @@
 #include <pthread.h>
 
 #define SERV_PORT 2227
+//#define IP "162.32.43.1"
 
-#define BUFFER_SIZE 100000
-/*
-void* handle_client(void* data)
-{
-  int res;
- 
-  int client_socket = *(int *)data;
-  printf("Connexion acceptée\n");
-  int length = BUFFER_SIZE;
-  while(length !=0)
-  {
-    res = recv(client_socket,buff,length,0);
-    if(res==-1){
-      perror("erreur réception server");
-      exit(1);
-    }
-    length -= res;
-    printf("Server : recv %d (left %d)\n", res, length);
-  }
-  //printf("Message reçu : %s",buff);
-  strcpy(buff,"envoi serveur\n");
-  printf("Server envoie au client\n");
-  int i=0;
-  int j;
-  for(i=0; i<2000000 ; ++i)
-  {
-    j=i*(i%14);
-    --j;
-  }
-  res=send(client_socket,buff,BUFFER_SIZE,0);
-  if(res==-1){
-    perror("erreur envoi server");
-    exit(1);
-  }
-  shutdown(client_socket,2);
-  close(client_socket);
-  
-  return NULL;
-}*/
+#define BUFFER_SIZE 40
 
 
 int main(){
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_t tid;
   
   int serverSocket;
   char *buff=malloc(BUFFER_SIZE);
@@ -147,31 +107,30 @@ int main(){
           exit(1);
         }else{
           printf("Connexion acceptée\n");
-          int length = BUFFER_SIZE;
-          while(length !=0)
+          
+          int ia=0;
+          for(ia=0; ia<10000; ++ia)
           {
-            res = recv(client_socket,buff,length,0);
+            int length = BUFFER_SIZE;
+            while(length >0)
+            {
+              res = recv(client_socket,buff,length,0);
+              if(res==-1){
+                perror("erreur réception server");
+                exit(1);
+              }
+              length -= res;
+              printf("Server : recv %d (left %d)\n", res, length);
+            }
+            //printf("Message reçu : %s",buff);
+//             strcpy(buff,"envoi serveur\n");
+            printf("Server envoie au client\n");
+            res=send(client_socket,buff,BUFFER_SIZE,0);
             if(res==-1){
-              perror("erreur réception server");
+              perror("erreur envoi server");
               exit(1);
             }
-            length -= res;
-            printf("Server : recv %d (left %d)\n", res, length);
-          }
-          //printf("Message reçu : %s",buff);
-          strcpy(buff,"envoi serveur\n");
-          printf("Server envoie au client\n");
-          int i=0;
-          int j;
-          for(i=0; i<2000000 ; ++i)
-          {
-            j=i*(i%14);
-            --j;
-          }
-          res=send(client_socket,buff,BUFFER_SIZE,0);
-          if(res==-1){
-            perror("erreur envoi server");
-            exit(1);
+            printf("Server send done\n");
           }
 //           shutdown(client_socket,2);
 //           close(client_socket);

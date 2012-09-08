@@ -12,7 +12,10 @@
 
 #define SERV_PORT 2227
 
-#define BUFFER_SIZE 100000
+#define BUFFER_SIZE 40
+
+#define IP "162.32.43.1"
+//#define IP "127.0.0.1"
 
 int main(){
 
@@ -32,8 +35,8 @@ int main(){
     
     struct sockaddr_in cli_addr;
     memset(&cli_addr,0,sizeof(struct sockaddr_in));
-    host_addr=inet_addr("162.32.43.1");
-    serverHostEnt=gethostbyname("162.32.43.1");
+    host_addr=inet_addr(IP);
+    serverHostEnt=gethostbyname(IP);
     memcpy(&(cli_addr.sin_addr),serverHostEnt->h_addr,serverHostEnt->h_length);
     port=SERV_PORT;
     cli_addr.sin_family=AF_INET;
@@ -58,13 +61,17 @@ int main(){
 	  perror("erreur envoi client");
 	  exit(1);
 	}else{
-	  res=recv(clientSocket,buff,BUFFER_SIZE,0);
-	  if(res==-1){
-	    perror("erreur reception client");
-	    exit(1);
-	  }else{
-	    printf("Message reçu : %s",buff);
-	  }
+          int length = BUFFER_SIZE;
+          while(length > 0)
+          {
+            res = recv(clientSocket,buff,length,0);
+            if(res==-1){
+              perror("erreur réception server");
+              exit(1);
+            }
+            length -= res;
+            printf("Client : recv %d (left %d)\n", res, length);
+          }
 	}
 	//}
 //       shutdown(clientSocket,2);
@@ -80,8 +87,8 @@ int main(){
     
     struct sockaddr_in cli_addr;
     memset(&cli_addr,0,sizeof(struct sockaddr_in));
-    host_addr=inet_addr("162.32.43.1");
-    serverHostEnt=gethostbyname("162.32.43.1");
+    host_addr=inet_addr(IP);
+    serverHostEnt=gethostbyname(IP);
     memcpy(&(cli_addr.sin_addr),serverHostEnt->h_addr,serverHostEnt->h_length);
     port=SERV_PORT;
     cli_addr.sin_family=AF_INET;
@@ -94,25 +101,28 @@ int main(){
       printf("Connexion avec le serveur établie\n");
       // while(1){
         //fgets(buff,512,stdin);
-      res=send(clientSocket,buff,BUFFER_SIZE,0);
-      int i=0;
-      int j;
-      for(i=0; i<2000000 ; ++i)
+      int ia = 0;
+      for(ia=0; ia < 10000 ; ++ia)
       {
-        j=i*(i%14);
-        --j;
-      }
-      if(res==-1){
-        perror("erreur envoi client");
-        exit(1);
-      }else{
-        res=recv(clientSocket,buff,BUFFER_SIZE,0);
+        res=send(clientSocket,buff,BUFFER_SIZE,0);
         if(res==-1){
-          perror("erreur reception client");
+          perror("erreur envoi client");
           exit(1);
         }else{
-          printf("Message reçu : %s",buff);
+          int length = BUFFER_SIZE;
+          while(length > 0)
+          {
+            printf("New receive waited\n");
+            res = recv(clientSocket,buff,length,0);
+            if(res==-1){
+              perror("erreur réception server");
+              exit(1);
+            }
+            length -= res;
+            printf("SClient : recv %d (left %d)\n", res, length);
+          }
         }
+        printf("End recevive\n");
       }
       //}
 //       shutdown(clientSocket,2);
