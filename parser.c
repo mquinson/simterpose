@@ -6,6 +6,7 @@
 #include "parser.h"
 #include "xbt.h"
 #include "surf/surfxml_parse.h"
+#include "simgrid/platf.h"
 
 
 launcher_procdesc* proc;
@@ -52,7 +53,7 @@ static void parse_process_init(void)
   proc = malloc(sizeof(launcher_procdesc));
   proc->process_name = strdup(A_surfxml_process_host);
   proc->executable = strdup(A_surfxml_process_function);
-  proc->launching_time=parse_double(A_surfxml_process_start_time);
+  proc->launching_time=parse_double(A_surfxml_process_start___time);
   proc->argument_nbr=1;
   proc->command_line_argument=malloc(sizeof(char*));
   proc->command_line_argument[0] = proc->executable;
@@ -81,12 +82,17 @@ static void parse_argument(void)
 void parse_deployment_file(const char* filename)
 {
   xbt_ex_t e;
-  
+
   surf_parse_reset_callbacks();
   
-  surfxml_add_callback(STag_surfxml_process_cb_list, parse_process_init);
+// TODO merge 3 functions
+sg_platf_process_add_cb(parse_process_init);
+sg_platf_process_add_cb(parse_argument);
+sg_platf_process_add_cb(parse_process_finalize);
+
+ /* surfxml_add_callback(STag_surfxml_process_cb_list, parse_process_init);
   surfxml_add_callback(ETag_surfxml_argument_cb_list, parse_argument);
-  surfxml_add_callback(ETag_surfxml_process_cb_list, parse_process_finalize);
+  surfxml_add_callback(ETag_surfxml_process_cb_list, parse_process_finalize);*/
   
   surf_parse_open(filename);
   TRY {

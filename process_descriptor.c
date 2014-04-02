@@ -4,7 +4,7 @@
 #include "simdag/simdag.h"
 
 #include <stdlib.h>
-#include <sched.h> /* For clone flags*/
+#include </usr/include/linux/sched.h> /* For clone flags*/
 
 
 process_descriptor *process_descriptor_new(char* name, pid_t pid)
