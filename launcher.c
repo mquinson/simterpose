@@ -8,6 +8,8 @@
 
 #include "xbt.h"
 #include "parser.h"
+//#include "xbt/str.h"
+//#include "xbt/dynar.h"
 
 FILE* comm_sim;
 

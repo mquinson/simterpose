@@ -8,7 +8,6 @@
 #include "surf/surfxml_parse.h"
 #include "simgrid/platf.h"
 
-
 launcher_procdesc* proc;
 int proc_amount = 0;
 

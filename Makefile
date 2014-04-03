@@ -4,7 +4,7 @@ OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o socket
 CFLAGS = -Wall -g
 CC=gcc
 
-LDFLAGS= -lsimgrid -lm
+LDFLAGS= -L/usr/lib/libsimgrid -I/usr/include/ -lsimgrid -lm
 
 all : run_trace launcher
 
@@ -67,7 +67,7 @@ communication.o: communication.c communication.h sockets.h
 #################################################
 # launcher section
 launcher: launcher.o
-	$(CC) $(LDFLAGS) $(CFLAGS) -o launcher launcher.o
+	$(CC) $(CFLAGS) -o launcher launcher.o $(LDFLAGS) 
 
 launcher.o: launcher.c
 	$(CC) $(CFLAGS) -c $< -o $@
