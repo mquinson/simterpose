@@ -1,6 +1,6 @@
-OBJS = server client server_select client_select client_simple server_simple server_poll\
-	server_poll_multi server_close client_sbr server_sbr fcntl_ex server_read \
-	client_write client_msg server_msg test_restore
+OBJS = server client #server_select client_select client_simple server_simple server_poll\
+	#server_poll_multi server_close client_sbr server_sbr fcntl_ex server_read \
+	#client_write client_msg server_msg test_restore
 CC = gcc 
 CFLAGS = -Wall -g
 
