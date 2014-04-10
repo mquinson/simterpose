@@ -1317,9 +1317,11 @@ int process_handle(pid_t pid, int stat)
 #ifndef no_full_mediate
           if(process_send_call(pid, sysarg))
           {
+
+	XBT_DEBUG("handle, -> PROCESS_TASK_FOUND \n");
             ptrace_neutralize_syscall(pid);
             sys_build_sendto(pid, sysarg);
-//             print_sendto_syscall(pid, sysarg);
+             print_sendto_syscall(pid, sysarg);
             process_set_out_syscall(proc);
             return PROCESS_TASK_FOUND;
           }

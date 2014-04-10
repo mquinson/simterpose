@@ -18,12 +18,12 @@
 
 #define BUFFER_SIZE 512
 
-XBT_LOG_NEW_CATEGORY(SIMTERPOSE, "Simterpose log");
+XBT_LOG_NEW_DEFAULT_CATEGORY(SIMTERPOSE, "Simterpose log");
 
 void sig_int(int sig)
 {
-  fprintf(stderr, "Interruption request by user\n");
-  fprintf(stderr, "Current time of simulation %lf\n", SD_get_clock());
+  XBT_ERROR("Interruption request by user");
+  XBT_ERROR("Current time of simulation %lf", SD_get_clock());
   exit(0);
 }
 
@@ -75,7 +75,7 @@ void add_to_idle(pid_t pid)
   if(proc->on_mediation)
     THROW_IMPOSSIBLE;
   proc->idle_list=1;
-//   printf("Add process %d to idle list\n", pid);
+  XBT_DEBUG("Add process %d to idle list", pid);
   xbt_dynar_push_as(idle_process, pid_t, pid);
 }
 
@@ -101,7 +101,7 @@ void add_to_sched_list(pid_t pid)
   proc->scheduled =1;
   xbt_dynar_push_as(sched_list, pid_t, pid);
   
-//   printf("Add process %d to sched_list\n", pid);
+  XBT_DEBUG("Add process %d to sched_list", pid);
   if(proc->idle_list)
     remove_from_idle_list(pid);
   else if(proc->on_mediation)
@@ -118,7 +118,7 @@ void move_idle_to_sched()
     process_descriptor *proc = process_get_descriptor(pid);
     
     proc->idle_list = 0;
-//     printf("Move process %d on sched_list\n", pid);
+    XBT_DEBUG("Move idle process %d on sched_list", pid);
     proc->scheduled = 1;
     xbt_dynar_push_as(sched_list, pid_t, pid);
   }
@@ -134,7 +134,7 @@ void move_mediate_to_sched()
     
     proc->on_mediation = 0;
     proc->scheduled = 1;
-//     printf("Move mediate process %d\n", pid);
+    XBT_DEBUG("Move mediate process to sched %d", pid);
     
     xbt_dynar_push_as(sched_list, pid_t, pid);
   }
@@ -143,6 +143,9 @@ void move_mediate_to_sched()
 
 
 int main(int argc, char *argv[]) { 
+
+xbt_log_control_set("SIMTERPOSE.thresh:debug");
+
   simterpose_init(argc, argv);
 
   struct sigaction nvt, old;
@@ -160,7 +163,7 @@ int main(int argc, char *argv[]) {
   mediate_list = xbt_dynar_new(sizeof(pid_t), NULL);
   
   int child_amount=0;
-  
+  int i = 7; // debug purpose
   do{
     //We calculate the time of simulation.
     double next_start_time = get_next_start_time();
@@ -172,32 +175,33 @@ int main(int argc, char *argv[]) {
     if(fabs(time_to_simulate) < 1e-9)
       time_to_simulate =0.;
     
-//     fprintf(stderr, "Next simulation time %.9lf (%.9lf - %.9lf)", time_to_simulate, get_next_start_time(), SD_get_clock());
+	XBT_ERROR("Next simulation time %.9lf (%.9lf - %.9lf)", time_to_simulate, get_next_start_time(), SD_get_clock());
     if(time_to_simulate < 0 && time_to_simulate != -1)
     {
-      fprintf(stderr, "Next simulation time going negative, aborting\n");
+      XBT_DEBUG("Next simulation time going negative, aborting");
       THROW_IMPOSSIBLE;
     }
     
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
-//     fprintf(stderr, "NEW TURN %.9lf\n", SD_get_clock());
+	XBT_DEBUG("NEW TURN %.9lf", SD_get_clock());
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
     while(!xbt_dynar_is_empty(arr))
     {
       xbt_dynar_shift(arr, &task_over);
-//       printf("(%d) A task is returned %s (%d)\n",xbt_dynar_length(arr), SD_task_get_name(task_over), SD_task_get_state(task_over));
+     XBT_DEBUG("(%lu) A task is returned %s (%d)",xbt_dynar_length(arr), SD_task_get_name(task_over), SD_task_get_state(task_over));
       if(SD_task_get_state(task_over) != SD_DONE)
         continue;
-//       printf("A task is over %s\n", SD_task_get_name(task_over));
+      XBT_DEBUG("A task is over %s", SD_task_get_name(task_over));
       int* data = (int *)SD_task_get_data(task_over);
       //If data is null, we schedule the process
+// FIXME pourquoi? + incohérence avec commentaire
       if(data != NULL)
       {
-//         printf("End of task for %d\n", *data);
+       XBT_DEBUG("End of task for %d", *data);
         process_on_simulation(process_get_descriptor(*data), 0);
-        add_to_sched_list(*data);
+        add_to_sched_list(*data); 
       }
       SD_task_destroy(task_over);
     }
@@ -209,7 +213,7 @@ int main(int argc, char *argv[]) {
 
     while(has_sleeping_to_launch())
     {
-//       printf("Trying to add in wait process\n");
+      XBT_DEBUG("Trying to add waiting process");
       //if we have to launch them to this turn
       if(equal_d(SD_get_clock(),get_next_start_time()))
       {
@@ -218,12 +222,14 @@ int main(int argc, char *argv[]) {
         process_descriptor* proc = process_get_descriptor(temp_pid);
         if(proc->in_timeout == PROC_NO_TIMEOUT)
           ++child_amount;
-//         printf("In_timeout = %d\n", proc->in_timeout);
+	XBT_DEBUG("In_timeout = %d", proc->in_timeout);
+
+	XBT_DEBUG("child_amount = %d", child_amount);
       }
       else
         break;
     }
-//     printf("Size of sched_list %ldu\n", xbt_dynar_length(sched_list));
+     XBT_DEBUG("Size of sched_list %lu", xbt_dynar_length(sched_list));
     
     //Now we have global list of process_data, we have to handle them
     while(!xbt_dynar_is_empty(sched_list))
@@ -232,10 +238,10 @@ int main(int argc, char *argv[]) {
       pid_t pid;
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
-//       fprintf(stdout, "Scheduling process %d\n", pid);
+      XBT_DEBUG("Scheduling process %d", pid);
       proc->scheduled = 0;
       
-//       printf("Strating treatment\n");
+      XBT_DEBUG("Starting treatment");
       int status;
       
       if(proc->mediate_state)
@@ -247,22 +253,37 @@ int main(int argc, char *argv[]) {
         status = process_handle_active(pid);
       
 
-//       printf("End of treatment %d\n", status);
+       XBT_DEBUG("End of treatment, status = %d", status);
       if(status == PROCESS_IDLE_STATE)
       {
+	  XBT_DEBUG("status = PROCESS_IDLE_STATE");
         process_set_idle(proc, PROC_IDLE);
         add_to_idle(pid);
       }
       else if( status == PROCESS_DEAD)
       {
+	  XBT_DEBUG("status = PROCESS_DEAD");
         process_die(pid);
         --child_amount;
       }
       else if(status == PROCESS_ON_MEDIATION)
       {
+	  XBT_DEBUG("status = PROCESS_ON_MEDIATION");
         add_to_mediate(pid);
       }
+	else if(status == PROCESS_TASK_FOUND)
+      {
+	   XBT_DEBUG("status = PROCESS_TASK_FOUND");
+      }
+	else if(status == PROCESS_ON_COMPUTATION)
+      {
+	  XBT_DEBUG("status = PROCESS_ON_COMPUTATION");
+      }
+	
+//FIXME pourquoi ne pas traiter le cas PROCESS_TASK_FOUND, qui semble renvoyé 1 fois la connexion établie par le client
     }
+
+
 //     --indice;
 //     if(!indice)
 //     {
@@ -271,12 +292,15 @@ int main(int argc, char *argv[]) {
 //     }
 //       if(SD_get_clock() > 1000)
 //         break;
-    }while(child_amount);
+
+	XBT_DEBUG("child_amount = %d", child_amount);
+	i--;
+    }while(child_amount);//i); // replace by child amount
   
 
   finish_cputime();
   
-  printf("End of simulation. Time : %lf\n", SD_get_clock());
+  XBT_DEBUG("End of simulation. Time : %lf", SD_get_clock());
   
   SD_exit();
   destroy_global_data();

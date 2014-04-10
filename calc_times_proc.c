@@ -177,7 +177,7 @@ int ask_time(int tid, long long int* times)
   }
 
   if (msg.n.nlmsg_type == NLMSG_ERROR ||
-      !NLMSG_OK((&msg.n), rep_len)) {
+      !NLMSG_OK((&msg.n), rep_len)) { // si root, on ne rentre pas dans cette erreur. Sinon, on déclenche la segfault (msg.n.nlmsg_type == NLMSG_ERROR)
 //     struct nlmsgerr *err = NLMSG_DATA(&msg);
   fprintf(stderr, "fatal reply error,  errno\n");
   *(int*)0=0;

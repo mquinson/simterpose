@@ -147,7 +147,7 @@ void simterpose_init(int argc, char** argv)
   
   init_socket_gestion();
   init_comm();
-  init_cputime();
+  init_cputime(); // creates socket
   
   SD_init(&argc, argv);
   xbt_cfg_set_parse(_sg_cfg_set,"maxmin/precision:1e-9");
