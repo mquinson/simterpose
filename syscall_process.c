@@ -17,6 +17,8 @@
 
 #include <linux/futex.h>
 
+#define DEBUG
+
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, ST, "Syscall process log");
 
 int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg);
@@ -152,7 +154,9 @@ int process_select_call(pid_t pid)
     arg->fd_except = fd_ex;
     arg->ret = match;
     sys_build_select(pid, match);
+#ifdef DEBUG
    	print_select_syscall(pid, &(proc->sysarg));
+#endif
     return match;
   }
   
@@ -168,7 +172,9 @@ int process_select_call(pid_t pid)
     arg->fd_write = fd_wr;
     arg->fd_except = fd_ex;
     sys_build_select(pid, 0);
+#ifdef DEBUG
 	print_select_syscall(pid, &(proc->sysarg));
+#endif
     proc->in_timeout = PROC_NO_TIMEOUT;
     return 1;
   }
@@ -230,7 +236,9 @@ int process_poll_call(pid_t pid)
   {
 	XBT_DEBUG("Result for poll\n");
     sys_build_poll(pid, match);
+#ifdef DEBUG
 	print_poll_syscall(pid, &(proc->sysarg));
+#endif
     free(proc->sysarg.poll.fd_list);
     return match;
   }
@@ -238,7 +246,9 @@ int process_poll_call(pid_t pid)
   {
 	XBT_DEBUG("Time out on poll\n");
     sys_build_poll(pid, 0);
+#ifdef DEBUG
 	print_poll_syscall(pid, &(proc->sysarg));
+#endif
     free(proc->sysarg.poll.fd_list);
     proc->in_timeout = PROC_NO_TIMEOUT;
     return 1;
@@ -270,7 +280,9 @@ void process_getpeername_call(pid_t pid, syscall_arg_u *sysarg)
       ptrace_neutralize_syscall(pid);
       process_set_out_syscall(process_get_descriptor(pid));
       sys_build_getpeername(pid, sysarg);
+#ifdef DEBUG
 	print_getpeername_syscall(pid, sysarg);
+#endif
     }
   }
 }
@@ -859,7 +871,9 @@ int process_handle_mediate(pid_t pid)
       int res = process_recv_call(pid, &(proc->sysarg));
       if(res == PROCESS_TASK_FOUND)
       {
+#ifdef DEBUG
 	print_recvfrom_syscall(pid, &(proc->sysarg));
+#endif
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
         process_end_mediation(proc);
@@ -867,7 +881,9 @@ int process_handle_mediate(pid_t pid)
       }
       else if(res == RECV_CLOSE)
       {
+#ifdef DEBUG
 	print_recvfrom_syscall(pid, &(proc->sysarg));
+#endif
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
         return process_handle_active(pid);
@@ -1106,8 +1122,10 @@ int process_handle(pid_t pid, int stat)
         case SYS_bind:
 	XBT_DEBUG("[%d] bind", pid);
           get_args_bind_connect(pid, 0, &arg, sysarg);
-          process_bind_call(pid, sysarg);          
+          process_bind_call(pid, sysarg);    
+#ifdef DEBUG     
 	print_bind_syscall(pid, sysarg);
+#endif
           break;
 // #endif
         
@@ -1116,7 +1134,9 @@ int process_handle(pid_t pid, int stat)
 	XBT_DEBUG("New connection");
 	XBT_DEBUG("[%d] connect_in", pid);
           get_args_bind_connect(pid, 0, &arg, sysarg);
+#ifdef DEBUG
            print_connect_syscall(pid, sysarg);
+#endif
           if(process_connect_in_call(pid, sysarg))
             state = PROCESS_ON_MEDIATION;
         }
@@ -1126,7 +1146,9 @@ int process_handle(pid_t pid, int stat)
         {
 	XBT_DEBUG("[%d] accept_in", pid);
           get_args_accept(pid, &arg, sysarg);
+#ifdef DEBUG
            print_accept_syscall(pid, sysarg);
+#endif
           pid_t conn_pid = process_accept_in_call(pid, sysarg);
           if(!conn_pid)
             state =  PROCESS_ON_MEDIATION;
@@ -1322,7 +1344,9 @@ int process_handle(pid_t pid, int stat)
 	XBT_DEBUG("process_handle -> PROCESS_TASK_FOUND");
             ptrace_neutralize_syscall(pid);
             sys_build_sendto(pid, sysarg);
+#ifdef DEBUG
             print_sendto_syscall(pid, sysarg);
+#endif
             process_set_out_syscall(proc);
             return PROCESS_TASK_FOUND;
           }
@@ -1459,7 +1483,9 @@ int process_handle(pid_t pid, int stat)
               
         case SYS_fcntl:
           get_args_fcntl(pid, &arg, sysarg);
+#ifdef DEBUG
 	print_fcntl_syscall(pid, sysarg);
+#endif
 #ifdef no_full_mediate
           process_fcntl_call(pid, sysarg);
 #endif
@@ -1472,18 +1498,24 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_socket: 
           get_args_socket(pid, &arg, sysarg);
+#ifdef DEBUG
 	print_socket_syscall(pid, sysarg);
+#endif
           process_socket_call(pid, sysarg);
           break;
           
         case SYS_bind:
           get_args_bind_connect(pid, 0, &arg, sysarg);
+#ifdef DEBUG
 	print_bind_syscall(pid, sysarg);
+#endif
           break;
           
         case SYS_connect:
           get_args_bind_connect(pid, 1, &arg, sysarg);
+#ifdef DEBUG
 	print_connect_syscall(pid, sysarg);
+#endif
 #ifdef no_full_mediate
           process_connect_out_call(pid, sysarg);
           process_reset_state(proc);
@@ -1495,7 +1527,9 @@ int process_handle(pid_t pid, int stat)
 #ifdef no_full_mediate
           process_accept_out_call(pid, sysarg);
 #endif
+#ifdef DEBUG
 	print_accept_syscall(pid, sysarg);
+#endif
           break;
           
         case SYS_listen:

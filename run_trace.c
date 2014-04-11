@@ -145,11 +145,14 @@ void move_mediate_to_sched()
 
 int main(int argc, char *argv[]) { 
 
-xbt_log_control_set("RUN_TRACE.:debug");
+//xbt_log_control_set("ST.:info"); /*
+
+xbt_log_control_set("RUN_TRACE.:debug"); 
 //xbt_log_control_set("BENCHMARK.:debug");
 //xbt_log_control_set("ARGS_TRACE.:debug");
 xbt_log_control_set("SYSCALL_PROCESS.:debug");
 xbt_log_control_set("CALC_TIMES_PROC.:error");
+// */
 
   simterpose_init(argc, argv);
 
@@ -305,7 +308,7 @@ xbt_log_control_set("CALC_TIMES_PROC.:error");
 
   finish_cputime();
   
-  XBT_DEBUG("End of simulation. Time : %lf", SD_get_clock());
+  XBT_INFO("End of simulation. Time : %lf", SD_get_clock());
   
   SD_exit();
   destroy_global_data();
