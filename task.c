@@ -10,13 +10,16 @@
 #include "xbt.h"
 
 #include <stdlib.h>
+#include "xbt/log.h"
+
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, ST, "task log");
 
 //Contains all informations necessary to make receive task when happen with passing only the info_socket
 
 
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* name)
 {
-//   printf("Scheduling last computation\n");
+	XBT_DEBUG("Scheduling last computation\n");
   process_descriptor *proc = process_get_descriptor(pid);
   
   double comp_size = SD_task_get_amount(proc->last_computation_task);
@@ -31,8 +34,8 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 
 void schedule_computation_task(pid_t pid)
 {
-//   printf("Scheduling computation\n");
-//   fprintf(stderr,"Adding compuation task to process %d\n", pid);
+	XBT_DEBUG("Scheduling computation\n");
+	XBT_DEBUG("Adding compuation task to process %d\n", pid);
   process_descriptor *proc = process_get_descriptor(pid);
   double comp_size = SD_task_get_amount(proc->last_computation_task);
   double comm_amount = 0;
@@ -45,14 +48,18 @@ void schedule_computation_task(pid_t pid)
   proc->last_computation_task = NULL;
 }
 
-
+static int num=0;
 
 SD_task_t create_computation_task(pid_t pid, double amount)
 {
-//   printf("ENTERING create_computation_task\n");
+num++;
+  char buff[256];
+  sprintf(buff, "computation %d ", num);
+
+	XBT_DEBUG("ENTERING create_computation_task\n");
   process_descriptor *proc = process_get_descriptor(pid);
 
-  SD_task_t task = SD_task_create(/*"computation"*/NULL, NULL, amount);
+  SD_task_t task = SD_task_create(buff, NULL, amount);
   
   if(proc->last_computation_task != NULL)
     schedule_last_computation_task(pid, task, "calculation sequence");
@@ -65,10 +72,10 @@ void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_t
 {
   if(SD_task_get_amount(task) < 0)
   {
-    fprintf(stderr, "Scheduling a negative task comm : abort\n");
+	XBT_ERROR("Scheduling a negative task comm : abort\n");
     THROW_IMPOSSIBLE;
   }
-//   printf("Entering schedule_comm_task %s\n", SD_task_get_name(task));
+	XBT_DEBUG("Entering schedule_comm_task %s\n", SD_task_get_name(task));
   double* comm_amount = malloc(sizeof(double)*4);
   comm_amount[1]=SD_task_get_amount(task);
   comm_amount[2]=0.0;
@@ -83,7 +90,7 @@ void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_t
   work_list[0] = sender;
   work_list[1] = receiver;
 
-//   fprintf(stderr, "Scheduling comm_task, %p\n", work_list);
+	XBT_DEBUG("Scheduling comm_task, %p\n", work_list);
   SD_task_schedule(task, 2, work_list, comp_size, comm_amount, -1);
   free(comp_size);
   free(comm_amount);
@@ -96,12 +103,12 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
 {
   process_descriptor *proc_sender = process_get_descriptor(pid_sender);
   
-//   char buff[256];
-//   sprintf(buff, "%s send",proc_sender->name);
+  char buff[256];
+  sprintf(buff, "%s send",proc_sender->name);
   
-  SD_task_t task_sending = SD_task_create(/*buff*/NULL, &(proc_sender->pid), amount);
+  SD_task_t task_sending = SD_task_create(buff, &(proc_sender->pid), amount);
   SD_task_watch(task_sending, SD_DONE);
-  SD_task_t task_receiving = SD_task_create(/*"communication recv"*/NULL, NULL, 0);
+  SD_task_t task_receiving = SD_task_create("communication recv", NULL, 0);
   SD_task_watch(task_receiving, SD_DONE);
   
   task_comm_info* temp = malloc(sizeof(task_comm_info));
@@ -112,17 +119,16 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   
   //if last_computation_task is not NULL, that means that we have to do some computation before process syscall
   if(proc_sender->last_computation_task)
-    schedule_last_computation_task(pid_sender, task_sending, NULL/*"calculation"*/);
+    schedule_last_computation_task(pid_sender, task_sending, "calculation");
 
-  
-  SD_task_dependency_add(/*"communication"*/NULL, NULL, task_sending, task_receiving);
-  
+  SD_task_dependency_add("communication", NULL, task_sending, task_receiving);
+
   return task_sending;
 }
 
 void task_schedule_receive(struct infos_socket* is, pid_t pid)
 {
-//   fprintf(stderr,"ENTERING task_schedule_receive %d\n", pid);
+	XBT_DEBUG("ENTERING task_schedule_receive %d\n", pid);
   
   task_comm_info* tci = comm_get_send(is);
   
@@ -132,11 +138,11 @@ void task_schedule_receive(struct infos_socket* is, pid_t pid)
   
   //If we have a computation task in queue, we have to scedule it before doing the other operation
   if(proc_receiver->last_computation_task)
-    schedule_last_computation_task(proc_receiver->pid, tci->task,NULL /*"calculation"*/);
+    schedule_last_computation_task(proc_receiver->pid, tci->task,"calculation");
 
   schedule_comm_task(tci->sender_station, proc_receiver->station, tci->task);
   proc_receiver->on_simulation = 1;
   free(tci);
   
-//   printf("Leaving task_schedule_receive\n");
+	XBT_DEBUG("Leaving task_schedule_receive\n");
 }

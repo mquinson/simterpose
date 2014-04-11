@@ -8,6 +8,9 @@
 
 #include <sys/types.h>
 #include <stdlib.h>
+#include "xbt/log.h"
+
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION, ST, "communication log");
 
 xbt_dynar_t comm_list;
 
@@ -23,11 +26,9 @@ void comm_exit()
 
 comm_t comm_new(struct infos_socket* socket)
 {
-//   printf("Creating new communication with peer %d %d\n", remote_ip, remote_port);
   comm_t res = malloc(sizeof(comm_s));
   
   socket->comm=res;
-//    printf("New communication init by %d\n", socket->proc->pid); 
   res->info[0].socket = socket;
   res->info[0].recv = recv_information_new();
   res->info[1].socket = NULL;
@@ -52,7 +53,7 @@ void comm_destroy(comm_t comm)
     xbt_dynar_remove_at(comm_list, i, NULL);
   }
   CATCH(e){
-    printf("Communication not found\n");
+	XBT_DEBUG("Communication not found");
   } 
   free(comm);
 }
@@ -134,7 +135,7 @@ void comm_shutdown(struct infos_socket *is)
 void comm_set_listen(comm_t comm)
 {
   comm->state = COMM_LISTEN;
-//   printf("Listen do %d\n", comm->state & COMM_LISTEN);
+	XBT_DEBUG("Listen do %d", comm->state & COMM_LISTEN);
 }
 
 int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int device)
@@ -159,8 +160,8 @@ int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int 
     comm->remote_ip = conn->ip_local;
   comm->remote_port = conn->port_local;
   
-//   struct in_addr in = {comm->remote_ip};
-//   printf("%s:%d\n", inet_ntoa(in), comm->remote_port);
+	struct in_addr in = {comm->remote_ip};
+	XBT_DEBUG("%s:%d\n", inet_ntoa(in), comm->remote_port);
   
   return conn->fd.proc->pid;
 }
@@ -188,7 +189,7 @@ void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in)
   if(xbt_dynar_is_empty(comm->conn_wait))
     return;
   
-//   printf("Store connected information\n");
+	XBT_DEBUG("Store connected information");
   comm_t comm_conn;
   xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
   
@@ -218,7 +219,7 @@ pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in)
   in->sin_addr.s_addr = s->ip_local;
   in->sin_port = htons(s->port_local);
 
-//   fprintf(stderr, "Accept connection from %d\n", comm_conn->info[0].socket->port_local);
+	XBT_DEBUG("Accept connection from %d", comm_conn->info[0].socket->port_local);
   return comm_conn->info[0].socket->fd.proc->pid;
 }
 
@@ -233,8 +234,8 @@ int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t*
   
   if(!peer)
   {
-//     struct in_addr in2 = {comm->remote_ip};
-//     printf("%s:%d\n", inet_ntoa(in2), comm->remote_port);
+	struct in_addr in2 = {comm->remote_ip};
+	XBT_DEBUG("%s:%d\n", inet_ntoa(in2), comm->remote_port);
     
     in->sin_addr.s_addr = comm->remote_ip;
     in->sin_port = comm->remote_port;
@@ -265,7 +266,7 @@ int comm_get_socket_state(struct infos_socket* is)
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);
-//   printf("[%d](%d) Comm state %d %d %d\n",is->fd.pid, is->fd.fd, xbt_fifo_size(recv->data_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
+	XBT_DEBUG("[%d](%d) Comm state %d %d %d",is->fd.pid, is->fd.fd, xbt_fifo_size(recv->data_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
   if(xbt_fifo_size(recv->data_fifo))
     res = res | SOCKET_READ_OK;
   if(!xbt_dynar_is_empty(comm->conn_wait))

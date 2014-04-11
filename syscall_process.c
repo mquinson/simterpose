@@ -17,7 +17,7 @@
 
 #include <linux/futex.h>
 
-#define DEBUG
+//#define DEBUG
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, ST, "Syscall process log");
 
@@ -42,8 +42,7 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
       calculate_computation_time(pid);
       struct infos_socket *is = get_infos_socket(pid,arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
-	XBT_DEBUG("[%d] %d->%d\n", pid, arg->sockfd, arg->ret);
-
+	XBT_DEBUG("[%d] %d->%d", pid, arg->sockfd, arg->ret);
 	XBT_DEBUG("Sending data(%d) on socket %d", arg->ret, s->fd.fd);
       int peer_stat = process_get_state(s->fd.proc);
       if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL || peer_stat == PROC_RECV_IN)
@@ -858,13 +857,13 @@ void process_close_call(pid_t pid, int fd)
 
 int process_handle_mediate(pid_t pid)
 {
-	XBT_DEBUG("Handle mediate");
+	XBT_DEBUG("process_handle_mediate");
   process_descriptor *proc = process_get_descriptor(pid);
   int state = process_get_state(proc);
   
   if(state & PROC_RECVFROM_IN)
   {
-	//XBT_DEBUG("receive_mediate");
+	XBT_DEBUG("receive_mediate");
     if(process_recv_in_call(pid, proc->sysarg.recvfrom.sockfd))
     {
 #ifndef no_full_mediate
@@ -904,7 +903,9 @@ int process_handle_mediate(pid_t pid)
       int res = process_recv_call(pid, &(proc->sysarg));
       if(res == PROCESS_TASK_FOUND)
       {
-        //         print_recvfrom_syscall(pid, &(proc->sysarg));
+#ifdef DEBUG
+	print_recvfrom_syscall(pid, &(proc->sysarg));
+#endif
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
         process_end_mediation(proc);
@@ -912,7 +913,9 @@ int process_handle_mediate(pid_t pid)
       }
       else if(res == RECV_CLOSE)
       {
-        //         print_recvfrom_syscall(pid, &(proc->sysarg));
+#ifdef DEBUG
+        print_recvfrom_syscall(pid, &(proc->sysarg));
+#endif
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
         return process_handle_active(pid);
@@ -934,7 +937,9 @@ int process_handle_mediate(pid_t pid)
       int res = process_recv_call(pid, &(proc->sysarg));
       if(res == PROCESS_TASK_FOUND)
       {
-        //         print_recvfrom_syscall(pid, &(proc->sysarg));
+#ifdef DEBUG
+	print_recvfrom_syscall(pid, &(proc->sysarg));
+#endif
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
         process_end_mediation(proc);
@@ -942,7 +947,9 @@ int process_handle_mediate(pid_t pid)
       }
       else if(res == RECV_CLOSE)
       {
-        //         print_recvfrom_syscall(pid, &(proc->sysarg));
+#ifdef DEBUG
+	print_recvfrom_syscall(pid, &(proc->sysarg));
+#endif
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
         return process_handle_active(pid);
