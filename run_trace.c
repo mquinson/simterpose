@@ -145,13 +145,15 @@ void move_mediate_to_sched()
 
 int main(int argc, char *argv[]) { 
 
-//xbt_log_control_set("ST.:info"); /*
+xbt_log_control_set("ST.:info"); /*
 
 xbt_log_control_set("RUN_TRACE.:debug"); 
 //xbt_log_control_set("BENCHMARK.:debug");
 //xbt_log_control_set("ARGS_TRACE.:debug");
 xbt_log_control_set("SYSCALL_PROCESS.:debug");
 xbt_log_control_set("CALC_TIMES_PROC.:error");
+xbt_log_control_set("COMMUNICATION.:debug");
+xbt_log_control_set("TASK.:debug");
 // */
 
   simterpose_init(argc, argv);
@@ -171,7 +173,6 @@ xbt_log_control_set("CALC_TIMES_PROC.:error");
   mediate_list = xbt_dynar_new(sizeof(pid_t), NULL);
   
   int child_amount=0;
-  int i = 7; // debug purpose
   do{
     //We calculate the time of simulation.
     double next_start_time = get_next_start_time();
@@ -203,8 +204,7 @@ xbt_log_control_set("CALC_TIMES_PROC.:error");
         continue;
       XBT_DEBUG("A task is over %s", SD_task_get_name(task_over));
       int* data = (int *)SD_task_get_data(task_over);
-      //If data is null, we schedule the process
-// FIXME pourquoi? + incohérence avec commentaire
+      //If data is not null, we schedule the process
       if(data != NULL)
       {
        XBT_DEBUG("End of task for %d", *data);
@@ -287,8 +287,6 @@ xbt_log_control_set("CALC_TIMES_PROC.:error");
       {
 	  XBT_DEBUG("status = PROCESS_ON_COMPUTATION");
       }
-	
-//FIXME pourquoi ne pas traiter le cas PROCESS_TASK_FOUND, qui semble renvoyé 1 fois la connexion établie par le client
     }
 
 
@@ -302,8 +300,7 @@ xbt_log_control_set("CALC_TIMES_PROC.:error");
 //         break;
 
 	XBT_DEBUG("child_amount = %d", child_amount);
-	i--;
-    }while(i); //child_amount);// replace by child amount
+    }while(child_amount);
   
 
   finish_cputime();
