@@ -1,4 +1,8 @@
 #include "calc_times_proc.h"
+#include "xbt/log.h"
+
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CALC_TIMES_PROC, ST, "calc times proc log");
+
 
 /*
  * Generic macros for dealing with netlink sockets. Might be duplicated
@@ -19,6 +23,7 @@
 #define MAX_MSG_SIZE	1024
 /* Maximum number of cpus expected to be specified in a cpumask */
 #define MAX_CPUS	32
+
 
 struct msgtemplate {
   struct nlmsghdr n;
@@ -165,21 +170,22 @@ int ask_time(int tid, long long int* times)
   int rc = send_cmd(_nl_sd, _id, pid, TASKSTATS_CMD_GET,
 		    cmd_type, &tid, sizeof(__u32));
   if (rc < 0) {
-    fprintf(stderr, "error sending tid/tgid cmd\n");
+    XBT_ERROR("error sending tid/tgid cmd\n");
     return -1;
   }
 
   rep_len = recv(_nl_sd, &msg, sizeof(msg), 0);
 
   if (rep_len < 0) {
-    fprintf(stderr, "error: %d\n", errno);
+    XBT_ERROR("error: %d\n", errno);
     return -1;
   }
 
   if (msg.n.nlmsg_type == NLMSG_ERROR ||
-      !NLMSG_OK((&msg.n), rep_len)) { // si root, on ne rentre pas dans cette erreur. Sinon, on déclenche la segfault (msg.n.nlmsg_type == NLMSG_ERROR)
+      !NLMSG_OK((&msg.n), rep_len)) { 
+//FIXME si root, on ne rentre pas dans cette erreur. Sinon, on déclenche la segfault (msg.n.nlmsg_type == NLMSG_ERROR)
 //     struct nlmsgerr *err = NLMSG_DATA(&msg);
-  fprintf(stderr, "fatal reply error,  errno\n");
+  XBT_ERROR("fatal reply error,  errno  %s\n",strerror(errno));
   *(int*)0=0;
     return -1;
   }
@@ -210,7 +216,7 @@ int ask_time(int tid, long long int* times)
 	  res = 0;
 	  break;
 	default:
-	  fprintf(stderr, "Unknown nested"
+	  XBT_ERROR("Unknown nested"
 		  " nla_type %d\n",
 		  na->nla_type);
 	  break;
@@ -220,7 +226,7 @@ int ask_time(int tid, long long int* times)
       }
       break;
     default:
-      fprintf(stderr, "Unknown nla_type %d\n", na->nla_type);
+      XBT_ERROR("Unknown nla_type %d\n", na->nla_type);
       break;
     }
     na = (struct nlattr *) (GENLMSG_DATA(&msg) + len);

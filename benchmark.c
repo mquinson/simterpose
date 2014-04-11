@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "xbt/log.h"
 
 #include "calc_times_proc.h"
 
 #define NOMBRE_BOUCLE 10000000
 #define OPERATION_PER_LOOP 4
 
-//#define DEBUG
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(BENCHMARK, ST, "benchmark log");
+
 
 int start_benchmark(float *flop_per_sec, float* ms_per_flop)
 {
@@ -16,9 +18,8 @@ int start_benchmark(float *flop_per_sec, float* ms_per_flop)
   long long int times[3];
   long long int result;
   pid_t pid = getpid();
-#if defined(DEBUG)
-  printf("Starting benchmark for %d\n", pid);
-#endif
+XBT_DEBUG("Starting benchmark for %d\n", pid);
+
   if(!ask_time(pid, times))
   {
     long long int initialTime = times[1]+times[2];
@@ -35,20 +36,18 @@ int start_benchmark(float *flop_per_sec, float* ms_per_flop)
     }
     ask_time(pid, times);
     result = (times[1] + times[2])-initialTime;
-#if defined(DEBUG)
-    printf("Duration of benchmark : %lld\n", result);
-#endif
+	XBT_DEBUG("Duration of benchmark : %lld\n", result);
+
     *ms_per_flop = ((float)result)/(NOMBRE_BOUCLE*OPERATION_PER_LOOP);
     *flop_per_sec = (1000000.)/(*ms_per_flop);
 
-    printf("Result for benchmark : %f -> (%f flops)\n", *ms_per_flop, *flop_per_sec);
+    XBT_DEBUG("Result for benchmark : %f -> (%f flops)\n", *ms_per_flop, *flop_per_sec);
   
   }
   else
   {
-#if defined(DEBUG)
-    printf("Unable to have system time\n");
-#endif
+	XBT_DEBUG("Unable to have system time\n");
+
     return -1;
   }
   
@@ -112,13 +111,12 @@ int benchmark_matrix_product(float *flop_per_sec, float* ms_per_flop)
     
     ask_time(pid, times);
     result = (times[1] + times[2])-initialTime;
-    #if defined(DEBUG)
-    printf("Duration of benchmark : %lld\n", result);
-    #endif
+	XBT_DEBUG("Duration of benchmark : %lld\n", result);
+	    
     *ms_per_flop = ((float)result)/(2.*matrixSize*matrixSize*matrixSize);
     *flop_per_sec = (1000000.)/(*ms_per_flop);
     
-    printf("Result for benchmark : %f -> (%f flops)\n", *ms_per_flop, *flop_per_sec);
+   XBT_DEBUG("Result for benchmark : %f -> (%f flops)\n", *ms_per_flop, *flop_per_sec);
     
   }
   

@@ -18,7 +18,8 @@
 
 #define BUFFER_SIZE 512
 
-XBT_LOG_NEW_DEFAULT_CATEGORY(SIMTERPOSE, "Simterpose log");
+XBT_LOG_NEW_CATEGORY(ST, "Simterpose log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(RUN_TRACE, ST, "run_trace debug");
 
 void sig_int(int sig)
 {
@@ -144,7 +145,11 @@ void move_mediate_to_sched()
 
 int main(int argc, char *argv[]) { 
 
-xbt_log_control_set("SIMTERPOSE.thresh:debug");
+xbt_log_control_set("RUN_TRACE.:debug");
+//xbt_log_control_set("BENCHMARK.:debug");
+//xbt_log_control_set("ARGS_TRACE.:debug");
+xbt_log_control_set("SYSCALL_PROCESS.:debug");
+xbt_log_control_set("CALC_TIMES_PROC.:error");
 
   simterpose_init(argc, argv);
 
@@ -175,15 +180,15 @@ xbt_log_control_set("SIMTERPOSE.thresh:debug");
     if(fabs(time_to_simulate) < 1e-9)
       time_to_simulate =0.;
     
-	XBT_ERROR("Next simulation time %.9lf (%.9lf - %.9lf)", time_to_simulate, get_next_start_time(), SD_get_clock());
+	//XBT_DEBUG("Next simulation time %.9lf (%.9lf - %.9lf)", time_to_simulate, get_next_start_time(), SD_get_clock());
     if(time_to_simulate < 0 && time_to_simulate != -1)
     {
-      XBT_DEBUG("Next simulation time going negative, aborting");
+      XBT_ERROR("Next simulation time going negative, aborting");
       THROW_IMPOSSIBLE;
     }
     
     xbt_dynar_t arr = SD_simulate(time_to_simulate);
-	XBT_DEBUG("NEW TURN %.9lf", SD_get_clock());
+	//XBT_DEBUG("NEW TURN %.9lf", SD_get_clock());
     
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
@@ -222,7 +227,7 @@ xbt_log_control_set("SIMTERPOSE.thresh:debug");
         process_descriptor* proc = process_get_descriptor(temp_pid);
         if(proc->in_timeout == PROC_NO_TIMEOUT)
           ++child_amount;
-	XBT_DEBUG("In_timeout = %d", proc->in_timeout);
+	//XBT_DEBUG("In_timeout = %d", proc->in_timeout);
 
 	XBT_DEBUG("child_amount = %d", child_amount);
       }
@@ -295,7 +300,7 @@ xbt_log_control_set("SIMTERPOSE.thresh:debug");
 
 	XBT_DEBUG("child_amount = %d", child_amount);
 	i--;
-    }while(child_amount);//i); // replace by child amount
+    }while(i); //child_amount);// replace by child amount
   
 
   finish_cputime();

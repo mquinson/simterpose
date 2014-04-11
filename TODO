@@ -1,9 +1,16 @@
+Court terme
 
+- fixer le bug, cf LogDebug (utiliser xbt_debug)
 - Regarder quelles fonctions exactement nécessitent d'être root
-- fixer le bug, cf LogDebug
+- écrire tests
+- faire tableau des technos selon l'objectif d'interception (LD_PRELOAD, ptrace...)
+- fusionner certains fichiers
 
+Long terme:
 
-
+- utrace ?
+- LD_PRELOAD pour traiter le temps
+- thread support (pas utiliser SimDag)
 
 
 //////////////////// Anciennes tâches ////////////////////
@@ -12,6 +19,6 @@ Voir si on peut thread exit le thread maitre.
 
 Ajouter un compteur de référence pour les fils descriptors.
 
-Concentré tous les print des syscall en un seul endroit pour pouvoir commenter.
+Concentrer tous les print des syscall en un seul endroit pour pouvoir commenter.
 
 Faire le tri des arguments que je parse qui me serve vraiment

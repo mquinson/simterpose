@@ -7,6 +7,9 @@
 #include "data_utils.h"
 #include "run_trace.h"
 #include <sys/uio.h>
+#include "xbt/log.h"
+
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, ST, "args trace log");
 
 void get_args_socket(pid_t child, reg_s *reg, syscall_arg_u * sysarg) { 
 
@@ -70,7 +73,7 @@ void get_args_accept(pid_t child, reg_s *reg, syscall_arg_u *sysarg) {
   arg->ret = reg->ret;
 
   arg->sockfd=(int)reg->arg1;
-//   printf("Socket for accepting %lu\n", reg->arg1);
+	XBT_DEBUG("Socket for accepting %lu\n", reg->arg1);
 
   int domain = get_domain_socket(child,arg->sockfd);
   if (domain == 2) // PF_INET
@@ -271,7 +274,7 @@ void sys_build_recvfrom(pid_t pid, syscall_arg_u* sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   ptrace_restore_syscall(pid, SYS_recvfrom, arg->ret);
-  printf("%p\n", arg->dest);
+  XBT_DEBUG("%p\n", arg->dest);
   ptrace_poke(pid, (void*)arg->dest, arg->data, arg->ret);
   free(arg->data);
 }
@@ -519,9 +522,9 @@ void get_args_time(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
   
   arg->ret = reg->ret;
   arg->t_dest = (void*) reg->arg1;
-//   if(arg->t_dest < (void*)0x100)
-//     arg->t_dest = 0;
-//   fprintf(stderr, "time destination %p\n", arg->t_dest);
+	if(arg->t_dest < (void*)0x100)
+		arg->t_dest = 0;
+	XBT_DEBUG("time destination %p\n", arg->t_dest);
 }
 
 void sys_build_time(pid_t pid, syscall_arg_u *sysarg)
@@ -567,7 +570,7 @@ void sys_translate_connect_in(pid_t pid, syscall_arg_u *sysarg)
   
   arg->sai.sin_port = htons(get_real_port(pid, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port)));
   arg->sai.sin_addr.s_addr = inet_addr("127.0.0.1");
-//   printf("Try to connect on 127.0.0.1:%d\n", arg->sai.sin_port);
+	XBT_DEBUG("Try to connect on 127.0.0.1:%d\n", arg->sai.sin_port);
   ptrace_poke(pid, (void*)reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
@@ -582,7 +585,7 @@ void sys_translate_connect_out(pid_t pid, syscall_arg_u *sysarg)
   arg->sai.sin_port = htons(td->port_num);
   arg->sai.sin_addr.s_addr = td->ip;
   
-//   printf("Restore %s:%d\n", inet_ntoa(arg->sai.sin_addr), td->port_num);
+	XBT_DEBUG("Restore %s:%d\n", inet_ntoa(arg->sai.sin_addr), td->port_num);
   ptrace_poke(pid, (void*)reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
@@ -596,15 +599,15 @@ void sys_translate_sendto_in(pid_t pid, syscall_arg_u *sysarg)
   if(reg.arg5 == 0)
     return;
   
-//   struct in_addr in = {arg->sai.sin_addr.s_addr};
-//   printf("Translate address %s:%d\n", inet_ntoa(in), ntohs(arg->sai.sin_port));
+	struct in_addr in = {arg->sai.sin_addr.s_addr};
+	XBT_DEBUG("Translate address %s:%d\n", inet_ntoa(in), ntohs(arg->sai.sin_port));
   
   struct sockaddr_in temp = arg->sai;
   int port = get_real_port(pid, temp.sin_addr.s_addr, ntohs(temp.sin_port));
   temp.sin_addr.s_addr = inet_addr("127.0.0.1");
   temp.sin_port = htons(port);
   ptrace_poke(pid, (void*)reg.arg5, &temp, sizeof(struct sockaddr_in));
-//   printf("Using 127.0.0.1:%d\n", port);
+	XBT_DEBUG("Using 127.0.0.1:%d\n", port);
 }
 
 void sys_translate_sendto_out(pid_t pid, syscall_arg_u *sysarg)
@@ -618,8 +621,8 @@ void sys_translate_sendto_out(pid_t pid, syscall_arg_u *sysarg)
     return;
   
   translate_desc* td = get_translation(ntohs(arg->sai.sin_port));
-  //   struct in_addr in = {td->ip};
-  //   printf("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
+	//struct in_addr in = {td->ip};
+	//XBT_DEBUG("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
   arg->sai.sin_port = htons(td->port_num);
   arg->sai.sin_addr.s_addr = td->ip;
   ptrace_poke(pid, (void*)reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));
@@ -641,7 +644,7 @@ void sys_translate_recvfrom_in(pid_t pid, syscall_arg_u *sysarg)
   temp.sin_port = htons(port);
   ptrace_poke(pid, (void*)reg.arg5, &temp, sizeof(struct sockaddr_in));
   arg->sai = temp;
-//   printf("Using 127.0.0.1:%d\n", port);
+	XBT_DEBUG("Using 127.0.0.1:%d\n", port);
 }
 
 void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u *sysarg)
@@ -655,8 +658,8 @@ void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u *sysarg)
     return;
   
   translate_desc* td = get_translation(ntohs(arg->sai.sin_port));
-//   struct in_addr in = {td->ip};
-//   printf("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
+	//struct in_addr in = {td->ip};
+	//XBT_DEBUG("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
   arg->sai.sin_port = htons(td->port_num);
   arg->sai.sin_addr.s_addr = td->ip;
   ptrace_poke(pid, (void*)reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));

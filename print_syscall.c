@@ -11,7 +11,7 @@ void print_accept_syscall(pid_t pid, syscall_arg_u* sysarg)
   accept_arg_t arg = &(sysarg->accept);
   
   int domain = get_domain_socket(pid,arg->sockfd);
-  printf("[%d] accept( ", pid);
+  printf("[%d] accept(", pid);
   
   printf("%d, ",arg->sockfd);
   
@@ -29,7 +29,7 @@ void print_accept_syscall(pid_t pid, syscall_arg_u* sysarg)
   }
   
   printf("%d",arg->addrlen);
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 
@@ -39,7 +39,7 @@ void print_connect_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   int domain = get_domain_socket(pid,arg->sockfd);
   
-  printf("[%d] connect( ", pid);
+  printf("[%d] connect(", pid);
   printf("%d, ",arg->sockfd);
   
   if (domain == 2 ) {
@@ -55,7 +55,7 @@ void print_connect_syscall(pid_t pid, syscall_arg_u* sysarg)
     printf("{sockaddr unknown}, ");
   }
   printf("%d",arg->addrlen);
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 
@@ -64,7 +64,7 @@ void print_bind_syscall(pid_t pid, syscall_arg_u *sysarg)
   bind_arg_t arg = &(sysarg->bind);
   int domain = get_domain_socket(pid,arg->sockfd);
   
-  printf("[%d] bind( ", pid);
+  printf("[%d] bind(", pid);
   printf("%d, ",arg->sockfd);
   
   if (domain == 2 ) {
@@ -80,7 +80,7 @@ void print_bind_syscall(pid_t pid, syscall_arg_u *sysarg)
     printf("{sockaddr unknown}, ");
   }
   printf("%d",arg->addrlen);
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 
@@ -89,7 +89,7 @@ void print_socket_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   socket_arg_t arg = &(sysarg->socket);
   
-  printf("[%d] socket( ",pid);
+  printf("[%d] socket(",pid);
   switch (arg->domain) {
     case 0: printf("PF_UNSPEC, "); break;
     case 1: printf("PF_UNIX, "); break;
@@ -141,7 +141,7 @@ void print_socket_syscall(pid_t pid, syscall_arg_u* sysarg)
     default :
       printf("DOMAIN UNKNOWN (%d), ",arg->domain); break;
   }
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 
@@ -247,10 +247,10 @@ void print_listen_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
   
-  printf("[%d] listen( ", pid);
+  printf("[%d] listen(", pid);
   printf("%d, ",arg->sockfd);
   printf("%d ",arg->backlog);
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 void print_flags_send(int flags) {
@@ -292,7 +292,7 @@ void print_flags_recv(int flags) {
 void print_recv_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   recv_arg_t arg = &(sysarg->recv);
-  printf("[%d] send( ", pid);
+  printf("[%d] send(", pid);
   
   printf("%d, ",arg->sockfd);
   printf("%d ",(int)arg->len);
@@ -302,7 +302,7 @@ void print_recv_syscall(pid_t pid, syscall_arg_u* sysarg)
   } else
     printf("0, ");
   
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 void print_send_syscall(pid_t pid, syscall_arg_u* sysarg)
@@ -318,7 +318,7 @@ void print_send_syscall(pid_t pid, syscall_arg_u* sysarg)
   } else
     printf("0, ");
   
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
@@ -326,7 +326,7 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
   sendto_arg_t arg = &(sysarg->sendto);
   int domain = get_domain_socket(pid,arg->sockfd);
   
-  printf("[%d] sendto( ", pid);
+  printf("[%d] sendto(", pid);
 #ifndef no_full_mediate
   char buff[200];
   if(arg->len<200)
@@ -374,7 +374,7 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
 
   printf("%d",(int)arg->addrlen); 
   
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
@@ -382,7 +382,7 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   sendto_arg_t arg = &(sysarg->sendto);
   int domain = get_domain_socket(pid,arg->sockfd);
   
-  printf("[%d] recvfrom( ", pid);
+  printf("[%d] recvfrom(", pid);
   
 #ifndef no_full_mediate
   if(arg->ret)
@@ -437,14 +437,14 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   printf("%d",(int)arg->addrlen); 
   
-  printf(" ) = %d\n", arg->ret);
+  printf(") = %d\n", arg->ret);
 }
 
 void print_recvmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->sendmsg);
   
-  printf("[%d] recvmsg( ", pid);
+  printf("[%d] recvmsg(", pid);
   printf("%d, ",arg->sockfd);
   
   printf(", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen,(int)arg->msg.msg_controllen,arg->msg.msg_flags);
@@ -454,14 +454,14 @@ void print_recvmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
   } else
     printf("0 ");
   
-  printf(" ) = %d\n",arg->ret);
+  printf(") = %d\n",arg->ret);
 }
 
 void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->sendmsg);
   
-  printf("[%d] sendmsg( ", pid);
+  printf("[%d] sendmsg(", pid);
   printf("%d, ",arg->sockfd);
 #ifndef no_full_mediate
   char buff[20];
@@ -486,7 +486,7 @@ void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
   } else
     printf("0 ");
   
-  printf(" ) = %d\n",arg->ret);
+  printf(") = %d\n",arg->ret);
 }
 
 
@@ -547,7 +547,7 @@ void print_poll_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   poll_arg_t arg = &(sysarg->poll);
   
-  printf("[%d] poll([ ",pid);
+  printf("[%d] poll([",pid);
   if(arg->fd_list != NULL)
     disp_pollfd(arg->fd_list, arg->nbfd);
   else
