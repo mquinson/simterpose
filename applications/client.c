@@ -29,7 +29,7 @@ int main(){
 
 
   if((clientSocket = socket(AF_INET,SOCK_STREAM,0)) < 0){
-    perror("error socket");
+    perror("Client : error socket");
     exit(1);
   }else{
     
@@ -43,10 +43,10 @@ int main(){
     cli_addr.sin_port=htons(port);
 
     if(connect(clientSocket,(struct sockaddr *)&cli_addr,sizeof(cli_addr))<0){
-      printf("echec demande de connexion\n");
+      printf("Client : echec demande de connexion\n");
       exit(0);
     }else{
-      printf("Connexion avec le serveur établie\n");
+      printf("Client : Connexion avec le serveur établie\n");
       // while(1){
 	//fgets(buff,512,stdin);
       res=send(clientSocket,buff,BUFFER_SIZE,0);
@@ -58,7 +58,7 @@ int main(){
 	  --j;
 	}
 	if(res==-1){
-	  perror("erreur envoi client");
+	  perror("Client : erreur envoi");
 	  exit(1);
 	}else{
           int length = BUFFER_SIZE;
@@ -66,7 +66,7 @@ int main(){
           {
             res = recv(clientSocket,buff,length,0);
             if(res==-1){
-              perror("erreur réception server");
+              perror("Client : erreur réception");
               exit(1);
             }
             length -= res;
@@ -74,14 +74,14 @@ int main(){
           }
 	}
 	//}
-//       shutdown(clientSocket,2);
-//       close(clientSocket);
+       shutdown(clientSocket,2);
+       close(clientSocket);
     }
 
   }
   
   if((clientSocket = socket(AF_INET,SOCK_STREAM,0)) < 0){
-    perror("error socket");
+    perror("Client : error socket");
     exit(1);
   }else{
     
@@ -95,10 +95,10 @@ int main(){
     cli_addr.sin_port=htons(port);
     
     if(connect(clientSocket,(struct sockaddr *)&cli_addr,sizeof(cli_addr))<0){
-      printf("echec demande de connexion\n");
+      printf("Client : echec demande de connexion\n");
       exit(0);
     }else{
-      printf("Connexion avec le serveur établie\n");
+      printf("Client : Connexion avec le serveur établie\n");
       // while(1){
         //fgets(buff,512,stdin);
       int ia = 0;
@@ -106,27 +106,27 @@ int main(){
       {
         res=send(clientSocket,buff,BUFFER_SIZE,0);
         if(res==-1){
-          perror("erreur envoi client");
+          perror("Client : erreur envoi");
           exit(1);
         }else{
           int length = BUFFER_SIZE;
           while(length > 0)
           {
-            printf("New receive waited\n");
+            //printf("New receive waited\n");
             res = recv(clientSocket,buff,length,0);
             if(res==-1){
-              perror("erreur réception server");
+              perror("Client : erreur réception");
               exit(1);
             }
             length -= res;
-            printf("SClient : recv %d (left %d)\n", res, length);
+            printf("Client : recv %d (left %d)\n", res, length);
           }
         }
-        printf("End recevive\n");
+      //  printf("Client : reçu\n");
       }
       //}
-//       shutdown(clientSocket,2);
-//       close(clientSocket);
+       shutdown(clientSocket,2);
+       close(clientSocket);
     }
     
   }

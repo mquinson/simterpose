@@ -24,7 +24,7 @@ int main(){
   int client_socket;
 
   if((serverSocket = socket(AF_INET,SOCK_STREAM,0)) < 0){
-    perror("error socket");
+    perror("Server: error socket");
     exit(1);
   }else{
     
@@ -39,25 +39,25 @@ int main(){
 
     int on = 1;
     if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0){
-      perror("error setsockopt");
+      perror("Server: error setsockopt");
       exit(1);
     }
 
    
     if(getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0){
-      perror("error getsockopt");
+      perror("Server: error getsockopt");
       exit(1);
     }
 
     if(bind(serverSocket, (struct sockaddr *)serv_addr, sizeof(struct sockaddr_in)) < 0){
-      perror("error bind");
+      perror("Server: error bind");
       exit(1);
     }else{
       if(listen(serverSocket,SOMAXCONN) < 0){
-	perror("error listen");
+	perror("Server: error listen");
 	exit(1);
       }else{
-	printf("Attente demande de connexion\n");
+	printf("Server: Attente demande de connexion\n");
 	int clilen=sizeof(struct sockaddr_in);
 	struct sockaddr_in *cli_addr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
         
@@ -68,24 +68,24 @@ int main(){
 //         printf("End of pool : %d\n", temp);
         
 	if((client_socket=accept(serverSocket, (struct sockaddr *)cli_addr,(socklen_t *)&clilen)) < 0){
-	  perror("error accept");
+	  perror("Server: error accept");
 	  exit(1);
 	}else{
-          printf("Connexion acceptée\n");
+          printf("Server: Connexion acceptée\n");
           int length = BUFFER_SIZE;
           while(length !=0)
           {
             res = recv(client_socket,buff,length,0);
             if(res==-1){
-              perror("erreur réception server");
+              perror("Server: erreur réception");
           exit(1);
             }
             length -= res;
             printf("Server : recv %d (left %d)\n", res, length);
           }
           //printf("Message reçu : %s",buff);
-          strcpy(buff,"envoi serveur\n");
-          printf("Server envoie au client\n");
+//          strcpy(buff,"Server: envoi \n");
+ //         printf("Server: envoi au client\n");
           int i=0;
           int j;
           for(i=0; i<2000000 ; ++i)
@@ -95,18 +95,18 @@ int main(){
           }
           res=send(client_socket,buff,BUFFER_SIZE,0);
           if(res==-1){
-            perror("erreur envoi server");
+            perror("Server erreur envoi");
             exit(1);
           }
-//           shutdown(client_socket,2);
-//           close(client_socket);
+           shutdown(client_socket,2);
+           close(client_socket);
 	}
 	
 	if((client_socket=accept(serverSocket, (struct sockaddr *)cli_addr,(socklen_t *)&clilen)) < 0){
-          perror("error accept");
+          perror("Server: error accept");
           exit(1);
         }else{
-          printf("Connexion acceptée\n");
+          printf("Server: Connexion acceptée\n");
           
           int ia=0;
           for(ia=0; ia<10000; ++ia)
@@ -116,24 +116,24 @@ int main(){
             {
               res = recv(client_socket,buff,length,0);
               if(res==-1){
-                perror("erreur réception server");
+                perror("Server: erreur réception");
                 exit(1);
               }
               length -= res;
               printf("Server : recv %d (left %d)\n", res, length);
             }
-            //printf("Message reçu : %s",buff);
-//             strcpy(buff,"envoi serveur\n");
-            printf("Server envoie au client\n");
+          //  printf("Server: Message reçu : %s",buff);
+         //   strcpy(buff,"envoi serveur\n");
+        //  printf("Server: envoi au client\n");
             res=send(client_socket,buff,BUFFER_SIZE,0);
             if(res==-1){
-              perror("erreur envoi server");
+              perror("Server: erreur envoi");
               exit(1);
             }
-            printf("Server send done\n");
+       //     printf("Server: envoyé\n");
           }
-//           shutdown(client_socket,2);
-//           close(client_socket);
+           shutdown(client_socket,2);
+           close(client_socket);
         }
       }
     }
