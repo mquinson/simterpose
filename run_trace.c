@@ -92,7 +92,7 @@ void add_to_mediate(pid_t pid)
   xbt_dynar_push_as(mediate_list, pid_t, pid);
 }
 
-//Verify is the process is not already schedule before adding
+//Verify is the process is not already scheduled before adding
 void add_to_sched_list(pid_t pid)
 {
   process_descriptor *proc = process_get_descriptor(pid);
@@ -154,6 +154,7 @@ xbt_log_control_set("SYSCALL_PROCESS.:debug");
 xbt_log_control_set("CALC_TIMES_PROC.:error");
 xbt_log_control_set("COMMUNICATION.:debug");
 xbt_log_control_set("TASK.:debug");
+xbt_log_control_set("PTRACE_UTILS.:debug");
 // */
 
   simterpose_init(argc, argv);
@@ -306,6 +307,11 @@ xbt_log_control_set("TASK.:debug");
   finish_cputime();
   
   XBT_INFO("End of simulation. Time : %lf", SD_get_clock());
+#ifdef address_translation
+  XBT_INFO("Address translation used");
+#else
+  XBT_INFO("Full mediation used");
+#endif
   
   SD_exit();
   destroy_global_data();

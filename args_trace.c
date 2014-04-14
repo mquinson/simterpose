@@ -197,7 +197,7 @@ void get_args_setsockopt(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
   arg->dest=(void *)reg->arg4;
   arg->optlen=reg->arg5;
   
-#ifndef no_full_mediate
+#ifndef address_translation
   arg->optval = malloc(arg->optlen);
   ptrace_cpy(pid, arg->optval, (void *)arg->dest, arg->optlen, "setsockopt");
 #endif
@@ -258,7 +258,7 @@ void get_args_sendto(pid_t pid, reg_s* reg, syscall_arg_u *sysarg) {
   else
     arg->is_addr = 0;
   
-#ifndef no_full_mediate
+#ifndef address_translation
   arg->data = malloc(arg->len);
   ptrace_cpy(pid, arg->data,  (void *)reg->arg2, arg->len, "sendto");
 #endif
@@ -338,7 +338,7 @@ void get_args_sendmsg(pid_t pid, reg_s* reg, syscall_arg_u *sysarg) {
   arg->flags=(int)reg->arg3;
   arg->ret = (int)reg->ret;
   ptrace_cpy(pid, &arg->msg, (void *)reg->arg2, sizeof(struct msghdr),"sendmsg");
-#ifndef no_full_mediate
+#ifndef address_translation
   arg->len = 0;
   arg->data = NULL;
   
@@ -457,7 +457,7 @@ void get_args_read(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg1;
-#ifndef no_full_mediate
+#ifndef address_translation
   arg->dest = (void*)reg->arg2;
 #endif
   arg->ret = reg->ret;
@@ -471,7 +471,7 @@ void get_args_write(pid_t pid, reg_s* reg, syscall_arg_u* sysarg)
   arg->dest = (void*)reg->arg2;  
   arg->ret = reg->ret;
   arg->count = reg->arg3;
-#ifndef no_full_mediate
+#ifndef address_translation
   if(socket_registered(pid, arg->fd))
   {
     if(socket_network(pid, arg->fd))

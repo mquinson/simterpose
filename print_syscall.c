@@ -327,7 +327,7 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
   int domain = get_domain_socket(pid,arg->sockfd);
   
   printf("[%d] sendto(", pid);
-#ifndef no_full_mediate
+#ifndef address_translation
   char buff[200];
   if(arg->len<200)
   {
@@ -384,7 +384,7 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   printf("[%d] recvfrom(", pid);
   
-#ifndef no_full_mediate
+#ifndef address_translation
   if(arg->ret)
   {
     char buff[500];
@@ -463,7 +463,7 @@ void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   printf("[%d] sendmsg(", pid);
   printf("%d, ",arg->sockfd);
-#ifndef no_full_mediate
+#ifndef address_translation
   char buff[20];
   if(arg->len<20)
   {

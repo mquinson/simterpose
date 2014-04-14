@@ -480,7 +480,7 @@ int handle_new_receive(int pid, syscall_arg_u* sysarg)
   int result=0;
   int receive_new_message=0;
   
-#ifndef no_full_mediate
+#ifndef address_translation
   char* data_recv = NULL;
   int length = arg->len;
   data_send_s* ds = xbt_fifo_shift(recv->data_fifo);
@@ -639,7 +639,7 @@ void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg)
   
   recv_information* recv = comm_get_peer_recv(is);
 
-#ifndef no_full_mediate
+#ifndef address_translation
   data_send_s* ds = malloc(sizeof(data_send_s));
   ds->data = arg->data;
   ds->size = arg->len;
@@ -682,7 +682,7 @@ int close_all_communication(int pid){
       }
 
       xbt_fifo_t dl = recv->data_fifo;
-#ifndef no_full_mediate
+#ifndef address_translation
       data_send_s* ds;
 #else
       int* ds;
@@ -690,7 +690,7 @@ int close_all_communication(int pid){
       while(xbt_fifo_size(dl))
       {
         ds = xbt_fifo_shift(dl);
-#ifndef no_full_mediate
+#ifndef address_translation
         free(((data_send_s*)ds)->data);
 #endif
         free(ds);
