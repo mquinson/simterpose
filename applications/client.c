@@ -70,7 +70,7 @@ int main(){
               exit(1);
             }
             length -= res;
-            printf("Client : recv %d (left %d)\n", res, length);
+        //    printf("Client : recv %d (left %d)\n", res, length);
           }
 	}
 	//}
@@ -98,11 +98,11 @@ int main(){
       printf("Client : echec demande de connexion\n");
       exit(0);
     }else{
-      printf("Client : Connexion avec le serveur établie\n");
+    //  printf("Client : Connexion avec le serveur établie\n");
       // while(1){
         //fgets(buff,512,stdin);
       int ia = 0;
-      for(ia=0; ia < 10000 ; ++ia)
+      for(ia=0; ia < 100 ; ++ia)
       {
         res=send(clientSocket,buff,BUFFER_SIZE,0);
         if(res==-1){
@@ -119,7 +119,7 @@ int main(){
               exit(1);
             }
             length -= res;
-            printf("Client : recv %d (left %d)\n", res, length);
+          //  printf("Client : recv %d (left %d)\n", res, length);
           }
         }
       //  printf("Client : reçu\n");

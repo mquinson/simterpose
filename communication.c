@@ -161,7 +161,7 @@ int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int 
   comm->remote_port = conn->port_local;
   
 	struct in_addr in = {comm->remote_ip};
-	XBT_DEBUG("%s:%d\n", inet_ntoa(in), comm->remote_port);
+	XBT_DEBUG("%s:%d", inet_ntoa(in), comm->remote_port);
   
   return conn->fd.proc->pid;
 }
@@ -235,7 +235,7 @@ int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t*
   if(!peer)
   {
 	struct in_addr in2 = {comm->remote_ip};
-	XBT_DEBUG("%s:%d\n", inet_ntoa(in2), comm->remote_port);
+	XBT_DEBUG("%s:%d", inet_ntoa(in2), comm->remote_port);
     
     in->sin_addr.s_addr = comm->remote_ip;
     in->sin_port = comm->remote_port;

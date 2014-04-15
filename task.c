@@ -19,7 +19,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, ST, "task log");
 
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* name)
 {
-	XBT_DEBUG("Scheduling last computation\n");
+	XBT_DEBUG("Scheduling last computation");
   process_descriptor *proc = process_get_descriptor(pid);
   
   double comp_size = SD_task_get_amount(proc->last_computation_task);
@@ -34,8 +34,8 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 
 void schedule_computation_task(pid_t pid)
 {
-	XBT_DEBUG("Scheduling computation\n");
-	XBT_DEBUG("Adding compuation task to process %d\n", pid);
+	XBT_DEBUG("Scheduling computation");
+	XBT_DEBUG("Adding compuation task to process %d", pid);
   process_descriptor *proc = process_get_descriptor(pid);
   double comp_size = SD_task_get_amount(proc->last_computation_task);
   double comm_amount = 0;
@@ -56,7 +56,7 @@ num++;
   char buff[256];
   sprintf(buff, "computation %d ", num);
 
-	XBT_DEBUG("ENTERING create_computation_task\n");
+	XBT_DEBUG("ENTERING create_computation_task");
   process_descriptor *proc = process_get_descriptor(pid);
 
   SD_task_t task = SD_task_create(buff, NULL, amount);
@@ -75,7 +75,7 @@ void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_t
 	XBT_ERROR("Scheduling a negative task comm : abort\n");
     THROW_IMPOSSIBLE;
   }
-	XBT_DEBUG("Entering schedule_comm_task %s\n", SD_task_get_name(task));
+	XBT_DEBUG("Entering schedule_comm_task %s", SD_task_get_name(task));
   double* comm_amount = malloc(sizeof(double)*4);
   comm_amount[1]=SD_task_get_amount(task);
   comm_amount[2]=0.0;
@@ -90,7 +90,7 @@ void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_t
   work_list[0] = sender;
   work_list[1] = receiver;
 
-	XBT_DEBUG("Scheduling comm_task, %p\n", work_list);
+	XBT_DEBUG("Scheduling comm_task, %p", work_list);
   SD_task_schedule(task, 2, work_list, comp_size, comm_amount, -1);
   free(comp_size);
   free(comm_amount);
@@ -121,6 +121,7 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
   if(proc_sender->last_computation_task)
     schedule_last_computation_task(pid_sender, task_sending, "calculation");
 
+ //TODO : créer tâche de transfert entre les deux, cf tuto sur SimDag
   SD_task_dependency_add("communication", NULL, task_sending, task_receiving);
 
   return task_sending;
@@ -128,7 +129,7 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
 
 void task_schedule_receive(struct infos_socket* is, pid_t pid)
 {
-	XBT_DEBUG("ENTERING task_schedule_receive %d\n", pid);
+	XBT_DEBUG("ENTERING task_schedule_receive %d", pid);
   
   task_comm_info* tci = comm_get_send(is);
   
@@ -144,5 +145,5 @@ void task_schedule_receive(struct infos_socket* is, pid_t pid)
   proc_receiver->on_simulation = 1;
   free(tci);
   
-	XBT_DEBUG("Leaving task_schedule_receive\n");
+	XBT_DEBUG("Leaving task_schedule_receive");
 }

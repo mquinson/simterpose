@@ -55,7 +55,7 @@ void ptrace_poke(pid_t pid, void* dst, void* src, size_t len)
 
 void ptrace_resume_process(const pid_t pid)
 {
-	XBT_DEBUG("Resume process %d\n", pid);
+	//XBT_DEBUG("Resume process %d", pid);
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL)==-1) {
     XBT_ERROR(" [%d] ptrace syscall %s\n", pid, strerror(errno));
     THROW_IMPOSSIBLE;

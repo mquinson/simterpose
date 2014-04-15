@@ -18,7 +18,7 @@ int start_benchmark(float *flop_per_sec, float* ms_per_flop)
   long long int times[3];
   long long int result;
   pid_t pid = getpid();
-XBT_DEBUG("Starting benchmark for %d\n", pid);
+XBT_DEBUG("Starting benchmark for %d", pid);
 
   if(!ask_time(pid, times))
   {
@@ -36,17 +36,17 @@ XBT_DEBUG("Starting benchmark for %d\n", pid);
     }
     ask_time(pid, times);
     result = (times[1] + times[2])-initialTime;
-	XBT_DEBUG("Duration of benchmark : %lld\n", result);
+	XBT_DEBUG("Duration of benchmark : %lld", result);
 
     *ms_per_flop = ((float)result)/(NOMBRE_BOUCLE*OPERATION_PER_LOOP);
     *flop_per_sec = (1000000.)/(*ms_per_flop);
 
-    XBT_DEBUG("Result for benchmark : %f -> (%f flops)\n", *ms_per_flop, *flop_per_sec);
+    XBT_DEBUG("Result for benchmark : %f -> (%f flops)", *ms_per_flop, *flop_per_sec);
   
   }
   else
   {
-	XBT_DEBUG("Unable to have system time\n");
+	XBT_DEBUG("Unable to have system time");
 
     return -1;
   }
@@ -111,12 +111,12 @@ int benchmark_matrix_product(float *flop_per_sec, float* ms_per_flop)
     
     ask_time(pid, times);
     result = (times[1] + times[2])-initialTime;
-	XBT_DEBUG("Duration of benchmark : %lld\n", result);
+	XBT_DEBUG("Duration of benchmark : %lld", result);
 	    
     *ms_per_flop = ((float)result)/(2.*matrixSize*matrixSize*matrixSize);
     *flop_per_sec = (1000000.)/(*ms_per_flop);
     
-   XBT_DEBUG("Result for benchmark : %f -> (%f flops)\n", *ms_per_flop, *flop_per_sec);
+   XBT_DEBUG("Result for benchmark : %f -> (%f flops)", *ms_per_flop, *flop_per_sec);
     
   }
   

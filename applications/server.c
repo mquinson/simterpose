@@ -81,7 +81,7 @@ int main(){
           exit(1);
             }
             length -= res;
-            printf("Server : recv %d (left %d)\n", res, length);
+        //    printf("Server : recv %d (left %d)\n", res, length);
           }
           //printf("Message reçu : %s",buff);
 //          strcpy(buff,"Server: envoi \n");
@@ -106,10 +106,10 @@ int main(){
           perror("Server: error accept");
           exit(1);
         }else{
-          printf("Server: Connexion acceptée\n");
+       //   printf("Server: Connexion acceptée\n");
           
           int ia=0;
-          for(ia=0; ia<10000; ++ia)
+          for(ia=0; ia<100; ++ia)
           {
             int length = BUFFER_SIZE;
             while(length >0)
@@ -120,7 +120,7 @@ int main(){
                 exit(1);
               }
               length -= res;
-              printf("Server : recv %d (left %d)\n", res, length);
+          //    printf("Server : recv %d (left %d)\n", res, length);
             }
           //  printf("Server: Message reçu : %s",buff);
          //   strcpy(buff,"envoi serveur\n");
