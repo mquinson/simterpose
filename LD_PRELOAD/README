@@ -1,0 +1,12 @@
+Try :
+
+	make
+	./programme
+
+The program returns "Fonction qui sera hookee"
+
+Now try
+	./ld_preload.sh
+The program returns "reecriture reussie !"
+
+NOTE: doesn't work if there's an end of line \n at the end of the printf in the program
