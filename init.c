@@ -242,6 +242,7 @@ void init_all_process()
 	perror("ptrace traceme");
       exit(1);
     }
+	nb_traceme++;
     if (execl("launcher", "launcher", NULL)==-1) {
 	perror("execl");
       exit(1);
@@ -262,6 +263,7 @@ void init_all_process()
 	perror("Error setoptions");
       exit(1);
     }
+	nb_setoptions++;
     
     FILE* launcher_pipe = NULL;
     launcher_pipe = fdopen(comm_launcher[1], "w");

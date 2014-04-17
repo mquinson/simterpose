@@ -1,18 +1,19 @@
 Simterpose aims at simulating distributed application. For this purpose, it intercepts all system calls made by the set of application.
 
-Requirement:
-	-simgrid > 3.9 (xml parser changes since 3.6.2)
+Requirements:
+	- simgrid > 3.9 (previous releases not tested, xml parser changes since 3.6.2)
+	- Simterpose uses a modified version of SimGrid (there is a commit with the two files involved) because our use of SimDag is not traditional. 
 
 To compil program
 	make
 
 To run program
-	sudo ./run_trace [-p flops_power] platform_file deployment_file
+	sudo ./run_trace [-p flops_power] platform_file deployment_file [--log=root.app:file:logfile.txt]
 
- /!\  /!\ ask_time (calc_time_proc.c) seems to require to be root /!\  /!\ 
+ /!\ TASKSTATS_CMD_GET in ask_time (calc_time_proc.c) seems to require to be root /!\ 
 
 To replay trace
-	disable for a while
+	disabled for a while
 
 
 GENERAL USE:

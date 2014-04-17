@@ -157,6 +157,16 @@ xbt_log_control_set("TASK.:debug");
 xbt_log_control_set("PTRACE_UTILS.:debug");
 // */
 
+nb_peek=0;
+nb_poke=0;
+nb_getregs=0;
+nb_setregs=0;
+nb_syscall=0;
+nb_traceme=0;
+nb_setoptions=0;
+nb_detach=0;
+nb_geteventmsg=0;
+
   simterpose_init(argc, argv);
 
   struct sigaction nvt, old;
@@ -312,6 +322,11 @@ xbt_log_control_set("PTRACE_UTILS.:debug");
 #else
   XBT_INFO("Full mediation used");
 #endif
+	XBT_INFO("%d peek et %d poke ", nb_peek, nb_poke);
+	XBT_INFO("%d getregs et %d setregs", nb_getregs, nb_setregs);
+	XBT_INFO("%d traceme et %d detach ", nb_traceme, nb_detach);
+	XBT_INFO("%d syscall, %d geteventmsg et %d setoptions ", nb_syscall, nb_geteventmsg, nb_setoptions);
+	XBT_INFO("nb total de ptrace() = %d ", nb_peek+nb_poke+nb_getregs+nb_setregs+nb_traceme+nb_detach+nb_syscall+nb_geteventmsg+nb_setoptions);
   
   SD_exit();
   destroy_global_data();

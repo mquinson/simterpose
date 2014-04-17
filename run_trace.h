@@ -25,6 +25,16 @@ typedef struct translate_desc translate_desc;
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
 
 
+int nb_peek;
+int nb_poke;
+int nb_getregs;
+int nb_setregs;
+int nb_syscall;
+int nb_traceme;
+int nb_setoptions;
+int nb_detach;
+int nb_geteventmsg;
+
 typedef struct simterpose_data simterpose_data_t;
 simterpose_data_t* global_data;
 
