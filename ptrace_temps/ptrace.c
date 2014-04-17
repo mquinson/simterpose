@@ -8,20 +8,28 @@
 #include <sys/reg.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include <sys/time.h>
 #include <errno.h>
 #include "ptrace.h"
 
-
-void get_args_time(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
+void ptrace_get_register(const pid_t pid, reg_s* arg)
 {
-	time_arg_t arg = &(sysarg->time);
+  struct user_regs_struct regs;
   
-  arg->ret = reg->ret;
-  arg->t_dest = (void*) reg->arg1;
-	if(arg->t_dest < (void*)0x100)
-		arg->t_dest = 0;
-	printf("time destination %p \n", arg->t_dest);
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs) == -1) {
+    printf(" [%d] ptrace getregs %d\n", pid, strerror(errno));
+  }
+	
+  arg->reg_orig=regs.orig_rax;
+  arg->ret=regs.rax;
+  arg->arg1=regs.rdi; // timeval
+  arg->arg2=regs.rsi; // timezone
+  arg->arg3=regs.rdx;
+  arg->arg4=regs.r10;
+  arg->arg5=regs.r8;
+  arg->arg6=regs.r9;
 }
+
 
 void ptrace_neutralize_syscall(const pid_t pid){
 	printf("neutralize syscall \n");
@@ -41,7 +49,7 @@ void ptrace_neutralize_syscall(const pid_t pid){
 }
 
 
-void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long result){
+void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long arg1){
 	printf("restore syscall \n");
   struct user_regs_struct regs;
   
@@ -51,7 +59,7 @@ void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long resu
   }
   
   regs.orig_rax = syscall;
-  regs.rax = result;
+  regs.rdi = arg1;
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
     printf(" [%d] ptrace getregs %i\n", pid, strerror(errno));
@@ -72,7 +80,10 @@ int main(int argc, char *argv[]){
 	int status;
 
 	reg_s arg;
+	reg_s DEB; // debug
 	struct timeval tv;
+	time_t sec = 0;
+        suseconds_t usec;
 	
 	child = fork();
 	if(child == 0) {
@@ -107,78 +118,41 @@ int main(int argc, char *argv[]){
 		}
 
 		
-  		struct user_regs_struct regs;
-		if (ptrace(PTRACE_GETREGS, child,NULL, &regs)==-1) {
-			perror("ptrace getregs");
-			exit(1);
-		}
-
-		  arg.reg_orig=regs.orig_rax;
-		  arg.ret=regs.rax;
-		  arg.arg1=regs.rdi;
-		  arg.arg2=regs.rsi;
-		  arg.arg3=regs.rdx;
-		  arg.arg4=regs.r10;
-		  arg.arg5=regs.r8;
-		  arg.arg6=regs.r9;
-
+  	
+ 		ptrace_get_register(child, &arg);
 		switch (arg.reg_orig){
-			/*case SYS_read:
-				printf("syscall read %ld \n", reg_orig);
-			break;
-			case SYS_write:
-				printf("syscall write %ld \n", reg_orig);
-			break;
-			case SYS_open:
-				printf("syscall open %ld \n", reg_orig);
-			break;
-			case SYS_close:
-				printf("syscall close %ld \n", reg_orig);
-			break;
-			case SYS_exit:
-				printf("syscall exit %ld \n", reg_orig);
-			break;
-			case SYS_execve:
-				printf("syscall execve %ld \n", reg_orig);
-			break;
-			case SYS_mmap :
-				printf("syscall mmap  %ld \n", reg_orig);
-			break;
-			case SYS_munmap :
-				printf("syscall munmap  %ld \n", reg_orig);
-			break;
-			case SYS_mprotect :
-				printf("syscall mprotect  %ld \n", reg_orig);
-			break;
-			case SYS_brk :
-				printf("syscall brk  %ld \n", reg_orig);
-			break;
-			case SYS_fstat:
-				printf("syscall fstat %ld \n", reg_orig);
-			break;*/
-			case SYS_gettimeofday:
-				printf("appel à gettimeofday\n");
 
-				syscall_arg_u *sysarg = NULL;
-				get_args_time(child, &arg, sysarg);
+		case SYS_gettimeofday:
 
-				ptrace_neutralize_syscall(child);
-				time_t ret = 1397660562;
-				ptrace_restore_syscall(child, SYS_gettimeofday, ret);
+			sec = ptrace(PTRACE_PEEKDATA, child, arg.arg1, 0);
+                    usec = ptrace(PTRACE_PEEKDATA, child, arg.arg1 + sizeof(time_t), 0);
 
-				ptrace(PTRACE_SYSCALL, child, NULL, NULL);
-    				waitpid(child, &status, 0);
-	
-			break;
-			/*default :
-				printf("syscall inconnu: %ld \n", reg_orig);
-			break;*/
+ #ifdef DEBUG
+                    retval = ptrace(PTRACE_PEEKUSER, child, sizeof(long) * ret, NULL);
+                    fprintf(stderr, "tt: gettimeofday(tv->tv_sec=%ld,tv->tv_usec=%ld)=%ld --> *tv={%ld,%ld}\n", sec, usec, retval, sec + sec_offset, usec + usec_offset);
+#endif
+
+                    sec += 1000;
+                    usec += 500000;
+                    ptrace(PTRACE_POKEDATA, child, arg.arg1, sec);
+                    ptrace(PTRACE_POKEDATA, child, arg.arg1 + sizeof(time_t), usec);
+
+			
+
+			//ptrace(PTRACE_SYSCALL, child, NULL, NULL);
+			//waitpid(child, &status, 0);
+
+		break;
+		default :
+			//printf("syscall : %ld \n", arg.reg_orig);
+		break;
 
 		}
 		if (ptrace(PTRACE_SYSCALL, child, NULL, NULL)==-1) {
 			perror("ptrace syscall");
 			exit(1);
 		}
+		//waitpid(child, &status, 0);
 	}
     }
     return 0;

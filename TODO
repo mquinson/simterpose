@@ -1,12 +1,14 @@
-- Régler le problème d'incohérence des deux méthodes (Full mediation plus rapide qu'address translation. Résultat du nb d'appels système: un peu plus en full médiation: 5%, mais quand même plus rapide) TODO: vérifier les fonctions de temps
+- Régler le problème d'incohérence des deux méthodes (Full mediation plus rapide qu'address translation. Résultat du nb d'appels système: un peu plus en full médiation: 5%, mais quand même plus rapide) TODO: vérifier les fonctions de temps, et Profiler
 
 - modifier les registres de gettimeofay, (vdso=0 vsyscall=native) pour dilater temps. Regarder où et comment est géré le temps (SD vs Simterpose)
 
 - écrire tests (traces cohérentes? un server et plusieurs clients, +lent/+rapide; CONTINUER bittorent)
 
+
+- cf ELKVM (Marion poster)
+- port 53, DNS: intercepter tout ce qui arrive (ou bien écrire dans le resolv.conf de la machine physique)
 - Modifier les dépendances entre tâches. Cf tuto SD (ou passer à MSG? ou rester comme ça avec le pseudo patch?)
 - faire tableau des technos selon l'objectif d'interception (LD_PRELOAD, ptrace...)
-
 
 Long terme:
 

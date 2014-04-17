@@ -13,7 +13,6 @@ typedef struct{
   unsigned long arg6;
 }reg_s;
 
-
 typedef struct {
 	time_t t;
 	void * t_dest;
@@ -24,9 +23,9 @@ typedef union{
   time_arg_t time;
 }syscall_arg_u;
 
-void get_args_time(pid_t pid, reg_s *reg, syscall_arg_u *sysarg);
+void ptrace_get_register(const pid_t pid, reg_s* arg);
 void ptrace_neutralize_syscall(const pid_t pid);
-void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long result);
+void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long arg1);
 
 
 

@@ -971,6 +971,7 @@ int process_handle(pid_t pid, int stat)
 {  
   int status = stat;
   reg_s arg;
+	reg_s DEB;
   process_descriptor *proc = process_get_descriptor(pid);
   syscall_arg_u *sysarg = &(proc->sysarg);
   while(1)
@@ -1090,12 +1091,21 @@ int process_handle(pid_t pid, int stat)
         break;
         
         case SYS_time:
+
+
+      ptrace_get_register(pid, &DEB);
+printf("lors de l'appel : %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
+  
+
           get_args_time(pid, &arg, sysarg);
           ptrace_neutralize_syscall(pid);
-          sysarg->time.ret = get_simulated_timestamp();
+          sysarg->time.ret = get_simulated_timestamp(); // (time_t)0;//
           sys_build_time(pid, sysarg);
+
+      ptrace_get_register(pid, &DEB);
+printf("on rend:  time : %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
           process_set_out_syscall(proc);
-//           print_time_syscall(pid, sysarg);
+
           break;
         
         case SYS_futex:

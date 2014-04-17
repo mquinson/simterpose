@@ -1,4 +1,4 @@
-OBJS = ptrace temps
+OBJS = ptrace temps timetravel
 CC = gcc 
 CFLAGS = -Wall -g
 
@@ -9,6 +9,9 @@ ptrace : ptrace.c ptrace.h
 
 temps : temps.c
 	gcc -o temps temps.c
+
+timetravel : timetravel.c
+	gcc -o timetravel timetravel.c -lm
 
 clean:
 	rm $(OBJS)
