@@ -2,9 +2,4 @@ To be able to trace gettimeofday, we need to disable vdso and vsyscall:
 
 vdso=0 vsyscall=native
 
-then run ./ptrace temps
-doesn't work
-
-found a timetravel example on the web but since it's linear we can't see the difference (as we compute final time - begin time), need to be modified. If we multiply by a scalar 'a' we don't actually have a dilatation of the time by a (gettimeofday does not return seconds)
-
-also there seem to be carry issues between sec & usec
+then run ./timetravel multiplying_factor temps
