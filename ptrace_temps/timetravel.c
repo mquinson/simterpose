@@ -1,9 +1,9 @@
 /**
  * Executable wrapper to fake syscall results returning absolute time
- * information. Calls to SYS_gettimeofday are intercepted.
+ * information. Calls to SYS_gettimeofday and YS_clock_gettime are intercepted.
  *
- * NOTE: will not work for all calls on kernels (e.g. some x86_64) implementing
- * vsyscalls.
+ * NOTE: will not work for all calls on kernels implementing
+ * vsyscalls. (vdso=0 vsyscal=natural)
  **/
 
 #include <math.h>
@@ -39,7 +39,7 @@ main(int argc, char** argv)
     int fact = atoi(argv[1]);
 
     #ifdef DEBUG
-    fprintf(stderr, "Multiplying gettimeofday syscalls by %d \n\n", fact);
+    fprintf(stderr, "Multiplying gettimeofday and clock_gettime syscalls by %d \n\n", fact);
     #endif
 
     char* executable = argv[2];
@@ -69,6 +69,7 @@ main(int argc, char** argv)
         long syscallno;
         long retval;
         time_t sec = 0;
+        long nsec = 0;
         suseconds_t usec;
         struct user_regs_struct regs;
         int status;
@@ -85,10 +86,6 @@ main(int argc, char** argv)
                 if (insyscall == 0) {
                     /* entry */
                     insyscall = 1;
-                    #ifdef DEBUG
-                    ptrace(PTRACE_GETREGS, pid, NULL, &regs);
-                    fprintf(stderr, "gettimeofday: (tv=%lld, tz=%lld)\n", regs.SYSCALL_ARG1, regs.SYSCALL_ARG2);
-                    #endif
                 }
                 else {
                     /* exit */
@@ -101,7 +98,7 @@ main(int argc, char** argv)
 
                     #ifdef DEBUG
                     retval = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * SYSCALL_RET, NULL);
-                    fprintf(stderr, "sec=%ld, usec=%ld --> %ld, %ld \n", sec, usec, sec * fact, usec * fact);
+                    fprintf(stderr, "gettimeofday: sec=%ld, usec=%ld --> %ld, %ld \n", sec, usec, sec * fact, usec * fact);
                     #endif
 
                     /* add adjustment and modify the result of the syscall */
@@ -113,6 +110,35 @@ main(int argc, char** argv)
                     ptrace(PTRACE_POKEDATA, pid, regs.SYSCALL_ARG1 + sizeof(time_t), usec);
                 }
                 break;
+
+
+		case SYS_clock_gettime:
+                if (insyscall == 0) {
+                    /* entry */
+                    insyscall = 1;
+                }
+                else {
+                    /* exit */
+                    insyscall = 0;
+
+                    /* struct timespec* tp parameter is in SECOND parameter */
+                    ptrace(PTRACE_GETREGS, pid, NULL, &regs);
+                    sec = ptrace(PTRACE_PEEKDATA, pid, regs.SYSCALL_ARG2, 0);
+                    nsec = ptrace(PTRACE_PEEKDATA, pid, regs.SYSCALL_ARG2 + sizeof(time_t), 0);
+
+                    #ifdef DEBUG
+                    retval = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * SYSCALL_RET, NULL);
+                    fprintf(stderr, "clock_gettime: sec=%ld, nsec=%ld --> %ld, %ld \n", sec, nsec, sec *fact, nsec*fact);
+                    #endif
+
+                    /* add adjustment and modify the result of the syscall */
+                    sec *=fact;
+                    nsec *=fact; 
+                    ptrace(PTRACE_POKEDATA, pid, regs.SYSCALL_ARG2, sec);
+                    ptrace(PTRACE_POKEDATA, pid, regs.SYSCALL_ARG2 + sizeof(time_t), nsec);
+                }
+                break;
+
             }
 
             if (ptrace(PTRACE_SYSCALL, pid, (char*) 1, 0) < 0) {
