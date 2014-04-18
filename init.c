@@ -140,7 +140,7 @@ void simterpose_init(int argc, char** argv)
     benchmark_matrix_product(&flops_power, &micro_s_per_flop);
   
   global_data = malloc(sizeof(simterpose_data_t));
-  init_global_data();
+  init_global_data(); // process desc = NULL
   
   global_data->flops_per_second = flops_power;
   global_data->micro_s_per_flop = micro_s_per_flop;

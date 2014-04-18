@@ -1,4 +1,4 @@
 #!/bin/bash
 
-export LD_PRELOAD=$PWD/libs.so
-./programme
+LD_PRELOAD=./libs.so ./programme
+

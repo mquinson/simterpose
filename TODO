@@ -1,9 +1,10 @@
-- Régler le problème d'incohérence des deux méthodes (Full mediation plus rapide qu'address translation. Résultat du nb d'appels système: un peu plus en full médiation: 5%, mais quand même plus rapide) TODO: vérifier les fonctions de temps, et Profiler
+- Régler le problème d'incohérence des deux méthodes (Full mediation plus rapide qu'address translation. Résultat du nb d'appels système: un peu plus en full médiation: 5%, mais quand même plus rapide) TODO: vérifier les fonctions de temps, et ----> Profiler avec FlameGraph
 
-- modifier les registres de gettimeofay, (vdso=0 vsyscall=native) pour dilater temps. Regarder où et comment est géré le temps (SD vs Simterpose)
+- intégrer gettimeofday à simterpose Question: Est-ce que je suis assurée que la seule méthode de temps à laquelle le programme fait appel est gettimeofday?
 
-- écrire tests (traces cohérentes? un server et plusieurs clients, +lent/+rapide; CONTINUER bittorent)
+- écrire tests (traces cohérentes? un server et plusieurs clients, +lent/+rapide; CONTINUER bittorent) ---> tesh
 
+- est-ce que le pipe est vraiment utile entre ptrace et SG dans le dessin?
 
 - cf ELKVM (Marion poster)
 - port 53, DNS: intercepter tout ce qui arrive (ou bien écrire dans le resolv.conf de la machine physique)

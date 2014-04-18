@@ -1,6 +1,6 @@
 /**
  * Executable wrapper to fake syscall results returning absolute time
- * information. Calls to SYS_gettimeofday and YS_clock_gettime are intercepted.
+ * information. Calls to SYS_gettimeofday and SYS_clock_gettime are intercepted.
  *
  * NOTE: will not work for all calls on kernels implementing
  * vsyscalls. (vdso=0 vsyscal=natural)
@@ -111,7 +111,6 @@ main(int argc, char** argv)
                 }
                 break;
 
-
 		case SYS_clock_gettime:
                 if (insyscall == 0) {
                     /* entry */
@@ -138,7 +137,6 @@ main(int argc, char** argv)
                     ptrace(PTRACE_POKEDATA, pid, regs.SYSCALL_ARG2 + sizeof(time_t), nsec);
                 }
                 break;
-
             }
 
             if (ptrace(PTRACE_SYSCALL, pid, (char*) 1, 0) < 0) {
