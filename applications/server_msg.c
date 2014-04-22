@@ -11,12 +11,20 @@
 
 #define SERV_PORT 2227
 
-#define BUFFER_SIZE 1024
+//#define BUFFER_SIZE 1024
 
 
-int main(){
+int main(int argc, char** argv){
+
+  if (argc < 2) {
+    fprintf(stderr, "usage: %s buffer_size \n", argv[0]);
+    return EXIT_FAILURE;
+  }
+
+   int buffer_size = atoi(argv[1]);
+
   int serverSocket;
-  char *buff=malloc(BUFFER_SIZE);
+  char *buff=malloc(buffer_size);
   u_short port;
   int res;
   int client_socket;
@@ -69,7 +77,7 @@ int main(){
           
           
           iov[0].iov_base = buff;
-          iov[0].iov_len = BUFFER_SIZE;
+          iov[0].iov_len = buffer_size;
           
           msg.msg_iov     = iov;
           msg.msg_iovlen  = 1;

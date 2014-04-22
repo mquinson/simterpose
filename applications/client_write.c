@@ -12,14 +12,21 @@
 
 #define SERV_PORT 2227
 
-#define BUFFER_SIZE 1024
+//#define BUFFER_SIZE 1024
 
-int main(){
-  
+int main(int argc, char** argv){
+
+  if (argc < 2) {
+    fprintf(stderr, "usage: %s buffer_size \n", argv[0]);
+    return EXIT_FAILURE;
+  }
+
+  int buffer_size = atoi(argv[1]);
+    
   int clientSocket;
   u_short port;
   int res;
-  char buff[BUFFER_SIZE];
+  char buff[buffer_size];
   strcpy(buff, "Message from client");
   int server_socket;
   long host_addr;
@@ -47,7 +54,7 @@ int main(){
       printf("Connexion avec le serveur établie\n");
       // while(1){
         //fgets(buff,512,stdin);
-      res=write(clientSocket,buff,BUFFER_SIZE);
+      res=write(clientSocket,buff,buffer_size);
       
       if(res==-1){
         perror("erreur envoi client");

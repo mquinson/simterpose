@@ -1,0 +1,9 @@
+<?xml version='1.0'?>
+<!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid.dtd">
+<platform version ="3">
+  <process host="Tremblay" function="applications/server_msg 1024" start_time="0.00">
+    <argument value="2227"/>
+  </process>
+  <process host="Jupiter" function="applications/client_msg 1024" start_time="3.0">
+  </process>
+</platform>

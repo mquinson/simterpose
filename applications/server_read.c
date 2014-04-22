@@ -11,12 +11,19 @@
 
 #define SERV_PORT 2227
 
-#define BUFFER_SIZE 1024
+//#define BUFFER_SIZE 1024
 
+int main(int argc, char** argv){
 
-int main(){
+  if (argc < 2) {
+    fprintf(stderr, "usage: %s buffer_size \n", argv[0]);
+    return EXIT_FAILURE;
+  }
+
+  int buffer_size = atoi(argv[1]);
+
   int serverSocket;
-  char *buff=malloc(BUFFER_SIZE);
+  char *buff=malloc(buffer_size);
   u_short port;
   int res;
   int client_socket;
@@ -65,7 +72,7 @@ int main(){
           exit(1);
         }else{
           
-          res = read(client_socket,buff,BUFFER_SIZE);
+          res = read(client_socket,buff,buffer_size);
           if(res==-1){
             perror("erreur réception server");
             exit(1);
