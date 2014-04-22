@@ -12,17 +12,25 @@
 
 #define SERV_PORT 2227
 
-#define BUFFER_SIZE 40
+//#define BUFFER_SIZE 1000
 
 #define IP "162.32.43.1"
 //#define IP "127.0.0.1"
 
-int main(){
+int main(int argc, char** argv){
+
+  if (argc < 3) {
+    fprintf(stderr, "usage: %s number_of_loops buffer_size \n", argv[0]);
+    return EXIT_FAILURE;
+  }
+
+  int number_of_loops = atoi(argv[1]);
+  int buffer_size = atoi(argv[2]);
 
   int clientSocket;
   u_short port;
   int res;
-  char *buff=malloc(BUFFER_SIZE);
+  char *buff=malloc(buffer_size);
   int server_socket;
   long host_addr;
   struct hostent *serverHostEnt;
@@ -49,7 +57,7 @@ int main(){
       printf("Client : Connexion avec le serveur établie\n");
       // while(1){
 	//fgets(buff,512,stdin);
-      res=send(clientSocket,buff,BUFFER_SIZE,0);
+      res=send(clientSocket,buff,buffer_size,0);
 	int i=0;
 	int j;
 	for(i=0; i<2000000 ; ++i)
@@ -61,7 +69,7 @@ int main(){
 	  perror("Client : erreur envoi");
 	  exit(1);
 	}else{
-          int length = BUFFER_SIZE;
+          int length = buffer_size;
           while(length > 0)
           {
             res = recv(clientSocket,buff,length,0);
@@ -102,14 +110,14 @@ int main(){
       // while(1){
         //fgets(buff,512,stdin);
       int ia = 0;
-      for(ia=0; ia < 100 ; ++ia)
+      for(ia=0; ia < number_of_loops ; ++ia)
       {
-        res=send(clientSocket,buff,BUFFER_SIZE,0);
+        res=send(clientSocket,buff,buffer_size,0);
         if(res==-1){
           perror("Client : erreur envoi");
           exit(1);
         }else{
-          int length = BUFFER_SIZE;
+          int length = buffer_size;
           while(length > 0)
           {
             //printf("New receive waited\n");

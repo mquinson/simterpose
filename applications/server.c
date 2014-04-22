@@ -12,13 +12,21 @@
 #define SERV_PORT 2227
 //#define IP "162.32.43.1"
 
-#define BUFFER_SIZE 40
+//#define BUFFER_SIZE 1000
 
 
-int main(){
+int main(int argc, char** argv){
+
+  if (argc < 3) {
+    fprintf(stderr, "usage: %s number_of_loops buffer_size \n", argv[0]);
+    return EXIT_FAILURE;
+  }
+
+  int number_of_loops = atoi(argv[1]);
+  int buffer_size = atoi(argv[2]);
   
   int serverSocket;
-  char *buff=malloc(BUFFER_SIZE);
+  char *buff=malloc(buffer_size);
   u_short port;
   int res;
   int client_socket;
@@ -72,7 +80,7 @@ int main(){
 	  exit(1);
 	}else{
           printf("Server: Connexion acceptée\n");
-          int length = BUFFER_SIZE;
+          int length = buffer_size;
           while(length !=0)
           {
             res = recv(client_socket,buff,length,0);
@@ -93,7 +101,7 @@ int main(){
             j=i*(i%14);
             --j;
           }
-          res=send(client_socket,buff,BUFFER_SIZE,0);
+          res=send(client_socket,buff,buffer_size,0);
           if(res==-1){
             perror("Server erreur envoi");
             exit(1);
@@ -109,9 +117,9 @@ int main(){
        //   printf("Server: Connexion acceptée\n");
           
           int ia=0;
-          for(ia=0; ia<100; ++ia)
+          for(ia=0; ia<number_of_loops; ++ia)
           {
-            int length = BUFFER_SIZE;
+            int length = buffer_size;
             while(length >0)
             {
               res = recv(client_socket,buff,length,0);
@@ -125,7 +133,7 @@ int main(){
           //  printf("Server: Message reçu : %s",buff);
          //   strcpy(buff,"envoi serveur\n");
         //  printf("Server: envoi au client\n");
-            res=send(client_socket,buff,BUFFER_SIZE,0);
+            res=send(client_socket,buff,buffer_size,0);
             if(res==-1){
               perror("Server: erreur envoi");
               exit(1);

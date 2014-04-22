@@ -145,7 +145,7 @@ void move_mediate_to_sched()
 
 int main(int argc, char *argv[]) { 
 
-xbt_log_control_set("ST.:info"); /*
+xbt_log_control_set("ST.:error"); /*
 
 xbt_log_control_set("RUN_TRACE.:debug"); 
 //xbt_log_control_set("BENCHMARK.:debug");
@@ -322,10 +322,10 @@ nb_geteventmsg=0;
 #else
   XBT_INFO("Full mediation used");
 #endif
-	XBT_INFO("%d peek et %d poke ", nb_peek, nb_poke);
-	XBT_INFO("%d getregs et %d setregs", nb_getregs, nb_setregs);
-	XBT_INFO("%d traceme et %d detach ", nb_traceme, nb_detach);
-	XBT_INFO("%d syscall, %d geteventmsg et %d setoptions ", nb_syscall, nb_geteventmsg, nb_setoptions);
+	XBT_DEBUG("%d peek et %d poke ", nb_peek, nb_poke);
+	XBT_DEBUG("%d getregs et %d setregs", nb_getregs, nb_setregs);
+	XBT_DEBUG("%d traceme et %d detach ", nb_traceme, nb_detach);
+	XBT_DEBUG("%d syscall, %d geteventmsg et %d setoptions ", nb_syscall, nb_geteventmsg, nb_setoptions);
 	XBT_INFO("nb total de ptrace() = %d ", nb_peek+nb_poke+nb_getregs+nb_setregs+nb_traceme+nb_detach+nb_syscall+nb_geteventmsg+nb_setoptions);
   
   SD_exit();
@@ -336,5 +336,6 @@ nb_geteventmsg=0;
   comm_exit();
   socket_exit();
   finish_cputime();
+  printf("End of simulation \n");
   return 0;
 }
