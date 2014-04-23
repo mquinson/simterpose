@@ -969,6 +969,12 @@ int process_handle_mediate(pid_t pid)
 
 int process_handle(pid_t pid, int stat)
 {  
+  //TODO : remplacer facteur par vrai temps
+  int fact = 500;
+  time_t sec = 0;
+  long nsec = 0;
+  suseconds_t usec;
+
   int status = stat;
   reg_s arg;
 	reg_s DEB;
@@ -1091,23 +1097,52 @@ int process_handle(pid_t pid, int stat)
         break;
         
         case SYS_time:
-
-
-      ptrace_get_register(pid, &DEB);
-printf("lors de l'appel : %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
-  
+	  ptrace_get_register(pid, &DEB);
+	  printf("lors de l'appel : %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
 
           get_args_time(pid, &arg, sysarg);
           ptrace_neutralize_syscall(pid);
           sysarg->time.ret = get_simulated_timestamp(); // (time_t)0;//
           sys_build_time(pid, sysarg);
 
-      ptrace_get_register(pid, &DEB);
-printf("on rend:  time : %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
-          process_set_out_syscall(proc);
-
+	  ptrace_get_register(pid, &DEB);
+	  printf("on rend:  %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
+	  process_set_out_syscall(proc);
           break;
-        
+
+      case SYS_gettimeofday:
+	ptrace_get_register(pid, &DEB);
+	printf("lors de l'appel : %s, ret: %ld,  arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
+
+	get_args_gettimeofday(pid, &arg, sysarg);
+	ptrace_neutralize_syscall(pid);
+	sysarg->gettimeofday.tv_dest->tv_sec = get_simulated_timestamp(); 
+	printf("time wanted : %d ",sysarg->gettimeofday.tv_dest->tv_sec); 
+	sys_build_gettimeofday(pid, sysarg);
+	
+	ptrace_get_register(pid, &DEB);
+	printf("on rend:  %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
+	process_set_out_syscall(proc);
+	break;
+	
+
+	/* struct timeval* tv parameter is in first parameter */
+	/*	ptrace(PTRACE_GETREGS, pid, NULL, &DEB);
+	sec = ptrace(PTRACE_PEEKDATA, pid, DEB.arg1, 0);
+	usec = ptrace(PTRACE_PEEKDATA, pid, DEB.arg1 + sizeof(time_t), 0);
+
+	long retval = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * DEB.ret, NULL);
+	printf("gettimeofday: sec=%ld, usec=%ld --> %ld, %ld \n", sec, usec, sec * fact, usec * fact);
+
+	/* add adjustment and modify the result of the syscall */
+	/*	sec *= fact;
+	usec *= fact;
+	/*sec = 1500;
+	  usec = 5;*/
+	/*	ptrace(PTRACE_POKEDATA, pid, DEB.arg1, sec);
+	ptrace(PTRACE_POKEDATA, pid, DEB.arg1 + sizeof(time_t), usec);
+	break;
+        */
         case SYS_futex:
         {
 	XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
@@ -1489,7 +1524,7 @@ printf("on rend:  time : %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig]
           
         case SYS_dup2:
 	XBT_DEBUG("[%d] dup2(%ld, %ld) = %ld", pid, arg.arg1, arg.arg2, arg.ret);
-          THROW_UNIMPLEMENTED; //Dup are not handle yet
+	//    THROW_UNIMPLEMENTED; //Dup are not handle yet
           break;
           
         case SYS_execve:

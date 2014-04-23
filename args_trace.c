@@ -8,6 +8,7 @@
 #include "run_trace.h"
 #include <sys/uio.h>
 #include "xbt/log.h"
+#include <time.h>
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, ST, "args trace log");
 
@@ -534,6 +535,28 @@ void sys_build_time(pid_t pid, syscall_arg_u *sysarg)
   ptrace_restore_syscall(pid, SYS_time, arg->ret);
   if(arg->t_dest)
     ptrace_poke(pid, arg->t_dest, &(arg->ret), sizeof(time_t));
+}
+
+void get_args_gettimeofday(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
+{
+  time_t sec = 0;
+  suseconds_t usec;
+
+  ptrace(PTRACE_GETREGS, pid, NULL, &reg);
+  sec = ptrace(PTRACE_PEEKDATA, pid, reg->arg1, 0);
+  usec = ptrace(PTRACE_PEEKDATA, pid, reg->arg1 + sizeof(time_t), 0);
+
+  gettimeofday_arg_t arg = &(sysarg->gettimeofday);
+  arg->tv->tv_sec = sec;
+  arg->tv->tv_usec = usec;
+}
+
+void sys_build_gettimeofday(pid_t pid, syscall_arg_u *sysarg)
+{ 
+  gettimeofday_arg_t arg = &(sysarg->gettimeofday);
+  ptrace_restore_syscall_arg1(pid, SYS_gettimeofday, arg->tv_dest);
+  if(arg->tv_dest)
+    ptrace_poke(pid, arg->tv, &(arg->tv_dest), sizeof(struct timeval));
 }
 
 void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg)

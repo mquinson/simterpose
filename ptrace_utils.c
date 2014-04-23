@@ -212,6 +212,27 @@ void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long resu
 	nb_setregs++;
 }
 
+void ptrace_restore_syscall_arg1(pid_t pid, unsigned long syscall, unsigned long arg1)
+{
+  struct user_regs_struct regs;
+  
+  if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
+    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+	nb_getregs++;
+  
+  regs.orig_rax = syscall;
+  regs.rdi = arg1;
+  
+  if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
+    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
+    xbt_die("Impossible to continue\n");
+  }
+	nb_setregs++;
+}
+
+
 void ptrace_rewind_syscalls(const pid_t pid)
 {
   struct user_regs_struct regs;

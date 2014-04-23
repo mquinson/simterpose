@@ -70,6 +70,10 @@ typedef getpeername_arg_s* getpeername_arg_t;
 typedef struct time_arg_s time_arg_s;
 typedef time_arg_s *time_arg_t;
 
+typedef struct gettimeofday_arg_s gettimeofday_arg_s;
+typedef gettimeofday_arg_s *gettimeofday_arg_t;
+
+
 struct recv_arg_s{
   int sockfd;
   int ret;
@@ -205,6 +209,12 @@ struct time_arg_s{
   time_t ret;
 };
 
+struct gettimeofday_arg_s{
+  struct timeval *tv;
+  struct timeval *tv_dest;
+  struct timezone *tz;
+};
+
 typedef union{
   connect_arg_s connect;
   bind_arg_s bind;
@@ -227,6 +237,7 @@ typedef union{
   shutdown_arg_s shutdown;
   getpeername_arg_s getpeername;
   time_arg_s time;
+  gettimeofday_arg_s gettimeofday;
 } syscall_arg_u;
 
 
