@@ -93,6 +93,7 @@ int main(int argc, char** argv){
     exit(1);
   }else{
     struct timeval begin;
+    struct timespec tvcl;
     struct sockaddr_in cli_addr;
     memset(&cli_addr,0,sizeof(struct sockaddr_in));
     host_addr=inet_addr(IP);
@@ -110,9 +111,12 @@ int main(int argc, char** argv){
       // while(1){
         //fgets(buff,512,stdin);
       int ia = 0;
-      gettimeofday(&begin, NULL); 
+
+      /*   gettimeofday(&begin, NULL); 
       printf("\ngettimeofday du client: %f\n",begin.tv_sec + begin.tv_usec/1000000.0);
-      printf("time du client: %d \n\n",time(NULL));
+      printf("time du client: %d \n",time(NULL));
+      clock_gettime(NULL, &tvcl); 
+      printf("clock_gettime du client : %f\n\n",tvcl.tv_sec + tvcl.tv_nsec/1000000000.0);*/
 
       for(ia=0; ia < number_of_loops ; ++ia)
       {

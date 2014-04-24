@@ -1110,6 +1110,13 @@ XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
 	process_set_out_syscall(proc);
 	break;	
 
+      case SYS_clock_gettime:
+	  get_args_clockgettime(pid, &arg, sysarg);
+          ptrace_neutralize_syscall(pid);
+          sys_build_clockgettime(pid, sysarg);
+	  process_set_out_syscall(proc);
+          break;
+
         case SYS_futex:
         {
 	XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);

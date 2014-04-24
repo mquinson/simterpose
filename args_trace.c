@@ -548,6 +548,26 @@ void sys_build_gettimeofday(pid_t pid, syscall_arg_u *sysarg)
   ptrace_poke(pid, arg->tv, &(tv), sizeof(struct timeval));
 }
 
+void get_args_clockgettime(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
+{  
+  clockgettime_arg_t arg = &(sysarg->clockgettime);
+   arg->ret = reg->ret;
+   arg->tp = (void*)reg->arg2;
+}
+
+void sys_build_clockgettime(pid_t pid, syscall_arg_u *sysarg)
+{ 
+  clockgettime_arg_t arg = &(sysarg->clockgettime);
+
+  ptrace_restore_syscall(pid, SYS_clock_gettime, arg->ret);
+
+  struct timespec tp;
+  tp.tv_sec = get_simulated_timestamp();// (time_t)42; //
+  tp.tv_nsec = 0;
+  
+  ptrace_poke(pid, arg->tp, &(tp), sizeof(struct timespec));
+}
+
 void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
