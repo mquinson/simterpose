@@ -519,32 +519,20 @@ void get_args_getpeername(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
 void get_args_time(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
 {
   time_arg_t arg = &(sysarg->time);
-  
   arg->ret = reg->ret;
-  arg->t_dest = (void*) reg->arg1;
-	if(arg->t_dest < (void*)0x100)
-		arg->t_dest = 0;
-	XBT_DEBUG("time destination %p", arg->t_dest);
 }
 
 void sys_build_time(pid_t pid, syscall_arg_u *sysarg)
 {
   time_arg_t arg = &(sysarg->time);
-  
   ptrace_restore_syscall(pid, SYS_time, arg->ret);
-  if(arg->t_dest)
-    ptrace_poke(pid, arg->t_dest, &(arg->ret), sizeof(time_t));
 }
 
 void get_args_gettimeofday(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
 {  
   gettimeofday_arg_t arg = &(sysarg->gettimeofday);
    arg->ret = reg->ret;
-  
-  ptrace_cpy(pid, &arg->tv, (void *)reg->arg1, sizeof(struct timeval),"gettimeofday");
-
-  arg->tv = (void*)reg->arg1;
-  arg->tv_dest = (void*)reg->arg1;
+   arg->tv = (void*)reg->arg1;
 }
 
 void sys_build_gettimeofday(pid_t pid, syscall_arg_u *sysarg)
@@ -554,11 +542,10 @@ void sys_build_gettimeofday(pid_t pid, syscall_arg_u *sysarg)
   ptrace_restore_syscall(pid, SYS_gettimeofday, arg->ret);
 
   struct timeval tv;
-  tv.tv_sec = get_simulated_timestamp();
+  tv.tv_sec = get_simulated_timestamp();// (time_t)42; //
   tv.tv_usec = 0;
-
-  if(arg->tv_dest)
-     ptrace_poke(pid, arg->tv, &(tv), sizeof(struct timeval));
+  
+  ptrace_poke(pid, arg->tv, &(tv), sizeof(struct timeval));
 }
 
 void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg)

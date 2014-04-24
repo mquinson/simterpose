@@ -1093,10 +1093,10 @@ XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
         break;
         
         case SYS_time:
-          get_args_time(pid, &arg, sysarg);
-	  print_time_syscall(pid, sysarg);
+	  get_args_time(pid, &arg, sysarg);
+	  //	  print_time_syscall(pid, sysarg);
           ptrace_neutralize_syscall(pid);
-          sysarg->time.ret = get_simulated_timestamp(); // (time_t)0;//
+          sysarg->time.ret = get_simulated_timestamp(); // (time_t)25; //
           sys_build_time(pid, sysarg);
 	  process_set_out_syscall(proc);
           break;

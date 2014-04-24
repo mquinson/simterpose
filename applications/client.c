@@ -110,9 +110,9 @@ int main(int argc, char** argv){
       // while(1){
         //fgets(buff,512,stdin);
       int ia = 0;
-      //	printf("client time : %d \n\n",time(NULL));
-		gettimeofday(&begin, NULL); 
-		printf("gettimeofday du client: %f\n\n",begin.tv_sec + begin.tv_usec/1000000.0);
+      gettimeofday(&begin, NULL); 
+      printf("\ngettimeofday du client: %f\n",begin.tv_sec + begin.tv_usec/1000000.0);
+      printf("time du client: %d \n\n",time(NULL));
 
       for(ia=0; ia < number_of_loops ; ++ia)
       {

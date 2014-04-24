@@ -204,15 +204,12 @@ struct getpeername_arg_s{
 
 
 struct time_arg_s{
-  time_t t;
-  void * t_dest;
   time_t ret;
 };
 
 struct gettimeofday_arg_s{
   int ret;
   struct timeval *tv;
-  struct timeval *tv_dest;
   struct timezone *tz;
 };
 
