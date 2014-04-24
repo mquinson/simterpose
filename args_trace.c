@@ -8,7 +8,6 @@
 #include "run_trace.h"
 #include <sys/uio.h>
 #include "xbt/log.h"
-#include <time.h>
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, ST, "args trace log");
 
@@ -538,25 +537,28 @@ void sys_build_time(pid_t pid, syscall_arg_u *sysarg)
 }
 
 void get_args_gettimeofday(pid_t pid, reg_s *reg, syscall_arg_u *sysarg)
-{
-  time_t sec = 0;
-  suseconds_t usec;
-
-  ptrace(PTRACE_GETREGS, pid, NULL, &reg);
-  sec = ptrace(PTRACE_PEEKDATA, pid, reg->arg1, 0);
-  usec = ptrace(PTRACE_PEEKDATA, pid, reg->arg1 + sizeof(time_t), 0);
-
+{  
   gettimeofday_arg_t arg = &(sysarg->gettimeofday);
-  arg->tv->tv_sec = sec;
-  arg->tv->tv_usec = usec;
+   arg->ret = reg->ret;
+  
+  ptrace_cpy(pid, &arg->tv, (void *)reg->arg1, sizeof(struct timeval),"gettimeofday");
+
+  arg->tv = (void*)reg->arg1;
+  arg->tv_dest = (void*)reg->arg1;
 }
 
 void sys_build_gettimeofday(pid_t pid, syscall_arg_u *sysarg)
 { 
   gettimeofday_arg_t arg = &(sysarg->gettimeofday);
-  ptrace_restore_syscall_arg1(pid, SYS_gettimeofday, arg->tv_dest);
+
+  ptrace_restore_syscall(pid, SYS_gettimeofday, arg->ret);
+
+  struct timeval tv;
+  tv.tv_sec = get_simulated_timestamp();
+  tv.tv_usec = 0;
+
   if(arg->tv_dest)
-    ptrace_poke(pid, arg->tv, &(arg->tv_dest), sizeof(struct timeval));
+     ptrace_poke(pid, arg->tv, &(tv), sizeof(struct timeval));
 }
 
 void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg)

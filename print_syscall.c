@@ -697,3 +697,9 @@ void print_time_syscall(pid_t pid, syscall_arg_u *sysarg)
   time_arg_t arg = &(sysarg->time);
   printf("[%d] time = %ld\n", pid, arg->ret);
 }
+
+void print_gettimeofday_syscall(pid_t pid, syscall_arg_u *sysarg)
+{
+  gettimeofday_arg_t arg = &(sysarg->gettimeofday);
+  printf("[%d] gettimeofday, tv = %ld\n", pid, arg->tv);
+}

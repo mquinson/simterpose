@@ -15,8 +15,10 @@
 #include "print_syscall.h"
 #include "syscall_list.h"
 
+#include <time.h>
 #include <linux/futex.h>
 
+#define SYSCALL_ARG1 rdi
 //#define DEBUG
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, ST, "Syscall process log");
@@ -968,16 +970,10 @@ int process_handle_mediate(pid_t pid)
 
 
 int process_handle(pid_t pid, int stat)
-{  
-  //TODO : remplacer facteur par vrai temps
-  int fact = 500;
-  time_t sec = 0;
-  long nsec = 0;
-  suseconds_t usec;
+{
 
   int status = stat;
   reg_s arg;
-	reg_s DEB;
   process_descriptor *proc = process_get_descriptor(pid);
   syscall_arg_u *sysarg = &(proc->sysarg);
   while(1)
@@ -986,7 +982,7 @@ int process_handle(pid_t pid, int stat)
       process_set_in_syscall(proc);
 
       ptrace_get_register(pid, &arg);
-	//XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
+XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
       
       int state = -1;
       switch(arg.reg_orig){
@@ -1097,52 +1093,23 @@ int process_handle(pid_t pid, int stat)
         break;
         
         case SYS_time:
-	  ptrace_get_register(pid, &DEB);
-	  printf("lors de l'appel : %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
-
           get_args_time(pid, &arg, sysarg);
+	  print_time_syscall(pid, sysarg);
           ptrace_neutralize_syscall(pid);
           sysarg->time.ret = get_simulated_timestamp(); // (time_t)0;//
           sys_build_time(pid, sysarg);
-
-	  ptrace_get_register(pid, &DEB);
-	  printf("on rend:  %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
 	  process_set_out_syscall(proc);
           break;
 
       case SYS_gettimeofday:
-	ptrace_get_register(pid, &DEB);
-	printf("lors de l'appel : %s, ret: %ld,  arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
 
 	get_args_gettimeofday(pid, &arg, sysarg);
+	//	print_gettimeofday_syscall(pid, sysarg);
 	ptrace_neutralize_syscall(pid);
-	sysarg->gettimeofday.tv_dest->tv_sec = get_simulated_timestamp(); 
-	printf("time wanted : %d ",sysarg->gettimeofday.tv_dest->tv_sec); 
 	sys_build_gettimeofday(pid, sysarg);
-	
-	ptrace_get_register(pid, &DEB);
-	printf("on rend:  %s, ret: %ld, arg1: %ld \n", syscall_list[DEB.reg_orig], DEB.ret, DEB.arg1);
 	process_set_out_syscall(proc);
-	break;
-	
+	break;	
 
-	/* struct timeval* tv parameter is in first parameter */
-	/*	ptrace(PTRACE_GETREGS, pid, NULL, &DEB);
-	sec = ptrace(PTRACE_PEEKDATA, pid, DEB.arg1, 0);
-	usec = ptrace(PTRACE_PEEKDATA, pid, DEB.arg1 + sizeof(time_t), 0);
-
-	long retval = ptrace(PTRACE_PEEKUSER, pid, sizeof(long) * DEB.ret, NULL);
-	printf("gettimeofday: sec=%ld, usec=%ld --> %ld, %ld \n", sec, usec, sec * fact, usec * fact);
-
-	/* add adjustment and modify the result of the syscall */
-	/*	sec *= fact;
-	usec *= fact;
-	/*sec = 1500;
-	  usec = 5;*/
-	/*	ptrace(PTRACE_POKEDATA, pid, DEB.arg1, sec);
-	ptrace(PTRACE_POKEDATA, pid, DEB.arg1 + sizeof(time_t), usec);
-	break;
-        */
         case SYS_futex:
         {
 	XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);

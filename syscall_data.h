@@ -210,6 +210,7 @@ struct time_arg_s{
 };
 
 struct gettimeofday_arg_s{
+  int ret;
   struct timeval *tv;
   struct timeval *tv_dest;
   struct timezone *tz;

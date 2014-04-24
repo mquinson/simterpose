@@ -92,7 +92,7 @@ int main(int argc, char** argv){
     perror("Client : error socket");
     exit(1);
   }else{
-    
+    struct timeval begin;
     struct sockaddr_in cli_addr;
     memset(&cli_addr,0,sizeof(struct sockaddr_in));
     host_addr=inet_addr(IP);
@@ -110,6 +110,10 @@ int main(int argc, char** argv){
       // while(1){
         //fgets(buff,512,stdin);
       int ia = 0;
+      //	printf("client time : %d \n\n",time(NULL));
+		gettimeofday(&begin, NULL); 
+		printf("gettimeofday du client: %f\n\n",begin.tv_sec + begin.tv_usec/1000000.0);
+
       for(ia=0; ia < number_of_loops ; ++ia)
       {
         res=send(clientSocket,buff,buffer_size,0);
