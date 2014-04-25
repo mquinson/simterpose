@@ -336,6 +336,6 @@ nb_geteventmsg=0;
   comm_exit();
   socket_exit();
   finish_cputime();
-  printf("End of simulation \n");
+  printf("End of simulation\n");
   return 0;
 }

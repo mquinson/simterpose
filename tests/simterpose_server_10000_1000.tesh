@@ -1,7 +1,7 @@
 #! ./tesh
 ! timeout 30
 $ cd /home/algorille/Documents/simterpose/
-$ sudo ./run_trace plat.xml deploy_10000_1000.xml
+$ sudo LD_LIBRARY_PATH=/opt/simgrid/lib/ ./run_trace plat.xml deploy_10000_1000.xml
 > [0.000000] [xbt_cfg/INFO] Configuration change: Set 'maxmin/precision' to '1e-9'
 > [0.000000] [surf_workstation/INFO] surf_workstation_model_init_ptask_L07
 > Server: Attente demande de connexion
