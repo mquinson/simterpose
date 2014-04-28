@@ -19,7 +19,7 @@
 #include <linux/futex.h>
 
 #define SYSCALL_ARG1 rdi
-//#define DEBUG
+#define DEBUG
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, ST, "Syscall process log");
 
@@ -41,14 +41,14 @@ int process_send_call(int pid, syscall_arg_u* sysarg)
     if (!socket_netlink(pid,arg->sockfd))
     {
 	XBT_DEBUG("%d This is not a netlink socket", arg->sockfd);
-      calculate_computation_time(pid);
+	calculate_computation_time(pid); // cree la computation task
       struct infos_socket *is = get_infos_socket(pid,arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
 	XBT_DEBUG("[%d] %d->%d", pid, arg->sockfd, arg->ret);
 	XBT_DEBUG("Sending data(%d) on socket %d", arg->ret, s->fd.fd);
       int peer_stat = process_get_state(s->fd.proc);
       if(peer_stat == PROC_SELECT || peer_stat == PROC_POLL || peer_stat == PROC_RECV_IN)
-        add_to_sched_list(s->fd.proc->pid);
+	add_to_sched_list(s->fd.proc->pid);
       
       handle_new_send(is,  sysarg);
 
@@ -982,7 +982,7 @@ int process_handle(pid_t pid, int stat)
       process_set_in_syscall(proc);
 
       ptrace_get_register(pid, &arg);
-XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
+      // XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
       
       int state = -1;
       switch(arg.reg_orig){
@@ -1234,15 +1234,16 @@ XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
             }
           } 
 #endif
-  //        XBT_ERROR("[%d] Seeing if %d receive something\n", pid, (int)arg.arg1);
+	  // XBT_ERROR("[%d] Seeing if %d receive something\n", pid, (int)arg.arg1);
           if(!process_recv_in_call(pid, sysarg->recvfrom.sockfd))
           {
+	    printf("! \n");
 #ifndef address_translation
             int flags = socket_get_flags(pid, arg.arg1);
             if(flags & O_NONBLOCK)
             {
               sysarg->recvfrom.ret=-11;
-//               print_recvfrom_syscall(pid, sysarg);
+               print_recvfrom_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
               process_set_out_syscall(proc);
               process_recvmsg_out_call(pid);
@@ -1256,6 +1257,8 @@ XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
           }
           else
           {
+
+	    printf("!! \n");
             int res = process_recv_call(pid, sysarg);
             if(res == PROCESS_TASK_FOUND)
             {
@@ -1268,13 +1271,14 @@ XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
             {
               if(res == RECV_CLOSE)
                 sysarg->recvfrom.ret=0;
-//               print_recvfrom_syscall(pid, sysarg);
+               print_recvfrom_syscall(pid, sysarg);
               ptrace_neutralize_syscall(pid);
               process_set_out_syscall(proc);
               process_recvfrom_out_call(pid);
             }
 #else
             int flags = socket_get_flags(pid, arg.arg1);
+	    printf("flag %d \n", flags);
             if(!(flags & O_NONBLOCK))
             {
               process_set_state(proc, PROC_RECVFROM);
@@ -1294,7 +1298,7 @@ XBT_DEBUG("New in %s", syscall_list[arg.reg_orig]);
           {
             ptrace_neutralize_syscall(pid);
             sys_build_sendmsg(pid, sysarg);
-//             print_sendmsg_syscall(pid, sysarg);
+             print_sendmsg_syscall(pid, sysarg);
             process_set_out_syscall(proc);
             return PROCESS_TASK_FOUND;
           }

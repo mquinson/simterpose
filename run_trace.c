@@ -145,7 +145,7 @@ void move_mediate_to_sched()
 
 int main(int argc, char *argv[]) { 
 
-xbt_log_control_set("ST.:error"); /*
+xbt_log_control_set("ST.:debug"); /*
 
 xbt_log_control_set("RUN_TRACE.:debug"); 
 //xbt_log_control_set("BENCHMARK.:debug");
@@ -182,7 +182,7 @@ nb_geteventmsg=0;
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
   mediate_list = xbt_dynar_new(sizeof(pid_t), NULL);
-  
+  int i = 10; //debug
   int child_amount=0;
   do{
     //We calculate the time of simulation.
@@ -210,10 +210,10 @@ nb_geteventmsg=0;
     while(!xbt_dynar_is_empty(arr))
     {
       xbt_dynar_shift(arr, &task_over);
-     XBT_DEBUG("(%lu) A task is returned %s (%d)",xbt_dynar_length(arr), SD_task_get_name(task_over), SD_task_get_state(task_over));
+     XBT_DEBUG("(%lu) A task is returned: %s (%d)",xbt_dynar_length(arr), SD_task_get_name(task_over), SD_task_get_state(task_over));
       if(SD_task_get_state(task_over) != SD_DONE)
         continue;
-      XBT_DEBUG("A task is over %s", SD_task_get_name(task_over));
+      XBT_DEBUG("A task is over: %s", SD_task_get_name(task_over));
       int* data = (int *)SD_task_get_data(task_over);
       //If data is not null, we schedule the process
       if(data != NULL)
@@ -311,7 +311,8 @@ nb_geteventmsg=0;
 //         break;
 
 	XBT_DEBUG("child_amount = %d", child_amount);
-    }while(child_amount);
+	i--;
+  }while(child_amount); //i);//
   
 
   finish_cputime();

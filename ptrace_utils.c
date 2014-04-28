@@ -3,6 +3,7 @@
 #include "xbt.h"
 #include "xbt/log.h"
 #include "run_trace.h"
+#include "syscall_list.h"
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_UTILS, ST, "ptrace utils log");
 
@@ -174,7 +175,6 @@ void ptrace_set_register(const pid_t pid)
 
 void ptrace_neutralize_syscall(const pid_t pid)
 {
-	XBT_DEBUG("neutralize syscall");
   struct user_regs_struct regs;
   int status;
   if (ptrace(PTRACE_GETREGS, pid,NULL, &regs)==-1) {
@@ -182,6 +182,7 @@ void ptrace_neutralize_syscall(const pid_t pid)
     xbt_die("Impossible to continue\n");
   }
 	nb_getregs++;
+	XBT_DEBUG("neutralize syscall %s", syscall_list[regs.orig_rax]);
   regs.orig_rax = 184;
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
     XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));

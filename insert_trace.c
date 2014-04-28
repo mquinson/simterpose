@@ -25,7 +25,7 @@ int calculate_computation_time(int pid)
     {
       //process_descriptor* proc = process_get_descriptor(pid);
       double amount = (diff_cpu/global_data->micro_s_per_flop);
-      //fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
+      fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
       
       SD_task_t comp_task = create_computation_task(pid, amount);
       proc->last_computation_task = comp_task;
