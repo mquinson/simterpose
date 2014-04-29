@@ -24,4 +24,6 @@ void task_schedule_receive(struct infos_socket* recv, pid_t pid);
 
 void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_task_t task);
 
+void create_and_schedule_communication_task(pid_t pid_sender, struct infos_socket *is, double amount, SD_workstation_t sender, SD_workstation_t receiver) ;
+
 #endif
