@@ -219,7 +219,7 @@ void task_schedule_receive(struct infos_socket* is, pid_t pid)
   if(proc_receiver->last_computation_task)
     schedule_last_computation_task(proc_receiver->pid, tci->task,"calculation");
 
-  schedule_comm_task(tci->sender_station, proc_receiver->station, tci->task);
+  // schedule_comm_task(tci->sender_station, proc_receiver->station, tci->task);
   proc_receiver->on_simulation = 1;
   free(tci);
   

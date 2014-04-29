@@ -37,14 +37,16 @@ et ça bouclait indéfiniment avec un: [sd_kernel/WARNING] Simulation is finishe
 Le problème a l'air de venir de SimDag, en tout cas en modifiant SimGrid-3.9/src/simdag/sd_global.c et SimGrid-3.9/src/simdag/sd_task.c 
 il n'y a plus de problème d'exécution, tout se termine correctement.
 Les problèmes suivants se posaient:
-- si A envoie à B, on crée une dépendance de B vers A, pour attendre que A ait accomplit sa tâche avant d'exécuter B. Donc on: schedule A, execute A, supprime A, schedule B, et B n'est jamais executé à cause de cette dépendance. Le compteur "unsatisfied_dependencies" de sd_global.c est décrémenté deux fois (car la dépendance est bilatérale) au lieu d'une fois.
+- si A envoie à B, on crée une dépendance de B vers A, pour attendre que A ait accomplit sa tâche avant d'exécuter B. 
+Donc on: schedule A, execute A, supprime A, schedule B, et B n'est jamais executé à cause de cette dépendance. 
+Le compteur "unsatisfied_dependencies" de sd_global.c est décrémenté deux fois (car la dépendance est bilatérale) au lieu d'une fois.
 - les tâches 'scheduled' ou 'runnable' étaient remises à 'schedulable' sans vérification
 Donc on a un patch: commit 'SimDag modifications" 
 
 * du <2014-04-14 lun.> au <2014-04-18 ven.>
 ** Concernant SimDag:
 L'utilisation qu'on en fait dans le code n'est pas correcte, d'où l'erreur qu'on a rencontrée. 
-Frederic Suter m'a dit que pour l'instant c'est codé en SimDag en suivant une logique à la MSG à base de processus qui s'échangent des messages, 
+Frederic Suter m'a dit que pour l'instant c'est codé en SimDag en suivant une logique à la MSG à base de processus qui s'échangent des messages. 
 Pour l'instant on reste quand meme sur le patch.
 ** interception des fonctions de temps
 *** Interception de gettimeofday: j'ai commencé des essais simplistes avec LD_PRELOAD
@@ -76,7 +78,8 @@ puis dans arg_trace on remplace les registres et on renvoie la valeur désirée 
 
 * <2014-04-28 lun.>
 essais pour faire fonctionner Simterpose sans le patch SimDag:
-Modifier toutes les dépendances des taches pour que ce soit conforme à l'utilisation traditionnelle (en suivant le tuto SimDag) essentiellement dans task.c
+Modifier toutes les dépendances des taches pour que ce soit conforme à l'utilisation traditionnelle 
+(en suivant le tuto SimDag) essentiellement dans task.c
 ** rajouter la tache intermédiaire de transfert entre deux taches A et B (create_send_communication_task)
 *** Résultat:
 [sd_kernel/WARNING] Simulation is finished but 2 tasks are still not done
@@ -90,3 +93,14 @@ Modifier toutes les dépendances des taches pour que ce soit conforme à l'utili
 tache d'envoi ok, mais la réception ne se fait pas (erreur réception: Transport endpoint is not connected)
 
 * <2014-04-29 mar.>
+** je me calque sur simgrid/examples/simdag/sd_comm_throttling.c
+nouvelle fonction qui crée les taches et les schedule aussitot. 
+Les dépendances se font bien, mais le problème se pose au moment de récupérer la tache de réception
+** essais avec deploy_msg_1024.xml pour trouver une nouvelle approche
+*** Résultat:
+[3.000002] task.c:84: [TASK/DEBUG] Entering schedule_comm_task communication recv
+[3.000002] task.c:99: [TASK/DEBUG] Scheduling comm_task, 0x11ae720
+SimGrid: UNCAUGHT EXCEPTION received on ./run_trace(0): category: invalid argument; value: 0
+Task 'communication recv' has already been scheduled
+*** Solution:
+ok si on retire l'appel à schedule_comm_task, puisque le recv a effectivement été schedulé au moment du send
