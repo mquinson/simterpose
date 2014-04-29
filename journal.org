@@ -1,0 +1,92 @@
+* du  <2014-03-31 lun.> au <2014-04-04 ven.>
+** J'ai lu les différents articles: 
+*** MicroGrid http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.122.9629
+*** celui de Marion, http://webloria.loria.fr/~quinson/Research/Publications/2011-renpar.pdf
+http://webloria.loria.fr/~quinson/Research/Publications/2011-renpar-slides.pdf
+*** section 4.1.3 page 76 du HDR, http://webloria.loria.fr/~quinson/Research/Publications/2013-hdr_quinson.pdf
+http://webloria.loria.fr/~quinson/Research/Publications/2013-hdr_quinson-slides.pdf
+*** rapport de Guillaume http://webloria.loria.fr/~quinson/Research/Students/2012-master-simterpose-rapport.pdf
+** J'ai également fait tourner le code de Marion et regardé comment il marche: 
+traçage des processus puis interception d'un certain nombre d'appels système, identification et affichage
+** Récupéré le code de Guillaume:  https://gforge.inria.fr/scm/?group_id=4125
+** j'ai effectué les modifications nécessaires pour qu'il compile avec la version 3.9 de SimGrid 
+fonctions différentes, notamment le parseur
+** il faut exécuter simterpose en root pour éviter une erreur à l'exécution
+à cause de l'appel à TASKSTATS_CMD_GET dans ask_time() (calc_time_proc.c) Si on n'est pas root, msg.n.nlmsg_type vaut NLMSG_ERROR
+** Je bloque sur l'exécution du programme.
+Les tâches à effectuer ne sont pas correctement marquées comme terminées, et ça boucle indéfiniment
+(alors que la connexion client/serveur de l'exemple s'effectue correctement). 
+j'ai notamment un: [sd_kernel/WARNING] Simulation is finished but 1 tasks are still not done
+
+* du <2014-04-07 lun.> au <2014-04-11 ven.>
+Uprobes: 
+** On est partis sur Uprobes.
+*** En théorie ça a l'air vraiment bien
+notamment parce que c'est beaucoup plus performant puisqu'on évite les changements de contexte intempestifs 
+(bon papier là dessus 'Ptrace, Utrace, Uprobes: Lightweight, Dynamic Tracing of User Apps Abstract. Linux Symposium, 2007').
+Ca permet également de mettre un probepoint au retour d'une fonction, et de gérer à la fois uprobe et kprobe donc user space et kernel. 
+*** En pratique, même si cela fait 2 ans que c'est mergé, il y a très peu d'exemples d'utilisation. 
+La doc (Documentation/trace/uprobetracer.txt) montre qu'il faut aller écrire les probepoints dans /sys/kernel/debug/tracing/uprobe_events 
+(c'est comme ça que perf l'utilise. Uprobes est également utilisé par SystemTap ou ftrace).
+ Problème : pour pouvoir crééer des handler il faut visiblement créer des modules noyau. 
+Exemple ici (https://sourceware.org/ml/systemtap/2007-q1/msg00587.html 11. Uprobes Example) à actualiser.
+*** Conclusion: on retourne à ptrace.
+** Retour sur le code de Guillaume
+On avait des tâches à effectuer qui n'étaient pas correctement marquées comme terminées, 
+et ça bouclait indéfiniment avec un: [sd_kernel/WARNING] Simulation is finished but 1 tasks are still not done.
+Le problème a l'air de venir de SimDag, en tout cas en modifiant SimGrid-3.9/src/simdag/sd_global.c et SimGrid-3.9/src/simdag/sd_task.c 
+il n'y a plus de problème d'exécution, tout se termine correctement.
+Les problèmes suivants se posaient:
+- si A envoie à B, on crée une dépendance de B vers A, pour attendre que A ait accomplit sa tâche avant d'exécuter B. Donc on: schedule A, execute A, supprime A, schedule B, et B n'est jamais executé à cause de cette dépendance. Le compteur "unsatisfied_dependencies" de sd_global.c est décrémenté deux fois (car la dépendance est bilatérale) au lieu d'une fois.
+- les tâches 'scheduled' ou 'runnable' étaient remises à 'schedulable' sans vérification
+Donc on a un patch: commit 'SimDag modifications" 
+
+* du <2014-04-14 lun.> au <2014-04-18 ven.>
+** Concernant SimDag:
+L'utilisation qu'on en fait dans le code n'est pas correcte, d'où l'erreur qu'on a rencontrée. 
+Frederic Suter m'a dit que pour l'instant c'est codé en SimDag en suivant une logique à la MSG à base de processus qui s'échangent des messages, 
+Pour l'instant on reste quand meme sur le patch.
+** interception des fonctions de temps
+*** Interception de gettimeofday: j'ai commencé des essais simplistes avec LD_PRELOAD
+*** Finalement on utilise ptrace
+gettimeofday est un appel système mais à cause de VDSO ça ne fait pas toujours d'appel système (conserve la valeur d'un appel récent et interpole)
+Il faut donc désactiver la vdso et vsyscall (vdso=0 et vsyscall=native dans le boot). 
+J'ai donc un prototype de programme simple où on peut modifier le temps pour gettimeofday et clock_gettime 
+(je n'arrive pas à modifier les registres pour l'appel time)
+** la full mediation est plus rapide que l'address translation ce qui n'est pas logique
+Normalement la full mediation utilise plein de peek et poke donc elle est très lente
+*** J'ai comptabilisé les peek et poke: il y a quasiment autant de (peek+poke) dans les 2 méthodes.
+En fait il y a globalement un tout petit peu moins d'appels à ptrace en Address translation (5%) mais c'est quand même plus lent. 
+Conclusions: 1) c'est bizarre qu'il y ait autant d'appels à ptrace dans les deux cas
+ 2) la différence de rapidité ne semble donc pas venir des appels à ptrace...
+*** vérifié le code, rien ne semble incohérent, les deux méthodes semblent respectées
+*** j'ai profilé avec FlameGraph, rient de concluant
+*** le strace des deux méthodes est identique
+
+* du <2014-04-22 mar.> au <2014-04-25 ven.>
+** écrit des tests avec tesh
+Tous les affichages de débug incluant du temps sont retirés pour avoir des tests reproductibles
+Je ne parviens pas à lancer le test avec BitTorrent. Je peux faire des téléchargements sans simterpose, mais ça échoue avec Simterpose
+Je mets dans le fichier de déploiement deploy.xml des scripts qui lancent chacun soit le tracker soit le seeder soit un client. 
+J'attends de savoir comment Guillaume faisait
+** Intégré l'interception et la modification de 3 appels système de gestion du temps à Simterpose 
+(gettimeofday, time et clock_gettime) L'appel est intercepté dans syscall_process, 
+puis dans arg_trace on remplace les registres et on renvoie la valeur désirée (get_simulated_timestamp)
+** passée à la version git de SimGrid: 3.11 et retiré le patch SimDag qu'on avait
+
+* <2014-04-28 lun.>
+essais pour faire fonctionner Simterpose sans le patch SimDag:
+Modifier toutes les dépendances des taches pour que ce soit conforme à l'utilisation traditionnelle (en suivant le tuto SimDag) essentiellement dans task.c
+** rajouter la tache intermédiaire de transfert entre deux taches A et B (create_send_communication_task)
+*** Résultat:
+[sd_kernel/WARNING] Simulation is finished but 2 tasks are still not done
+[3.238773] /home/algorille/Documents/simterpose/simgrid/src/simdag/sd_global.c:401: [sd_kernel/WARNING] transfert comm is in SD_SCHEDULABLE state
+[3.238773] /home/algorille/Documents/simterpose/simgrid/src/simdag/sd_global.c:404: [sd_kernel/WARNING] communication recv is in SD_SCHEDULED state
+** La tache de transfert n'est pas bien schedulee. voir où les taches sont schedulees et modifier en conséquence
+*** Bon exemple dans simgrid/examples/simdag/sd_comm_throttling.c:
+- utilise des SD_task_comp_seq et SD_task_comm_e2e au lieu de SD_task
+- schedulel au lieu de schedule
+*** Résultat:
+tache d'envoi ok, mais la réception ne se fait pas (erreur réception: Transport endpoint is not connected)
+
+* <2014-04-29 mar.>
