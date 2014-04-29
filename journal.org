@@ -104,3 +104,6 @@ SimGrid: UNCAUGHT EXCEPTION received on ./run_trace(0): category: invalid argume
 Task 'communication recv' has already been scheduled
 *** Solution:
 ok si on retire l'appel à schedule_comm_task, puisque le recv a effectivement été schedulé au moment du send
+**  essais avec deploy_rw_512.xml
+fonctionne aussi maintenant
+** Conclusion: ok pour read/write et sendmsg/recvmsg mais toujours pas pour sendto/recvfrom
