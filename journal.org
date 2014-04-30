@@ -98,12 +98,35 @@ nouvelle fonction qui crée les taches et les schedule aussitot.
 Les dépendances se font bien, mais le problème se pose au moment de récupérer la tache de réception
 ** essais avec deploy_msg_1024.xml pour trouver une nouvelle approche
 *** Résultat:
-[3.000002] task.c:84: [TASK/DEBUG] Entering schedule_comm_task communication recv
-[3.000002] task.c:99: [TASK/DEBUG] Scheduling comm_task, 0x11ae720
-SimGrid: UNCAUGHT EXCEPTION received on ./run_trace(0): category: invalid argument; value: 0
 Task 'communication recv' has already been scheduled
 *** Solution:
 ok si on retire l'appel à schedule_comm_task, puisque le recv a effectivement été schedulé au moment du send
 **  essais avec deploy_rw_512.xml
 fonctionne aussi maintenant
 ** Conclusion: ok pour read/write et sendmsg/recvmsg mais toujours pas pour sendto/recvfrom
+
+* <2014-04-30 mer.>
+Pourquoi la simulation fonctionne avec sendmsg et pas sendto ?
+** send doit etre utilisé en mode connecté, et pas forcément sendmsg ni sendto
+d'où le problème de connexion: 'Transport endpoint is not connected'.
+Or la connexion s'est bien établie, pourquoi est-ce qu'elle se ferme?
+en fait peut etre qu'elle se ferme avec sendmsg aussi: exit_group(0) called, status = PROCESS_DEAD
+** Remarque: L'appel à send() (depuis client/server) est intercepté comme un appel à SYS_sendto dans simterpose
+send() est visiblement implémenté à l'aide de sendto
+Lorsque j'utilise des client/server qui utilisent directement sendto et recvfrom la simulation se fait correctement, idem que pour sendmsg.
+** Remarque: parfois l'erreur n'est pas située au meme endroit
+On alterne entre:
+- Server: error accept: Invalid argument
+- Transport endpoint is not connected
+** Ne change rien qu'on soit en full ou en addressage ...
+** regardé le patch qu'on avait fait pour trouver ce qu'on doit modifier dans simterpose. ça n'apporte pas d'indice supplémentaire
+
+** Regardé le 'scp-tsunami' comme application de test potentielle quand Simterpose fonctionnera
+algorille@midona:~/Documents/simterpose/scp-tsunami-read-only$ ./scpTsunamiB.py ../applications/ubuntu.torrent ../applications/client1/ubuntu.torrent -l localhost
+transferring ../applications/ubuntu.torrent to 1 hosts ...
+split complete!
+algorille@midona's password: algorille@midona's password: 
+algorille@localhost's password: 
+algorille@localhost's password: 
+Permission denied, please try again.
+*** mdp localhost? 

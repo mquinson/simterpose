@@ -19,7 +19,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, ST, "task log");
 
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* name)
 {
-	XBT_DEBUG("Scheduling last computation task");
+  XBT_DEBUG("Scheduling last computation task %s", name);
   process_descriptor *proc = process_get_descriptor(pid);
   
   double comp_size = SD_task_get_amount(proc->last_computation_task);
