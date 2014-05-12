@@ -136,6 +136,11 @@ Permission denied, please try again.
 
 Le problème est soit: 
 
+** Au niveau de l'interception de la connexion, si on la fait mal
+*** la valeur de retour "-38" du connect ? 
+*** Regardé au niveau des syscall accept, connect et bind
+dans syscall_process.c et task.c, rien de concluant
+
 ** Après la connexion, une déconnexion se produit
 *** Vérification des clients/server:
 Dans le client et le server, j'ai retiré la boucle préalable (qui tournait dans le vide)
@@ -143,8 +148,28 @@ Les envois/reception tournent un moment puis 'Transport endpoint is not connecte
 Ne s'arrete jamais au meme endroit de la boucle, varie entre 3 et 200..
 (ou bien parfois Server: error accept 1: Invalid argument)
 *** essayé sans simterpose: aucun souci
-donc c'est nous qui introduisons une sorte de timeout ?
+DONC c'est dans simterpose que la connexion a une durée de vie limitee
 
-** Au niveau de l'interception de la connexion, en fait on la fait pas bien 
-*** TODO Regarder quelles modifications on a faites/pas encore faites
-au niveau des syscall accept, connect et bind, depuis modifs SD
+* <2014-05-13 mar.>
+
+** SimDag:
+*** Le problème se pose en fait aussi pour read/write
+à condition de boucler suffisamment, on a la meme erreur après un write-in
+*** Parfois différence Full mediation/address translation:
+- Generalement la full mediation renvoie l'erreur 'Transport endpoint...'
+et les messages sont bien échangés entre client et server régulièrement,
+jusqu'à ce que ça se déconnecte
+- Alors que l'address translation s'arrete en plein milieu
+sans rien dire: simterpose fait son truc, et tous les messages 
+client/server arrivent tous en bloc à la fin, mais jamais après le meme 
+event (parfois après recv_in, parfois une fois que la tache de communication
+est destroy) et toujours sans aucun message d'erreur.
+
+** J'envisage une version avec MSG au lieu de SD
+Tutos/exemples pour comprendre les mecanismes:
+initialisation: Pas besoin de deployment file avec SimDag, on l'ajoute donc pour MSG
+Les workstations semblent correspondre à des host, ou process ?
+on MSG_function_register les differents "agents" liés à une fonction chacun
+ici quoi? client server? Pas réalise que ce soit dépendant de l'application.
+Send, recv? un par syscall?
+
