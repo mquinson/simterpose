@@ -136,6 +136,11 @@ Permission denied, please try again.
 
 Le problème est soit: 
 
+** Au niveau de l'interception de la connexion, si on la fait mal
+*** la valeur de retour "-38" du connect ? 
+*** Regardé au niveau des syscall accept, connect et bind
+dans syscall_process.c et task.c, rien de concluant
+
 ** Après la connexion, une déconnexion se produit
 *** Vérification des clients/server:
 Dans le client et le server, j'ai retiré la boucle préalable (qui tournait dans le vide)
@@ -143,8 +148,6 @@ Les envois/reception tournent un moment puis 'Transport endpoint is not connecte
 Ne s'arrete jamais au meme endroit de la boucle, varie entre 3 et 200..
 (ou bien parfois Server: error accept 1: Invalid argument)
 *** essayé sans simterpose: aucun souci
-donc c'est nous qui introduisons une sorte de timeout ?
+DONC c'est dans simterpose que la connexion a une durée de vie limitee
 
-** Au niveau de l'interception de la connexion, en fait on la fait pas bien 
-*** TODO Regarder quelles modifications on a faites/pas encore faites
-au niveau des syscall accept, connect et bind, depuis modifs SD
+** Aucune piste pour le moment. Je commence une version avec MSG au lieu de SD
