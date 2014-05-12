@@ -76,42 +76,34 @@ int main(int argc, char** argv){
 //         printf("End of pool : %d\n", temp);
         
 	if((client_socket=accept(serverSocket, (struct sockaddr *)cli_addr,(socklen_t *)&clilen)) < 0){
-	  perror("Server: error accept");
+	  perror("Server: error accept 1");
 	  exit(1);
-	}else{
-          printf("Server: Connexion acceptée\n");
+	}else{ 
+	  printf("Server: Connexion acceptée\n");
           int length = buffer_size;
           while(length !=0)
-          {
+          { 
             res = recv(client_socket,buff,length,0);
             if(res==-1){
-              perror("Server: erreur réception");
-          exit(1);
+              perror("Server: erreur réception 1");
+	      exit(1);
             }
             length -= res;
         //    printf("Server : recv %d (left %d)\n", res, length);
           }
-          //printf("Message reçu : %s",buff);
+          printf("Server: Message reçu : %s",buff);
 //          strcpy(buff,"Server: envoi \n");
  //         printf("Server: envoi au client\n");
-          int i=0;
-          int j;
-          for(i=0; i<2000000 ; ++i)
-          {
-            j=i*(i%14);
-            --j;
-          }
-          res=send(client_socket,buff,buffer_size,0);
+	  res=send(client_socket,buff,buffer_size,0);
           if(res==-1){
-            perror("Server erreur envoi");
+            perror("Server: erreur envoi 1");
             exit(1);
           }
            shutdown(client_socket,2);
            close(client_socket);
 	}
-	
 	if((client_socket=accept(serverSocket, (struct sockaddr *)cli_addr,(socklen_t *)&clilen)) < 0){
-          perror("Server: error accept");
+          perror("Server: error accept 2");
           exit(1);
         }else{
        //   printf("Server: Connexion acceptée\n");
@@ -124,25 +116,26 @@ int main(int argc, char** argv){
             {
               res = recv(client_socket,buff,length,0);
               if(res==-1){
-                perror("Server: erreur réception");
+		printf("Server : loop %d \n",ia);
+                perror("Server: erreur réception 2");
                 exit(1);
               }
               length -= res;
           //    printf("Server : recv %d (left %d)\n", res, length);
             }
-          //  printf("Server: Message reçu : %s",buff);
+	    printf("Server: Message reçu : %s",buff);
          //   strcpy(buff,"envoi serveur\n");
         //  printf("Server: envoi au client\n");
             res=send(client_socket,buff,buffer_size,0);
             if(res==-1){
-              perror("Server: erreur envoi");
+              perror("Server: erreur envoi 2");
               exit(1);
             }
        //     printf("Server: envoyé\n");
           }
            shutdown(client_socket,2);
            close(client_socket);
-        }
+	   }
       }
     }
   }
