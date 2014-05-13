@@ -170,6 +170,6 @@ Tutos/exemples pour comprendre les mecanismes:
 initialisation: Pas besoin de deployment file avec SimDag, on l'ajoute donc pour MSG
 Les workstations semblent correspondre à des host, ou process ?
 on MSG_function_register les differents "agents" liés à une fonction chacun
-ici quoi? client server? Pas réalise que ce soit dépendant de l'application.
+ici quoi? client server? Pas réaliste que ce soit dépendant de l'application.
 Send, recv? un par syscall?
-
+   
