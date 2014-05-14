@@ -173,3 +173,9 @@ on MSG_function_register les differents "agents" liés à une fonction chacun
 ici quoi? client server? Pas réaliste que ce soit dépendant de l'application.
 Send, recv? un par syscall?
    
+* <2014-05-14 mer.>
+** SimDag: toujours pas d'explication
+** Adaptations pour utiliser MSG
+Workstation converties en host
+La gestion des taches va etre modifiée fondamentalement: utilisation de mailbox pour la communication,
+plus de dépendances. Debut des modifications, reste tout le coeur des taches (init task runtrace)
