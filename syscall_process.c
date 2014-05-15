@@ -427,7 +427,9 @@ void process_recvfrom_out_call(int pid)
 //     return;
   
   process_reset_state(proc);
+#ifdef DEBUG
   print_recvfrom_syscall(pid, &(proc->sysarg));
+#endif
   sys_build_recvfrom(pid, &(proc->sysarg));
   
 }
@@ -490,7 +492,9 @@ int process_accept_in_call(pid_t pid, syscall_arg_u* sysarg)
     sys_build_accept(pid, sysarg);
     
     process_accept_out_call(pid, sysarg);
-//     print_accept_syscall(pid, sysarg);
+#ifdef DEBUG
+     print_accept_syscall(pid, sysarg);
+#endif
 #endif
     
     return conn_pid;
@@ -1001,7 +1005,6 @@ int process_handle(pid_t pid, int stat)
       
       int state = -1;
       switch(arg.reg_orig){
-	printf("argg  \n");
         case SYS_read:
         {
           get_args_read(pid, &arg, sysarg);
@@ -1013,7 +1016,9 @@ int process_handle(pid_t pid, int stat)
               if(flags & O_NONBLOCK)
               {
                 sysarg->read.ret=-11;
-//                 print_read_syscall(pid, sysarg);
+#ifdef DEBUG
+                print_read_syscall(pid, sysarg);
+#endif
                 ptrace_neutralize_syscall(pid);
                 process_set_out_syscall(proc);
                 process_read_out_call(pid);
@@ -1030,7 +1035,9 @@ int process_handle(pid_t pid, int stat)
               int res = process_recv_call(pid, sysarg);
               if(res == PROCESS_TASK_FOUND)
               {
-//                 print_read_syscall(pid, sysarg);
+#ifdef DEBUG
+                print_read_syscall(pid, sysarg);
+#endif
                 ptrace_neutralize_syscall(pid);
                 process_set_out_syscall(proc);
                 process_set_state(proc, PROC_READ);
@@ -1040,7 +1047,9 @@ int process_handle(pid_t pid, int stat)
               {
                 if( res == RECV_CLOSE)
                   sysarg->read.ret=0;
-//                 print_read_syscall(pid, sysarg);
+#ifdef DEBUG
+                print_read_syscall(pid, sysarg);
+#endif
                 ptrace_neutralize_syscall(pid);
                 process_set_out_syscall(proc);
                 process_read_out_call(pid);
@@ -1071,7 +1080,9 @@ int process_handle(pid_t pid, int stat)
             {
               ptrace_neutralize_syscall(pid);
               sys_build_sendto(pid, sysarg);
+#ifdef DEBUG
 	      print_write_syscall(pid, sysarg);
+#endif
               process_set_out_syscall(proc);
               return PROCESS_TASK_FOUND;
             }
@@ -1082,7 +1093,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_poll:
         {
           get_args_poll(pid, &arg, sysarg);
-//           print_poll_syscall(pid, sysarg);
+#ifdef DEBUG
+          print_poll_syscall(pid, sysarg);
+#endif
           process_descriptor* proc = process_get_descriptor(pid);
           if(sysarg->poll.timeout >=0)
             add_timeout(pid, sysarg->poll.timeout + SD_get_clock());
@@ -1113,7 +1126,9 @@ int process_handle(pid_t pid, int stat)
         
         case SYS_time:
 	  get_args_time(pid, &arg, sysarg);
-	  //	  print_time_syscall(pid, sysarg);
+#ifdef DEBUG
+	   print_time_syscall(pid, sysarg);
+#endif
           ptrace_neutralize_syscall(pid);
           sysarg->time.ret = get_simulated_timestamp(); // (time_t)25; //
           sys_build_time(pid, sysarg);
@@ -1123,7 +1138,9 @@ int process_handle(pid_t pid, int stat)
       case SYS_gettimeofday:
 
 	get_args_gettimeofday(pid, &arg, sysarg);
-	//	print_gettimeofday_syscall(pid, sysarg);
+#ifdef DEBUG
+	print_gettimeofday_syscall(pid, sysarg);
+#endif
 	ptrace_neutralize_syscall(pid);
 	sys_build_gettimeofday(pid, sysarg);
 	process_set_out_syscall(proc);
@@ -1159,7 +1176,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_listen:
           get_args_listen(pid, &arg, sysarg);
           process_listen_call(pid, sysarg);
-//           print_listen_syscall(pid, sysarg);
+#ifdef DEBUG
+          print_listen_syscall(pid, sysarg);
+#endif
           break;
 #endif
           
@@ -1203,7 +1222,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_getsockopt:
           get_args_getsockopt(pid, &arg, sysarg);
           process_getsockopt_syscall(pid, sysarg);
-//           print_getsockopt_syscall(pid, sysarg);
+#ifdef DEBUG
+           print_getsockopt_syscall(pid, sysarg);
+#endif
           break;
 #endif
          
@@ -1211,7 +1232,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_setsockopt:
           get_args_setsockopt(pid, &arg, sysarg);
           process_setsockopt_syscall(pid, sysarg);
-//           print_setsockopt_syscall(pid, sysarg);
+#ifdef DEBUG
+           print_setsockopt_syscall(pid, sysarg);
+#endif
           free(sysarg->setsockopt.optval);
           break;
 #endif
@@ -1219,7 +1242,9 @@ int process_handle(pid_t pid, int stat)
 #ifndef address_translation
         case SYS_fcntl:
           get_args_fcntl(pid, &arg, sysarg);
-//           print_fcntl_syscall(pid, sysarg);
+#ifdef DEBUG
+          print_fcntl_syscall(pid, sysarg);
+#endif
           process_fcntl_call(pid, sysarg);
           break;
 #endif
@@ -1227,7 +1252,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_select:
         {
           get_args_select(pid,&arg, sysarg);
-//           print_select_syscall(pid, sysarg);
+#ifdef DEBUG
+          print_select_syscall(pid, sysarg);
+#endif
           process_descriptor* proc = process_get_descriptor(pid);
           if(sysarg->select.timeout >=0)
             add_timeout(pid, sysarg->select.timeout + SD_get_clock());
@@ -1252,16 +1279,17 @@ int process_handle(pid_t pid, int stat)
             }
           } 
 #endif
-	  XBT_ERROR("[%d] Seeing if %d receive something", pid, (int)arg.arg1);
+	  XBT_DEBUG("[%d] Seeing if %d receive something", pid, (int)arg.arg1);
           if(!process_recv_in_call(pid, sysarg->recvfrom.sockfd))
           {
-	    printf("! \n");
 #ifndef address_translation
             int flags = socket_get_flags(pid, arg.arg1);
             if(flags & O_NONBLOCK)
             {
               sysarg->recvfrom.ret=-11;
+#ifdef DEBUG
                print_recvfrom_syscall(pid, sysarg);
+#endif
               ptrace_neutralize_syscall(pid);
               process_set_out_syscall(proc);
               process_recvmsg_out_call(pid);
@@ -1287,7 +1315,9 @@ int process_handle(pid_t pid, int stat)
             {
               if(res == RECV_CLOSE)
                 sysarg->recvfrom.ret=0;
+#ifdef DEBUG
                print_recvfrom_syscall(pid, sysarg);
+#endif
               ptrace_neutralize_syscall(pid);
               process_set_out_syscall(proc);
               process_recvfrom_out_call(pid);
@@ -1315,7 +1345,9 @@ int process_handle(pid_t pid, int stat)
           {
             ptrace_neutralize_syscall(pid);
             sys_build_sendmsg(pid, sysarg);
+#ifdef DEBUG
 	    print_sendmsg_syscall(pid, sysarg);
+#endif
             process_set_out_syscall(proc);
             return PROCESS_TASK_FOUND;
           }
@@ -1338,7 +1370,9 @@ int process_handle(pid_t pid, int stat)
             if(flags & O_NONBLOCK)
             {
               sysarg->recvmsg.ret=-11;
+#ifdef DEBUG
 	      print_read_syscall(pid, sysarg);
+#endif
               ptrace_neutralize_syscall(pid);
               process_set_out_syscall(proc);
               process_recvmsg_out_call(pid);
@@ -1364,7 +1398,9 @@ int process_handle(pid_t pid, int stat)
             {
               if(res == RECV_CLOSE)
                 sysarg->recvfrom.ret=0;
+#ifdef DEBUG
 	      print_read_syscall(pid, sysarg);
+#endif
               ptrace_neutralize_syscall(pid);
               process_set_out_syscall(proc);
               process_recvmsg_out_call(pid);
@@ -1399,7 +1435,9 @@ int process_handle(pid_t pid, int stat)
             process_set_out_syscall(proc);
             return PROCESS_TASK_FOUND;
           }
+#ifdef DEBUG
           print_sendto_syscall(pid, sysarg);
+#endif
 #else
           if (socket_registered(pid, arg.arg1) != -1) {
             if(socket_network(pid, arg.arg1))
@@ -1432,7 +1470,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_write:
 	  //	XBT_DEBUG("[%d] write_out", pid);
           get_args_write(pid, &arg, sysarg);
-	  // print_write_syscall(pid, sysarg);
+#ifdef DEBUG
+	  print_write_syscall(pid, sysarg);
+#endif
 #ifdef address_translation
           if((int)arg.ret > 0)
           {
@@ -1447,7 +1487,9 @@ int process_handle(pid_t pid, int stat)
 
         case SYS_read:
           get_args_read(pid, &arg, sysarg);
-//           print_read_syscall(pid, sysarg);
+#ifdef DEBUG
+	  print_read_syscall(pid, sysarg);
+#endif
 #ifdef address_translation
           if((int)arg.ret > 0)
           {
@@ -1589,7 +1631,9 @@ int process_handle(pid_t pid, int stat)
 #ifdef address_translation
           get_args_listen(pid, &arg, sysarg);
           process_listen_call(pid, sysarg);
-//           print_listen_syscall(pid, sysarg);
+#ifdef DEBUG
+          print_listen_syscall(pid, sysarg);
+#endif
 #else
           THROW_IMPOSSIBLE;
 #endif
@@ -1598,7 +1642,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_sendto:
 	  XBT_DEBUG("[%d] sendto_out", pid);
           get_args_sendto(pid, &arg, sysarg);
+#ifdef DEBUG
 	  print_sendto_syscall(pid, sysarg);
+#endif
 #ifdef address_translation
           
           if (socket_registered(pid, arg.arg1) != -1) {
@@ -1618,7 +1664,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_recvfrom:
 	  XBT_DEBUG("[%d] recvfrom_out", pid);
           get_args_recvfrom(pid, &arg, sysarg);
+#ifdef DEBUG
           print_recvfrom_syscall(pid, sysarg);
+#endif
 #ifdef address_translation
           
           if (socket_registered(pid, arg.arg1) != -1) {
@@ -1638,7 +1686,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_sendmsg:
 	  XBT_DEBUG("[%d] sendmsg_out", pid);
           get_args_sendmsg(pid, &arg, sysarg);
+#ifdef DEBUG
 	  print_sendmsg_syscall(pid, sysarg);
+#endif
 #ifdef address_translation
           if(arg.ret > 0)
           {
@@ -1651,7 +1701,9 @@ int process_handle(pid_t pid, int stat)
         case SYS_recvmsg:
 	  XBT_DEBUG("[%d] recvmsg_out", pid);
           get_args_recvmsg(pid, &arg, sysarg);
+#ifdef DEBUG
           print_recvmsg_syscall(pid, sysarg);
+#endif
 #ifdef address_translation
           if(arg.ret > 0)
           {
@@ -1663,18 +1715,24 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_shutdown:
           get_args_shutdown(pid, &arg, sysarg);
-//           print_shutdown_syscall(pid, sysarg);
+#ifdef DEBUG
+           print_shutdown_syscall(pid, sysarg);
+#endif
           process_shutdown_call(pid, sysarg);
           break;
               
         case SYS_getsockopt:
           get_args_getsockopt(pid, &arg, sysarg);
-//           print_getsockopt_syscall(pid, sysarg);
+#ifdef DEBUG
+           print_getsockopt_syscall(pid, sysarg);
+#endif
           break;
           
         case SYS_setsockopt:
           get_args_setsockopt(pid, &arg, sysarg);
-//           print_setsockopt_syscall(pid, sysarg);
+#ifdef DEBUG
+           print_setsockopt_syscall(pid, sysarg);
+#endif
           break;
                 
         

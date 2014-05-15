@@ -51,7 +51,7 @@ int main(int argc, char** argv){
     cli_addr.sin_port=htons(port);
 
     if(connect(clientSocket,(struct sockaddr *)&cli_addr,sizeof(cli_addr))<0){
-      printf("Client : echec demande de connexion 1\n");
+      perror("Client : echec demande de connexion 1\n");
       exit(0);
     }else{
       printf("Client : Connexion avec le serveur établie 1\n");
