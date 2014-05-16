@@ -179,3 +179,32 @@ Send, recv? un par syscall?
 Workstation converties en host
 La gestion des taches va etre modifiée fondamentalement: utilisation de mailbox pour la communication,
 plus de dépendances. Debut des modifications, reste tout le coeur des taches (init task runtrace)
+
+* <2014-05-15 jeu.> et <2014-05-16 ven.>
+retour au debug, avec SimDag: 
+** Affichage des logs de simterpose au meme format que strace, pour comparer avec et sans simterpose
+il y a des interruptions dans strace (unfinished, resumed) 
+et des trucs parasites (pid et adresses différents...) mais:
+*** connect renvoie -38 au lieu de 0 sans simterpose
+En fait:  -38 correspond à ENOSYS Function not implemented
+"The events generated on entry and exit to a system call are distinguished by the value of the register 
+used for the return code, which contains a special value of -ENOSYS on entry and the actual 
+return value or error code on exit."
+Déplacement des traces à la sortie du syscall. 
+On a toujours des -38 (normal): là où strace interrompt le accept et attend un connect, nous on print l'appel
+avec -38, puis quand le connect arrive on reprint le accept correct. Donc pas de souci de ce coté là.
+*** aucune autre différence majeure entre les traces
+*** parfois server error accept: invalid argument .. 
+alors que toutes les traces sont identiques d'ici là
+** traces pas assez complètes
+sans simterpose je peux stracer avec l'option -f pour suivre les enfants, mais avec simterpose
+strace -ff -o traces_reseau/ff/COMP_run ./run.sh donne:
+sudo: effective uid is not 0, is sudo installed setuid root?
+** laisser passer le connect/accept/bind chacun à son tour (attention port)
+*** bind
+il faut réussir à passer quand meme l'appel systeme, si on fait rien il passe pas
+** parfois (idem, plein d'échanges puis:)
+Server: error accept 2: Invalid argument
+
+** MSG : en fait plus de runnable etc
+voir comment se fait dans examples/msg/bittorrent ou parallel task

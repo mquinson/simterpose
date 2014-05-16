@@ -149,8 +149,8 @@ xbt_log_control_set("ST.:debug"); /*
 
 xbt_log_control_set("RUN_TRACE.:debug"); 
 //xbt_log_control_set("BENCHMARK.:debug");
-//xbt_log_control_set("ARGS_TRACE.:debug");
-xbt_log_control_set("SYSCALL_PROCESS.:debug");
+xbt_log_control_set("ARGS_TRACE.:debug");
+xbt_log_control_set("SYSCALL_PROCESS.:debug");/*
 xbt_log_control_set("CALC_TIMES_PROC.:error");
 xbt_log_control_set("COMMUNICATION.:debug");
 xbt_log_control_set("TASK.:debug");

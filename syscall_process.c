@@ -1073,9 +1073,7 @@ int process_handle(pid_t pid, int stat)
         case SYS_write:
 	  XBT_DEBUG("[%d] write_in", pid);
           get_args_write(pid, &arg, sysarg);
-	  XBT_DEBUG("AAAAAA");
           if (socket_registered(pid, sysarg->write.fd) != -1) {
-	  XBT_DEBUG("BBBBBBBBBB");
             if(process_send_call(pid, sysarg))
             {
               ptrace_neutralize_syscall(pid);
@@ -1185,7 +1183,7 @@ int process_handle(pid_t pid, int stat)
           
 // #ifndef address_translation
         case SYS_bind:
-	XBT_DEBUG("[%d] bind_in", pid);
+	XBT_DEBUG("[%d] bind_in ", pid);
           get_args_bind_connect(pid, 0, &arg, sysarg);
           process_bind_call(pid, sysarg);    
 #ifdef DEBUG     
@@ -1562,12 +1560,12 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_dup:
-		XBT_ERROR("[%d] dup(%ld) = %ld",pid,arg.arg1,arg.ret);
-	THROW_UNIMPLEMENTED; //Dup are not handle yet
+		XBT_ERROR("[%d] dup not handle yet (%ld) = %ld",pid,arg.arg1,arg.ret);
+		//	THROW_UNIMPLEMENTED; //Dup are not handle yet
           break;
           
         case SYS_dup2:
-	XBT_ERROR("[%d] dup2(%ld, %ld) = %ld", pid, arg.arg1, arg.arg2, arg.ret);
+	XBT_ERROR("[%d] dup2 not handle yet (%ld, %ld) = %ld", pid, arg.arg1, arg.arg2, arg.ret);
 	//    THROW_UNIMPLEMENTED; //Dup are not handle yet
           break;
           
