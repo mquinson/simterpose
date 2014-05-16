@@ -592,8 +592,8 @@ int process_handle_idle(pid_t pid)
 
 int process_connect_in_call(pid_t pid, syscall_arg_u *sysarg)
 {
-  XBT_DEBUG(" CONNEXION: process_connect_in_call");
   connect_arg_t arg = &(sysarg->connect);
+  XBT_DEBUG(" CONNEXION: process_connect_in_call");
   int domain = get_domain_socket(pid, arg->sockfd);
   
   if(domain == 2)//PF_INET
@@ -1174,6 +1174,7 @@ int process_handle(pid_t pid, int stat)
           
 #ifndef address_translation
         case SYS_listen:
+	  XBT_DEBUG("[%d] listen_in", pid);
           get_args_listen(pid, &arg, sysarg);
           process_listen_call(pid, sysarg);
 #ifdef DEBUG
@@ -1184,7 +1185,7 @@ int process_handle(pid_t pid, int stat)
           
 // #ifndef address_translation
         case SYS_bind:
-	XBT_DEBUG("[%d] bind", pid);
+	XBT_DEBUG("[%d] bind_in", pid);
           get_args_bind_connect(pid, 0, &arg, sysarg);
           process_bind_call(pid, sysarg);    
 #ifdef DEBUG     
@@ -1197,11 +1198,11 @@ int process_handle(pid_t pid, int stat)
         {
 	XBT_DEBUG("[%d] connect_in", pid);
           get_args_bind_connect(pid, 0, &arg, sysarg);
+          if(process_connect_in_call(pid, sysarg))
+            state = PROCESS_ON_MEDIATION;
 #ifdef DEBUG
            print_connect_syscall(pid, sysarg);
 #endif
-          if(process_connect_in_call(pid, sysarg))
-            state = PROCESS_ON_MEDIATION;
         }
         break;
         
@@ -1209,12 +1210,13 @@ int process_handle(pid_t pid, int stat)
         {
 	XBT_DEBUG("[%d] accept_in", pid);
           get_args_accept(pid, &arg, sysarg);
-#ifdef DEBUG
-           print_accept_syscall(pid, sysarg);
-#endif
           pid_t conn_pid = process_accept_in_call(pid, sysarg);
           if(!conn_pid)
             state =  PROCESS_ON_MEDIATION;
+
+#ifdef DEBUG
+           print_accept_syscall(pid, sysarg);
+#endif
         }
         break;
         
@@ -1560,17 +1562,17 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_dup:
-		XBT_DEBUG("[%d] dup(%ld) = %ld",pid,arg.arg1,arg.ret);
+		XBT_ERROR("[%d] dup(%ld) = %ld",pid,arg.arg1,arg.ret);
 	THROW_UNIMPLEMENTED; //Dup are not handle yet
           break;
           
         case SYS_dup2:
-	XBT_DEBUG("[%d] dup2(%ld, %ld) = %ld", pid, arg.arg1, arg.arg2, arg.ret);
+	XBT_ERROR("[%d] dup2(%ld, %ld) = %ld", pid, arg.arg1, arg.arg2, arg.ret);
 	//    THROW_UNIMPLEMENTED; //Dup are not handle yet
           break;
           
         case SYS_execve:
-	XBT_DEBUG("[%d] execve called", pid);
+	XBT_ERROR("[%d] execve called", pid);
           THROW_UNIMPLEMENTED; //
           break;
               
@@ -1599,6 +1601,7 @@ int process_handle(pid_t pid, int stat)
           break;
           
         case SYS_bind:
+	  XBT_DEBUG("[%d] bind_out", pid);
           get_args_bind_connect(pid, 0, &arg, sysarg);
 #ifdef DEBUG
 	print_bind_syscall(pid, sysarg);
@@ -1607,27 +1610,32 @@ int process_handle(pid_t pid, int stat)
           
         case SYS_connect:
 	XBT_DEBUG("[%d] connect_out", pid);
+
           get_args_bind_connect(pid, 1, &arg, sysarg);
-#ifdef DEBUG
-	print_connect_syscall(pid, sysarg);
-#endif
 #ifdef address_translation
           process_connect_out_call(pid, sysarg);
 	  process_reset_state(proc);
 #endif
+#ifdef DEBUG
+	print_connect_syscall(pid, sysarg);
+#endif
           break;
           
         case SYS_accept:
+	  XBT_DEBUG("[%d] accept_out", pid);
           get_args_accept(pid, &arg, sysarg);
 #ifdef address_translation
           process_accept_out_call(pid, sysarg);
 #endif
+
 #ifdef DEBUG
 	print_accept_syscall(pid, sysarg);
 #endif
+
           break;
           
         case SYS_listen:
+	XBT_DEBUG("[%d] listen_out", pid);
 #ifdef address_translation
           get_args_listen(pid, &arg, sysarg);
           process_listen_call(pid, sysarg);
