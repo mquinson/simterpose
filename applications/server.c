@@ -65,7 +65,7 @@ int main(int argc, char** argv){
 	perror("Server: error listen");
 	exit(1);
       }else{
-	printf("Server: Attente demande de connexion\n");
+	fprintf(stderr,"Server: Attente demande de connexion\n");
 	int clilen=sizeof(struct sockaddr_in);
 	struct sockaddr_in *cli_addr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
         
@@ -79,7 +79,7 @@ int main(int argc, char** argv){
 	  perror("Server: error accept 1");
 	  exit(1);
 	}else{ 
-	  printf("Server: Connexion acceptée\n");
+	  fprintf(stderr,"Server: Connexion acceptée\n");
           int length = buffer_size;
           while(length !=0)
           { 
@@ -91,7 +91,7 @@ int main(int argc, char** argv){
             length -= res;
         //    printf("Server : recv %d (left %d)\n", res, length);
           }
-          printf("Server: Message reçu : %s",buff);
+          fprintf(stderr,"Server: Message reçu : %s",buff);
 //          strcpy(buff,"Server: envoi \n");
  //         printf("Server: envoi au client\n");
 	  res=send(client_socket,buff,buffer_size,0);
@@ -116,14 +116,14 @@ int main(int argc, char** argv){
             {
               res = recv(client_socket,buff,length,0);
               if(res==-1){
-		printf("Server : loop %d \n",ia);
+		fprintf(stderr,"Server : loop %d \n",ia);
                 perror("Server: erreur réception 2");
                 exit(1);
               }
               length -= res;
           //    printf("Server : recv %d (left %d)\n", res, length);
             }
-	    printf("Server: Message reçu : %s",buff);
+	    fprintf(stderr,"Server: Message reçu : %s",buff);
          //   strcpy(buff,"envoi serveur\n");
         //  printf("Server: envoi au client\n");
             res=send(client_socket,buff,buffer_size,0);

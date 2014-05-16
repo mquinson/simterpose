@@ -54,7 +54,7 @@ int main(int argc, char** argv){
       perror("Client : echec demande de connexion 1\n");
       exit(0);
     }else{
-      printf("Client : Connexion avec le serveur établie 1\n");
+      fprintf(stderr,"Client : Connexion avec le serveur établie 1\n");
       // while(1){
 	//fgets(buff,512,stdin);
 
@@ -72,7 +72,7 @@ int main(int argc, char** argv){
               exit(1);
             }
             length -= res;
-            printf("Client : Message reçu : recv %d (left %d)\n", res, length);
+            fprintf(stderr,"Client : Message reçu : recv %d (left %d)\n", res, length);
           }
       }
       //}
@@ -98,7 +98,7 @@ int main(int argc, char** argv){
     cli_addr.sin_port=htons(port);
     
     if(connect(clientSocket,(struct sockaddr *)&cli_addr,sizeof(cli_addr))<0){
-      printf("Client : echec demande de connexion 2\n");
+      fprintf(stderr,"Client : echec demande de connexion 2\n");
       exit(0);
     }else{
     //  printf("Client : Connexion avec le serveur établie\n");
@@ -125,12 +125,12 @@ int main(int argc, char** argv){
             //printf("New receive waited\n");
             res = recv(clientSocket,buff,length,0);
             if(res==-1){
-              printf("Client : loop %d \n",ia);
+	      fprintf(stderr,"Client : loop %d \n",ia);
               perror("Client : erreur réception 2 ");
               exit(1);
             }
             length -= res;
-            printf("Client : Message reçu : recv %d (left %d)\n", res, length);
+            fprintf(stderr,"Client : Message reçu : recv %d (left %d)\n", res, length);
           }
         }
       //  printf("Client : reçu\n");
