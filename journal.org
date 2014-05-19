@@ -208,3 +208,32 @@ Server: error accept 2: Invalid argument
 
 ** MSG : en fait plus de runnable etc
 voir comment se fait dans examples/msg/bittorrent ou parallel task
+
+* <2014-05-19 lun.>
+** wireshark
+** Commandes de traçage
+*** Sans simterpose:
+Toutes les traces dans 'trace': 
+
+        strace -f -o traces_reseau/trace ./lance_clientserver.sh
+
+-f utilisé pour suivre les child process, mais dans ce cas
+il y a des interruptions (unfinished, resumed)
+Si on veut un fichier par processus:
+
+        strace -ff -o traces_reseau/ff/trace ./lance_clientserver.sh
+
+(Attention à utiliser le client avec l'adresse locale 127.0.0.1)
+*** Avec simterpose:
+        ./run.sh > traces_reseau/simulation 2>&1
+Si on désactive les logs de simterpose+simdag, 
+on obtient des traces similaires à strace
+
+** address/full
+address ne rend pas la main, full si 
+en address on fait vraiment des appels système mais en full on devrait faire 
+que des peek et poke donc pas de "transport endpoint.."
+*** cherche dans full mediation où on laisse passer un vrai syscall
+bind ok
+listen ok
+*** dans address où ça plante sans rendre la main

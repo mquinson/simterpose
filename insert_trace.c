@@ -13,7 +13,7 @@ long long int times_syscall[3];
 
 int calculate_computation_time(int pid)
 {
-  // printf("entering calculate_computation_time \n");
+  fprintf(stderr, "entering calculate_computation_time \n");
   if (ask_time(pid, times_syscall)) {
     perror("Error ask_time");
     exit(1);

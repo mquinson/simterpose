@@ -207,7 +207,7 @@ void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long resu
   regs.rax = result;
   
   if (ptrace(PTRACE_SETREGS, pid,NULL, &regs)==-1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
+    XBT_ERROR(" [%d] ptrace setregs %s\n", pid, strerror(errno));
     xbt_die("Impossible to continue\n");
   }
 	nb_setregs++;
