@@ -113,7 +113,7 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
   process_descriptor* forked = process_get_descriptor(pid_fork);
   result->name = strdup(forked->name);
   
-  result->trace = forked->trace;
+  // result->trace = forked->trace;
   result->fd_list = malloc(sizeof(struct infos_socket*)*MAX_FD);
   result->pid=new_pid;
   result->cpu_time=0;
