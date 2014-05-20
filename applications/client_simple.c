@@ -20,7 +20,7 @@ int main(){
   u_short port;
   int res;
   char buff[BUFFER_SIZE];
-  strcpy(buff, "Message from client ");
+  strcpy(buff, "Message from client \n ");
   int server_socket;
   long host_addr;
   struct hostent *serverHostEnt;
@@ -41,15 +41,18 @@ int main(){
     cli_addr.sin_port=htons(port);
     
     if(connect(clientSocket,(struct sockaddr *)&cli_addr,sizeof(cli_addr))<0){
-      printf("echec demande de connexion\n");
+      fprintf(stderr,"echec demande de connexion\n");
       exit(0);
     }else{
-      printf("Connexion avec le serveur établie %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
-      res=sendto(clientSocket,buff,strlen(buff)+1,0, (struct sockaddr*)&cli_addr, sizeof(struct sockaddr_in));
+      fprintf(stderr,"Connexion avec le serveur établie %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
+      int ia = 0;
+      for(ia=0; ia < 1000 ; ++ia) {
+	res=sendto(clientSocket,buff,strlen(buff)+1,0, (struct sockaddr*)&cli_addr, sizeof(struct sockaddr_in));
 
-      if(res==-1){
-        perror("erreur envoi client");
-        exit(1);
+	if(res==-1){
+	  perror("erreur envoi client");
+	  exit(1);
+	}
       }
     }
   }

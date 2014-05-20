@@ -237,3 +237,21 @@ que des peek et poke donc pas de "transport endpoint.."
 bind ok
 listen ok
 *** dans address où ça plante sans rendre la main
+
+* <2014-05-20 mar.>
+** modification de l'affichage des logs (printsyscall)
+-> problème dès le premier recv
+** Dans calculate_computation_time (insert_trace.c)
+l'appel à proc->trace échoue puisque trace n'existe pas
+Le problème se posait que quand le temps avançait, d'où le fait
+qu'on ne le rencontrait pas à chaque fois
+Quand je recommente ça, boucle infinie, tache jamais prise.
+en fait le "trace" était pas totalement supprimé 
+puisqu'utilisé dans process_fork (alors que supprimé du constructeur)
+** retour à: Boucle infinie sur le recv
+ne reçoit rien, reste en médiation
+
+run (send/recv) address: infini (mediation)
+run (send/recv) full: infini (mediation)
+run_from (sendto/recvfrom) full: Cannot add a dependency between task 'communication recv' and itself
+run_from (sendto/recvfrom) address: Error in `./run_trace': double free or corruption (!prev): 0x000000000147edd0 ***

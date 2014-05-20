@@ -59,7 +59,7 @@ int main(){
         perror("error listen");
         exit(1);
       }else{
-        printf("Attente demande de connexion\n");
+        fprintf(stderr, "Attente demande de connexion\n");
         socklen_t clilen=sizeof(struct sockaddr_in);
         struct sockaddr_in cli_addr;
         
@@ -68,15 +68,20 @@ int main(){
           exit(1);
         }else{
           struct in_addr in = {cli_addr.sin_addr.s_addr};
-          printf("Here %d %s\n", cli_addr.sin_addr.s_addr, inet_ntoa(in));
-          printf("Connect to client  %s:%d\n", inet_ntoa(in), ntohs(cli_addr.sin_port));
-          res = recvfrom(client_socket,buff,BUFFER_SIZE,0, (struct sockaddr *)&cli_addr, (socklen_t *)&clilen);
-          if(res==-1){
-            perror("erreur réception server");
-            exit(1);
-          }
+          fprintf(stderr,"Here %d %s\n", cli_addr.sin_addr.s_addr, inet_ntoa(in));
+          fprintf(stderr,"Connect to client  %s:%d\n", inet_ntoa(in), ntohs(cli_addr.sin_port));
+
+	  int ia = 0;
+	  for(ia=0; ia < 1000 ; ++ia) {
+	    res = recvfrom(client_socket,buff,BUFFER_SIZE,0, (struct sockaddr *)&cli_addr, (socklen_t *)&clilen);
+	    if(res==-1){
+	      perror("erreur réception server");
+	      exit(1);
+	    }
+	    fprintf(stderr, "Message reçu du client %s\n", buff);
+	  }
+
         }
-        printf("Message reçu du client %s\n", buff);
       }
     }
   }
