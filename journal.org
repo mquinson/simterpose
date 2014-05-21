@@ -254,4 +254,10 @@ ne reçoit rien, reste en médiation
 run (send/recv) address: infini (mediation)
 run (send/recv) full: infini (mediation)
 run_from (sendto/recvfrom) full: Cannot add a dependency between task 'communication recv' and itself
+(ou erreur réception server: Function not implemented <-- alors qu'en full on ne fait pas de communication)
 run_from (sendto/recvfrom) address: Error in `./run_trace': double free or corruption (!prev): 0x000000000147edd0 ***
+
+* <2014-05-21 mer.>
+
+plantuml
+toolindent *.[ch]

@@ -66,7 +66,7 @@ void print_bind_syscall(pid_t pid, syscall_arg_u *sysarg)
   bind_arg_t arg = &(sysarg->bind);
   int domain = get_domain_socket(pid,arg->sockfd);
   
-  fprintf(stderr,"[%d] bind(", pid);
+  // fprintf(stderr,"[%d] bind(", pid);
   fprintf(stderr,"bind(");
   fprintf(stderr,"%d, ",arg->sockfd);
   
