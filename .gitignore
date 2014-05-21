@@ -1,0 +1,4 @@
+*.o
+*~
+launcher
+run_trace

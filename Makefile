@@ -1,4 +1,4 @@
-OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o run_trace.o benchmark.o syscall_process.o replay.o\
+OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o run_trace.o benchmark.o syscall_process.o \
 	data_utils.o task.o parser.o init.o communication.o print_syscall.o
 
 CFLAGS = -Wall -g -I/opt/simgrid/include/ 
@@ -38,9 +38,6 @@ syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h 
 		process_descriptor.h args_trace.h task.h communication.h syscall_list.h print_syscall.h\
 		syscall_data.h
 	$(CC) $(CFLAGS) -c $< -o $@
-
-#replay.o : replay.c replay.h
-#	$(CC) $(CFLAGS) -c $< -o $@
 
 data_utils.o : data_utils.c data_utils.h run_trace.h sysdep.h process_descriptor.h
 	$(CC) $(CFLAGS) -c $< -o $@
