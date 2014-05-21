@@ -135,7 +135,8 @@ void move_mediate_to_sched()
     
     proc->on_mediation = 0;
     proc->scheduled = 1;
-    XBT_DEBUG("Move mediate process to sched %d", pid);
+    //  XBT_DEBUG("Move mediate process to sched %d", pid);
+    XBT_DEBUG("Move mediate process to sched");
     
     xbt_dynar_push_as(sched_list, pid_t, pid);
   }
@@ -145,15 +146,15 @@ void move_mediate_to_sched()
 
 int main(int argc, char *argv[]) { 
 
-xbt_log_control_set("ST.:debug"); /*
+xbt_log_control_set("ST.:info"); /*
 
 xbt_log_control_set("RUN_TRACE.:debug"); 
 //xbt_log_control_set("BENCHMARK.:debug");
-xbt_log_control_set("ARGS_TRACE.:debug");
+xbt_log_control_set("ARGS_TRACE.:debug");*/
 xbt_log_control_set("SYSCALL_PROCESS.:debug");/*
 xbt_log_control_set("CALC_TIMES_PROC.:error");
-xbt_log_control_set("COMMUNICATION.:debug");
-xbt_log_control_set("TASK.:debug");
+xbt_log_control_set("COMMUNICATION.:debug");*/
+xbt_log_control_set("TASK.:debug");/*
 xbt_log_control_set("PTRACE_UTILS.:debug");
 // */
 
@@ -257,7 +258,8 @@ nb_geteventmsg=0;
       pid_t pid;
       xbt_dynar_shift (sched_list, &pid);
       process_descriptor* proc = process_get_descriptor(pid);
-      XBT_DEBUG("Scheduling process %d", pid);
+      //  XBT_DEBUG("Scheduling process %d", pid);
+      XBT_DEBUG("Scheduling process");
       proc->scheduled = 0;
       
       XBT_DEBUG("Starting treatment");

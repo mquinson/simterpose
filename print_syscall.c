@@ -11,7 +11,8 @@ void print_accept_syscall(pid_t pid, syscall_arg_u* sysarg)
   accept_arg_t arg = &(sysarg->accept);
   
   int domain = get_domain_socket(pid,arg->sockfd);
-  fprintf(stderr,"[%d] accept(", pid);
+  // fprintf(stderr,"[%d] accept(", pid);
+  fprintf(stderr,"accept(");
   
   fprintf(stderr,"%d, ",arg->sockfd);
   
@@ -39,7 +40,8 @@ void print_connect_syscall(pid_t pid, syscall_arg_u* sysarg)
   
   int domain = get_domain_socket(pid,arg->sockfd);
   
-  fprintf(stderr,"[%d] connect(", pid);
+  // fprintf(stderr,"[%d] connect(", pid);
+  fprintf(stderr,"connect(");
   fprintf(stderr,"%d, ",arg->sockfd);
   
   if (domain == 2 ) {
@@ -65,6 +67,7 @@ void print_bind_syscall(pid_t pid, syscall_arg_u *sysarg)
   int domain = get_domain_socket(pid,arg->sockfd);
   
   fprintf(stderr,"[%d] bind(", pid);
+  fprintf(stderr,"bind(");
   fprintf(stderr,"%d, ",arg->sockfd);
   
   if (domain == 2 ) {
@@ -89,7 +92,8 @@ void print_socket_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   socket_arg_t arg = &(sysarg->socket);
   
-  fprintf(stderr,"[%d] socket(",pid);
+  // fprintf(stderr,"[%d] socket(",pid);
+  fprintf(stderr,"socket(");
   switch (arg->domain) {
     case 0: fprintf(stderr,"PF_UNSPEC, "); break;
     case 1: fprintf(stderr,"PF_UNIX, "); break;
@@ -148,7 +152,8 @@ void print_socket_syscall(pid_t pid, syscall_arg_u* sysarg)
 void print_getsockopt_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
-  fprintf(stderr,"[%d] getsockopt(", pid);
+  // fprintf(stderr,"[%d] getsockopt(", pid);
+  fprintf(stderr,"getsockopt(");
   fprintf(stderr,"%d, ",arg->sockfd);
   
   switch (arg->level) {
@@ -197,7 +202,8 @@ void print_getsockopt_syscall(pid_t pid, syscall_arg_u* sysarg)
 void print_setsockopt_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->setsockopt);
-  fprintf(stderr,"[%d] setsockopt(", pid);
+  // fprintf(stderr,"[%d] setsockopt(", pid);
+  fprintf(stderr,"setsockopt(");
   fprintf(stderr,"%d, ",arg->sockfd);
   
   switch (arg->level) {
@@ -247,7 +253,8 @@ void print_listen_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
   
-  fprintf(stderr,"[%d] listen(", pid);
+  fprintf(stderr,"listen(");
+  //  fprintf(stderr,"[%d] listen(", pid);
   fprintf(stderr,"%d, ",arg->sockfd);
   fprintf(stderr,"%d ",arg->backlog);
   fprintf(stderr,") = %d\n", arg->ret);
@@ -292,7 +299,8 @@ void print_flags_recv(int flags) {
 void print_recv_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   recv_arg_t arg = &(sysarg->recv);
-  fprintf(stderr,"[%d] send(", pid);
+  // fprintf(stderr,"[%d] recv(", pid);
+  fprintf(stderr,"recv(");
   
   fprintf(stderr,"%d, ",arg->sockfd);
   fprintf(stderr,"%d ",(int)arg->len);
@@ -308,7 +316,8 @@ void print_recv_syscall(pid_t pid, syscall_arg_u* sysarg)
 void print_send_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   recv_arg_t arg = &(sysarg->send);
-  fprintf(stderr,"[%d] send( ", pid);
+  // fprintf(stderr,"[%d] send( ", pid);
+  fprintf(stderr,"send( ");
   
   fprintf(stderr,"%d, ",arg->sockfd);
   fprintf(stderr,"%d ",(int)arg->len);
@@ -325,8 +334,9 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
   int domain = get_domain_socket(pid,arg->sockfd);
-  
-  fprintf(stderr,"[%d] sendto(", pid);
+
+  // fprintf(stderr,"[%d] sendto(", pid);
+  fprintf(stderr,"sendto(");
 #ifndef address_translation
   char buff[200];
   if(arg->len<200)
@@ -381,9 +391,9 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
   int domain = get_domain_socket(pid,arg->sockfd);
-  
-  fprintf(stderr,"[%d] recvfrom(", pid);
-  
+
+  // fprintf(stderr,"[%d] RECVFROM(", pid);
+  fprintf(stderr,"RECVFROM(");
 #ifndef address_translation
   if(arg->ret)
   {
@@ -400,6 +410,7 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
       buff[499]='\0';
       fprintf(stderr,"%d, \"%s...\" , %d, ",arg->sockfd, buff, arg->len);
     }  
+
     if (arg->flags>0) {
       print_flags_send(arg->flags); 
     } else
@@ -410,7 +421,6 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
 #else
     fprintf(stderr,"%d, \"...\" , %d, ",arg->sockfd, arg->len);
 #endif
-    
   
   if (domain == 2 ) { // PF_INET
     if (arg->is_addr) {
@@ -443,8 +453,9 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u* sysarg)
 void print_recvmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->sendmsg);
-  
-  fprintf(stderr,"[%d] recvmsg(", pid);
+
+  //  fprintf(stderr,"[%d] recvmsg(", pid);
+  fprintf(stderr,"recvmsg(");
   fprintf(stderr,"%d, ",arg->sockfd);
   
   fprintf(stderr,", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ",(int)arg->msg.msg_namelen,(int)arg->msg.msg_iovlen,(int)arg->msg.msg_controllen,arg->msg.msg_flags);
@@ -461,7 +472,8 @@ void print_sendmsg_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->sendmsg);
   
-  fprintf(stderr,"[%d] sendmsg(", pid);
+  //  fprintf(stderr,"[%d] sendmsg(", pid);
+  fprintf(stderr,"sendmsg(");
   fprintf(stderr,"%d, ",arg->sockfd);
 #ifndef address_translation
   char buff[20];
@@ -547,7 +559,8 @@ void print_poll_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   poll_arg_t arg = &(sysarg->poll);
   
-  fprintf(stderr,"[%d] poll([",pid);
+  fprintf(stderr,"poll([");
+  // fprintf(stderr,"[%d] poll([",pid);
   if(arg->fd_list != NULL)
     disp_pollfd(arg->fd_list, arg->nbfd);
   else
@@ -570,7 +583,8 @@ void disp_fd(fd_set * fd) {
 void print_select_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   select_arg_t arg = &(sysarg->select);
-  fprintf(stderr,"[%d] select(%d,", pid, arg->maxfd);
+  // fprintf(stderr,"[%d] select(%d,", pid, arg->maxfd);
+  fprintf(stderr,"select(%d,", arg->maxfd);
   
   if(arg->fd_state & SELECT_FDRD_SET)
     disp_fd(&arg->fd_read);
@@ -642,7 +656,8 @@ void print_fcntl_cmd(int cmd)
 void print_fcntl_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
-  fprintf(stderr,"[%d] fcntl( %d, ", pid, arg->fd);
+  //  fprintf(stderr,"[%d] fcntl( %d, ", pid, arg->fd);
+  fprintf(stderr,"fcntl( %d, ", arg->fd);
   print_fcntl_cmd(arg->cmd);
   fprintf(stderr," , %d) = %d\n", arg->arg, arg->ret);
 }
@@ -650,13 +665,15 @@ void print_fcntl_syscall(pid_t pid, syscall_arg_u* sysarg)
 void print_read_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   read_arg_t arg = &(sysarg->read);
-  fprintf(stderr,"[%d] read(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
+  //  fprintf(stderr,"[%d] read(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
+  fprintf(stderr,"read(%d, \"...\", %d) = %d\n",  arg->fd, arg->count, arg->ret);
 }
 
 void print_write_syscall(pid_t pid, syscall_arg_u* sysarg)
 {
   write_arg_t arg = &(sysarg->read);
-  fprintf(stderr,"[%d] write(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
+  //  fprintf(stderr,"[%d] write(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
+  fprintf(stderr,"write(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
 void print_shutdown_option(int how)
@@ -678,7 +695,8 @@ void print_shutdown_option(int how)
 void print_shutdown_syscall(pid_t pid, syscall_arg_u *sysarg)
 {
   shutdown_arg_t arg = &(sysarg->shutdown);
-  fprintf(stderr,"[%d] shutdown (%d, ", pid, arg->fd);
+  //  fprintf(stderr,"[%d] shutdown (%d, ", pid, arg->fd);
+  fprintf(stderr,"shutdown (%d, ",  arg->fd);
   print_shutdown_option(arg->how);
   fprintf(stderr,") = %d\n", arg->ret);
 }
@@ -687,7 +705,8 @@ void print_shutdown_syscall(pid_t pid, syscall_arg_u *sysarg)
 void print_getpeername_syscall(pid_t pid, syscall_arg_u *sysarg)
 {
   getpeername_arg_t arg = &(sysarg->getpeername);
-  fprintf(stderr,"[%d] getpeername (%d, ", pid, arg->sockfd);
+  //  fprintf(stderr,"[%d] getpeername (%d, ", pid, arg->sockfd);
+  fprintf(stderr,"getpeername (%d, ", arg->sockfd);
   fprintf(stderr,"{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ",arg->in.sin_port,inet_ntoa(arg->in.sin_addr));
   fprintf(stderr,"%d ) = %d\n", arg->len, arg->ret);
 }
@@ -695,11 +714,13 @@ void print_getpeername_syscall(pid_t pid, syscall_arg_u *sysarg)
 void print_time_syscall(pid_t pid, syscall_arg_u *sysarg)
 {
   time_arg_t arg = &(sysarg->time);
-  fprintf(stderr,"[%d] time = %ld\n", pid, arg->ret);
+  //fprintf(stderr,"[%d] time = %ld\n", pid, arg->ret);
+  fprintf(stderr,"time = %ld\n", arg->ret);
 }
 
 void print_gettimeofday_syscall(pid_t pid, syscall_arg_u *sysarg)
 {
   gettimeofday_arg_t arg = &(sysarg->gettimeofday);
-  fprintf(stderr,"[%d] gettimeofday, tv = %ld\n", pid, arg->tv);
+  //  fprintf(stderr,"[%d] gettimeofday, tv = %ld\n", pid, arg->tv);
+  fprintf(stderr,"gettimeofday, tv = %ld\n", arg->tv);
 }

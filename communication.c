@@ -266,7 +266,8 @@ int comm_get_socket_state(struct infos_socket* is)
   int res=0;
   recv_information* recv = comm_get_own_recv(is);
   struct infos_socket* peer = comm_get_peer(is);
-	XBT_DEBUG("[%d](%d) Comm state %d %d %d",is->fd.pid, is->fd.fd, xbt_fifo_size(recv->data_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
+  //	XBT_DEBUG("[%d](%d) Comm state %d %d %d",is->fd.pid, is->fd.fd, xbt_fifo_size(recv->data_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
+	XBT_DEBUG("(%d) Comm state %d %d %d", is->fd.fd, xbt_fifo_size(recv->data_fifo), !xbt_dynar_is_empty(comm->conn_wait), comm->state);
   if(xbt_fifo_size(recv->data_fifo))
     res = res | SOCKET_READ_OK;
   if(!xbt_dynar_is_empty(comm->conn_wait))

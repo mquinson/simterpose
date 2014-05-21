@@ -36,7 +36,8 @@ void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char* 
 void schedule_computation_task(pid_t pid)
 {
 	XBT_DEBUG("Scheduling computation");
-	XBT_DEBUG("Adding compuation task to process %d", pid);
+	//	XBT_DEBUG("Adding compuation task to process %d", pid);
+	XBT_DEBUG("Adding compuation task to process");
   process_descriptor *proc = process_get_descriptor(pid);
   double comp_size = SD_task_get_amount(proc->last_computation_task);
   double comm_amount = 0;
@@ -196,7 +197,8 @@ void create_and_schedule_communication_task(pid_t pid_sender, struct infos_socke
   work_list[0] = sender;
   work_list[1] = receiver;
  
-  XBT_DEBUG("Scheduling comm_task, %p", work_list);
+  //  XBT_DEBUG("Scheduling comm_task, %p", work_list);
+  XBT_DEBUG("Scheduling comm_task");
   SD_task_schedulel(task_sending, 1, work_list[0]);
   SD_task_schedulel(task_receiving, 1, work_list[1]);
  
@@ -207,7 +209,8 @@ void create_and_schedule_communication_task(pid_t pid_sender, struct infos_socke
 // called by socket
 void task_schedule_receive(struct infos_socket* is, pid_t pid) 
 {
-	XBT_DEBUG("ENTERING task_schedule_receive %d", pid);
+  //	XBT_DEBUG("ENTERING task_schedule_receive %d", pid);
+	XBT_DEBUG("ENTERING task_schedule_receive");
   
   task_comm_info* tci = comm_get_send(is);
   
