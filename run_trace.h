@@ -6,7 +6,7 @@
 #include <sys/types.h>
 
 #define MAX_FD 1024
-#define MAX_PID 32768  
+#define MAX_PID 32768
 
 #define PORT_BIND       0x1
 #define PORT_LOCAL      0x2
@@ -36,33 +36,33 @@ int nb_detach;
 int nb_geteventmsg;
 
 typedef struct simterpose_data simterpose_data_t;
-simterpose_data_t* global_data;
+simterpose_data_t *global_data;
 
 
-struct time_desc{
+struct time_desc {
   pid_t pid;
   double start_time;
 };
 
-struct port_desc{
+struct port_desc {
   int port_num;
   int real_port;
   int option;
   int amount_socket;
-  struct infos_socket* bind_socket;
+  struct infos_socket *bind_socket;
 };
 
-struct translate_desc{
+struct translate_desc {
   int port_num;
   unsigned int ip;
 };
 
-struct simterpose_station{
+struct simterpose_station {
   unsigned int ip;
   xbt_dict_t port;
 };
 
-struct simterpose_data{
+struct simterpose_data {
   xbt_dynar_t launching_time;
   process_descriptor *process_desc[MAX_PID];
   xbt_dict_t list_station;

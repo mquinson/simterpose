@@ -29,7 +29,7 @@ struct msgtemplate {
   struct nlmsghdr n;
   struct genlmsghdr g;
   char buf[MAX_MSG_SIZE];
-}msg;
+} msg;
 
 pid_t pid;
 
@@ -52,15 +52,13 @@ int create_nl_socket(int protocol)
     goto error;
 
   return fd;
- error:
+error:
   close(fd);
   return -1;
 }
 
 
-int send_cmd(int sd, __u16 nlmsg_type, __u32 nlmsg_pid,
-		    __u8 genl_cmd, __u16 nla_type,
-		    void *nla_data, int nla_len)
+int send_cmd(int sd, __u16 nlmsg_type, __u32 nlmsg_pid, __u8 genl_cmd, __u16 nla_type, void *nla_data, int nla_len)
 {
   struct nlattr *na;
   struct sockaddr_nl nladdr;
@@ -82,11 +80,10 @@ int send_cmd(int sd, __u16 nlmsg_type, __u32 nlmsg_pid,
   msg.n.nlmsg_len += NLMSG_ALIGN(na->nla_len);
 
   buf = (char *) &msg;
-  buflen = msg.n.nlmsg_len ;
+  buflen = msg.n.nlmsg_len;
   memset(&nladdr, 0, sizeof(nladdr));
   nladdr.nl_family = AF_NETLINK;
-  while ((r = sendto(sd, buf, buflen, 0, (struct sockaddr *) &nladdr,
-		     sizeof(nladdr))) < buflen) {
+  while ((r = sendto(sd, buf, buflen, 0, (struct sockaddr *) &nladdr, sizeof(nladdr))) < buflen) {
     if (r > 0) {
       buf += r;
       buflen -= r;
@@ -109,19 +106,17 @@ int get_family_id(int sd)
     char buf[256];
   } ans;
 
-  int id = 0/*, rc*/;
+  int id = 0 /*, rc */ ;
   struct nlattr *na;
   int rep_len;
   char name[100];
 
   strcpy(name, TASKSTATS_GENL_NAME);
-  /*rc = */send_cmd(sd, GENL_ID_CTRL, getpid(), CTRL_CMD_GETFAMILY,
-		CTRL_ATTR_FAMILY_NAME, (void *)name,
-		strlen(TASKSTATS_GENL_NAME)+1);
+  /*rc = */ send_cmd(sd, GENL_ID_CTRL, getpid(), CTRL_CMD_GETFAMILY,
+                     CTRL_ATTR_FAMILY_NAME, (void *) name, strlen(TASKSTATS_GENL_NAME) + 1);
 
   rep_len = recv(sd, &ans, sizeof(ans), 0);
-  if (ans.n.nlmsg_type == NLMSG_ERROR ||
-      (rep_len < 0) || !NLMSG_OK((&ans.n), rep_len))
+  if (ans.n.nlmsg_type == NLMSG_ERROR || (rep_len < 0) || !NLMSG_OK((&ans.n), rep_len))
     return 0;
 
   na = (struct nlattr *) GENLMSG_DATA(&ans);
@@ -136,8 +131,9 @@ static int _nl_sd;
 static __u16 _id;
 
 /* initialization */
-int init_cputime() {
-  
+int init_cputime()
+{
+
   if ((_nl_sd = create_nl_socket(NETLINK_GENERIC)) < 0) {
     err("error creating Netlink socket\n");
     return -1;
@@ -153,22 +149,23 @@ int init_cputime() {
 }
 
 /* cleaning up */
-int finish_cputime() {
+int finish_cputime()
+{
   close(_nl_sd);
   return 0;
 }
 
-int ask_time(int tid, long long int* times)
+int ask_time(int tid, long long int *times)
 {
   int res = -2;
   struct msgtemplate msg;
   int rep_len;
   struct nlattr *na;
   int cmd_type = TASKSTATS_CMD_ATTR_PID;
-  struct taskstats* stats;
-  
+  struct taskstats *stats;
+
   int rc = send_cmd(_nl_sd, _id, pid, TASKSTATS_CMD_GET,
-		    cmd_type, &tid, sizeof(__u32));
+                    cmd_type, &tid, sizeof(__u32));
   if (rc < 0) {
     XBT_ERROR("error sending tid/tgid cmd\n");
     return -1;
@@ -181,12 +178,11 @@ int ask_time(int tid, long long int* times)
     return -1;
   }
 
-  if (msg.n.nlmsg_type == NLMSG_ERROR ||
-      !NLMSG_OK((&msg.n), rep_len)) { 
+  if (msg.n.nlmsg_type == NLMSG_ERROR || !NLMSG_OK((&msg.n), rep_len)) {
 //FIXME si root, on ne rentre pas dans cette erreur. Sinon, on déclenche la segfault (msg.n.nlmsg_type == NLMSG_ERROR)
 //     struct nlmsgerr *err = NLMSG_DATA(&msg);
-  XBT_ERROR("fatal reply error,  errno  %s\n",strerror(errno));
-  *(int*)0=0;
+    XBT_ERROR("fatal reply error,  errno  %s\n", strerror(errno));
+    *(int *) 0 = 0;
     return -1;
   }
 
@@ -204,25 +200,23 @@ int ask_time(int tid, long long int* times)
       /* For nested attributes, na follows */
       na = (struct nlattr *) NLA_DATA(na);
       while (len2 < aggr_len) {
-	switch (na->nla_type) {
-	case TASKSTATS_TYPE_PID:
-	  break;
-	case TASKSTATS_TYPE_STATS:
-	  /* here we collect info */
-	  stats = (struct taskstats *) NLA_DATA(na);
-	  //times[0] = (long long int)stats->ac_etime;
-	  times[1] = (long long int)stats->ac_utime;
-	  times[2] = (long long int)stats->ac_stime;
-	  res = 0;
-	  break;
-	default:
-	  XBT_ERROR("Unknown nested"
-		  " nla_type %d\n",
-		  na->nla_type);
-	  break;
-	}
-	len2 += NLA_ALIGN(na->nla_len);
-	na = (struct nlattr *) ((char *) na + len2);
+        switch (na->nla_type) {
+        case TASKSTATS_TYPE_PID:
+          break;
+        case TASKSTATS_TYPE_STATS:
+          /* here we collect info */
+          stats = (struct taskstats *) NLA_DATA(na);
+          //times[0] = (long long int)stats->ac_etime;
+          times[1] = (long long int) stats->ac_utime;
+          times[2] = (long long int) stats->ac_stime;
+          res = 0;
+          break;
+        default:
+          XBT_ERROR("Unknown nested" " nla_type %d\n", na->nla_type);
+          break;
+        }
+        len2 += NLA_ALIGN(na->nla_len);
+        na = (struct nlattr *) ((char *) na + len2);
       }
       break;
     default:
@@ -234,9 +228,3 @@ int ask_time(int tid, long long int* times)
 
   return res;
 }
-
-
-
-
-
-

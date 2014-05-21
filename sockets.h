@@ -1,4 +1,4 @@
-#ifndef __SOCKETS_H 
+#ifndef __SOCKETS_H
 #define __SOCKETS_H
 
 /*Declaration of state for socket*/
@@ -25,15 +25,15 @@ struct infos_socket;
 #include "simdag/simdag.h"
 
 
-struct recv_information{
+struct recv_information {
   xbt_fifo_t data_fifo;
   xbt_fifo_t recv_task;
   int quantity_recv;
 };
 
-struct infos_socket{
+struct infos_socket {
   fd_s fd;
-  comm_t comm;//point to the communication which socket involved in
+  comm_t comm;                  //point to the communication which socket involved in
   SD_workstation_t station;
   int domain;
   int protocol;
@@ -44,29 +44,29 @@ struct infos_socket{
   int binded;
 };
 
-recv_information* recv_information_new();
+recv_information *recv_information_new();
 
 void delete_socket(struct infos_socket *is);
 
-void recv_information_destroy(recv_information *recv);
+void recv_information_destroy(recv_information * recv);
 
 void init_socket_gestion();
 
 void socket_exit();
 
-int handle_new_receive(int pid, syscall_arg_u* sysarg);
+int handle_new_receive(int pid, syscall_arg_u * sysarg);
 
-void handle_new_send(struct infos_socket *is,  syscall_arg_u* sysarg);
+void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg);
 
 int close_all_communication(int pid);
 
-struct infos_socket* register_socket(pid_t pid, int sockfd, int domain, int protocol);
+struct infos_socket *register_socket(pid_t pid, int sockfd, int domain, int protocol);
 
 void update_socket(pid_t pid, int fd);
 
 int socket_registered(pid_t pid, int fd);
 
-struct infos_socket* get_infos_socket(pid_t pid, int fd);
+struct infos_socket *get_infos_socket(pid_t pid, int fd);
 
 void get_localaddr_port_socket(pid_t pid, int fd);
 
@@ -80,11 +80,11 @@ int socket_incomplete(pid_t pid, int fd);
 
 int socket_netlink(pid_t pid, int fd);
 
-int socket_get_remote_addr(pid_t pid, int fd, struct sockaddr_in* addr_port);
+int socket_get_remote_addr(pid_t pid, int fd, struct sockaddr_in *addr_port);
 
-struct infos_socket* getSocketInfoFromContext(unsigned int locale_ip, int locale_port);
+struct infos_socket *getSocketInfoFromContext(unsigned int locale_ip, int locale_port);
 
-int socket_get_state(struct infos_socket* is);
+int socket_get_state(struct infos_socket *is);
 
 int socket_read_event(pid_t pid, int fd);
 

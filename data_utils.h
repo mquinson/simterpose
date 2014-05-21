@@ -35,11 +35,11 @@ int get_port_option(SD_workstation_t station, int port);
 
 void set_port_option(SD_workstation_t station, int port, int option);
 
-void set_port_on_binding(SD_workstation_t station, int port, struct infos_socket* is, int device);
+void set_port_on_binding(SD_workstation_t station, int port, struct infos_socket *is, int device);
 
 struct infos_socket *get_binding_socket(unsigned int ip, int port, int nature);
 
-struct infos_socket *get_binding_socket_workstation(SD_workstation_t station , int port, int device);
+struct infos_socket *get_binding_socket_workstation(SD_workstation_t station, int port, int device);
 
 unsigned int get_ip_of_station(SD_workstation_t station);
 
@@ -47,7 +47,7 @@ SD_workstation_t get_station_by_ip(unsigned int ip);
 
 int get_random_port(SD_workstation_t station);
 
-void unset_socket(pid_t pid, struct infos_socket* is);
+void unset_socket(pid_t pid, struct infos_socket *is);
 
 time_t get_simulated_timestamp();
 
@@ -55,7 +55,7 @@ void set_real_port(SD_workstation_t station, int port, int real_port);
 
 void add_new_translation(int real_port, int translated_port, unsigned int translated_ip);
 
-translate_desc* get_translation(int real_port);
+translate_desc *get_translation(int real_port);
 
 int get_real_port(pid_t pid, unsigned int ip, int port);
 

@@ -1,4 +1,4 @@
-#ifndef __SYSDEP_H_ 
+#ifndef __SYSDEP_H_
 #define __SYSDEP_H_
 
 #include <sys/ptrace.h>

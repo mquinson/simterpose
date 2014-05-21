@@ -1,4 +1,4 @@
-#ifndef __TIME_PROC_H_ 
+#ifndef __TIME_PROC_H_
 #define __TIME_PROC_H_
 
 #define SYSCALL_IN              0x1
@@ -45,9 +45,9 @@
 typedef struct process_descriptor process_descriptor;
 typedef struct fd_s fd_s;
 
-struct fd_s{
+struct fd_s {
   int type;
-  process_descriptor* proc;
+  process_descriptor *proc;
   int fd;
   int pid;
 };
@@ -61,67 +61,67 @@ struct fd_s{
 
 
 
-struct process_descriptor{
+struct process_descriptor {
   pid_t pid;
   pid_t tgid;
   int mediate_state;
   long long int cpu_time;
-  char* name;
-  FILE* trace;
-  time_desc* timeout;//point to the next timeout of process, NULL there is not timeout
+  char *name;
+  FILE *trace;
+  time_desc *timeout;           //point to the next timeout of process, NULL there is not timeout
   SD_workstation_t station;
   SD_task_t last_computation_task;
-  fd_s** fd_list;
-  
-  unsigned int idle     :1;
-  unsigned int in_timeout :2;
-  unsigned int scheduled  :1;
-  unsigned int idle_list  :1;
-  unsigned int on_simulation :1;
-  unsigned int on_mediation :1;
+  fd_s **fd_list;
 
-  
+  unsigned int idle:1;
+  unsigned int in_timeout:2;
+  unsigned int scheduled:1;
+  unsigned int idle_list:1;
+  unsigned int on_simulation:1;
+  unsigned int on_mediation:1;
+
+
   int state;
   syscall_arg_u sysarg;
 };
 
 
-process_descriptor *process_descriptor_new(char* name, pid_t pid);
+process_descriptor *process_descriptor_new(char *name, pid_t pid);
 
 process_descriptor *process_get_descriptor(pid_t pid);
 
-void process_set_descriptor(pid_t pid, process_descriptor* proc);
+void process_set_descriptor(pid_t pid, process_descriptor * proc);
 
-void process_set_idle(process_descriptor *proc, int idle_state);
+void process_set_idle(process_descriptor * proc, int idle_state);
 
-int process_get_idle(process_descriptor *proc);
+int process_get_idle(process_descriptor * proc);
 
 void process_fork(pid_t new_pid, pid_t pid_fork);
 
-int process_update_cputime(process_descriptor* proc, long long int cputime_elapsed);
+int process_update_cputime(process_descriptor * proc, long long int cputime_elapsed);
 
-int process_in_syscall(process_descriptor *proc);
+int process_in_syscall(process_descriptor * proc);
 
-void process_set_in_syscall(process_descriptor *proc);
+void process_set_in_syscall(process_descriptor * proc);
 
-void process_set_out_syscall(process_descriptor *proc);
+void process_set_out_syscall(process_descriptor * proc);
 
 void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags);
 
-int process_get_state(process_descriptor *proc);
+int process_get_state(process_descriptor * proc);
 
-void process_reset_state(process_descriptor* proc);
+void process_reset_state(process_descriptor * proc);
 
-void process_set_state(process_descriptor *proc, int state);
+void process_set_state(process_descriptor * proc, int state);
 
 void process_die(pid_t pid);
 
-void process_on_simulation(process_descriptor *proc, int val);
+void process_on_simulation(process_descriptor * proc, int val);
 
-void process_on_mediation(process_descriptor *proc);
+void process_on_mediation(process_descriptor * proc);
 
-void process_end_mediation(process_descriptor *proc);
+void process_end_mediation(process_descriptor * proc);
 
-int process_get_free_fd(process_descriptor *proc);
+int process_get_free_fd(process_descriptor * proc);
 
 #endif

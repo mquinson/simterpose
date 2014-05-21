@@ -8,64 +8,64 @@
 #define SELECT_FDEX_SET 0x04
 
 typedef struct connect_bind_arg_s connect_arg_s;
-typedef connect_arg_s* connect_arg_t;
+typedef connect_arg_s *connect_arg_t;
 
 typedef struct connect_bind_arg_s bind_arg_s;
-typedef bind_arg_s* bind_arg_t;
+typedef bind_arg_s *bind_arg_t;
 
 typedef struct accept_arg_s accept_arg_s;
-typedef accept_arg_s* accept_arg_t;
+typedef accept_arg_s *accept_arg_t;
 
 typedef struct socket_arg_s socket_arg_s;
-typedef socket_arg_s* socket_arg_t;
+typedef socket_arg_s *socket_arg_t;
 
 typedef struct listen_arg_s listen_arg_s;
-typedef listen_arg_s* listen_arg_t;
+typedef listen_arg_s *listen_arg_t;
 
 typedef struct getsockopt_arg_s getsockopt_arg_s;
-typedef getsockopt_arg_s* getsockopt_arg_t;
+typedef getsockopt_arg_s *getsockopt_arg_t;
 
 typedef struct getsockopt_arg_s setsockopt_arg_s;
-typedef setsockopt_arg_s* setsockopt_arg_t;
+typedef setsockopt_arg_s *setsockopt_arg_t;
 
 typedef struct select_arg_s select_arg_s;
-typedef select_arg_s* select_arg_t;
+typedef select_arg_s *select_arg_t;
 
 typedef struct poll_arg_s poll_arg_s;
-typedef poll_arg_s* poll_arg_t;
+typedef poll_arg_s *poll_arg_t;
 
 typedef struct recv_arg_s recv_arg_s;
-typedef recv_arg_s* recv_arg_t;
+typedef recv_arg_s *recv_arg_t;
 
 typedef struct recv_arg_s send_arg_s;
-typedef send_arg_s* send_arg_t;
+typedef send_arg_s *send_arg_t;
 
 typedef struct sendto_arg_s sendto_arg_s;
-typedef sendto_arg_s* sendto_arg_t;
+typedef sendto_arg_s *sendto_arg_t;
 
 typedef struct sendto_arg_s recvfrom_arg_s;
-typedef recvfrom_arg_s* recvfrom_arg_t;
+typedef recvfrom_arg_s *recvfrom_arg_t;
 
 typedef struct recvmsg_arg_s sendmsg_arg_s;
-typedef sendmsg_arg_s* sendmsg_arg_t;
+typedef sendmsg_arg_s *sendmsg_arg_t;
 
 typedef struct recvmsg_arg_s recvmsg_arg_s;
-typedef recvmsg_arg_s* recvmsg_arg_t;
+typedef recvmsg_arg_s *recvmsg_arg_t;
 
 typedef struct fcntl_arg_s fcntl_arg_s;
-typedef struct fcntl_arg_s* fcntl_arg_t;
+typedef struct fcntl_arg_s *fcntl_arg_t;
 
 typedef struct write_arg_s write_arg_s;
-typedef write_arg_s* write_arg_t;
+typedef write_arg_s *write_arg_t;
 
 typedef struct write_arg_s read_arg_s;
-typedef read_arg_s* read_arg_t;
+typedef read_arg_s *read_arg_t;
 
 typedef struct shutdown_arg_s shutdown_arg_s;
-typedef shutdown_arg_s* shutdown_arg_t;
+typedef shutdown_arg_s *shutdown_arg_t;
 
 typedef struct getpeername_arg_s getpeername_arg_s;
-typedef getpeername_arg_s* getpeername_arg_t;
+typedef getpeername_arg_s *getpeername_arg_t;
 
 typedef struct time_arg_s time_arg_s;
 typedef time_arg_s *time_arg_t;
@@ -77,23 +77,23 @@ typedef struct clockgettime_arg_s clockgettime_arg_s;
 typedef clockgettime_arg_s *clockgettime_arg_t;
 
 
-struct recv_arg_s{
+struct recv_arg_s {
   int sockfd;
   int ret;
   size_t len;
   int flags;
 };
 
-struct recvmsg_arg_s{
+struct recvmsg_arg_s {
   int sockfd;
   int ret;
   int len;
-  void* data;
+  void *data;
   int flags;
   struct msghdr msg;
 };
 
-struct select_arg_s{
+struct select_arg_s {
   int fd_state;
   int maxfd;
   int ret;
@@ -103,33 +103,33 @@ struct select_arg_s{
   double timeout;
 };
 
-struct poll_arg_s{
+struct poll_arg_s {
   int nbfd;
-  struct pollfd* fd_list;
+  struct pollfd *fd_list;
   double timeout;
   int ret;
 };
 
-struct sendto_arg_s{
+struct sendto_arg_s {
   int sockfd;
   int ret;
   int len;
-  void* data;
+  void *data;
   int flags;
   int addrlen;
-  void* dest; //address in processus of data
-  int is_addr;//indicate if struct sockadrr is null or not
-  union{
+  void *dest;                   //address in processus of data
+  int is_addr;                  //indicate if struct sockadrr is null or not
+  union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
     struct sockaddr_nl snl;
   };
 };
 
-struct connect_bind_arg_s{
+struct connect_bind_arg_s {
   int sockfd;
   int ret;
-  union{
+  union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
     struct sockaddr_nl snl;
@@ -137,10 +137,10 @@ struct connect_bind_arg_s{
   socklen_t addrlen;
 };
 
-struct accept_arg_s{
+struct accept_arg_s {
   int sockfd;
   int ret;
-  union{
+  union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
     struct sockaddr_nl snl;
@@ -151,20 +151,20 @@ struct accept_arg_s{
 };
 
 
-struct socket_arg_s{
+struct socket_arg_s {
   int ret;
   int domain;
   int type;
   int protocol;
 };
 
-struct listen_arg_s{
+struct listen_arg_s {
   int sockfd;
   int backlog;
   int ret;
 };
 
-struct getsockopt_arg_s{
+struct getsockopt_arg_s {
   int sockfd;
   int level;
   int optname;
@@ -175,53 +175,53 @@ struct getsockopt_arg_s{
   void *dest_optlen;
 };
 
-struct fcntl_arg_s{
+struct fcntl_arg_s {
   int fd;
   int cmd;
-  int arg;//TODO put an union to handle various type of argument
+  int arg;                      //TODO put an union to handle various type of argument
   int ret;
 };
 
-struct write_arg_s{
+struct write_arg_s {
   int fd;
   int ret;
   int count;
-  void* data;
-  void* dest;
+  void *data;
+  void *dest;
 };
 
-struct shutdown_arg_s{
+struct shutdown_arg_s {
   int fd;
   int how;
   int ret;
 };
 
-struct getpeername_arg_s{
+struct getpeername_arg_s {
   int sockfd;
   struct sockaddr_in in;
-  void* sockaddr_dest;
+  void *sockaddr_dest;
   socklen_t len;
-  void* len_dest;
+  void *len_dest;
   int ret;
 };
 
 
-struct time_arg_s{
+struct time_arg_s {
   time_t ret;
 };
 
-struct gettimeofday_arg_s{
+struct gettimeofday_arg_s {
   int ret;
   struct timeval *tv;
   struct timezone *tz;
 };
 
-struct clockgettime_arg_s{
+struct clockgettime_arg_s {
   int ret;
   struct timespec *tp;
 };
 
-typedef union{
+typedef union {
   connect_arg_s connect;
   bind_arg_s bind;
   accept_arg_s accept;

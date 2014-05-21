@@ -2,24 +2,24 @@
 #define INCLUDE_PARSER_H
 
 typedef struct {
-  char* process_name;
-  char* executable;
+  char *process_name;
+  char *executable;
   double launching_time;
-  char** command_line_argument;
+  char **command_line_argument;
   int argument_nbr;
-}launcher_procdesc;
+} launcher_procdesc;
 
-launcher_procdesc** proc_list;
+launcher_procdesc **proc_list;
 
 
 
-void parse_deployment_file(const char* filename);
+void parse_deployment_file(const char *filename);
 
-void destruct_process_descriptor(launcher_procdesc* proc);
+void destruct_process_descriptor(launcher_procdesc * proc);
 
-char** parser_get_commandline(int numero);
+char **parser_get_commandline(int numero);
 
-char* parser_get_workstation(int numero);
+char *parser_get_workstation(int numero);
 
 double parser_get_start_time(int numero);
 

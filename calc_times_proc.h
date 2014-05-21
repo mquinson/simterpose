@@ -1,4 +1,4 @@
-#ifndef __CALC_TIMES_PROC_H_ 
+#ifndef __CALC_TIMES_PROC_H_
 #define __CALC_TIMES_PROC_H_
 
 #include "sysdep.h"
@@ -22,7 +22,7 @@ int init_cputime();
 
 int finish_cputime();
 
-int ask_time(int tid, long long int* times);
+int ask_time(int tid, long long int *times);
 
 
 #endif

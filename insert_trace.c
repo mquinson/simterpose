@@ -20,15 +20,14 @@ int calculate_computation_time(int pid)
     exit(1);
   } else {
     process_descriptor *proc = process_get_descriptor(pid);
-    long long int diff_cpu=0;
+    long long int diff_cpu = 0;
 
     // On crée la tache seulement si le temps a avancé
-    if((diff_cpu=process_update_cputime(proc,times_syscall[1]+times_syscall[2])) > 0)
-    {
+    if ((diff_cpu = process_update_cputime(proc, times_syscall[1] + times_syscall[2])) > 0) {
       //process_descriptor* proc = process_get_descriptor(pid);
-      double amount = (diff_cpu/global_data->micro_s_per_flop);
+      double amount = (diff_cpu / global_data->micro_s_per_flop);
       //fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
-      
+
       SD_task_t comp_task = create_computation_task(pid, amount);
       proc->last_computation_task = comp_task;
       return 1;
@@ -42,9 +41,9 @@ int calculate_computation_time(int pid)
 // char * trace_header(int pid, char * syscall) {
 //   process_descriptor* proc = process_get_descriptor(pid);
 // #if defined(DEBUG)
-// 	sprintf(buftrace, "%8s %12s", proc->name, syscall);
+//      sprintf(buftrace, "%8s %12s", proc->name, syscall);
 // #else
-// 	sprintf(buftrace, "%s %s", proc->name, syscall);
+//      sprintf(buftrace, "%s %s", proc->name, syscall);
 // #endif
 //     return buftrace;
 // }

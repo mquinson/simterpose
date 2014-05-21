@@ -1,7 +1,7 @@
 #ifndef INCLUDED_SYSCALL_PROCESS
 #define INCLUDED_SYSCALL_PROCESS
 
-#include <sys/types.h> //for pid_t
+#include <sys/types.h>          //for pid_t
 #include "ptrace_utils.h"
 #include "syscall_data.h"
 
@@ -16,9 +16,9 @@
 
 #define RECV_CLOSE              10
 
-int process_send_call(pid_t pid, syscall_arg_u* sysarg);
+int process_send_call(pid_t pid, syscall_arg_u * sysarg);
 
-int process_recv_call(pid_t pid, syscall_arg_u* sysarg);
+int process_recv_call(pid_t pid, syscall_arg_u * sysarg);
 
 int process_fork_call(pid_t pid);
 
@@ -30,6 +30,6 @@ int process_handle_idle(pid_t pid);
 
 int process_handle_mediate(pid_t pid);
 
-int process_clone_call(pid_t pid, reg_s *arg);
+int process_clone_call(pid_t pid, reg_s * arg);
 
 #endif

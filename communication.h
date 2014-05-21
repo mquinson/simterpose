@@ -17,13 +17,13 @@ typedef comm_s *comm_t;
 #include "simdag/simdag.h"
 #include <sys/types.h>
 
-typedef struct{
-  struct infos_socket* socket;
+typedef struct {
+  struct infos_socket *socket;
   recv_information *recv;
-}comm_info;
+} comm_info;
 
 
-struct comm_s{
+struct comm_s {
   unsigned int remote_ip;
   int remote_port;
   comm_info info[2];
@@ -36,18 +36,18 @@ void init_comm();
 void comm_exit();
 
 //Create a new communication and register socket passed into
-comm_t comm_new(struct infos_socket* socket);
+comm_t comm_new(struct infos_socket *socket);
 
-comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket* is);
+comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket *is);
 
 //Add a socket to a communication
-void comm_join_on_accept(struct infos_socket* socket, pid_t pid, int fd_listen);
+void comm_join_on_accept(struct infos_socket *socket, pid_t pid, int fd_listen);
 
-struct infos_socket* comm_get_peer(struct infos_socket* is);
+struct infos_socket *comm_get_peer(struct infos_socket *is);
 
-recv_information* comm_get_own_recv(struct infos_socket* is);
+recv_information *comm_get_own_recv(struct infos_socket *is);
 
-recv_information* comm_get_peer_recv(struct infos_socket* is);
+recv_information *comm_get_peer_recv(struct infos_socket *is);
 
 void comm_set_state(comm_t comm, int new_state);
 
@@ -57,20 +57,20 @@ void comm_set_listen(comm_t comm);
 
 int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int device);
 
-pid_t comm_accept_connect(struct infos_socket* is, struct sockaddr_in *in);
+pid_t comm_accept_connect(struct infos_socket *is, struct sockaddr_in *in);
 
-int comm_get_socket_state(struct infos_socket* is);
+int comm_get_socket_state(struct infos_socket *is);
 
 //Indicate if theres process which wait for connection on this socket
-int comm_has_connect_waiting(struct infos_socket* is);
+int comm_has_connect_waiting(struct infos_socket *is);
 
-void comm_close(struct infos_socket* is);
+void comm_close(struct infos_socket *is);
 
-void comm_send_data(struct infos_socket *is, task_comm_info *tci);
+void comm_send_data(struct infos_socket *is, task_comm_info * tci);
 
-task_comm_info* comm_get_send(struct infos_socket* is);
+task_comm_info *comm_get_send(struct infos_socket *is);
 
-int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t* sock);
+int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t * sock);
 
 void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in);
 

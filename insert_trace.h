@@ -1,4 +1,4 @@
-#ifndef __INSERT_TRACE_H_ 
+#ifndef __INSERT_TRACE_H_
 #define __INSERT_TRACE_H_
 
 #include <sys/types.h>

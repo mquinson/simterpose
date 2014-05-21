@@ -1,9 +1,9 @@
-#ifndef __PEEK_DATA_H 
+#ifndef __PEEK_DATA_H
 #define __PEEK_DATA_H
 
 #include <sys/types.h>
 
-typedef struct{
+typedef struct {
   unsigned long reg_orig;
   unsigned long ret;
   unsigned long arg1;
@@ -12,18 +12,18 @@ typedef struct{
   unsigned long arg4;
   unsigned long arg5;
   unsigned long arg6;
-}reg_s;
+} reg_s;
 
 
-void ptrace_cpy(pid_t child, void * dst, void * src, size_t len, char *syscall);
+void ptrace_cpy(pid_t child, void *dst, void *src, size_t len, char *syscall);
 
-void ptrace_poke(pid_t pid, void* dst, void* src, size_t len);
+void ptrace_poke(pid_t pid, void *dst, void *src, size_t len);
 
 void ptrace_resume_process(const pid_t pid);
 
 void ptrace_detach_process(const pid_t pid);
 
-void ptrace_get_register(const pid_t pid, reg_s* arg);
+void ptrace_get_register(const pid_t pid, reg_s * arg);
 
 unsigned long ptrace_get_pid_fork(const pid_t pid);
 
@@ -43,4 +43,3 @@ int ptrace_record_socket(pid_t pid);
 int ptrace_find_free_binding_port(const pid_t pid);
 
 #endif
-
