@@ -146,6 +146,10 @@ void move_mediate_to_sched()
 
 int main(int argc, char *argv[]) { 
 
+   uid_t uid=getuid(), euid=geteuid();
+   if (uid>0 && uid==euid)
+      xbt_die("Simterpose must be run with the super-user privileges.");
+
 xbt_log_control_set("ST.:info"); /*
 
 xbt_log_control_set("RUN_TRACE.:debug"); 
