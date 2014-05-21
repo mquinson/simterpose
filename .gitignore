@@ -32,7 +32,7 @@ applications/server_read_asym
 applications/test
 
 launcher
-run_trace
+simterpose
 ptrace_temps/svg
 ptrace_temps/temps
 ptrace_temps/timetravel

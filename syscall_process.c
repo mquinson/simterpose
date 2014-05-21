@@ -2,7 +2,7 @@
 #include "syscall_data.h"
 #include "insert_trace.h"
 #include "sockets.h"
-#include "run_trace.h"
+#include "simterpose.h"
 #include "data_utils.h"
 #include "ptrace_utils.h"
 #include "process_descriptor.h"

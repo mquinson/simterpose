@@ -1,4 +1,4 @@
-#include "run_trace.h"
+#include "simterpose.h"
 #include "data_utils.h"
 #include "process_descriptor.h"
 #include "xbt.h"

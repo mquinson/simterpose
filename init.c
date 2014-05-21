@@ -1,5 +1,5 @@
 #include "parser.h"             /* for launcher proc desc */
-#include "run_trace.h"
+#include "simterpose.h"
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
 #include "xbt.h"

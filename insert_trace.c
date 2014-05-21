@@ -4,7 +4,7 @@
 #include "sockets.h"
 #include "calc_times_proc.h"
 #include "process_descriptor.h"
-#include "run_trace.h"
+#include "simterpose.h"
 #include "simdag/simdag.h"
 
 char buftrace[512];

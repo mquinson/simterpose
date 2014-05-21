@@ -1,4 +1,4 @@
-OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o run_trace.o benchmark.o syscall_process.o \
+OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o simterpose.o benchmark.o syscall_process.o \
 	data_utils.o task.o parser.o init.o communication.o print_syscall.o
 
 CFLAGS = -Wall -g -I/opt/simgrid/include/ 
@@ -6,12 +6,12 @@ CC=gcc
 
 LDFLAGS= -L/opt/simgrid/lib/ -lsimgrid -lm
 
-all : run_trace launcher
+all : simterpose launcher
 
-run_trace: $(OBJS)
+simterpose: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)
 
-run_trace.o: run_trace.c run_trace.h calc_times_proc.h process_descriptor.h  init.h\
+simterpose.o: simterpose.c simterpose.h calc_times_proc.h process_descriptor.h  init.h\
 		data_utils.h parser.h communication.h syscall_process.h  print_syscall.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -24,25 +24,25 @@ benchmark.o: benchmark.c benchmark.h calc_times_proc.h
 calc_times_proc.o: calc_times_proc.c calc_times_proc.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-insert_trace.o: insert_trace.c insert_trace.h sockets.h calc_times_proc.h process_descriptor.h run_trace.h \
+insert_trace.o: insert_trace.c insert_trace.h sockets.h calc_times_proc.h process_descriptor.h simterpose.h \
 		task.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 ptrace_utils.o: ptrace_utils.c ptrace_utils.h sysdep.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-process_descriptor.o: process_descriptor.c process_descriptor.h run_trace.h sockets.h data_utils.h
+process_descriptor.o: process_descriptor.c process_descriptor.h simterpose.h sockets.h data_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h run_trace.h ptrace_utils.h \
+syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h simterpose.h ptrace_utils.h \
 		process_descriptor.h args_trace.h task.h communication.h syscall_list.h print_syscall.h\
 		syscall_data.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-data_utils.o : data_utils.c data_utils.h run_trace.h sysdep.h process_descriptor.h
+data_utils.o : data_utils.c data_utils.h simterpose.h sysdep.h process_descriptor.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-task.o: task.c task.h run_trace.h data_utils.h sockets.h process_descriptor.h communication.h
+task.o: task.c task.h simterpose.h data_utils.h sockets.h process_descriptor.h communication.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 parser.o: parser.c parser.h
@@ -51,11 +51,11 @@ parser.o: parser.c parser.h
 print_syscall.o: print_syscall.c print_syscall.h syscall_data.h sockets.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-init.o: init.c init.h parser.h process_descriptor.h run_trace.h ptrace_utils.h data_utils.h\
+init.o: init.c init.h parser.h process_descriptor.h simterpose.h ptrace_utils.h data_utils.h\
 		calc_times_proc.h benchmark.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-sockets.o: sockets.c sockets.h run_trace.h sysdep.h task.h insert_trace.h communication.h
+sockets.o: sockets.c sockets.h simterpose.h sysdep.h task.h insert_trace.h communication.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 communication.o: communication.c communication.h sockets.h
@@ -83,6 +83,6 @@ run_benchmark.o: run_benchmark.c
 #################################################
 
 clean:
-	rm -rf run_trace benchmark launcher *.o
+	rm -rf simterpose benchmark launcher *.o
 
 

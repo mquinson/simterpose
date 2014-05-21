@@ -55,7 +55,7 @@ struct fd_s {
 #include "args_trace.h"
 #include "simdag/simdag.h"
 #include "sockets.h"
-#include "run_trace.h"
+#include "simterpose.h"
 
 #include <sys/types.h>
 

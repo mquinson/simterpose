@@ -2,7 +2,7 @@
 #include "sysdep.h"
 #include "xbt.h"
 #include "xbt/log.h"
-#include "run_trace.h"
+#include "simterpose.h"
 #include "syscall_list.h"
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_UTILS, ST, "ptrace utils log");

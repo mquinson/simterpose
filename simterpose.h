@@ -1,5 +1,12 @@
-#ifndef INCLUDE_RUN_TRACE_H
-#define INCLUDE_RUN_TRACE_H
+/* simterpose.h -- main configurations of simterpose                       */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
+#ifndef SIMTERPOSE_H
+#define SIMTERPOSE_H
 
 //#define address_translation
 

@@ -1,3 +1,10 @@
+/* simterpose -- main launcher of simterpose                               */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
 #include <unistd.h>
 #include <float.h>
 #include <math.h>
@@ -5,9 +12,10 @@
 #include "args_trace.h"
 #include "calc_times_proc.h"
 #include "process_descriptor.h"
-#include "run_trace.h"
-#include "xbt/fifo.h"
-#include "xbt/log.h"
+#include "simterpose.h"
+#include <xbt/ex.h>
+#include <xbt/fifo.h>
+#include <xbt/log.h>
 #include "data_utils.h"
 #include "parser.h"
 #include "init.h"

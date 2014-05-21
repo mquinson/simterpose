@@ -18,7 +18,7 @@ struct infos_socket;
 #include "sysdep.h"
 #include "xbt.h"
 #include "xbt/fifo.h"
-#include "run_trace.h"
+#include "simterpose.h"
 #include "communication.h"
 #include "syscall_data.h"
 #include "process_descriptor.h"

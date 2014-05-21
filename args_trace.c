@@ -5,7 +5,7 @@
 #include "sockets.h"
 #include "sysdep.h"
 #include "data_utils.h"
-#include "run_trace.h"
+#include "simterpose.h"
 #include <sys/uio.h>
 #include "xbt/log.h"
 
