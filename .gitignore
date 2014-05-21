@@ -37,29 +37,16 @@ ptrace_temps/svg
 ptrace_temps/temps
 ptrace_temps/timetravel
 
-#ptrace_utils.c#
-.mylogfile_addresstranslation.txt.swp
 Testing/
 perf.data
-perf.data.old
-ptrace_temps/gmon.out
-ptrace_temps/old/
-ptrace_temps/perf.data
-ptrace_temps/perf.data.old
-run_trace.old
-taches.org
 
 LogDebug*
 *.tar.gz
 *~
 *.so
-SimGrid-3.9/
-libowfat/
 opentracker/
 Uprobes/
 LD_PRELOAD/
 addressVsFull/
 tests/Testing/
 torrents/
-SimGrid-3.9/src/simdag/sd_global.c
-SimGrid-3.9/src/simdag/sd_task.c
