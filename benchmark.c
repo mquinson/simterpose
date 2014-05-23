@@ -5,7 +5,7 @@
 
 #include "calc_times_proc.h"
 
-#define NOMBRE_BOUCLE 10000000
+#define LOOP_AMOUNT 10000000
 #define OPERATION_PER_LOOP 4
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(BENCHMARK, ST, "benchmark log");
@@ -26,7 +26,7 @@ int start_benchmark(float *flop_per_sec, float *ms_per_flop)
     float a = rand() % 20;
     float b = rand() % 40;
     float c = rand() % 47;
-    for (i = NOMBRE_BOUCLE; i >= 0; --i) {
+    for (i = LOOP_AMOUNT; i >= 0; --i) {
       b = (float) (a * c);
       b = (float) (a + c);
       b = (float) (a - b);
@@ -36,7 +36,7 @@ int start_benchmark(float *flop_per_sec, float *ms_per_flop)
     result = (times[1] + times[2]) - initialTime;
     XBT_DEBUG("Duration of benchmark : %lld", result);
 
-    *ms_per_flop = ((float) result) / (NOMBRE_BOUCLE * OPERATION_PER_LOOP);
+    *ms_per_flop = ((float) result) / (LOOP_AMOUNT * OPERATION_PER_LOOP);
     *flop_per_sec = (1000000.) / (*ms_per_flop);
 
     XBT_DEBUG("Result for benchmark : %f -> (%f flops)", *ms_per_flop, *flop_per_sec);
