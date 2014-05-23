@@ -19,8 +19,8 @@ extern xbt_cfg_t _sg_cfg_set;
 
 void init_station_list()
 {
-  xbt_dict_t list_s = spose_get_station_list();
-  xbt_dict_t list_ip = spose_get_ip_list();
+  xbt_dict_t list_s = simterpose_get_station_list();
+  xbt_dict_t list_ip = simterpose_get_ip_list();
 
   xbt_dynar_t no_ip_list = xbt_dynar_new(sizeof(int), NULL);
   xbt_dynar_t ip_list = xbt_dynar_new(sizeof(unsigned int), NULL);

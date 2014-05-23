@@ -9,7 +9,7 @@
 #include <sys/uio.h>
 #include "xbt/log.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, ST, "args trace log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, SIMTERPOSE, "args trace log");
 
 void get_args_socket(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
 {

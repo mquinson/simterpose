@@ -4,7 +4,7 @@
 #include "xbt/log.h"
 #include "simterpose.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_UTILS, ST, "ptrace utils log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_UTILS, SIMTERPOSE, "ptrace utils log");
 
 static char *syscall_list[] =
     { "read", "write", "open", "close", "stat", "fstat", "lstat", "poll", "lseek", "mmap", "mprotect", "munmap", "brk",

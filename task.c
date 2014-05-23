@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include "xbt/log.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, ST, "task log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, SIMTERPOSE, "task log");
 
 //Contains all informations necessary to make receive task when happen with passing only the info_socket
 

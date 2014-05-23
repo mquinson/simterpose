@@ -8,7 +8,7 @@
 #define LOOP_AMOUNT 10000000
 #define OPERATION_PER_LOOP 4
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(BENCHMARK, ST, "benchmark log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(BENCHMARK, SIMTERPOSE, "benchmark log");
 
 
 int start_benchmark(float *flop_per_sec, float *ms_per_flop)

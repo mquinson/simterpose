@@ -20,7 +20,7 @@
 #define SYSCALL_ARG1 rdi
 #define DEBUG
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, ST, "Syscall process log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process log");
 
 int process_accept_in_call(pid_t pid, syscall_arg_u * sysarg);
 int process_recv_in_call(int pid, int fd);

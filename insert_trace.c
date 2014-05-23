@@ -22,7 +22,7 @@ int calculate_computation_time(int pid)
   // On crée la tache seulement si le temps a avancé
   if ((diff_cpu = process_update_cputime(proc, times_syscall[1] + times_syscall[2])) > 0) {
 	  //process_descriptor* proc = process_get_descriptor(pid);
-	  double amount = (diff_cpu / spose_get_msec_per_flop());
+	  double amount = (diff_cpu / simterpose_get_msec_per_flop());
 	  //fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
 
 	  SD_task_t comp_task = create_computation_task(pid, amount);

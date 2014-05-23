@@ -26,8 +26,8 @@
 
 #define BUFFER_SIZE 512
 
-XBT_LOG_NEW_CATEGORY(ST, "Simterpose log");
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(RUN_TRACE, ST, "run_trace debug");
+XBT_LOG_NEW_CATEGORY(SIMTERPOSE, "Simterpose log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(RUN_TRACE, SIMTERPOSE, "run_trace debug");
 
 /* A little handler for the Ctrl-C */
 static void sigint_handler(int sig)
@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
   if (uid > 0 && uid == euid)
     xbt_die("Simterpose must be run with the super-user privileges.");
 
-  xbt_log_control_set("ST.:info");
+  xbt_log_control_set("SIMTERPOSE.:info");
   //xbt_log_control_set("RUN_TRACE.:debug");
   //xbt_log_control_set("BENCHMARK.:debug");
   //xbt_log_control_set("ARGS_TRACE.:debug");

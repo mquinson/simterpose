@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "xbt/log.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION, ST, "communication log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION, SIMTERPOSE, "communication log");
 
 xbt_dynar_t comm_list;
 
