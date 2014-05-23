@@ -20,7 +20,7 @@ insert_trace.o: insert_trace.c insert_trace.h sockets.h calc_times_proc.h proces
 ptrace_utils.o: ptrace_utils.c ptrace_utils.h sysdep.h
 process_descriptor.o: process_descriptor.c process_descriptor.h simterpose.h sockets.h data_utils.h
 syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h simterpose.h ptrace_utils.h \
-		process_descriptor.h args_trace.h task.h communication.h syscall_list.h print_syscall.h\
+		process_descriptor.h args_trace.h task.h communication.h print_syscall.h\
 		syscall_data.h
 data_utils.o : data_utils.c data_utils.h simterpose.h sysdep.h process_descriptor.h
 task.o: task.c task.h simterpose.h data_utils.h sockets.h process_descriptor.h communication.h

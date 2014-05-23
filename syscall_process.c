@@ -13,7 +13,6 @@
 #include "xbt/log.h"
 #include "communication.h"
 #include "print_syscall.h"
-#include "syscall_list.h"
 
 #include <time.h>
 #include <linux/futex.h>
