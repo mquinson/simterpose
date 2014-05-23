@@ -74,18 +74,13 @@ static void parse_processes(sg_platf_process_cbarg_t args)
 
 void parse_deployment_file(const char *filename)
 {
-  xbt_ex_t e;
-
   surf_parse_reset_callbacks();
   sg_platf_process_add_cb(parse_processes);
 
   surf_parse_open(filename);
-  TRY {
-    int parse_status = surf_parse();
-    surf_parse_close();
-    xbt_assert(!parse_status, "Parse error at %s", filename);
-  } CATCH(e) {
-  }
+  int parse_status = surf_parse();
+  surf_parse_close();
+  xbt_assert(!parse_status, "Parse error at %s", filename);
 
   qsort(proc_list, proc_amount, sizeof(launcher_procdesc *), compare_time);
 }
