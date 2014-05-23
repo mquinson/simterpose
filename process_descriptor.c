@@ -35,6 +35,26 @@ process_descriptor *process_descriptor_new(char *name, pid_t pid)
   for (i = 0; i < MAX_FD; ++i)
     result->fd_list[i] = NULL;
 
+  // Initialize stdin, stdout, stderr
+  fd_descriptor *file_desc = malloc(sizeof(fd_descriptor));
+  file_desc->type = FD_STDIN;
+  file_desc->proc = result;
+  file_desc->fd = 0;
+  result->fd_list[0] = file_desc;
+
+  file_desc = malloc(sizeof(fd_descriptor));
+  file_desc->type = FD_STDOUT;
+  file_desc->proc = result;
+  file_desc->fd = 1;
+  result->fd_list[1] = file_desc;
+
+  file_desc = malloc(sizeof(fd_descriptor));
+  file_desc->type = FD_STDERR;
+  file_desc->proc = result;
+  file_desc->fd = 2;
+  result->fd_list[2] = file_desc;
+
+
   result->station = SD_workstation_get_by_name(result->name);
 
   return result;

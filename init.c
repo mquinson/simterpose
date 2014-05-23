@@ -287,25 +287,6 @@ void start_processes()
       run_until_exec(new_pid);
       process_set_in_syscall(proc);
 
-
-      fd_descriptor *file_desc = malloc(sizeof(fd_descriptor));
-      file_desc->type = FD_STDIN;
-      file_desc->proc = proc;
-      file_desc->fd = 0;
-      proc->fd_list[0] = file_desc;
-
-      file_desc = malloc(sizeof(fd_descriptor));
-      file_desc->type = FD_STDOUT;
-      file_desc->proc = proc;
-      file_desc->fd = 1;
-      proc->fd_list[1] = file_desc;
-
-      file_desc = malloc(sizeof(fd_descriptor));
-      file_desc->type = FD_STDERR;
-      file_desc->proc = proc;
-      file_desc->fd = 2;
-      proc->fd_list[2] = file_desc;
-
       add_launching_time(new_pid, parser_get_start_time(amount_process_launch));
 
       ++amount_process_launch;
