@@ -4,7 +4,7 @@
 #include <sys/types.h>
 
 #include "parser.h"
-#include "xbt.h"
+#include <xbt.h>
 #include "surf/surfxml_parse.h"
 #include "simgrid/platf.h"
 
@@ -35,19 +35,17 @@ static int compare_time(const void *proc1, const void *proc2)
     return 1;
 }
 
-
+// FIXME: dupplicated code
 static double parse_double(const char *string)
 {
-  double value;
   char *endptr;
-
-  value = strtod(string, &endptr);
-  if (*endptr != '\0')
-    THROWF(unknown_error, 0, "%s is not a double", string);
+  double value = strtod(string, &endptr);
+  xbt_assert(*endptr == '\0', "%s is not a double", string);
   return value;
 }
 
-static void parse_processes(void)
+// FIXME: Don't use flexml data but args
+static void parse_processes(sg_platf_process_cbarg_t args)
 {
   // init
   proc = malloc(sizeof(launcher_procdesc));

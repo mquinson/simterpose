@@ -372,7 +372,6 @@ translate_desc *get_translation(int real_port)
 
 int get_real_port(pid_t pid, unsigned int ip, int port)
 {
-  struct in_addr in = { ip };
 //   printf("Searching for ral port of %s:%d\n", inet_ntoa(in), port);
   simterpose_station *temp = NULL;
   if (ip == inet_addr("127.0.0.1")) {

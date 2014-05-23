@@ -877,7 +877,8 @@ void print_time_syscall(pid_t pid, syscall_arg_u * sysarg)
 
 void print_gettimeofday_syscall(pid_t pid, syscall_arg_u * sysarg)
 {
-  gettimeofday_arg_t arg = &(sysarg->gettimeofday);
+  //gettimeofday_arg_t arg = &(sysarg->gettimeofday);
   //  fprintf(stderr,"[%d] gettimeofday, tv = %ld\n", pid, arg->tv);
-  fprintf(stderr, "gettimeofday, tv = %ld\n", arg->tv);
+  //fprintf(stderr, "gettimeofday, tv = %ld\n", arg->tv);
+  THROW_UNIMPLEMENTED;
 }

@@ -1,7 +1,7 @@
 OBJS = args_trace.o calc_times_proc.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o simterpose.o benchmark.o syscall_process.o \
 	data_utils.o task.o parser.o init.o communication.o print_syscall.o
 
-CFLAGS = -Wall -g -I/opt/simgrid/include/ 
+CFLAGS = -Wall -Werror -g -I/opt/simgrid/include/ 
 CC=gcc
 
 LDFLAGS= -L/opt/simgrid/lib/ -lsimgrid -lm
