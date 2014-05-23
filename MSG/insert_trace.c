@@ -14,10 +14,7 @@ long long int times_syscall[3];
 int calculate_computation_time(int pid)
 {
   // printf("entering calculate_computation_time \n");
-  if (ask_time(pid, times_syscall)) {
-    perror("Error ask_time");
-    exit(1);
-  } else {
+  cputimer_get(pid, times_syscall);
     process_descriptor *proc = process_get_descriptor(pid);
     long long int diff_cpu=0;
 
@@ -32,7 +29,6 @@ int calculate_computation_time(int pid)
       proc->last_computation_task = comp_task;
       return 1;
     }
-  }
   return 0;
 }
 

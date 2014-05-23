@@ -18,11 +18,11 @@
  */
 
 
-int init_cputime();
+void cputimer_init();
 
-int finish_cputime();
+void cputimer_exit();
 
-int ask_time(int tid, long long int *times);
+void cputimer_get(int tid, long long int *times);
 
 
 #endif

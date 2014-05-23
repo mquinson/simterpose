@@ -1,5 +1,5 @@
 #include "calc_times_proc.h"
-#include "xbt/log.h"
+#include <xbt.h>
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CALC_TIMES_PROC, ST, "calc times proc log");
 
@@ -13,11 +13,6 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CALC_TIMES_PROC, ST, "calc times proc log");
 #define GENLMSG_PAYLOAD(glh)	(NLMSG_PAYLOAD(glh, 0) - GENL_HDRLEN)
 #define NLA_DATA(na)		((void *)((char*)(na) + NLA_HDRLEN))
 #define NLA_PAYLOAD(len)	(len - NLA_HDRLEN)
-
-#define err(fmt, arg...)			\
-  do {						\
-    fprintf(stderr, fmt, ##arg);		\
-  } while (0)
 
 /* Maximum size of response requested or message sent */
 #define MAX_MSG_SIZE	1024
@@ -131,60 +126,38 @@ static int _nl_sd;
 static __u16 _id;
 
 /* initialization */
-int init_cputime()
+void cputimer_init()
 {
+  _nl_sd = create_nl_socket(NETLINK_GENERIC);
+  xbt_assert(_nl_sd >=0, "error creating Netlink socket to retrieve the time");
 
-  if ((_nl_sd = create_nl_socket(NETLINK_GENERIC)) < 0) {
-    err("error creating Netlink socket\n");
-    return -1;
-  }
-  pid = getpid();
   _id = get_family_id(_nl_sd);
+  xbt_assert(_id, "Error getting family id, errno %d\n", errno);
+
   memset(&msg, 0, sizeof(struct msgtemplate));
-  if (!_id) {
-    err("Error getting family id, errno %d\n", errno);
-    return -1;
-  }
-  return 0;
 }
 
 /* cleaning up */
-int finish_cputime()
+void cputimer_exit()
 {
   close(_nl_sd);
-  return 0;
 }
 
-int ask_time(int tid, long long int *times)
+void cputimer_get(int tid, long long int *times)
 {
-  int res = -2;
   struct msgtemplate msg;
   int rep_len;
   struct nlattr *na;
-  int cmd_type = TASKSTATS_CMD_ATTR_PID;
   struct taskstats *stats;
 
-  int rc = send_cmd(_nl_sd, _id, pid, TASKSTATS_CMD_GET,
-                    cmd_type, &tid, sizeof(__u32));
-  if (rc < 0) {
-    XBT_ERROR("error sending tid/tgid cmd\n");
-    return -1;
-  }
+  int rc = send_cmd(_nl_sd, _id, pid, TASKSTATS_CMD_GET,  TASKSTATS_CMD_ATTR_PID, &tid, sizeof(__u32));
+  xbt_assert(rc>=0, "Error while sending a command to the netlink socket: %s", strerror(errno));
 
   rep_len = recv(_nl_sd, &msg, sizeof(msg), 0);
+  xbt_assert(rep_len>=0, "error while receiving the answer from netlink socket: %s\n", strerror(errno));
 
-  if (rep_len < 0) {
-    XBT_ERROR("error: %d\n", errno);
-    return -1;
-  }
-
-  if (msg.n.nlmsg_type == NLMSG_ERROR || !NLMSG_OK((&msg.n), rep_len)) {
-//FIXME si root, on ne rentre pas dans cette erreur. Sinon, on déclenche la segfault (msg.n.nlmsg_type == NLMSG_ERROR)
-//     struct nlmsgerr *err = NLMSG_DATA(&msg);
-    XBT_ERROR("fatal reply error,  errno  %s\n", strerror(errno));
-    *(int *) 0 = 0;
-    return -1;
-  }
+  xbt_assert( (msg.n.nlmsg_type != NLMSG_ERROR && NLMSG_OK((&msg.n), rep_len)) ,
+    	"received a fatal error from the netlink socket: %s", strerror(errno));
 
   rep_len = GENLMSG_PAYLOAD(&msg.n);
 
@@ -209,7 +182,6 @@ int ask_time(int tid, long long int *times)
           //times[0] = (long long int)stats->ac_etime;
           times[1] = (long long int) stats->ac_utime;
           times[2] = (long long int) stats->ac_stime;
-          res = 0;
           break;
         default:
           XBT_ERROR("Unknown nested" " nla_type %d\n", na->nla_type);
@@ -225,6 +197,4 @@ int ask_time(int tid, long long int *times)
     }
     na = (struct nlattr *) (GENLMSG_DATA(&msg) + len);
   }
-
-  return res;
 }

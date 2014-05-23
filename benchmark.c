@@ -14,13 +14,13 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(BENCHMARK, ST, "benchmark log");
 int start_benchmark(float *flop_per_sec, float *ms_per_flop)
 {
   srand(time(NULL));
-  init_cputime();
+  cputimer_init();
   long long int times[3];
   long long int result;
   pid_t pid = getpid();
   XBT_DEBUG("Starting benchmark for %d", pid);
 
-  if (!ask_time(pid, times)) {
+  cputimer_get(pid, times);
     long long int initialTime = times[1] + times[2];
     int i;
     float a = rand() % 20;
@@ -32,7 +32,7 @@ int start_benchmark(float *flop_per_sec, float *ms_per_flop)
       b = (float) (a - b);
       b = (float) (a / c);
     }
-    ask_time(pid, times);
+    cputimer_get(pid, times);
     result = (times[1] + times[2]) - initialTime;
     XBT_DEBUG("Duration of benchmark : %lld", result);
 
@@ -41,14 +41,7 @@ int start_benchmark(float *flop_per_sec, float *ms_per_flop)
 
     XBT_DEBUG("Result for benchmark : %f -> (%f flops)", *ms_per_flop, *flop_per_sec);
 
-  } else {
-    XBT_DEBUG("Unable to have system time");
-
-    return -1;
-  }
-
-
-  finish_cputime();
+  cputimer_exit();
 
   return EXIT_SUCCESS;
 }
@@ -68,6 +61,7 @@ int benchmark_matrix_product(float *flop_per_sec, float *ms_per_flop)
   float **matrix2 = malloc(sizeof(float *) * matrixSize);
   float **matrix_result = malloc(sizeof(float *) * matrixSize);
 
+  // Warmup the caches
   for (i = 0; i < matrixSize; ++i) {
     matrix1[i] = malloc(sizeof(float) * matrixSize);
     matrix2[i] = malloc(sizeof(float) * matrixSize);
@@ -84,9 +78,10 @@ int benchmark_matrix_product(float *flop_per_sec, float *ms_per_flop)
 
   pid_t pid = getpid();
 
-  init_cputime();
+  cputimer_init();
 
-  if (!ask_time(pid, times)) {
+  // run the experiment for real
+  cputimer_get(pid, times);
     long long int initialTime = times[1] + times[2];
     int i_result, j_result;
 
@@ -100,7 +95,7 @@ int benchmark_matrix_product(float *flop_per_sec, float *ms_per_flop)
     }
 
 
-    ask_time(pid, times);
+    cputimer_get(pid, times);
     result = (times[1] + times[2]) - initialTime;
     XBT_DEBUG("Duration of benchmark : %lld", result);
 
@@ -109,9 +104,8 @@ int benchmark_matrix_product(float *flop_per_sec, float *ms_per_flop)
 
     XBT_DEBUG("Result for benchmark : %f -> (%f flops)", *ms_per_flop, *flop_per_sec);
 
-  }
 
-  finish_cputime();
+  cputimer_exit();
 
   return EXIT_SUCCESS;
 }

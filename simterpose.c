@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
   } while (child_amount);       //i);//
 
 
-  finish_cputime();
+  cputimer_exit();
 
   XBT_INFO("End of simulation. Time : %lf", SD_get_clock());
 #ifdef address_translation
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
   xbt_dynar_free(&mediate_list);
   comm_exit();
   socket_exit();
-  finish_cputime();
+  cputimer_exit();
   printf("End of simulation\n");
   return 0;
 }

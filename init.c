@@ -136,7 +136,7 @@ void simterpose_init(int argc, char **argv)
 
   init_socket_gestion();
   init_comm();
-  init_cputime();               // creates socket
+  cputimer_init();               // creates socket
 
   SD_create_environment(argv[optind]);
   parse_deployment_file(argv[optind + 1]);
