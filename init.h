@@ -4,7 +4,7 @@
 //Init all simterpose
 void simterpose_init(int argc, char **argv);
 
-void init_all_process();
+void start_processes();
 
 
 #endif

@@ -6,55 +6,42 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "xbt.h"
+#include <xbt.h>
 #include "parser.h"
-//#include "xbt/str.h"
-//#include "xbt/dynar.h"
 
-FILE *comm_sim;
-
-char **get_command_line()
-{
-  char *buff = NULL;
-  size_t length;
-  getline(&buff, &length, comm_sim);
-  *(strrchr(buff, '\n')) = '\0';
-  xbt_dynar_t cmd_array = xbt_str_split(buff, NULL);
-  char **result = (char **) xbt_dynar_to_array(cmd_array);
-  return result;
-}
-
-void print_command_line(char **cmd)
-{
-  while (*cmd != NULL) {
-    printf("[%s] ", *cmd);
-    ++cmd;
-  }
-  printf("(end of command)\n");
-}
+FILE *pipe_to_simterpose;
 
 int main(int argc, char **argv)
 {
-  comm_sim = fdopen(3, "r");
+  pipe_to_simterpose = fdopen(0, "r");
 
-  int numero;
+  int amount;
   char *buff = NULL;
   size_t length = 0;
-  getline(&buff, &length, comm_sim);
-  sscanf(buff, "%d", &numero);
-  while (numero) {
-    char **cmd_line = get_command_line();
-//     print_command_line(cmd_line);
+
+  getline(&buff, &length, pipe_to_simterpose);
+  sscanf(buff, "%d", &amount);
+  fprintf(stderr,"launcher: %d processes to start\n",amount);
+
+  while (amount > 0) {
+    getline(&buff, &length, pipe_to_simterpose);
+    *(strrchr(buff, '\n')) = '\0';
+    xbt_dynar_t cmd_array = xbt_str_split(buff, NULL);
+    char *display_cmd_line = xbt_str_join(cmd_array," ");
+    char **cmd_line = (char **) xbt_dynar_to_array(cmd_array);
+    fprintf(stderr, "launcher: Starting child: %s\n", display_cmd_line);
+
     if (fork() == 0) {
-      fclose(comm_sim);
+      fclose(pipe_to_simterpose);
+
       if (execv(cmd_line[0], cmd_line) == -1) {
         fprintf(stderr, "%s : %s\n", strerror(errno), cmd_line[0]);
         exit(1);
       }
     }
-    --numero;
+    --amount;
   }
-  fclose(comm_sim);
+  fclose(pipe_to_simterpose);
   int status;
   while (wait(&status) > 0);
 

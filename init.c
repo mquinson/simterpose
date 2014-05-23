@@ -145,7 +145,7 @@ void simterpose_init(int argc, char **argv)
   parse_deployment_file(argv[optind + 1]);
 
   init_station_list();
-  init_all_process();
+  start_processes();
 }
 
 
@@ -199,7 +199,7 @@ void run_until_exec(pid_t pid)
 
 
 
-void init_all_process()
+void start_processes()
 {
   int status;
 
@@ -212,12 +212,12 @@ void init_all_process()
 
   if (launcherpid == 0) {
 
+    close(0);
+    dup2(comm_launcher[0], 0);
+
     close(comm_launcher[1]);
-    //Here to avoid non desire closing
-    if (comm_launcher[0] != 3) {
-      dup2(comm_launcher[0], 3);
-      close(comm_launcher[0]);
-    }
+    close(comm_launcher[0]);
+
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
       perror("ptrace traceme");
       exit(1);
@@ -233,11 +233,14 @@ void init_all_process()
 
     close(comm_launcher[0]);
 
-    // We wait for the child to be blocked by ptrace in the first exec()
+    // wait for the launcher child to be blocked by ptrace(TRACEME)
     waitpid(launcherpid, &status, 0);
+    if (WIFSIGNALED(status))
+    	XBT_ERROR("Launcher got a signal %d",WTERMSIG(status));
+    if (WIFEXITED(status))
+    	XBT_ERROR("Launched returned %d",WEXITSTATUS(status));
 
-
-    //We set option for trace all of this son
+    // Trace the launcher, and all its son
     if (ptrace
         (PTRACE_SETOPTIONS, launcherpid, NULL,
          PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE) == -1) {
@@ -255,7 +258,6 @@ void init_all_process()
     //We write the amount of process to launch for the launcher
     fprintf(launcher_pipe, "%d\n", amount);
     fflush(launcher_pipe);
-
 
     //Now we launch all process and let them blocked on the first syscall following the exec
     while (amount_process_launch < amount) {
