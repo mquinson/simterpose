@@ -29,7 +29,8 @@
 XBT_LOG_NEW_CATEGORY(ST, "Simterpose log");
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(RUN_TRACE, ST, "run_trace debug");
 
-void sig_int(int sig)
+/* A little handler for the Ctrl-C */
+static void sigint_handler(int sig)
 {
   XBT_ERROR("Interruption request by user");
   XBT_ERROR("Current time of simulation %lf", SD_get_clock());
@@ -158,17 +159,15 @@ int main(int argc, char *argv[])
   if (uid > 0 && uid == euid)
     xbt_die("Simterpose must be run with the super-user privileges.");
 
-  xbt_log_control_set("ST.:info");      /*
-
-                                           xbt_log_control_set("RUN_TRACE.:debug"); 
-                                           //xbt_log_control_set("BENCHMARK.:debug");
-                                           xbt_log_control_set("ARGS_TRACE.:debug"); */
-  xbt_log_control_set("SYSCALL_PROCESS.:debug");        /*
-                                                           xbt_log_control_set("CALC_TIMES_PROC.:error");
-                                                           xbt_log_control_set("COMMUNICATION.:debug"); */
-  xbt_log_control_set("TASK.:debug");   /*
-                                           xbt_log_control_set("PTRACE_UTILS.:debug");
-                                           // */
+  xbt_log_control_set("ST.:info");
+  //xbt_log_control_set("RUN_TRACE.:debug");
+  //xbt_log_control_set("BENCHMARK.:debug");
+  //xbt_log_control_set("ARGS_TRACE.:debug");
+  xbt_log_control_set("SYSCALL_PROCESS.:debug");
+  //xbt_log_control_set("CALC_TIMES_PROC.:error");
+  //xbt_log_control_set("COMMUNICATION.:debug");
+  xbt_log_control_set("TASK.:debug");
+  //xbt_log_control_set("PTRACE_UTILS.:debug");
 
   nb_peek = 0;
   nb_poke = 0;
@@ -182,15 +181,13 @@ int main(int argc, char *argv[])
 
   simterpose_init(argc, argv);
 
+  // Install our SIGINT handler
   struct sigaction nvt, old;
   memset(&nvt, 0, sizeof(nvt));
-  nvt.sa_handler = &sig_int;
-
+  nvt.sa_handler = &sigint_handler;
   sigaction(SIGINT, &nvt, &old);
 
   double time_to_simulate = 0;
-
-//   int indice = 10000;
 
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
