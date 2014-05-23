@@ -858,7 +858,7 @@ void process_fcntl_call(pid_t pid, syscall_arg_u* sysarg)
 void process_close_call(pid_t pid, int fd)
 {
   process_descriptor *proc = process_get_descriptor(pid);
-  fd_s *file_desc = proc->fd_list[fd];
+  fd_descriptor *file_desc = proc->fd_list[fd];
   if(file_desc->type == FD_SOCKET)
     socket_close(pid, fd);
   else
@@ -1476,7 +1476,7 @@ int process_handle(pid_t pid, int stat)
 //           printf(") = %ld\n", arg.ret);
           if((int)arg.ret >= 0)
           {
-            fd_s *file_desc = malloc(sizeof(fd_s));
+            fd_descriptor *file_desc = malloc(sizeof(fd_descriptor));
             file_desc->fd=(int)arg.ret;
             file_desc->proc=proc;
             file_desc->type = FD_CLASSIC;
@@ -1489,7 +1489,7 @@ int process_handle(pid_t pid, int stat)
         {
           if((int)arg.ret >= 0)
           {
-            fd_s *file_desc = malloc(sizeof(fd_s));
+            fd_descriptor *file_desc = malloc(sizeof(fd_descriptor));
             file_desc->fd=(int)arg.ret;
             file_desc->proc=proc;
             file_desc->type = FD_CLASSIC;

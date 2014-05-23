@@ -271,7 +271,7 @@ void start_processes()
 
         waitpid(launcherpid, &status, 0);
 
-        //try to found if it is a fork
+        // check if it's a fork
         int stat16 = status >> 16;
 
         if (stat16 == PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16 == PTRACE_EVENT_CLONE) {
@@ -288,19 +288,19 @@ void start_processes()
       process_set_in_syscall(proc);
 
 
-      fd_s *file_desc = malloc(sizeof(fd_s));
+      fd_descriptor *file_desc = malloc(sizeof(fd_descriptor));
       file_desc->type = FD_STDIN;
       file_desc->proc = proc;
       file_desc->fd = 0;
       proc->fd_list[0] = file_desc;
 
-      file_desc = malloc(sizeof(fd_s));
+      file_desc = malloc(sizeof(fd_descriptor));
       file_desc->type = FD_STDOUT;
       file_desc->proc = proc;
       file_desc->fd = 1;
       proc->fd_list[1] = file_desc;
 
-      file_desc = malloc(sizeof(fd_s));
+      file_desc = malloc(sizeof(fd_descriptor));
       file_desc->type = FD_STDERR;
       file_desc->proc = proc;
       file_desc->fd = 2;

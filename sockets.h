@@ -32,7 +32,7 @@ struct recv_information {
 };
 
 struct infos_socket {
-  fd_s fd;
+  fd_descriptor fd;
   comm_t comm;                  //point to the communication which socket involved in
   SD_workstation_t station;
   int domain;

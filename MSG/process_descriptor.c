@@ -15,7 +15,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
 //   strcpy(buff, name);
 //   strcat(buff, ".txt");
 //   result->trace = fopen(buff, "w");
-  result->fd_list = malloc(sizeof(fd_s*)*MAX_FD);
+  result->fd_list = malloc(sizeof(fd_descriptor*)*MAX_FD);
   result->pid=pid;
   result->tgid = pid; //By default, we consider that process is the first of this pgid
   result->cpu_time=0; 
