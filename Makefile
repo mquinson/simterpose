@@ -1,4 +1,4 @@
-OBJS = args_trace.o cputimer.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o simterpose.o benchmark.o syscall_process.o \
+OBJS = args_trace.o cputimer.o process_descriptor.o ptrace_utils.o sockets.o insert_trace.o simterpose.o syscall_process.o \
 	data_utils.o task.o parser.o init.o communication.o print_syscall.o
 
 CFLAGS = -Wall -Werror -g -I/opt/simgrid/include/ 
@@ -14,7 +14,6 @@ simterpose: $(OBJS)
 simterpose.o: simterpose.c simterpose.h cputimer.h process_descriptor.h  init.h\
 		data_utils.h parser.h communication.h syscall_process.h  print_syscall.h
 args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h communication.h syscall_data.h
-benchmark.o: benchmark.c benchmark.h cputimer.h 
 calc_times_proc.o: calc_times_proc.c cputimer.h sysdep.h
 insert_trace.o: insert_trace.c insert_trace.h sockets.h cputimer.h process_descriptor.h simterpose.h task.h
 ptrace_utils.o: ptrace_utils.c ptrace_utils.h sysdep.h
@@ -27,7 +26,7 @@ task.o: task.c task.h simterpose.h data_utils.h sockets.h process_descriptor.h c
 parser.o: parser.c parser.h
 print_syscall.o: print_syscall.c print_syscall.h syscall_data.h sockets.h
 init.o: init.c init.h parser.h process_descriptor.h simterpose.h ptrace_utils.h data_utils.h\
-		cputimer.h benchmark.h
+		cputimer.h
 sockets.o: sockets.c sockets.h simterpose.h sysdep.h task.h insert_trace.h communication.h
 communication.o: communication.c communication.h sockets.h
 
@@ -42,17 +41,7 @@ launcher.o: launcher.c
 #################################################
 
 
-#################################################
-# benchmark test section
-benchmark: run_benchmark.o benchmark.o cputimer.o
-	$(CC) $^ -o $@ $(LDFLAGS)
-
-run_benchmark.o: run_benchmark.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-#################################################
-
 clean:
-	rm -rf simterpose benchmark launcher *.o
+	rm -rf simterpose launcher *.o
 
 

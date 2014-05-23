@@ -5,7 +5,6 @@
 #include "xbt.h"
 #include "simdag/simdag.h"
 #include "data_utils.h"
-#include "benchmark.h"
 #include "cputimer.h"
 #include "init.h"
 #include "sysdep.h"
@@ -15,7 +14,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SIMTERPOSE);
+
 extern xbt_cfg_t _sg_cfg_set;
+
+static void benchmark_matrix_product(float *flop_per_sec, float *msec_per_flop);
 
 void init_station_list()
 {
@@ -312,4 +315,64 @@ void init_all_process()
 
   //Now we detach launcher because we don't need it anymore
   ptrace_detach_process(launcherpid);
+}
+
+/* Get the power of the current machine from a simple matrix product operation */
+static void benchmark_matrix_product(float *flop_per_sec, float *msec_per_flop)
+{
+  srand(time(NULL));
+  int matrixSize = rand() % 20 + 500;
+
+  int i, j;
+
+
+  float **matrix1 = malloc(sizeof(float *) * matrixSize);
+  float **matrix2 = malloc(sizeof(float *) * matrixSize);
+  float **matrix_result = malloc(sizeof(float *) * matrixSize);
+
+  // Warmup the caches
+  for (i = 0; i < matrixSize; ++i) {
+    matrix1[i] = malloc(sizeof(float) * matrixSize);
+    matrix2[i] = malloc(sizeof(float) * matrixSize);
+    matrix_result[i] = malloc(sizeof(float) * matrixSize);
+    for (j = 0; j < matrixSize; ++j) {
+      matrix1[i][j] = rand() % 20;
+      matrix2[i][j] = rand() % 20;
+      matrix_result[i][j] = rand() % 20;
+    }
+  }
+
+  long long int times[3];
+  long long int result;
+
+  pid_t pid = getpid();
+
+  cputimer_init();
+
+  // run the experiment for real
+  cputimer_get(pid, times);
+    long long int initialTime = times[1] + times[2];
+    int i_result, j_result;
+
+    for (j_result = 0; j_result < matrixSize; ++j_result) {
+      for (i_result = 0; i_result < matrixSize; ++i_result) {
+        for (i = 0; i < matrixSize; ++i) {
+          matrix_result[j_result][i_result] =
+              matrix_result[i_result][j_result] + matrix1[i_result][i] * matrix2[i][j_result];
+        }
+      }
+    }
+
+
+    cputimer_get(pid, times);
+    result = (times[1] + times[2]) - initialTime;
+    XBT_DEBUG("Duration of benchmark : %lld", result);
+
+    *msec_per_flop = ((float) result) / (2. * matrixSize * matrixSize * matrixSize);
+    *flop_per_sec = (1000000.) / (*msec_per_flop);
+
+    XBT_DEBUG("Result for benchmark : %f -> (%f flops)", *msec_per_flop, *flop_per_sec);
+
+
+  cputimer_exit();
 }
