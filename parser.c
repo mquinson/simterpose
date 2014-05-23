@@ -8,16 +8,15 @@
 #include "surf/surfxml_parse.h"
 #include "simgrid/platf.h"
 
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PARSE, SIMTERPOSE, "parsing of command-line");
+
 launcher_procdesc *proc;
 int proc_amount = 0;
 
 void destruct_process_descriptor(launcher_procdesc * proc)
 {
   free(proc->process_name);
-  int i;
-  for (i = 0; i < proc->argument_nbr - 1; ++i)
-    free(proc->command_line_argument[i]);
-  free(proc->command_line_argument);
+  xbt_dynar_free(&(proc->command_line_argument));
   free(proc);
   //We don't free executable because it is already free when freeing command_line member
 }
@@ -35,37 +34,21 @@ static int compare_time(const void *proc1, const void *proc2)
     return 1;
 }
 
-// FIXME: dupplicated code
-static double parse_double(const char *string)
-{
-  char *endptr;
-  double value = strtod(string, &endptr);
-  xbt_assert(*endptr == '\0', "%s is not a double", string);
-  return value;
-}
-
-// FIXME: Don't use flexml data but args
 static void parse_processes(sg_platf_process_cbarg_t args)
 {
-  // init
+  int i;
+
   proc = malloc(sizeof(launcher_procdesc));
-  proc->process_name = strdup(A_surfxml_process_host);
-  proc->executable = strdup(A_surfxml_process_function);
-  proc->launching_time = parse_double(A_surfxml_process_start___time);
-  proc->argument_nbr = 1;
-  proc->command_line_argument = malloc(sizeof(char *));
-  proc->command_line_argument[0] = proc->executable;
+  proc->process_name = strdup(args->host);
+  proc->executable = strdup(args->function);
+  proc->launching_time = args->start_time;
 
-  // argument
-  ++(proc->argument_nbr);
-  proc->command_line_argument = realloc(proc->command_line_argument, proc->argument_nbr * sizeof(char *));
-  proc->command_line_argument[proc->argument_nbr - 1] = strdup(A_surfxml_argument_value);
-
-  // finalize
-//Starting with add NULL termination to command line
-  ++(proc->argument_nbr);
-  proc->command_line_argument = realloc(proc->command_line_argument, proc->argument_nbr * sizeof(char *));
-  proc->command_line_argument[proc->argument_nbr - 1] = NULL;
+  proc->command_line_argument = xbt_dynar_new(sizeof(char*), &xbt_free_ref);
+  for (i=0;i < args->argc; i++) {
+	  XBT_INFO("Push arg %s", args->argv[i]);
+	  char *val = (args->argv[i] == NULL) ? NULL: xbt_strdup(args->argv[i]);
+	  xbt_dynar_push(proc->command_line_argument, &val );
+  }
 
   ++proc_amount;
   proc_list = realloc(proc_list, sizeof(launcher_procdesc *) * proc_amount);
@@ -85,9 +68,9 @@ void parse_deployment_file(const char *filename)
   qsort(proc_list, proc_amount, sizeof(launcher_procdesc *), compare_time);
 }
 
-char **parser_get_commandline(int numero)
+xbt_dynar_t parser_get_commandline(int rank)
 {
-  return proc_list[numero]->command_line_argument;
+  return proc_list[rank]->command_line_argument;
 }
 
 char *parser_get_workstation(int numero)

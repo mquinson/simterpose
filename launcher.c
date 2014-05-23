@@ -13,6 +13,7 @@ FILE *pipe_to_simterpose;
 
 int main(int argc, char **argv)
 {
+  fprintf(stderr,"Launcher starting\n");
   pipe_to_simterpose = fdopen(0, "r");
 
   int amount;

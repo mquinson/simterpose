@@ -155,6 +155,7 @@ void fprint_array(FILE * file, char **array)
   while (1) {
     fprintf(file, "%s", array[i]);
     printf("[%s]", array[i]);
+    fflush(stdout);
     ++i;
     if (array[i] != NULL) {
       printf(" ");
@@ -223,6 +224,7 @@ void start_processes()
       exit(1);
     }
 
+    fprintf(stderr,"simterpose: launching launcher\n");
     if (execl("launcher", "launcher", NULL) == -1) {
       perror("execl");
       exit(1);
@@ -261,7 +263,8 @@ void start_processes()
     //Now we launch all process and let them blocked on the first syscall following the exec
     while (amount_process_launch < amount) {
       process_descriptor *proc;
-      fprint_array(launcher_pipe, parser_get_commandline(amount_process_launch));
+      xbt_dynar_t cmdline = parser_get_commandline(amount_process_launch);
+      fprint_array(launcher_pipe, xbt_dynar_to_array(cmdline));
 
       int forked = 0;
       pid_t new_pid;

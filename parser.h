@@ -1,12 +1,13 @@
 #ifndef INCLUDE_PARSER_H
 #define INCLUDE_PARSER_H
 
+#include <xbt/dynar.h>
+
 typedef struct {
   char *process_name;
   char *executable;
   double launching_time;
-  char **command_line_argument;
-  int argument_nbr;
+  xbt_dynar_t command_line_argument;
 } launcher_procdesc;
 
 launcher_procdesc **proc_list;
@@ -17,7 +18,7 @@ void parse_deployment_file(const char *filename);
 
 void destruct_process_descriptor(launcher_procdesc * proc);
 
-char **parser_get_commandline(int numero);
+xbt_dynar_t parser_get_commandline(int numero);
 
 char *parser_get_workstation(int numero);
 
