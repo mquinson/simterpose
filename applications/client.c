@@ -40,7 +40,7 @@ int main(int argc, char **argv)
   if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("Client : error socket 1");
     exit(1);
-  } else {
+  }
 
     struct sockaddr_in cli_addr;
     memset(&cli_addr, 0, sizeof(struct sockaddr_in));
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
       perror("Client : echec demande de connexion 1\n");
       exit(0);
-    } else {
+    }
       fprintf(stderr, "Client : Connexion avec le serveur établie 1\n");
       // while(1){
       //fgets(buff,512,stdin);
@@ -78,14 +78,11 @@ int main(int argc, char **argv)
       //}
       shutdown(clientSocket, 2);
       close(clientSocket);
-    }
-
-  }
 
   if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("Client : error socket 2");
     exit(1);
-  } else {
+  }
     struct timeval begin;
     struct timespec tvcl;
     struct sockaddr_in cli_addr;
@@ -100,7 +97,7 @@ int main(int argc, char **argv)
     if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
       fprintf(stderr, "Client : echec demande de connexion 2\n");
       exit(0);
-    } else {
+    }
       //  printf("Client : Connexion avec le serveur établie\n");
       // while(1){
       //fgets(buff,512,stdin);
@@ -136,9 +133,6 @@ int main(int argc, char **argv)
       //}
       shutdown(clientSocket, 2);
       close(clientSocket);
-    }
-
-  }
 
   return 0;
 }
