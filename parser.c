@@ -45,7 +45,6 @@ static void parse_processes(sg_platf_process_cbarg_t args)
 
   proc->command_line_argument = xbt_dynar_new(sizeof(char*), &xbt_free_ref);
   for (i=0;i < args->argc; i++) {
-	  XBT_INFO("Push arg %s", args->argv[i]);
 	  char *val = (args->argv[i] == NULL) ? NULL: xbt_strdup(args->argv[i]);
 	  xbt_dynar_push(proc->command_line_argument, &val );
   }

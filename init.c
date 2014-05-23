@@ -149,25 +149,6 @@ void simterpose_init(int argc, char **argv)
 }
 
 
-void fprint_array(FILE * file, char **array)
-{
-  int i = 0;
-  while (1) {
-    fprintf(file, "%s", array[i]);
-    printf("[%s]", array[i]);
-    fflush(stdout);
-    ++i;
-    if (array[i] != NULL) {
-      printf(" ");
-      fprintf(file, " ");
-    } else
-      break;
-  }
-  fprintf(file, "\n");
-  printf("(fin de commande)\n");
-  fflush(file);
-}
-
 
 void run_until_exec(pid_t pid)
 {
@@ -263,8 +244,11 @@ void start_processes()
     //Now we launch all process and let them blocked on the first syscall following the exec
     while (amount_process_launch < amount) {
       process_descriptor *proc;
-      xbt_dynar_t cmdline = parser_get_commandline(amount_process_launch);
-      fprint_array(launcher_pipe, xbt_dynar_to_array(cmdline));
+      char* line = xbt_str_join(parser_get_commandline(amount_process_launch), " ");
+      printf("simterpose: request the startup of grandchild: %s\n",line);
+      fprintf(launcher_pipe, "%s\n",line);
+      free(line);
+      fflush(launcher_pipe);
 
       int forked = 0;
       pid_t new_pid;
