@@ -17,11 +17,6 @@
 
 extern xbt_cfg_t _sg_cfg_set;
 
-void usage(char *progName)
-{
-  printf("usage : %s [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
-}
-
 void init_station_list()
 {
   xbt_dict_t list_s = spose_get_station_list();
@@ -84,15 +79,17 @@ void init_station_list()
   xbt_dynar_free(&no_ip_list);
 }
 
-float str_to_double(const char *string)
+static inline float str_to_double(const char *string)
 {
-  double value = 0;
   char *endptr;
-
-  value = strtof(string, &endptr);
-  if (*endptr != '\0')
-    THROWF(unknown_error, 0, "%s is not a double", string);
+  double value = strtof(string, &endptr);
+  xbt_assert(*endptr == '\0',  "%s is not a double", string);
   return value;
+}
+
+void usage(char *progName)
+{
+  printf("usage : %s [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
 }
 
 void simterpose_init(int argc, char **argv)
