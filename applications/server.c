@@ -20,11 +20,11 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  int messages_count = atoi(argv[1]);
-  int message_size = atoi(argv[2]);
+  int msg_count = atoi(argv[1]);
+  int msg_size = atoi(argv[2]);
 
   int serverSocket;
-  char *buff = malloc(message_size);
+  char *buff = malloc(msg_size);
   u_short port;
   int res;
   int client_socket;
@@ -72,21 +72,21 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  int ia = 0;
-  for (ia = 0; ia < messages_count; ++ia) {
-    int length = message_size;
+  int msg_number = 0;
+  for (msg_number = 0; msg_number < msg_count; ++msg_number) {
+    int length = msg_size;
     while (length > 0) {
       res = recv(client_socket, buff, length, 0);
       if (res == -1) {
-        fprintf(stderr, "Server: error while receiving message #%d: %s\n", ia, strerror(errno));
+        fprintf(stderr, "Server: error while receiving message #%d: %s\n", msg_number, strerror(errno));
         exit(1);
       }
       length -= res;
       //    printf("Server : recv %d (left %d)\n", res, length);
     }
     fprintf(stderr, "Server: Message received: %s", buff);
-    sprintf(buff, "answer #%d",ia);
-    res = send(client_socket, buff, message_size, 0);
+    sprintf(buff, "answer #%d",msg_number);
+    res = send(client_socket, buff, msg_size, 0);
     if (res == -1) {
       perror("Server: erreur envoi 2");
       exit(1);

@@ -34,7 +34,7 @@ static int compare_time(const void *proc1, const void *proc2)
     return 1;
 }
 
-static void parse_processes(sg_platf_process_cbarg_t args)
+static void parse_process(sg_platf_process_cbarg_t args)
 {
   int i;
 
@@ -57,7 +57,7 @@ static void parse_processes(sg_platf_process_cbarg_t args)
 void parse_deployment_file(const char *filename)
 {
   surf_parse_reset_callbacks();
-  sg_platf_process_add_cb(parse_processes);
+  sg_platf_process_add_cb(parse_process);
 
   surf_parse_open(filename);
   int parse_status = surf_parse();
@@ -72,9 +72,9 @@ xbt_dynar_t parser_get_commandline(int rank)
   return proc_list[rank]->command_line_argument;
 }
 
-char *parser_get_workstation(int numero)
+char *parser_get_workstation(int rank)
 {
-  return proc_list[numero]->process_name;
+  return proc_list[rank]->process_name;
 }
 
 int parser_get_amount()
@@ -82,9 +82,9 @@ int parser_get_amount()
   return proc_amount;
 }
 
-double parser_get_start_time(int numero)
+double parser_get_start_time(int rank)
 {
-  return proc_list[numero]->launching_time;
+  return proc_list[rank]->launching_time;
 }
 
 

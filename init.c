@@ -331,7 +331,6 @@ static void benchmark_matrix_product(float *msec_per_flop)
       }
     }
 
-
     cputimer_get(pid, times);
     result = (times[1] + times[2]) - initialTime;
     XBT_DEBUG("Duration of benchmark : %lld", result);

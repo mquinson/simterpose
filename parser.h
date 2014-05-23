@@ -18,11 +18,11 @@ void parse_deployment_file(const char *filename);
 
 void destruct_process_descriptor(launcher_procdesc * proc);
 
-xbt_dynar_t parser_get_commandline(int numero);
+xbt_dynar_t parser_get_commandline(int rank);
 
-char *parser_get_workstation(int numero);
+char *parser_get_workstation(int rank);
 
-double parser_get_start_time(int numero);
+double parser_get_start_time(int rank);
 
 int parser_get_amount();
 
