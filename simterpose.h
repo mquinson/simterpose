@@ -37,7 +37,6 @@ int nb_poke;
 int nb_getregs;
 int nb_setregs;
 int nb_syscall;
-int nb_traceme;
 int nb_setoptions;
 int nb_detach;
 int nb_geteventmsg;

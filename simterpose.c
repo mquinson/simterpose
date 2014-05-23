@@ -173,7 +173,6 @@ int main(int argc, char *argv[])
   nb_getregs = 0;
   nb_setregs = 0;
   nb_syscall = 0;
-  nb_traceme = 0;
   nb_setoptions = 0;
   nb_detach = 0;
   nb_geteventmsg = 0;
@@ -320,10 +319,10 @@ int main(int argc, char *argv[])
 #endif
   XBT_DEBUG("%d peek et %d poke ", nb_peek, nb_poke);
   XBT_DEBUG("%d getregs et %d setregs", nb_getregs, nb_setregs);
-  XBT_DEBUG("%d traceme et %d detach ", nb_traceme, nb_detach);
+  XBT_DEBUG("%d detach ", nb_detach);
   XBT_DEBUG("%d syscall, %d geteventmsg et %d setoptions ", nb_syscall, nb_geteventmsg, nb_setoptions);
   XBT_INFO("nb total de ptrace() = %d ",
-           nb_peek + nb_poke + nb_getregs + nb_setregs + nb_traceme + nb_detach + nb_syscall + nb_geteventmsg +
+           nb_peek + nb_poke + nb_getregs + nb_setregs + nb_detach + nb_syscall + nb_geteventmsg +
            nb_setoptions);
 
   SD_exit();

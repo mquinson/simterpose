@@ -222,7 +222,6 @@ void start_processes()
       perror("ptrace traceme");
       exit(1);
     }
-    nb_traceme++;
 
     if (execl("launcher", "launcher", NULL) == -1) {
       perror("execl");
