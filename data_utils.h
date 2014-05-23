@@ -5,7 +5,10 @@
 #include "simdag/simdag.h"
 #include "sockets.h"
 
-void init_global_data();
+void init_global_data(float flops_power, float msec_per_flop);
+double spose_get_msec_per_flop();
+xbt_dict_t spose_get_station_list();
+xbt_dict_t spose_get_ip_list();
 
 double update_simulation_clock();
 

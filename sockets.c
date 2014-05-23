@@ -56,7 +56,7 @@ void recv_information_destroy(recv_information * recv)
 
 void register_accepting_socket(struct infos_socket *is, pid_t pid, int sockfd)
 {
-  process_descriptor *proc = global_data->process_desc[pid];
+  process_descriptor *proc = process_get_descriptor(pid);
   proc->fd_list[sockfd] = (fd_s *) is;
   is->fd.type = FD_SOCKET;
   is->fd.fd = sockfd;
@@ -72,7 +72,7 @@ void register_accepting_socket(struct infos_socket *is, pid_t pid, int sockfd)
 struct infos_socket *confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol)
 {
 
-  process_descriptor *proc = global_data->process_desc[pid];
+  process_descriptor *proc = process_get_descriptor(pid);
 
   struct infos_socket *is = malloc(sizeof(struct infos_socket));
   proc->fd_list[sockfd] = (fd_s *) is;
@@ -157,7 +157,7 @@ void socket_close(pid_t pid, int fd)
     else {
       free(is);
     }
-    process_descriptor *proc = global_data->process_desc[pid];
+    process_descriptor *proc = process_get_descriptor(pid);
     proc->fd_list[fd] = NULL;
   }
 }
@@ -165,7 +165,7 @@ void socket_close(pid_t pid, int fd)
 struct infos_socket *register_socket(pid_t pid, int sockfd, int domain, int protocol)
 {
 //   printf("Registering socket %d for processus %d\n", sockfd, pid);
-  if (global_data->process_desc[pid]->fd_list[sockfd] != NULL) {
+  if (process_get_descriptor(pid)->fd_list[sockfd] != NULL) {
     xbt_die("Inconsistence found in model. Socket already exist");
   } else {
     return confirm_register_socket(pid, sockfd, domain, protocol);
@@ -417,7 +417,7 @@ int socket_registered(pid_t pid, int fd)
 struct infos_socket *get_infos_socket(pid_t pid, int fd)
 {
   //printf("Info socket %d %d\n", pid, fd);
-  fd_s *file_desc = global_data->process_desc[pid]->fd_list[fd];
+  fd_s *file_desc = process_get_descriptor(pid)->fd_list[fd];
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
     return NULL;
 
@@ -639,7 +639,7 @@ void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
 
 int close_all_communication(int pid)
 {
-  process_descriptor *proc = global_data->process_desc[pid];
+  process_descriptor *proc = process_get_descriptor(pid);
   int i = 0;
   int result = 0;
   for (i = 0; i < MAX_FD; ++i) {

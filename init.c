@@ -24,8 +24,8 @@ void usage(char *progName)
 
 void init_station_list()
 {
-  xbt_dict_t list_s = global_data->list_station;
-  xbt_dict_t list_ip = global_data->list_ip;
+  xbt_dict_t list_s = spose_get_station_list();
+  xbt_dict_t list_ip = spose_get_ip_list();
 
   xbt_dynar_t no_ip_list = xbt_dynar_new(sizeof(int), NULL);
   xbt_dynar_t ip_list = xbt_dynar_new(sizeof(unsigned int), NULL);
@@ -100,6 +100,11 @@ void simterpose_init(int argc, char **argv)
   float flops_power = 0;
   float micro_s_per_flop = 0;
   int flop_option = 0;
+
+  // Initialize SimGrid (and consume the SG command-line options)
+  SD_init(&argc, argv);
+
+  // Initialize simterpose
   if (argc < 3) {
     usage(argv[0]);
     exit(1);
@@ -129,22 +134,14 @@ void simterpose_init(int argc, char **argv)
   if (!flop_option)
     benchmark_matrix_product(&flops_power, &micro_s_per_flop);
 
-  global_data = malloc(sizeof(simterpose_data_t));
-  init_global_data();           // process desc = NULL
 
-  global_data->flops_per_second = flops_power;
-  global_data->micro_s_per_flop = micro_s_per_flop;
+  init_global_data(flops_power, micro_s_per_flop);
 
   init_socket_gestion();
   init_comm();
   init_cputime();               // creates socket
 
-  SD_init(&argc, argv);
-  xbt_cfg_set_parse(_sg_cfg_set, "maxmin/precision:1e-9");
   SD_create_environment(argv[optind]);
-
-
-
   parse_deployment_file(argv[optind + 1]);
 
   init_station_list();
@@ -279,7 +276,7 @@ void init_all_process()
         if (stat16 == PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16 == PTRACE_EVENT_CLONE) {
           new_pid = ptrace_get_pid_fork(launcherpid);
           proc = process_descriptor_new(parser_get_workstation(amount_process_launch), new_pid);
-          global_data->process_desc[new_pid] = proc;
+          process_set_descriptor(new_pid, proc);
           forked = 1;
         }
       }

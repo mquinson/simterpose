@@ -42,8 +42,6 @@ int nb_setoptions;
 int nb_detach;
 int nb_geteventmsg;
 
-typedef struct simterpose_data simterpose_data_t;
-simterpose_data_t *global_data;
 
 
 struct time_desc {
@@ -67,18 +65,6 @@ struct translate_desc {
 struct simterpose_station {
   unsigned int ip;
   xbt_dict_t port;
-};
-
-struct simterpose_data {
-  xbt_dynar_t launching_time;
-  process_descriptor *process_desc[MAX_PID];
-  xbt_dict_t list_station;
-  xbt_dict_t list_ip;
-  xbt_dict_t list_translate;
-  time_t init_time;
-  int child_amount;
-  float flops_per_second;
-  float micro_s_per_flop;
 };
 
 void add_to_sched_list(pid_t pid);

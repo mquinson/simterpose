@@ -58,11 +58,7 @@ void process_descriptor_destroy(process_descriptor * proc)
   free(proc);
 }
 
-//TODO regarder l'inline pour cette fonction
-process_descriptor *process_get_descriptor(pid_t pid)
-{
-  return global_data->process_desc[pid];
-}
+
 
 void process_set_idle(process_descriptor * proc, int idle_state)
 {
@@ -75,10 +71,6 @@ int process_get_idle(process_descriptor * proc)
 }
 
 
-void process_set_descriptor(pid_t pid, process_descriptor * proc)
-{
-  global_data->process_desc[pid] = proc;
-}
 
 
 int process_update_cputime(process_descriptor * proc, long long int new_cputime)
@@ -128,7 +120,7 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
 
   result->station = forked->station;
 
-  global_data->process_desc[new_pid] = result;
+  process_set_descriptor(new_pid, result);
 }
 
 //For detail on clone flags report to man clone
@@ -161,7 +153,7 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
       result->fd_list[i] = NULL;
   }
 
-  global_data->process_desc[new_pid] = result;
+  process_set_descriptor(new_pid, result);
 }
 
 void process_set_state(process_descriptor * proc, int state)
@@ -182,7 +174,7 @@ void process_die(pid_t pid)
   close_all_communication(pid);
   process_descriptor *proc = process_get_descriptor(pid);
   process_descriptor_destroy(proc);
-  global_data->process_desc[pid] = NULL;
+  process_set_descriptor(pid, NULL);
 }
 
 void process_on_simulation(process_descriptor * proc, int val)

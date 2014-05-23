@@ -5,8 +5,26 @@
 #include "sockets.h"
 #include "simdag/simdag.h"      /* For SD_get_clock() */
 
-void init_global_data()
+struct simterpose_data {
+  xbt_dynar_t launching_time;
+  process_descriptor *process_desc[MAX_PID];
+  xbt_dict_t list_station;
+  xbt_dict_t list_ip;
+  xbt_dict_t list_translate;
+  time_t init_time;
+  int child_amount;
+  float flops_per_second;
+  float micro_s_per_flop;
+};
+typedef struct simterpose_data simterpose_data_t;
+simterpose_data_t *global_data;
+
+void init_global_data(float flops_power, float msec_per_flop)
 {
+  global_data = malloc(sizeof(simterpose_data_t));
+  global_data->flops_per_second = flops_power;
+  global_data->micro_s_per_flop = msec_per_flop;
+
   global_data->child_amount = 0;
   global_data->flops_per_second = 0.0;
   global_data->micro_s_per_flop = 0.0;
@@ -373,4 +391,24 @@ int get_real_port(pid_t pid, unsigned int ip, int port)
 
 //   printf("Return %d\n", desc->real_port);
   return desc->real_port;
+}
+
+process_descriptor *process_get_descriptor(pid_t pid)
+{
+  return global_data->process_desc[pid];
+}
+void process_set_descriptor(pid_t pid, process_descriptor * proc)
+{
+  global_data->process_desc[pid] = proc;
+}
+
+double spose_get_msec_per_flop() {
+	return global_data->micro_s_per_flop;
+}
+
+xbt_dict_t spose_get_station_list() {
+	return global_data->list_station;
+}
+xbt_dict_t spose_get_ip_list() {
+	return global_data->list_ip;
 }
