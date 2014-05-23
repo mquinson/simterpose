@@ -10,32 +10,19 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PARSE, SIMTERPOSE, "parsing of command-line");
 
-launcher_procdesc *proc;
 int proc_amount = 0;
 
 void destruct_process_descriptor(launcher_procdesc * proc)
 {
   free(proc->process_name);
+  free(proc->executable);
   xbt_dynar_free(&(proc->command_line_argument));
   free(proc);
-  //We don't free executable because it is already free when freeing command_line member
 }
 
-static int compare_time(const void *proc1, const void *proc2)
+static void parse_process(sg_platf_process_cbarg_t args)
 {
-  int time1 = (*((launcher_procdesc **) proc1))->launching_time;
-  int time2 = (*((launcher_procdesc **) proc2))->launching_time;
-
-  if (time1 < time2)
-    return -1;
-  else if (time1 == time2)
-    return 0;
-  else
-    return 1;
-}
-
-static void parse_processes(sg_platf_process_cbarg_t args)
-{
+  launcher_procdesc *proc;
   int i;
 
   proc = malloc(sizeof(launcher_procdesc));
@@ -54,10 +41,22 @@ static void parse_processes(sg_platf_process_cbarg_t args)
   proc_list[proc_amount - 1] = proc;
 }
 
+static int compare_time(const void *proc1, const void *proc2)
+{
+  int time1 = (*((launcher_procdesc **) proc1))->launching_time;
+  int time2 = (*((launcher_procdesc **) proc2))->launching_time;
+
+  if (time1 < time2)
+    return -1;
+  else if (time1 == time2)
+    return 0;
+  else
+    return 1;
+}
 void parse_deployment_file(const char *filename)
 {
   surf_parse_reset_callbacks();
-  sg_platf_process_add_cb(parse_processes);
+  sg_platf_process_add_cb(parse_process);
 
   surf_parse_open(filename);
   int parse_status = surf_parse();
@@ -72,9 +71,9 @@ xbt_dynar_t parser_get_commandline(int rank)
   return proc_list[rank]->command_line_argument;
 }
 
-char *parser_get_workstation(int numero)
+char *parser_get_workstation(int rank)
 {
-  return proc_list[numero]->process_name;
+  return proc_list[rank]->process_name;
 }
 
 int parser_get_amount()
@@ -82,9 +81,9 @@ int parser_get_amount()
   return proc_amount;
 }
 
-double parser_get_start_time(int numero)
+double parser_get_start_time(int rank)
 {
-  return proc_list[numero]->launching_time;
+  return proc_list[rank]->launching_time;
 }
 
 

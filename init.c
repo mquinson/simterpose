@@ -180,7 +180,6 @@ void run_until_exec(pid_t pid)
 }
 
 
-
 void start_processes()
 {
   int status;
@@ -234,7 +233,7 @@ void start_processes()
     FILE *launcher_pipe = NULL;
     launcher_pipe = fdopen(comm_launcher[1], "w");
 
-    int amount_process_launch = 0;
+    int rank;
     int amount = parser_get_amount();
 
     //We write the amount of process to launch for the launcher
@@ -242,9 +241,9 @@ void start_processes()
     fflush(launcher_pipe);
 
     //Now we launch all process and let them blocked on the first syscall following the exec
-    while (amount_process_launch < amount) {
+    for (rank=0; rank < amount; rank++) {
       process_descriptor *proc;
-      char* line = xbt_str_join(parser_get_commandline(amount_process_launch), " ");
+      char* line = xbt_str_join(parser_get_commandline(rank), " ");
       printf("simterpose: request the startup of grandchild: %s\n",line);
       fprintf(launcher_pipe, "%s\n",line);
       free(line);
@@ -262,7 +261,7 @@ void start_processes()
 
         if (stat16 == PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16 == PTRACE_EVENT_CLONE) {
           new_pid = ptrace_get_pid_fork(launcherpid);
-          proc = process_descriptor_new(parser_get_workstation(amount_process_launch), new_pid);
+          proc = process_descriptor_new(parser_get_workstation(rank), new_pid);
           process_set_descriptor(new_pid, proc);
           forked = 1;
         }
@@ -273,9 +272,7 @@ void start_processes()
       run_until_exec(new_pid);
       process_set_in_syscall(proc);
 
-      add_launching_time(new_pid, parser_get_start_time(amount_process_launch));
-
-      ++amount_process_launch;
+      add_launching_time(new_pid, parser_get_start_time(rank));
     }
     parser_free_all();
     fclose(launcher_pipe);
@@ -330,7 +327,6 @@ static void benchmark_matrix_product(float *msec_per_flop)
         }
       }
     }
-
 
     cputimer_get(pid, times);
     result = (times[1] + times[2]) - initialTime;
