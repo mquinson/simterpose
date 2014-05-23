@@ -13,53 +13,23 @@ simterpose: $(OBJS)
 
 simterpose.o: simterpose.c simterpose.h calc_times_proc.h process_descriptor.h  init.h\
 		data_utils.h parser.h communication.h syscall_process.h  print_syscall.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 args_trace.o: args_trace.c args_trace.h ptrace_utils.h sysdep.h sockets.h communication.h syscall_data.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 benchmark.o: benchmark.c benchmark.h calc_times_proc.h 
-	$(CC) $(CFLAGS) -c $< -o $@
-
 calc_times_proc.o: calc_times_proc.c calc_times_proc.h sysdep.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
-insert_trace.o: insert_trace.c insert_trace.h sockets.h calc_times_proc.h process_descriptor.h simterpose.h \
-		task.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
+insert_trace.o: insert_trace.c insert_trace.h sockets.h calc_times_proc.h process_descriptor.h simterpose.h task.h
 ptrace_utils.o: ptrace_utils.c ptrace_utils.h sysdep.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 process_descriptor.o: process_descriptor.c process_descriptor.h simterpose.h sockets.h data_utils.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 syscall_process.o: syscall_process.c syscall_process.h insert_trace.h sockets.h simterpose.h ptrace_utils.h \
 		process_descriptor.h args_trace.h task.h communication.h syscall_list.h print_syscall.h\
 		syscall_data.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 data_utils.o : data_utils.c data_utils.h simterpose.h sysdep.h process_descriptor.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 task.o: task.c task.h simterpose.h data_utils.h sockets.h process_descriptor.h communication.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 parser.o: parser.c parser.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 print_syscall.o: print_syscall.c print_syscall.h syscall_data.h sockets.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 init.o: init.c init.h parser.h process_descriptor.h simterpose.h ptrace_utils.h data_utils.h\
 		calc_times_proc.h benchmark.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 sockets.o: sockets.c sockets.h simterpose.h sysdep.h task.h insert_trace.h communication.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
 communication.o: communication.c communication.h sockets.h
-	$(CC) $(CFLAGS) -c $< -o $@
 
 #################################################
 # launcher section
