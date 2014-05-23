@@ -8,26 +8,23 @@
 #include <unistd.h>
 #include <poll.h>
 #include <pthread.h>
+#include <errno.h>
 
 #define SERV_PORT 2227
-//#define IP "162.32.43.1"
-
-//#define BUFFER_SIZE 1000
-
 
 int main(int argc, char **argv)
 {
 
   if (argc < 3) {
-    fprintf(stderr, "usage: %s number_of_loops buffer_size \n", argv[0]);
+    fprintf(stderr, "usage: %s amount_of_messages message_size \n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  int number_of_loops = atoi(argv[1]);
-  int buffer_size = atoi(argv[2]);
+  int messages_count = atoi(argv[1]);
+  int message_size = atoi(argv[2]);
 
   int serverSocket;
-  char *buff = malloc(buffer_size);
+  char *buff = malloc(message_size);
   u_short port;
   int res;
   int client_socket;
@@ -66,70 +63,34 @@ int main(int argc, char **argv)
     perror("Server: error listen");
     exit(1);
   }
-  fprintf(stderr, "Server: Attente demande de connexion\n");
+  fprintf(stderr, "Server: Waiting for incoming requests\n");
   int clilen = sizeof(struct sockaddr_in);
   struct sockaddr_in *cli_addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
 
-  //         struct pollfd ld = {serverSocket, POLLIN, 0};
-  //         int temp;
-  //         while((temp = poll(&ld, 1, 100)) != 1);
-  //
-  //         printf("End of pool : %d\n", temp);
-
   if ((client_socket = accept(serverSocket, (struct sockaddr *) cli_addr, (socklen_t *) & clilen)) < 0) {
-    perror("Server: error accept 1");
+    perror("Server: error accepting real message");
     exit(1);
   }
-  fprintf(stderr, "Server: Connexion acceptée\n");
-  int length = buffer_size;
-  while (length != 0) {
-    res = recv(client_socket, buff, length, 0);
-    if (res == -1) {
-      perror("Server: erreur réception 1");
-      exit(1);
-    }
-    length -= res;
-    //    printf("Server : recv %d (left %d)\n", res, length);
-  }
-  fprintf(stderr, "Server: Message reçu : %s", buff);
-  //          strcpy(buff,"Server: envoi \n");
-  //         printf("Server: envoi au client\n");
-  res = send(client_socket, buff, buffer_size, 0);
-  if (res == -1) {
-    perror("Server: erreur envoi 1");
-    exit(1);
-  }
-  shutdown(client_socket, 2);
-  close(client_socket);
-
-  if ((client_socket = accept(serverSocket, (struct sockaddr *) cli_addr, (socklen_t *) & clilen)) < 0) {
-    perror("Server: error accept 2");
-    exit(1);
-  }
-  //   printf("Server: Connexion acceptée\n");
 
   int ia = 0;
-  for (ia = 0; ia < number_of_loops; ++ia) {
-    int length = buffer_size;
+  for (ia = 0; ia < messages_count; ++ia) {
+    int length = message_size;
     while (length > 0) {
       res = recv(client_socket, buff, length, 0);
       if (res == -1) {
-        fprintf(stderr, "Server : loop %d \n", ia);
-        perror("Server: erreur réception 2");
+        fprintf(stderr, "Server: error while receiving message #%d: %s\n", ia, strerror(errno));
         exit(1);
       }
       length -= res;
       //    printf("Server : recv %d (left %d)\n", res, length);
     }
-    fprintf(stderr, "Server: Message reçu : %s", buff);
-    //   strcpy(buff,"envoi serveur\n");
-    //  printf("Server: envoi au client\n");
-    res = send(client_socket, buff, buffer_size, 0);
+    fprintf(stderr, "Server: Message received: %s", buff);
+    sprintf(buff, "answer #%d",ia);
+    res = send(client_socket, buff, message_size, 0);
     if (res == -1) {
       perror("Server: erreur envoi 2");
       exit(1);
     }
-    //     printf("Server: envoyé\n");
   }
   shutdown(client_socket, 2);
   close(client_socket);

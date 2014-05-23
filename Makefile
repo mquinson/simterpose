@@ -6,7 +6,7 @@ CC=gcc
 
 LDFLAGS= -L/opt/simgrid/lib/ -lsimgrid -lm
 
-all : simterpose launcher
+all : simterpose launcher applications/client applications/server
 
 simterpose: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)
@@ -39,6 +39,10 @@ launcher.o: launcher.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 #################################################
+applications/client: applications/client.c
+	make -C applications client
+applications/server: applications/server.c
+	make -C applications server
 
 
 clean:

@@ -223,6 +223,7 @@ void init_all_process()
       exit(1);
     }
     nb_traceme++;
+
     if (execl("launcher", "launcher", NULL) == -1) {
       perror("execl");
       exit(1);
@@ -231,8 +232,6 @@ void init_all_process()
   } else {
 
     close(comm_launcher[0]);
-
-    //global_data->process_desc[launcherpid]= process_descriptor_new("launcher", launcherpid);
 
     // We wait for the child to be blocked by ptrace in the first exec()
     waitpid(launcherpid, &status, 0);
