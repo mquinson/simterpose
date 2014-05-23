@@ -13,21 +13,17 @@ struct simterpose_data {
   xbt_dict_t list_translate;
   time_t init_time;
   int child_amount;
-  float flops_per_second;
-  float micro_s_per_flop;
+  float msec_per_flop;
 };
 typedef struct simterpose_data simterpose_data_t;
 simterpose_data_t *global_data;
 
-void init_global_data(float flops_power, float msec_per_flop)
+void init_global_data(float msec_per_flop)
 {
   global_data = malloc(sizeof(simterpose_data_t));
-  global_data->flops_per_second = flops_power;
-  global_data->micro_s_per_flop = msec_per_flop;
+  global_data->msec_per_flop = msec_per_flop;
 
   global_data->child_amount = 0;
-  global_data->flops_per_second = 0.0;
-  global_data->micro_s_per_flop = 0.0;
   global_data->launching_time = xbt_dynar_new(sizeof(time_desc *), NULL);
   global_data->list_station = xbt_dict_new_homogeneous(&destroy_simterpose_station);
   global_data->list_ip = xbt_dict_new_homogeneous(&free);
@@ -402,7 +398,7 @@ void process_set_descriptor(pid_t pid, process_descriptor * proc)
 }
 
 double simterpose_get_msec_per_flop() {
-	return global_data->micro_s_per_flop;
+	return global_data->msec_per_flop;
 }
 
 xbt_dict_t simterpose_get_station_list() {

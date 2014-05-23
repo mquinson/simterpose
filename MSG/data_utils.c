@@ -8,7 +8,6 @@
 void init_global_data()
 {
   global_data->child_amount = 0;
-  global_data->flops_per_second = 0.0;
   global_data->micro_s_per_flop = 0.0;
   global_data->launching_time = xbt_dynar_new(sizeof(time_desc*), NULL);
   global_data->list_station = xbt_dict_new_homogeneous(&destroy_simterpose_station);

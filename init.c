@@ -18,7 +18,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SIMTERPOSE);
 
 extern xbt_cfg_t _sg_cfg_set;
 
-static void benchmark_matrix_product(float *flop_per_sec, float *msec_per_flop);
+static void benchmark_matrix_product(float *msec_per_flop);
 
 void init_station_list()
 {
@@ -97,8 +97,7 @@ void usage(char *progName)
 
 void simterpose_init(int argc, char **argv)
 {
-  float flops_power = 0;
-  float micro_s_per_flop = 0;
+  float msec_per_flop = 0;
   int flop_option = 0;
 
   // Initialize SimGrid (and consume the SG command-line options)
@@ -114,8 +113,9 @@ void simterpose_init(int argc, char **argv)
       switch (c) {
       case 'p':
         flop_option = 1;
-        flops_power = str_to_double(optarg);
-        micro_s_per_flop = 1000000 / flops_power;
+        msec_per_flop = 1000000 / str_to_double(optarg);
+        XBT_INFO("Setting reference power to %s flop/s", optarg);
+
         break;
 
       default:
@@ -132,10 +132,10 @@ void simterpose_init(int argc, char **argv)
   }
 
   if (!flop_option)
-    benchmark_matrix_product(&flops_power, &micro_s_per_flop);
+    benchmark_matrix_product(&msec_per_flop);
 
 
-  init_global_data(flops_power, micro_s_per_flop);
+  init_global_data(msec_per_flop);
 
   init_socket_gestion();
   init_comm();
@@ -318,7 +318,7 @@ void init_all_process()
 }
 
 /* Get the power of the current machine from a simple matrix product operation */
-static void benchmark_matrix_product(float *flop_per_sec, float *msec_per_flop)
+static void benchmark_matrix_product(float *msec_per_flop)
 {
   srand(time(NULL));
   int matrixSize = rand() % 20 + 500;
@@ -369,10 +369,9 @@ static void benchmark_matrix_product(float *flop_per_sec, float *msec_per_flop)
     XBT_DEBUG("Duration of benchmark : %lld", result);
 
     *msec_per_flop = ((float) result) / (2. * matrixSize * matrixSize * matrixSize);
-    *flop_per_sec = (1000000.) / (*msec_per_flop);
+    float flop_per_sec = (1000000.) / (*msec_per_flop);
 
-    XBT_DEBUG("Result for benchmark : %f -> (%f flops)", *msec_per_flop, *flop_per_sec);
-
+    XBT_INFO("Your machine was benchmarked at %.0f flop/s (use -p %.0f to avoid that benchmarking)", flop_per_sec, flop_per_sec);
 
   cputimer_exit();
 }

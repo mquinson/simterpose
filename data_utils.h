@@ -5,7 +5,7 @@
 #include "simdag/simdag.h"
 #include "sockets.h"
 
-void init_global_data(float flops_power, float msec_per_flop);
+void init_global_data(float msec_per_flop);
 double simterpose_get_msec_per_flop();
 xbt_dict_t simterpose_get_station_list();
 xbt_dict_t simterpose_get_ip_list();
