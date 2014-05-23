@@ -3,7 +3,7 @@
 #include <time.h>
 #include "xbt/log.h"
 
-#include "calc_times_proc.h"
+#include "cputimer.h"
 
 #define LOOP_AMOUNT 10000000
 #define OPERATION_PER_LOOP 4

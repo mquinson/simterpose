@@ -6,7 +6,7 @@
 #include "simdag/simdag.h"
 #include "data_utils.h"
 #include "benchmark.h"
-#include "calc_times_proc.h"
+#include "cputimer.h"
 #include "init.h"
 #include "sysdep.h"
 #include <xbt/config.h>

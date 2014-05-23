@@ -2,7 +2,7 @@
 #include "data_utils.h"
 #include "task.h"
 #include "sockets.h"
-#include "calc_times_proc.h"
+#include "cputimer.h"
 #include "process_descriptor.h"
 #include "simterpose.h"
 #include "simdag/simdag.h"

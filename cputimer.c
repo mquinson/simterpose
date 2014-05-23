@@ -1,7 +1,15 @@
-#include "calc_times_proc.h"
+/* cputimer -- retrieve the cputime of a given thread using netlink        */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
+
+#include "cputimer.h"
 #include <xbt.h>
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CALC_TIMES_PROC, ST, "calc times proc log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CPUTIMER, ST, "Retrieve the CPU time of a given thread using netlink");
 
 
 /*
