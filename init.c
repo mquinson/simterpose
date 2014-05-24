@@ -19,6 +19,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SIMTERPOSE);
 extern xbt_cfg_t _sg_cfg_set;
 
 static void benchmark_matrix_product(float *msec_per_flop);
+static void start_all_processes();
 
 void init_station_list()
 {
@@ -145,142 +146,57 @@ void simterpose_init(int argc, char **argv)
   parse_deployment_file(argv[optind + 1]);
 
   init_station_list();
-  start_processes();
+  start_all_processes();
 }
 
-
-
-void run_until_exec(pid_t pid)
-{
-  int exec_found = 0;
-  int exec_passed = 0;
-  int status;
-
-  //First we run process until we found the first exec.
-  reg_s arg;
-  while (!exec_found) {
-    waitpid(pid, &status, 0);
-    ptrace_get_register(pid, &arg);
-    if (arg.reg_orig == SYS_execve) {
-      exec_found = 1;
-    }
-    //Here we can run even if we found an execve because we trap the syscall when it came from process
-    ptrace_resume_process(pid);
-  }
-
-  //Second we bring process to the first syscall which is not an execve
-  while (!exec_passed) {
-    waitpid(pid, &status, 0);
-    ptrace_get_register(pid, &arg);
-    if (arg.reg_orig != SYS_execve)
-      exec_passed = 1;
-    else
-      ptrace_resume_process(pid);
-  }
-}
-
-
-void start_processes()
+static void start_one_process(int rank)
 {
   int status;
-
-  //First we make pipe for communication and we start running the launcher
-  int comm_launcher[2];
-  pipe(comm_launcher);
-
-
-  int launcherpid = fork();
-
-  if (launcherpid == 0) {
-
-    close(0);
-    dup2(comm_launcher[0], 0);
-
-    close(comm_launcher[1]);
-    close(comm_launcher[0]);
-
+  int new_pid = fork();
+  if (new_pid == 0) {
+    // in child
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
       perror("ptrace traceme");
       exit(1);
     }
+    
+    xbt_dynar_t cmdline_dynar = parser_get_commandline(rank);
+    char* cmdline_str = xbt_str_join(cmdline_dynar, " ");
+    char **cmdline_array = (char **) xbt_dynar_to_array(cmdline_dynar);
 
-    fprintf(stderr,"simterpose: launching launcher\n");
-    if (execl("launcher", "launcher", NULL) == -1) {
-      perror("execl");
+    fprintf(stderr, "Process %d is starting child: %s\n", getpid(), cmdline_str);
+
+    if (execv(cmdline_array[0], cmdline_array) == -1) {
+      fprintf(stderr, "Error while starting %s: %s (full cmdline: %s)\n", cmdline_array[0],strerror(errno),cmdline_str);
       exit(1);
     }
 
   } else {
+    // still in simterpose. wait for the traceme to apply (ie, for child to start)
+    waitpid(new_pid, &status, 0);
 
-    close(comm_launcher[0]);
-
-    // wait for the launcher child to be blocked by ptrace(TRACEME)
-    waitpid(launcherpid, &status, 0);
-    if (WIFSIGNALED(status))
-    	XBT_ERROR("Launcher got a signal %d",WTERMSIG(status));
-    if (WIFEXITED(status))
-    	XBT_ERROR("Launched returned %d",WEXITSTATUS(status));
-
-    // Trace the launcher, and all its son
-    if (ptrace
-        (PTRACE_SETOPTIONS, launcherpid, NULL,
-         PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE) == -1) {
+    //Trace the child and all upcoming granchilds
+    if (ptrace(PTRACE_SETOPTIONS, new_pid, NULL,
+         PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE) 
+        == -1) {
       perror("Error setoptions");
       exit(1);
     }
     nb_setoptions++;
-
-    FILE *launcher_pipe = NULL;
-    launcher_pipe = fdopen(comm_launcher[1], "w");
-
-    int rank;
-    int amount = parser_get_amount();
-
-    //We write the amount of process to launch for the launcher
-    fprintf(launcher_pipe, "%d\n", amount);
-    fflush(launcher_pipe);
-
-    //Now we launch all process and let them blocked on the first syscall following the exec
-    for (rank=0; rank < amount; rank++) {
-      process_descriptor *proc;
-      char* line = xbt_str_join(parser_get_commandline(rank), " ");
-      printf("simterpose: request the startup of grandchild: %s\n",line);
-      fprintf(launcher_pipe, "%s\n",line);
-      free(line);
-      fflush(launcher_pipe);
-
-      int forked = 0;
-      pid_t new_pid;
-      while (!forked) {
-        ptrace_resume_process(launcherpid);
-
-        waitpid(launcherpid, &status, 0);
-
-        // check if it's a fork
-        int stat16 = status >> 16;
-
-        if (stat16 == PTRACE_EVENT_FORK || stat16 == PTRACE_EVENT_VFORK || stat16 == PTRACE_EVENT_CLONE) {
-          new_pid = ptrace_get_pid_fork(launcherpid);
-          proc = process_descriptor_new(parser_get_workstation(rank), new_pid);
-          process_set_descriptor(new_pid, proc);
-          forked = 1;
-        }
-      }
-      //resume fork syscall
-      ptrace_resume_process(launcherpid);
-
-      run_until_exec(new_pid);
-      process_set_in_syscall(proc);
-
-      add_launching_time(new_pid, parser_get_start_time(rank));
-    }
-    parser_free_all();
-    fclose(launcher_pipe);
+   
+    process_set_descriptor(new_pid, process_descriptor_new(parser_get_workstation(rank), new_pid));
+    add_launching_time(new_pid, parser_get_start_time(rank));
   }
-
-  //Now we detach launcher because we don't need it anymore
-  ptrace_detach_process(launcherpid);
 }
+ 
+static void start_all_processes()
+{
+  int rank;
+
+  for (rank = 0; rank <parser_get_amount(); rank++) {
+    start_one_process(rank);
+  }
+} 
 
 /* Get the power of the current machine from a simple matrix product operation */
 static void benchmark_matrix_product(float *msec_per_flop)

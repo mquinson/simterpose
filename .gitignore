@@ -31,7 +31,6 @@ applications/server_2
 applications/server_read_asym
 applications/test
 
-launcher
 simterpose
 ptrace_temps/svg
 ptrace_temps/temps
