@@ -30,9 +30,10 @@ static inline float str_to_double(const char *string)
   return value;
 }
 
-void usage(char *progName)
+void usage(char *progName, int retcode)
 {
   printf("usage : %s [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
+  exit(retcode);
 }
 
 void simterpose_init(int argc, char **argv)
@@ -45,8 +46,7 @@ void simterpose_init(int argc, char **argv)
 
   // Initialize simterpose
   if (argc < 3) {
-    usage(argv[0]);
-    exit(1);
+    usage(argv[0],1);
   } else {
     int c;
     while ((c = getopt(argc, argv, "+p:")) != EOF) {
@@ -59,7 +59,7 @@ void simterpose_init(int argc, char **argv)
         break;
 
       default:
-        usage(argv[0]);
+        usage(argv[0],0);
         break;
       }
     }
@@ -67,13 +67,11 @@ void simterpose_init(int argc, char **argv)
   }
 
   if (argc - optind < 2) {
-    usage(argv[0]);
-    exit(1);
+    usage(argv[0],1);
   }
 
   if (!flop_option)
     benchmark_matrix_product(&msec_per_flop);
-
 
   init_global_data(msec_per_flop);
 
