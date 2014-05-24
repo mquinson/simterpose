@@ -1,7 +1,6 @@
 #include "ptrace_utils.h"
 #include "sysdep.h"
-#include "xbt.h"
-#include "xbt/log.h"
+#include <xbt.h>
 #include "simterpose.h"
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_UTILS, SIMTERPOSE, "ptrace utils log");
@@ -37,6 +36,8 @@ static char *syscall_list[] =
 "signalfd4", "eventfd2", "epoll_create1", "dup3", "pipe2", "inotify_init1", "preadv", "pwritev"
 };
 
+#define SYSERROR(...) THROWF(system_error, errno, __VA_ARGS__)
+
 
 void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, char *syscall)
 {
@@ -52,10 +53,10 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, char *syscall)
   while (size_copy < len) {
     ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
     nb_peek++;
-    if (ret == -1 && errno != 0) {
-      XBT_ERROR("%s : ptrace peekdata in %s\n", strerror(errno), syscall);
-      THROW_IMPOSSIBLE;
-    }
+
+    if (ret == -1 && errno != 0)
+      SYSERROR("%s : ptrace peekdata in %s\n", strerror(errno), syscall);
+
     *temp_dest = ret;
     ++temp_dest;
     size_copy += sizeof(long);
@@ -65,10 +66,10 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, char *syscall)
   if (rest) {
     ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
     nb_peek++;
-    if (ret == -1 && errno != 0) {
-      XBT_ERROR("%s : ptrace peekdata in %s\n", strerror(errno), syscall);
-      THROW_IMPOSSIBLE;
-    }
+
+    if (ret == -1 && errno != 0)
+      SYSERROR("%s : ptrace peekdata in %s\n", strerror(errno), syscall);
+
     memcpy(temp_dest, &ret, rest);
   }
 }
@@ -81,31 +82,24 @@ void ptrace_poke(pid_t pid, void *dst, void *src, size_t len)
   while (size_copy < len) {
     ret = ptrace(PTRACE_POKEDATA, pid, dst + size_copy, *((long *) (src + size_copy)));
     nb_poke++;
-    if (ret == -1 && errno != 0) {
-      XBT_ERROR("[%d] Unable to write at memory address %p\n", pid, dst);
-      THROW_IMPOSSIBLE;
-    }
+    if (ret == -1 && errno != 0)
+      SYSERROR("[%d] Unable to write at memory address %p\n", pid, dst);
+
     size_copy += sizeof(long);
   }
 }
 
 void ptrace_resume_process(const pid_t pid)
 {
-  // XBT_DEBUG("Resume process %d", pid); // to much noise
-  if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL) == -1) {
-    XBT_ERROR(" [%d] ptrace syscall %s\n", pid, strerror(errno));
-    THROW_IMPOSSIBLE;
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL) == -1)
+    SYSERROR("[%d] Error while resuming until next syscall: %s\n", pid, strerror(errno));
   nb_syscall++;
 }
 
 void ptrace_detach_process(const pid_t pid)
 {
-  if (ptrace(PTRACE_DETACH, pid, NULL, NULL) == -1) {
-    perror("ptrace detach");
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_DETACH, pid, NULL, NULL) == -1)
+	  SYSERROR("[%d] Error while detaching process: %s\n", pid, strerror(errno));
   nb_detach++;
 }
 
@@ -113,16 +107,12 @@ void ptrace_detach_process(const pid_t pid)
 int ptrace_record_socket(pid_t pid)
 {
   struct user_regs_struct save_reg, reg;
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &save_reg) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &save_reg) == -1)
+    SYSERROR("[%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_getregs++;
 
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_getregs++;
 
   reg.orig_rax = SYS_socket;
@@ -130,29 +120,23 @@ int ptrace_record_socket(pid_t pid)
   reg.rsi = SOCK_STREAM;
   reg.rdx = 0;
 
-  if (ptrace(PTRACE_SETREGS, pid, NULL, &reg) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_SETREGS, pid, NULL, &reg) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_setregs++;
   ptrace_resume_process(pid);
 
   int status;
   waitpid(pid, &status, 0);
 
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_getregs++;
 
   int res = (int) reg.rax;
 
 
-  if (ptrace(PTRACE_SETREGS, pid, NULL, &save_reg) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_SETREGS, pid, NULL, &save_reg) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_setregs++;
   ptrace_rewind_syscalls(pid);
   ptrace_resume_process(pid);
@@ -167,10 +151,9 @@ void ptrace_get_register(const pid_t pid, reg_s * arg)
 {
   struct user_regs_struct regs;
 
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
+
   nb_getregs++;
   /* ---- test archi for registers ---- */
   arg->reg_orig = regs.orig_rax;
@@ -183,42 +166,19 @@ void ptrace_get_register(const pid_t pid, reg_s * arg)
   arg->arg6 = regs.r9;
 }
 
-void ptrace_set_register(const pid_t pid)
-{
-  struct user_regs_struct regs;
-
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
-  nb_getregs++;
-  //regs.rax=184;
-  regs.orig_rax = 184;
-
-  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
-  nb_setregs++;
-
-}
-
-
 void ptrace_neutralize_syscall(const pid_t pid)
 {
   struct user_regs_struct regs;
   int status;
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
+
   nb_getregs++;
   XBT_DEBUG("neutralize syscall %s", syscall_list[regs.orig_rax]);
   regs.orig_rax = 184;
-  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
+
   nb_setregs++;
   ptrace_resume_process(pid);
   waitpid(pid, &status, 0);
@@ -228,19 +188,15 @@ void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long resu
 {
   struct user_regs_struct regs;
 
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_getregs++;
 
   regs.orig_rax = syscall;
   regs.rax = result;
 
-  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace setregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace setregs %s\n", pid, strerror(errno));
   nb_setregs++;
 }
 
@@ -248,19 +204,15 @@ void ptrace_restore_syscall_arg1(pid_t pid, unsigned long syscall, unsigned long
 {
   struct user_regs_struct regs;
 
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_getregs++;
 
   regs.orig_rax = syscall;
   regs.rdi = arg1;
 
-  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_setregs++;
 }
 
@@ -269,19 +221,15 @@ void ptrace_rewind_syscalls(const pid_t pid)
 {
   struct user_regs_struct regs;
 
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_getregs++;
 
   regs.rax = regs.orig_rax;
   regs.rip -= 2;
 
-  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
+    SYSERROR(" [%d] ptrace getregs %s", pid, strerror(errno));
   nb_setregs++;
 
 }
@@ -289,10 +237,8 @@ void ptrace_rewind_syscalls(const pid_t pid)
 unsigned long ptrace_get_pid_fork(const pid_t pid)
 {
   unsigned long new_pid;
-  if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &new_pid) == -1) {
-    perror("ptrace geteventmsg");
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &new_pid) == -1)
+    SYSERROR("[%d] ptrace geteventmsg %s", pid, strerror(errno));
   nb_geteventmsg++;
   return new_pid;
 }
@@ -301,18 +247,14 @@ int ptrace_find_free_binding_port(const pid_t pid)
 {
   struct user_regs_struct save_reg;
 
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &save_reg) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &save_reg) == -1)
+    SYSERROR(" [%d] ptrace getregs %s", pid, strerror(errno));
   nb_getregs++;
 
   struct user_regs_struct reg;
 
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1) {
-    XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    xbt_die("Impossible to continue\n");
-  }
+  if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
+    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
   nb_getregs++;
   struct sockaddr_in in;
   struct sockaddr_in temp;
@@ -329,10 +271,8 @@ int ptrace_find_free_binding_port(const pid_t pid)
     ptrace_poke(pid, (void *) reg.rsi, &temp, reg.rdx);
     ptrace_resume_process(pid);
     waitpid(pid, &status, 0);
-    if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1) {
-      XBT_ERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-      xbt_die("Impossible to continue\n");
-    }
+    if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
+      SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
     nb_getregs++;
     if (reg.rax == 0)
       break;
