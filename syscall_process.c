@@ -715,7 +715,7 @@ int process_socket_call(pid_t pid, syscall_arg_u * arg)
 void process_setsockopt_syscall(pid_t pid, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
-  //TODO real gestion of setsockopt with warn
+  //TODO really handle setsockopt that currently raise a warning
   arg->ret = 0;
 
   if (arg->optname == SO_REUSEADDR)
@@ -902,9 +902,8 @@ int process_handle_mediate(pid_t pid)
 
 
 
-int process_handle(pid_t pid, int stat)
+int process_handle(pid_t pid, int status)
 {
-  int status = stat;
   reg_s arg;
   process_descriptor_t *proc = process_get_descriptor(pid);
   syscall_arg_u *sysarg = &(proc->sysarg);

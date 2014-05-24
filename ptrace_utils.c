@@ -155,7 +155,8 @@ void ptrace_get_register(const pid_t pid, reg_s * arg)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
 
   nb_getregs++;
-  /* ---- test archi for registers ---- */
+
+  // FIXME: test architecture and use the right registers
   arg->reg_orig = regs.orig_rax;
   arg->ret = regs.rax;
   arg->arg1 = regs.rdi;

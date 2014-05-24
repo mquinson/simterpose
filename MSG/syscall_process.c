@@ -1013,7 +1013,6 @@ int process_handle(pid_t pid, int stat)
               if(flags & O_NONBLOCK)
               {
                 sysarg->read.ret=-11;
-//                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
                 process_set_out_syscall(proc);
                 process_read_out_call(pid);
@@ -1030,7 +1029,6 @@ int process_handle(pid_t pid, int stat)
               int res = process_recv_call(pid, sysarg);
               if(res == PROCESS_TASK_FOUND)
               {
-//                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
                 process_set_out_syscall(proc);
                 process_set_state(proc, PROC_READ);
@@ -1040,7 +1038,6 @@ int process_handle(pid_t pid, int stat)
               {
                 if( res == RECV_CLOSE)
                   sysarg->read.ret=0;
-//                 print_read_syscall(pid, sysarg);
                 ptrace_neutralize_syscall(pid);
                 process_set_out_syscall(proc);
                 process_read_out_call(pid);
@@ -1080,7 +1077,6 @@ int process_handle(pid_t pid, int stat)
         case SYS_poll:
         {
           get_args_poll(pid, &arg, sysarg);
-//           print_poll_syscall(pid, sysarg);
           process_descriptor_t* proc = process_get_descriptor(pid);
           if(sysarg->poll.timeout >=0)
             add_timeout(pid, sysarg->poll.timeout + MSG_get_clock());
@@ -1095,7 +1091,7 @@ int process_handle(pid_t pid, int stat)
         
         case SYS_exit_group:
         {
-	XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
+          XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
           ptrace_detach_process(pid);
           return PROCESS_DEAD;
         }
@@ -1103,7 +1099,7 @@ int process_handle(pid_t pid, int stat)
         
         case SYS_exit:
         {
-	XBT_DEBUG("[%d] exit(%ld) called", pid, arg.arg1);
+          XBT_DEBUG("[%d] exit(%ld) called", pid, arg.arg1);
           ptrace_detach_process(pid);
           return PROCESS_DEAD;
         }
@@ -1137,7 +1133,7 @@ int process_handle(pid_t pid, int stat)
         case SYS_futex:
         {
 	XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
-          //TODO add real gestion of timeout
+          //TODO really handle the timeout
           if(arg.arg2 == FUTEX_WAIT)
           {
             ptrace_resume_process(pid);

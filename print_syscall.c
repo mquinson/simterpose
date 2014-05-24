@@ -765,9 +765,12 @@ void print_select_syscall(pid_t pid, syscall_arg_u * sysarg)
 
 }
 
-void print_fcntl_cmd(int cmd)
+void print_fcntl_syscall(pid_t pid, syscall_arg_u * sysarg)
 {
-  switch (cmd) {
+  fcntl_arg_t arg = &(sysarg->fcntl);
+  //  fprintf(stderr,"[%d] fcntl( %d, ", pid, arg->fd);
+  fprintf(stderr, "fcntl( %d, ", arg->fd);
+  switch (arg->cmd) {
   case F_DUPFD:
     fprintf(stderr, "F_DUPFD");
     break;
@@ -808,14 +811,6 @@ void print_fcntl_cmd(int cmd)
     fprintf(stderr, "Unknown command");
     break;
   }
-}
-
-void print_fcntl_syscall(pid_t pid, syscall_arg_u * sysarg)
-{
-  fcntl_arg_t arg = &(sysarg->fcntl);
-  //  fprintf(stderr,"[%d] fcntl( %d, ", pid, arg->fd);
-  fprintf(stderr, "fcntl( %d, ", arg->fd);
-  print_fcntl_cmd(arg->cmd);
   fprintf(stderr, " , %d) = %d\n", arg->arg, arg->ret);
 }
 
