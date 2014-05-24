@@ -294,37 +294,11 @@ int main(int argc, char *argv[])
     }
 
 
-//     --indice;
-//     if(!indice)
-//     {
-//       fprintf(stderr, "End of loop (left %d): Simulation time : %lf\n",global_data->child_amount, SD_get_clock());
-//       indice = 10000;
-//     }
-//       if(SD_get_clock() > 1000)
-//         break;
-
     XBT_DEBUG("child_amount = %d", child_amount);
     i--;
-  } while (child_amount);       //i);//
+  } while (child_amount);
 
 
-  cputimer_exit();
-
-  XBT_INFO("End of simulation. Time : %lf", SD_get_clock());
-#ifdef address_translation
-  XBT_INFO("Address translation used");
-#else
-  XBT_INFO("Full mediation used");
-#endif
-  XBT_DEBUG("%d peek et %d poke ", nb_peek, nb_poke);
-  XBT_DEBUG("%d getregs et %d setregs", nb_getregs, nb_setregs);
-  XBT_DEBUG("%d detach ", nb_detach);
-  XBT_DEBUG("%d syscall, %d geteventmsg et %d setoptions ", nb_syscall, nb_geteventmsg, nb_setoptions);
-  XBT_INFO("nb total de ptrace() = %d ",
-           nb_peek + nb_poke + nb_getregs + nb_setregs + nb_detach + nb_syscall + nb_geteventmsg +
-           nb_setoptions);
-
-  SD_exit();
   destroy_global_data();
   xbt_dynar_free(&sched_list);
   xbt_dynar_free(&idle_process);
@@ -332,6 +306,16 @@ int main(int argc, char *argv[])
   comm_exit();
   socket_exit();
   cputimer_exit();
-  printf("End of simulation\n");
+  char *interposer_name =
+#ifdef address_translation
+          "Address translation (connect pipes instead of sockets)";
+#else
+          "Full mediation (peek/poke every data)";
+#endif
+  XBT_INFO("End of simulation. Simulated time: %lf. Used interposer: %s", SD_get_clock(),interposer_name);
+  XBT_INFO("Total amount of ptrace(): %d (peek/poke: %d/%d, getregs/setregs: %d/%d, detach: %d, syscall: %d, geteventmsg: %d, setoption: %d)",
+           nb_peek + nb_poke + nb_getregs + nb_setregs + nb_detach + nb_syscall + nb_geteventmsg + nb_setoptions,
+           nb_peek,nb_poke, nb_getregs,nb_setregs, nb_detach, nb_syscall, nb_geteventmsg,nb_setoptions);
+  SD_exit();
   return 0;
 }
