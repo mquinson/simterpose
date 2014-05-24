@@ -39,5 +39,6 @@ applications/server: applications/server.c
 
 clean:
 	rm -rf simterpose *.o
+	make -C applications clean
 
 
