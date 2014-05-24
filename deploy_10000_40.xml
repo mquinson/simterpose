@@ -1,9 +1,13 @@
 <?xml version='1.0'?>
 <!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid.dtd">
 <platform version ="3">
-  <process host="Tremblay" function="applications/server 10000 40" start_time="0.00">
+  <process host="Tremblay" function="applications/server" start_time="0.00">
+    <argument value="10"/> <!-- Amount of messages to send -->
+    <argument value="40"/>
     <argument value="2227"/>
   </process>
-  <process host="Jupiter" function="applications/client 10000 40" start_time="3.0">
+  <process host="Jupiter" function="applications/client" start_time="3.0">
+    <argument value="10"/>
+    <argument value="40"/>
   </process>
 </platform>
