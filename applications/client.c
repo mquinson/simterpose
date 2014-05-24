@@ -26,12 +26,22 @@ int main(int argc, char **argv)
   }
 
   int msg_count = atoi(argv[1]);
-  int msg_size = atoi(argv[2]);
+  int message_size = atoi(argv[2]);
+
+  struct timeval begin;
+  struct timespec tvcl;
+  gettimeofday(&begin, NULL);
+  clock_gettime(NULL, &tvcl);
+  fprintf(stderr, "Client starting: #msg: %d; size: %d (gettimeofday %f; time: %d; clock_gettime: %f)\n",
+		  msg_count,message_size,
+		  begin.tv_sec + begin.tv_usec/1000000.0,
+		  time(NULL),
+		  tvcl.tv_sec + tvcl.tv_nsec/1000000000.0);
 
   int clientSocket;
   u_short port;
   int res;
-  char *buff = malloc(msg_size);
+  char *buff = malloc(message_size);
   int server_socket;
   long host_addr;
   struct hostent *serverHostEnt;
@@ -40,8 +50,6 @@ int main(int argc, char **argv)
     perror("Client: error while creating the real socket");
     exit(1);
   }
-  struct timeval begin;
-  struct timespec tvcl;
   struct sockaddr_in cli_addr;
   memset(&cli_addr, 0, sizeof(struct sockaddr_in));
   host_addr = inet_addr(IP);
@@ -58,19 +66,13 @@ int main(int argc, char **argv)
 
   int msg_number = 0;
 
-  /*   gettimeofday(&begin, NULL); 
-     printf("\ngettimeofday du client: %f\n",begin.tv_sec + begin.tv_usec/1000000.0);
-     printf("time du client: %d \n",time(NULL));
-     clock_gettime(NULL, &tvcl); 
-     printf("clock_gettime du client : %f\n\n",tvcl.tv_sec + tvcl.tv_nsec/1000000000.0); */
-
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
-    res = send(clientSocket, buff, msg_size, 0);
+    res = send(clientSocket, buff, message_size, 0);
     if (res == -1) {
       perror("Client: cannot send message");
       exit(1);
     } else {
-      int length = msg_size;
+      int length = message_size;
       while (length > 0) {
         res = recv(clientSocket, buff, length, 0);
         if (res == -1) {
@@ -84,6 +86,16 @@ int main(int argc, char **argv)
   }
   shutdown(clientSocket, 2);
   close(clientSocket);
+
+  struct timeval end;
+  struct timespec end_tvcl;
+  gettimeofday(&end, NULL);
+  clock_gettime(NULL, &end_tvcl);
+  fprintf(stderr, "Client exiting after %d msgs (gettimeofday %f; time: %d; clock_gettime: %f)\n",
+		  msg_count,message_size,
+		  end.tv_sec + end.tv_usec/1000000.0,
+		  time(NULL),
+		  end_tvcl.tv_sec + end_tvcl.tv_nsec/1000000000.0);
 
   return 0;
 }

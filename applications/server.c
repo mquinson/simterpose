@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <poll.h>
-#include <pthread.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <errno.h>
 
 #define SERV_PORT 2227
@@ -22,6 +22,16 @@ int main(int argc, char **argv)
 
   int msg_count = atoi(argv[1]);
   int msg_size = atoi(argv[2]);
+
+  struct timeval begin;
+  struct timespec tvcl;
+  gettimeofday(&begin, NULL);
+  clock_gettime(NULL, &tvcl);
+  fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d (gettimeofday %f; time: %d; clock_gettime: %f)\n",
+		  SERV_PORT, msg_count,msg_size,
+		  begin.tv_sec + begin.tv_usec/1000000.0,
+		  time(NULL),
+		  tvcl.tv_sec + tvcl.tv_nsec/1000000000.0);
 
   int serverSocket;
   char *buff = malloc(msg_size);
@@ -82,7 +92,6 @@ int main(int argc, char **argv)
         exit(1);
       }
       length -= res;
-      //    printf("Server : recv %d (left %d)\n", res, length);
     }
     fprintf(stderr, "Server: Message received: %s", buff);
     sprintf(buff, "answer #%d",msg_number);
@@ -94,6 +103,16 @@ int main(int argc, char **argv)
   }
   shutdown(client_socket, 2);
   close(client_socket);
+
+  struct timeval end;
+  struct timespec end_tvcl;
+  gettimeofday(&end, NULL);
+  clock_gettime(NULL, &end_tvcl);
+  fprintf(stderr, "Server exiting after %d msgs (gettimeofday %f; time: %d; clock_gettime: %f)\n",
+		  msg_count,msg_size,
+		  end.tv_sec + end.tv_usec/1000000.0,
+		  time(NULL),
+		  end_tvcl.tv_sec + end_tvcl.tv_nsec/1000000000.0);
 
   return 0;
 }
