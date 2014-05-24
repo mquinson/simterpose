@@ -35,6 +35,7 @@ int main(int argc, char **argv)
 
   int serverSocket;
   char *buff = malloc(msg_size);
+  char *expected = malloc(msg_size);
   u_short port;
   int res;
   int client_socket;
@@ -84,6 +85,8 @@ int main(int argc, char **argv)
 
   int msg_number = 0;
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
+    sprintf(expected, "This is the message #%d produced on the client.",msg_number);
+
     int length = msg_size;
     while (length > 0) {
       res = recv(client_socket, buff, length, 0);
@@ -93,11 +96,17 @@ int main(int argc, char **argv)
       }
       length -= res;
     }
-    fprintf(stderr, "Server: Message received: %s", buff);
-    sprintf(buff, "answer #%d",msg_number);
+    if (strcmp(buff,expected)) {
+      fprintf(stderr, "Server: received message does not match at step %d (got: %s)\n",
+              msg_number, buff);
+      exit(1);
+    }
+    fprintf(stderr, "Server: reception of message #%d was successful\n", msg_number);
+
+    sprintf(buff, "This is the answer #%d, from the server.",msg_number);
     res = send(client_socket, buff, msg_size, 0);
     if (res == -1) {
-      perror("Server: erreur envoi 2");
+      perror("Server: error sending answer");
       exit(1);
     }
   }

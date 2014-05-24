@@ -42,6 +42,7 @@ int main(int argc, char **argv)
   u_short port;
   int res;
   char *buff = malloc(message_size);
+  char *expected = malloc(message_size);
   int server_socket;
   long host_addr;
   struct hostent *serverHostEnt;
@@ -67,22 +68,31 @@ int main(int argc, char **argv)
   int msg_number = 0;
 
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
+    sprintf(buff, "This is the message #%d produced on the client.",msg_number);
     res = send(clientSocket, buff, message_size, 0);
     if (res == -1) {
       perror("Client: cannot send message");
       exit(1);
-    } else {
-      int length = message_size;
-      while (length > 0) {
-        res = recv(clientSocket, buff, length, 0);
-        if (res == -1) {
-          fprintf(stderr, "Client: Error while sending message #%d: %s\n", msg_number, strerror(errno));
-          exit(1);
-        }
-        length -= res;
-      }
-        fprintf(stderr, "Client: Received message #%d",msg_number);
     }
+    fprintf(stderr,"Client: sent message #%d\n",msg_number,buff);
+
+    int length = message_size;
+    while (length > 0) {
+      res = recv(clientSocket, buff, length, 0);
+      if (res == -1) {
+        fprintf(stderr, "Client: Error while sending message #%d: %s\n",
+                msg_number, strerror(errno));
+        exit(1);
+      }
+      length -= res;
+    }
+    sprintf(expected, "This is the answer #%d, from the server.",msg_number);
+    if (strcmp(buff,expected)) {
+      fprintf(stderr, "Client: received answer does not match at step %d (got: %s)\n",
+              msg_number, buff);
+      exit(1);
+    }
+    fprintf(stderr, "Client: reception of answer #%d was successful\n", msg_number);
   }
   shutdown(clientSocket, 2);
   close(clientSocket);
