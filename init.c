@@ -238,12 +238,21 @@ static void benchmark_matrix_product(float *msec_per_flop)
     }
   }
 
+<<<<<<< HEAD
   cputimer_get(pid, times);
   result = (times[1] + times[2]) - initialTime;
   XBT_DEBUG("Duration of benchmark : %lld", result);
 
   *msec_per_flop = ((float) result) / (2. * matrixSize * matrixSize * matrixSize);
   float flop_per_sec = (1000000.) / (*msec_per_flop);
+=======
+    cputimer_get(pid, times);
+    result = (times[1] + times[2]) - initialTime;
+    XBT_DEBUG("Duration of benchmark : %lld", result);
+
+    *msec_per_flop = ((float) result) / (2. * matrixSize * matrixSize * matrixSize);
+    float flop_per_sec = (1000000.) / (*msec_per_flop);
+>>>>>>> 77b820d772ad4e3f57c35a9cbfcb41ae2a161bdc
 
   XBT_INFO("Your machine was benchmarked at %.0f flop/s (use -p %.0f to avoid that benchmarking)", flop_per_sec,
            flop_per_sec);

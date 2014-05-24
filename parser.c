@@ -20,6 +20,19 @@ void destruct_process_descriptor(launcher_procdesc * proc)
   free(proc);
 }
 
+static int compare_time(const void *proc1, const void *proc2)
+{
+  int time1 = (*((launcher_procdesc **) proc1))->launching_time;
+  int time2 = (*((launcher_procdesc **) proc2))->launching_time;
+
+  if (time1 < time2)
+    return -1;
+  else if (time1 == time2)
+    return 0;
+  else
+    return 1;
+}
+
 static void parse_process(sg_platf_process_cbarg_t args)
 {
   launcher_procdesc *proc;

@@ -66,13 +66,24 @@ int main(int argc, char **argv)
 
   int msg_number = 0;
 
+<<<<<<< HEAD
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
     res = send(clientSocket, buff, message_size, 0);
+=======
+  /*   gettimeofday(&begin, NULL); 
+     printf("\ngettimeofday du client: %f\n",begin.tv_sec + begin.tv_usec/1000000.0);
+     printf("time du client: %d \n",time(NULL));
+     clock_gettime(NULL, &tvcl); 
+     printf("clock_gettime du client : %f\n\n",tvcl.tv_sec + tvcl.tv_nsec/1000000000.0); */
+
+  for (msg_number = 0; msg_number < msg_count; ++msg_number) {
+    res = send(clientSocket, buff, msg_size, 0);
+>>>>>>> 77b820d772ad4e3f57c35a9cbfcb41ae2a161bdc
     if (res == -1) {
       perror("Client: cannot send message");
       exit(1);
     } else {
-      int length = message_size;
+      int length = msg_size;
       while (length > 0) {
         res = recv(clientSocket, buff, length, 0);
         if (res == -1) {
