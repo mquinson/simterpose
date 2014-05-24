@@ -18,7 +18,6 @@
 #include <xbt/log.h>
 #include "data_utils.h"
 #include "parser.h"
-#include "init.h"
 #include "communication.h"
 #include "syscall_process.h"
 

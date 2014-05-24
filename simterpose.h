@@ -68,4 +68,8 @@ struct simterpose_station {
 
 void add_to_sched_list(pid_t pid);
 
+
+// Initialize all simterpose
+void simterpose_init(int argc, char **argv);
+
 #endif
