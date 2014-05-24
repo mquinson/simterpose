@@ -54,7 +54,7 @@ pid_t pop_next_pid()
   xbt_dynar_shift(global_data->launching_time, &t);
   int res = t->pid;
   
-  process_descriptor* proc = process_get_descriptor(res);
+  process_descriptor_t* proc = process_get_descriptor(res);
   if(proc->in_timeout == PROC_IN_TIMEOUT)
     proc->in_timeout = PROC_TIMEOUT_EXPIRE;
   proc->timeout = NULL;
@@ -69,7 +69,7 @@ void add_launching_time(pid_t pid, double start_time)
   t->pid = pid;
   t->start_time = start_time;
   
-  process_descriptor* proc = process_get_descriptor(pid);
+  process_descriptor_t* proc = process_get_descriptor(pid);
   proc->timeout = t;
   
   xbt_dynar_push(global_data->launching_time, &t);
@@ -81,7 +81,7 @@ void set_next_launchment(pid_t pid)
   t->pid = pid;
   t->start_time = MSG_get_clock();
   
-  process_descriptor* proc = process_get_descriptor(pid);
+  process_descriptor_t* proc = process_get_descriptor(pid);
   proc->timeout = t;
   
   xbt_dynar_unshift(global_data->launching_time, &t);
@@ -102,7 +102,7 @@ void add_timeout(pid_t pid, double start_time)
   t->pid = pid;
   t->start_time = start_time;
   
-  process_descriptor* proc = process_get_descriptor(pid);
+  process_descriptor_t* proc = process_get_descriptor(pid);
   proc->timeout = t;
   proc->in_timeout = PROC_IN_TIMEOUT;
   
@@ -119,7 +119,7 @@ void add_timeout(pid_t pid, double start_time)
 
 void remove_timeout(pid_t pid)
 {
-  process_descriptor* proc = process_get_descriptor(pid);
+  process_descriptor_t* proc = process_get_descriptor(pid);
   time_desc* t = proc->timeout;
   proc->timeout = NULL;
   proc->in_timeout = PROC_NO_TIMEOUT;
@@ -356,7 +356,7 @@ int get_real_port(pid_t pid, unsigned int ip, int port)
   if(ip == inet_addr("127.0.0.1"))
   {
 //     printf("We are on local network %d\n",port);
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
     temp = (simterpose_station*)xbt_dict_get(global_data->list_station, MSG_host_get_name(proc->host));
   }
   else

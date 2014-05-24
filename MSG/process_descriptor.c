@@ -7,15 +7,15 @@
 #include </usr/include/linux/sched.h> /* For clone flags*/
 
 
-process_descriptor *process_descriptor_new(char* name, pid_t pid)
+process_descriptor_t *process_descriptor_new(char* name, pid_t pid)
 {
-  process_descriptor* result = malloc(sizeof(process_descriptor));
+  process_descriptor_t* result = malloc(sizeof(process_descriptor_t));
   result->name = strdup(name);
 //   char buff[256];
 //   strcpy(buff, name);
 //   strcat(buff, ".txt");
 //   result->trace = fopen(buff, "w");
-  result->fd_list = malloc(sizeof(fd_descriptor*)*MAX_FD);
+  result->fd_list = malloc(sizeof(fd_descriptor_t*)*MAX_FD);
   result->pid=pid;
   result->tgid = pid; //By default, we consider that process is the first of this pgid
   result->cpu_time=0; 
@@ -41,7 +41,7 @@ process_descriptor *process_descriptor_new(char* name, pid_t pid)
 }
 
 
-void process_descriptor_destroy(process_descriptor* proc)
+void process_descriptor_destroy(process_descriptor_t* proc)
 {
   free(proc->name);
   //We don't free each fd beacuse application do this before
@@ -60,48 +60,48 @@ void process_descriptor_destroy(process_descriptor* proc)
 }
 
 //TODO regarder l'inline pour cette fonction
-process_descriptor *process_get_descriptor(pid_t pid)
+process_descriptor_t *process_get_descriptor(pid_t pid)
 {
   return global_data->process_desc[pid];
 }
 
-void process_set_idle(process_descriptor *proc, int idle_state)
+void process_set_idle(process_descriptor_t *proc, int idle_state)
 {
   proc->idle = idle_state;
 }
 
-int process_get_idle(process_descriptor *proc)
+int process_get_idle(process_descriptor_t *proc)
 {
   return proc->idle;
 }
 
 
-void process_set_descriptor(pid_t pid, process_descriptor* proc)
+void process_set_descriptor(pid_t pid, process_descriptor_t* proc)
 {
   global_data->process_desc[pid]=proc;
 }
 
 
-int process_update_cputime(process_descriptor *proc, long long int new_cputime) {
+int process_update_cputime(process_descriptor_t *proc, long long int new_cputime) {
   
   int result = new_cputime - proc->cpu_time;
   proc->cpu_time = new_cputime;
   return result;
 }
 
-int process_in_syscall(process_descriptor *proc) {
+int process_in_syscall(process_descriptor_t *proc) {
   return (proc->state & 0x1);
 }
 
-void process_set_in_syscall(process_descriptor *proc) {
+void process_set_in_syscall(process_descriptor_t *proc) {
   proc->state= proc->state^0x1;
 }
 
-void process_set_out_syscall(process_descriptor *proc) {
+void process_set_out_syscall(process_descriptor_t *proc) {
   proc->state= proc->state^0x1;
 }
 
-void process_reset_state(process_descriptor* proc)
+void process_reset_state(process_descriptor_t* proc)
 {
   proc->state = proc->state & (~STATE_MASK);
 }
@@ -109,8 +109,8 @@ void process_reset_state(process_descriptor* proc)
 //Create and set a new file descriptor
 void process_fork(pid_t new_pid, pid_t pid_fork)
 {
-  process_descriptor* result = malloc(sizeof(process_descriptor));
-  process_descriptor* forked = process_get_descriptor(pid_fork);
+  process_descriptor_t* result = malloc(sizeof(process_descriptor_t));
+  process_descriptor_t* forked = process_get_descriptor(pid_fork);
   result->name = strdup(forked->name);
   
   result->trace = forked->trace;
@@ -131,8 +131,8 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
 //For detail on clone flags report to man clone
 void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
 {
-  process_descriptor* result = malloc(sizeof(process_descriptor));
-  process_descriptor* cloned = process_get_descriptor(pid_cloned);
+  process_descriptor_t* result = malloc(sizeof(process_descriptor_t));
+  process_descriptor_t* cloned = process_get_descriptor(pid_cloned);
   
   result->pid=new_pid;
   result->cpu_time=0;
@@ -162,14 +162,14 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
   global_data->process_desc[new_pid] = result;
 }
 
-void process_set_state(process_descriptor *proc, int state)
+void process_set_state(process_descriptor_t *proc, int state)
 {
 //   printf("%x %x %x\n", proc->state, state, (state | (proc->state & 0x1)));
   proc->state = (state | (proc->state & 0x1));
 //   printf("Set new state to %d : %x\n", tid, proc->state);
 }
 
-int process_get_state(process_descriptor *proc)
+int process_get_state(process_descriptor_t *proc)
 {
 //   printf("get : %x %x %d\n", proc->state, STATE_MASK, (proc->state & STATE_MASK));
   return proc->state;
@@ -178,27 +178,27 @@ int process_get_state(process_descriptor *proc)
 void process_die(pid_t pid)
 {
   close_all_communication(pid);
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   process_descriptor_destroy(proc);
   global_data->process_desc[pid]=NULL;
 }
 
-void process_on_simulation(process_descriptor *proc, int val)
+void process_on_simulation(process_descriptor_t *proc, int val)
 {
   proc->on_simulation = val;
 }
 
-void process_end_mediation(process_descriptor *proc)
+void process_end_mediation(process_descriptor_t *proc)
 {
   proc->mediate_state=0;
 }
 
-void process_on_mediation(process_descriptor *proc)
+void process_on_mediation(process_descriptor_t *proc)
 {
   proc->mediate_state=1;
 }
 
-int process_get_free_fd(process_descriptor *proc)
+int process_get_free_fd(process_descriptor_t *proc)
 {
   int i;
   for(i=0; i< MAX_FD ; ++i)

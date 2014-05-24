@@ -162,7 +162,7 @@ void sys_build_select(pid_t pid, int match)
   reg_s r;
   ptrace_get_register(pid, &r);
   
-  process_descriptor* proc = process_get_descriptor(pid);
+  process_descriptor_t* proc = process_get_descriptor(pid);
   select_arg_t arg = &(proc->sysarg.select);
   
   if(arg->fd_state & SELECT_FDRD_SET)
@@ -394,7 +394,7 @@ void sys_build_poll(pid_t pid, int match)
   reg_s r;
   ptrace_get_register(pid, &r);
   
-  process_descriptor* proc = process_get_descriptor(pid);
+  process_descriptor_t* proc = process_get_descriptor(pid);
   poll_arg_t arg = &(proc->sysarg.poll);
   arg->ret = match;
   
@@ -581,7 +581,7 @@ void sys_translate_accept(pid_t pid, syscall_arg_u *sysarg)
   msg_host_t host;
   if(arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
   {
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
     host = proc->host;
   }
   else

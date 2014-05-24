@@ -15,7 +15,7 @@ int calculate_computation_time(int pid)
 {
   // printf("entering calculate_computation_time \n");
   cputimer_get(pid, times_syscall);
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
     long long int diff_cpu=0;
 
     // On crée la tache seulement si le temps a avancé

@@ -54,7 +54,7 @@ void remove_from_idle_list(pid_t pid)
   TRY {
     int i = xbt_dynar_search(idle_process, &pid);
     xbt_dynar_remove_at(idle_process, i, NULL);
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
     proc->idle_list = 0;
   }
   CATCH(e) {
@@ -68,7 +68,7 @@ void remove_from_mediate_list(pid_t pid)
   TRY {
     int i = xbt_dynar_search(mediate_list, &pid);
     xbt_dynar_remove_at(mediate_list, i, NULL);
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
     proc->on_mediation = 0;
   }
   CATCH(e) {
@@ -79,7 +79,7 @@ void remove_from_mediate_list(pid_t pid)
 
 void add_to_idle(pid_t pid)
 {
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   if (proc->idle_list)
     return;
   if (proc->on_mediation)
@@ -91,7 +91,7 @@ void add_to_idle(pid_t pid)
 
 void add_to_mediate(pid_t pid)
 {
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   if (proc->on_mediation)
     return;
   if (proc->idle_list)
@@ -104,7 +104,7 @@ void add_to_mediate(pid_t pid)
 //Verify is the process is not already scheduled before adding
 void add_to_sched_list(pid_t pid)
 {
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   if (proc->scheduled || proc->on_simulation)
     return;
 
@@ -124,7 +124,7 @@ void move_idle_to_sched()
   pid_t pid;
   while (!xbt_dynar_is_empty(idle_process)) {
     xbt_dynar_shift(idle_process, &pid);
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
 
     proc->idle_list = 0;
     XBT_DEBUG("Move idle process %d on sched_list", pid);
@@ -138,7 +138,7 @@ void move_mediate_to_sched()
   pid_t pid;
   while (!xbt_dynar_is_empty(mediate_list)) {
     xbt_dynar_shift(mediate_list, &pid);
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
 
     proc->on_mediation = 0;
     proc->scheduled = 1;
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
       if (equal_d(SD_get_clock(), get_next_start_time())) {
         int temp_pid = pop_next_pid();
         add_to_sched_list(temp_pid);
-        process_descriptor *proc = process_get_descriptor(temp_pid);
+        process_descriptor_t *proc = process_get_descriptor(temp_pid);
         if (proc->in_timeout == PROC_NO_TIMEOUT)
           ++child_amount;
         //XBT_DEBUG("In_timeout = %d", proc->in_timeout);
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
 
       pid_t pid;
       xbt_dynar_shift(sched_list, &pid);
-      process_descriptor *proc = process_get_descriptor(pid);
+      process_descriptor_t *proc = process_get_descriptor(pid);
       //  XBT_DEBUG("Scheduling process %d", pid);
       XBT_DEBUG("Scheduling process");
       proc->scheduled = 0;

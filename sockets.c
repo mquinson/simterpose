@@ -56,8 +56,8 @@ void recv_information_destroy(recv_information * recv)
 
 void register_accepting_socket(struct infos_socket *is, pid_t pid, int sockfd)
 {
-  process_descriptor *proc = process_get_descriptor(pid);
-  proc->fd_list[sockfd] = (fd_descriptor *) is;
+  process_descriptor_t *proc = process_get_descriptor(pid);
+  proc->fd_list[sockfd] = (fd_descriptor_t *) is;
   is->fd.type = FD_SOCKET;
   is->fd.fd = sockfd;
   is->fd.proc = proc;
@@ -72,10 +72,10 @@ void register_accepting_socket(struct infos_socket *is, pid_t pid, int sockfd)
 struct infos_socket *confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol)
 {
 
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
 
   struct infos_socket *is = malloc(sizeof(struct infos_socket));
-  proc->fd_list[sockfd] = (fd_descriptor *) is;
+  proc->fd_list[sockfd] = (fd_descriptor_t *) is;
   is->fd.type = FD_SOCKET;
   is->fd.fd = sockfd;
   is->fd.proc = proc;
@@ -157,7 +157,7 @@ void socket_close(pid_t pid, int fd)
     else {
       free(is);
     }
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
     proc->fd_list[fd] = NULL;
   }
 }
@@ -417,7 +417,7 @@ int socket_registered(pid_t pid, int fd)
 struct infos_socket *get_infos_socket(pid_t pid, int fd)
 {
   //printf("Info socket %d %d\n", pid, fd);
-  fd_descriptor *file_desc = process_get_descriptor(pid)->fd_list[fd];
+  fd_descriptor_t *file_desc = process_get_descriptor(pid)->fd_list[fd];
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
     return NULL;
 
@@ -639,11 +639,11 @@ void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
 
 int close_all_communication(int pid)
 {
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   int i = 0;
   int result = 0;
   for (i = 0; i < MAX_FD; ++i) {
-    fd_descriptor *file_desc = proc->fd_list[i];
+    fd_descriptor_t *file_desc = proc->fd_list[i];
     if (file_desc != NULL && file_desc->type == FD_SOCKET) {
       recv_information *recv = comm_get_own_recv((struct infos_socket *) file_desc);
 

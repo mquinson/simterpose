@@ -101,7 +101,7 @@ int process_fork_call(int pid)
 int process_select_call(pid_t pid)
 {
   XBT_DEBUG("Entering process_select_call");
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   select_arg_t arg = &(proc->sysarg.select);
   int i;
 
@@ -175,7 +175,7 @@ int process_select_call(pid_t pid)
 
 int process_poll_call(pid_t pid)
 {
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
 
   XBT_DEBUG("Entering poll %lf %p\n", SD_get_clock(), proc->timeout);
   poll_arg_t arg = (poll_arg_t) & (proc->sysarg.poll);
@@ -265,7 +265,7 @@ int process_handle_active(pid_t pid)
 {
   XBT_DEBUG("process_handle_active");
   int status;
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   int proc_state = process_get_state(proc);
 
   if (proc_state & PROC_SELECT) {
@@ -352,7 +352,7 @@ int process_handle_active(pid_t pid)
 int process_recv_in_call(int pid, int fd)
 {
   XBT_DEBUG("Entering process_recv_in_call");
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   // XBT_DEBUG("[%d]Trying to see if socket %d recv something", pid, fd);
   XBT_DEBUG("Trying to see if socket %d recv something", fd);
   if (proc->fd_list[fd] == NULL)
@@ -375,7 +375,7 @@ int process_recv_in_call(int pid, int fd)
 void process_recvfrom_out_call(int pid)
 {
   XBT_DEBUG("Entering process_RECVFROM_out_call");
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
 //   recvfrom_arg_t arg = &(proc->sysarg.recvfrom);
   //   XBT_ERROR("[%d]Try to see if socket %d recv something", pid, fd);
 //   if(proc->fd_list[arg->sockfd]==NULL)
@@ -395,7 +395,7 @@ void process_recvfrom_out_call(int pid)
 void process_read_out_call(pid_t pid)
 {
   XBT_DEBUG("Entering process_read_out_call");
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
 //   read_arg_t arg = &(proc->sysarg.read);
   process_reset_state(proc);
   sys_build_read(pid, &(proc->sysarg));
@@ -404,7 +404,7 @@ void process_read_out_call(pid_t pid)
 void process_recvmsg_out_call(pid_t pid)
 {
   XBT_DEBUG("Entering process_recvmsg_out_call");
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   sys_build_recvmsg(pid, &(proc->sysarg));
   process_reset_state(proc);
 }
@@ -415,7 +415,7 @@ int process_accept_in_call(pid_t pid, syscall_arg_u * sysarg)
 {
   XBT_DEBUG(" CONNEXION: process_accept_in_call");
   accept_arg_t arg = &(sysarg->accept);
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   //We try to find here if there's a connection to accept
   if (comm_has_connect_waiting(get_infos_socket(pid, arg->sockfd))) {
     struct sockaddr_in in;
@@ -424,7 +424,7 @@ int process_accept_in_call(pid_t pid, syscall_arg_u * sysarg)
 
 //     struct in_addr in2 = {arg->sai.sin_addr.s_addr};
 //     XBT_DEBUG("Accept connection from %s:%d\n", inet_ntoa(in2), arg->sai.sin_port);
-    process_descriptor *conn_proc = process_get_descriptor(conn_pid);
+    process_descriptor_t *conn_proc = process_get_descriptor(conn_pid);
 
     int conn_state = process_get_state(conn_proc);
     if (conn_state & PROC_CONNECT) {
@@ -464,7 +464,7 @@ void process_accept_out_call(pid_t pid, syscall_arg_u * sysarg)
   XBT_DEBUG(" CONNEXION: process_accept_out_call");
   accept_arg_t arg = &(sysarg->accept);
 
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   if (arg->ret >= 0) {
     int domain = get_domain_socket(pid, arg->sockfd);
     int protocol = get_protocol_socket(pid, arg->sockfd);
@@ -548,7 +548,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
 
   if (domain == 2)              //PF_INET
   {
-    process_descriptor *proc = process_get_descriptor(pid);
+    process_descriptor_t *proc = process_get_descriptor(pid);
     struct sockaddr_in *sai = &(arg->sai);
 
     SD_workstation_t station;
@@ -577,7 +577,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
 
     //if the processus waiting for connection, we add it to schedule list
     if (acc_pid) {
-      process_descriptor *acc_proc = process_get_descriptor(acc_pid);
+      process_descriptor_t *acc_proc = process_get_descriptor(acc_pid);
       int status = process_get_state(acc_proc);
       if (status == PROC_ACCEPT_IN || status == PROC_SELECT || status == PROC_POLL)
         add_to_sched_list(acc_pid);
@@ -633,7 +633,7 @@ int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
 void process_connect_out_call(pid_t pid, syscall_arg_u * sysarg)
 {
   XBT_DEBUG(" CONNEXION: process_connect_out_call");
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
 #ifdef address_translation
   connect_arg_t arg = &(sysarg->connect);
 
@@ -657,7 +657,7 @@ int process_bind_call(pid_t pid, syscall_arg_u * sysarg)
   if (socket_registered(pid, arg->sockfd)) {
     if (socket_network(pid, arg->sockfd)) {
 
-      process_descriptor *proc = process_get_descriptor(pid);
+      process_descriptor_t *proc = process_get_descriptor(pid);
 
       if (!is_port_in_use(proc->station, ntohs(arg->sai.sin_port))) {
         XBT_DEBUG("Port %d is free", ntohs(arg->sai.sin_port));
@@ -793,8 +793,8 @@ void process_fcntl_call(pid_t pid, syscall_arg_u * sysarg)
 
 void process_close_call(pid_t pid, int fd)
 {
-  process_descriptor *proc = process_get_descriptor(pid);
-  fd_descriptor *file_desc = proc->fd_list[fd];
+  process_descriptor_t *proc = process_get_descriptor(pid);
+  fd_descriptor_t *file_desc = proc->fd_list[fd];
   if (file_desc->type == FD_SOCKET)
     socket_close(pid, fd);
   else {
@@ -808,7 +808,7 @@ void process_close_call(pid_t pid, int fd)
 int process_handle_mediate(pid_t pid)
 {
   XBT_DEBUG("process_handle_mediate");
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   int state = process_get_state(proc);
 
   if (state & PROC_RECVFROM_IN) {
@@ -906,7 +906,7 @@ int process_handle(pid_t pid, int stat)
 {
   int status = stat;
   reg_s arg;
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   syscall_arg_u *sysarg = &(proc->sysarg);
   XBT_DEBUG("process handle");
   while (1) {
@@ -998,7 +998,7 @@ int process_handle(pid_t pid, int stat)
 #ifdef DEBUG
           print_poll_syscall(pid, sysarg);
 #endif
-          process_descriptor *proc = process_get_descriptor(pid);
+          process_descriptor_t *proc = process_get_descriptor(pid);
           if (sysarg->poll.timeout >= 0)
             add_timeout(pid, sysarg->poll.timeout + SD_get_clock());
           else
@@ -1165,7 +1165,7 @@ int process_handle(pid_t pid, int stat)
 #ifdef DEBUG
           print_select_syscall(pid, sysarg);
 #endif
-          process_descriptor *proc = process_get_descriptor(pid);
+          process_descriptor_t *proc = process_get_descriptor(pid);
           if (sysarg->select.timeout >= 0)
             add_timeout(pid, sysarg->select.timeout + SD_get_clock());
           else
@@ -1432,7 +1432,7 @@ int process_handle(pid_t pid, int stat)
 //           }    
 //           printf(") = %ld\n", arg.ret);
           if ((int) arg.ret >= 0) {
-            fd_descriptor *file_desc = malloc(sizeof(fd_descriptor));
+            fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
             file_desc->fd = (int) arg.ret;
             file_desc->proc = proc;
             file_desc->type = FD_CLASSIC;
@@ -1444,7 +1444,7 @@ int process_handle(pid_t pid, int stat)
       case SYS_creat:
         {
           if ((int) arg.ret >= 0) {
-            fd_descriptor *file_desc = malloc(sizeof(fd_descriptor));
+            fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
             file_desc->fd = (int) arg.ret;
             file_desc->proc = proc;
             file_desc->type = FD_CLASSIC;

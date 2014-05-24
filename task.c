@@ -20,7 +20,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, SIMTERPOSE, "task log");
 void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char *name)
 {
   XBT_DEBUG("Scheduling last computation task %s", name);
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
 
   double comp_size = SD_task_get_amount(proc->last_computation_task);
   double comm_amount = 0;
@@ -38,7 +38,7 @@ void schedule_computation_task(pid_t pid)
   XBT_DEBUG("Scheduling computation");
   //      XBT_DEBUG("Adding compuation task to process %d", pid);
   XBT_DEBUG("Adding compuation task to process");
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
   double comp_size = SD_task_get_amount(proc->last_computation_task);
   double comm_amount = 0;
   SD_workstation_t work_list = proc->station;
@@ -62,7 +62,7 @@ SD_task_t create_computation_task(pid_t pid, double amount)
   char buff[256];
   sprintf(buff, "computation %d ", num);
 
-  process_descriptor *proc = process_get_descriptor(pid);
+  process_descriptor_t *proc = process_get_descriptor(pid);
 
   SD_task_t task = SD_task_create(buff, NULL, amount);
   //SD_task_t task = SD_task_create_comp_seq(buff, NULL, amount);
@@ -123,7 +123,7 @@ void schedule_comm_task(SD_workstation_t sender, SD_workstation_t receiver, SD_t
 // called by process_send_call dans syscall_process
 SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *is, double amount)
 {
-  process_descriptor *proc_sender = process_get_descriptor(pid_sender);
+  process_descriptor_t *proc_sender = process_get_descriptor(pid_sender);
   XBT_DEBUG("Entering create_send_communication_task %s", proc_sender->name);
 
   char buff[256];
@@ -161,7 +161,7 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
 void create_and_schedule_communication_task(pid_t pid_sender, struct infos_socket *is, double amount,
                                             SD_workstation_t sender, SD_workstation_t receiver)
 {
-  process_descriptor *proc_sender = process_get_descriptor(pid_sender);
+  process_descriptor_t *proc_sender = process_get_descriptor(pid_sender);
   XBT_DEBUG("Entering create_and_schedule_communication_task %s", proc_sender->name);
 
   char buff[256];
@@ -213,7 +213,7 @@ void task_schedule_receive(struct infos_socket *is, pid_t pid)
 
   task_comm_info *tci = comm_get_send(is);
 
-  process_descriptor *proc_receiver = process_get_descriptor(pid);
+  process_descriptor_t *proc_receiver = process_get_descriptor(pid);
 
   SD_task_set_data(tci->task, &(proc_receiver->pid));
 
