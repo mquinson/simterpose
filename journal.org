@@ -261,3 +261,50 @@ run_from (sendto/recvfrom) address: Error in `./run_trace': double free or corru
 
 plantuml
 toolindent *.[ch]
+
+* <2014-05-24 sam.>
+(Entrée écrite par Martin)
+- Nettoyé pas mal de code 
+  - J'ai augmenté l'encapsulation des globales de simterpose.
+  - J'ai réindenté à 120 caractères (en utilisant un <simgrid>/tools/indent modifié)
+  - J'ai renommé pas mal de symboles pour suivre une convention de nommage, qui
+    reste à rédiger proprement. Je n'ai pas suivi la convention de simgrid,
+    puisque le XX_t est la structure (en simgrid, c'est une référence à la
+    structure). Je crois qu'on devrait rendre les pointeurs explicites en
+    simgrid, mais ca va être un boulot de chien de tout changer maintenant.
+  - J'ai traduit en anglais ce que j'ai vu en français
+  - J'ai cherché à réduire la quantité de fichiers dans le projet pour qu'il
+    soit plus simple de s'y repérer.
+  - Simplification de Makefile
+  - Y'a du boulot, encore, mais l'initialisation semble clean
+- j'ai tué le processus launcher qui compliquait l'initialisation
+  - Avant, simterpose fork+exec le launcher puis simterpose envoie les lignes de
+    commandes à démarrer sur un tube vers le launcher démarré à cet effet. Le
+    launcher lit ces lignes, puis les démarre. Une fois qu'il a fini, il se met
+    en attente et wait tous ses fils.
+  - Avant tjs, simterpose avait un mal de chien à retrouver le pid des fils
+    démarrés par launcher (il devait ptracer launcher, et modifier le syscall
+    fork() de launcher pour lire ce pid)
+  - C'était ultra compliqué pour rien
+  - Maintenant, simterpose lance ses fils tout seul comme un grand (il a les
+    arguments de la ligne de controle sous une forme directement adapté à
+    execlp, pas besoin de les afficher dans un tube puis de les parser), et
+    récupère directement le pid.
+- J'ai nettoyé les applications server/client.
+  - Les affichages sont consistants
+  - chacun vérifie ce que l'autre lui envoie
+- Le code qui interagit avec simdag est vraiment effrayant. Il faut passer tout
+  ça à MSG, voire directement simix. Je n'ai pas regardé ce que Chloé avait fait
+  car c'est basé sur de la dupplication de code, et que j'avais déjà assez de
+  mal à me repérer comme ça. Je n'arrive pas encore à m'orienter dans le code
+  d'interception pour écrire un nouveau code de rejeu.
+- J'ai modifié simgrid pour exporter les fonctionnalités de xbt_os_timer, dans
+  l'espoir de les utiliser à la place de cputimer
+  - autant factoriser le code avec xbt quand c'est possible
+  - cputimer n'est pas réentrant. On peut avoir un seul timer à la fois, ce qui
+    est parfois problématique (d'après les commentaires)
+  - Malheureusement, xbt_os_timer ne permet pas d'aller espionner les autres
+    processus lourds comme cputimer permet de le faire.
+  - TODO: il faut refaire la même interface que xbt_os_timer, mais avec netlink
+    pour écouter le CPUtime des autres. On va faire ca dans simterpose pour
+    l'instant, quite à le réintégrer à xbt plus tard.
