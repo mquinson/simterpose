@@ -5,7 +5,7 @@
 #include "simdag/simdag.h"
 #include "sockets.h"
 
-void init_global_data();
+void simterpose_globals_init();
 
 double update_simulation_clock();
 
@@ -23,7 +23,7 @@ void add_timeout(pid_t pid, double start_time);
 
 void remove_timeout(pid_t pid);
 
-void destroy_global_data();
+void simterpose_globals_exit();
 
 void destroy_simterpose_station(void *station);
 

@@ -5,7 +5,7 @@
 #include "sockets.h"
 #include "simdag/simdag.h" /* For SD_get_clock() */
 
-void init_global_data()
+void simterpose_globals_init()
 {
   global_data->child_amount = 0;
   global_data->micro_s_per_flop = 0.0;
@@ -22,7 +22,7 @@ void init_global_data()
   }
 }
 
-void destroy_global_data()
+void simterpose_globals_exit()
 {
   xbt_dynar_free(&(global_data->launching_time));
   xbt_dict_free(&(global_data->list_station));

@@ -5,7 +5,7 @@
 #include "sockets.h"
 #include "simdag/simdag.h"      /* For SD_get_clock() */
 
-struct simterpose_data {
+struct simterpose_globals {
   xbt_dynar_t launching_time;
   process_descriptor *process_desc[MAX_PID];
   xbt_dict_t list_station;
@@ -15,10 +15,10 @@ struct simterpose_data {
   int child_amount;
   float msec_per_flop;
 };
-typedef struct simterpose_data simterpose_data_t;
+typedef struct simterpose_globals simterpose_data_t;
 simterpose_data_t *global_data;
 
-void init_global_data(float msec_per_flop)
+void simterpose_globals_init(float msec_per_flop)
 {
   global_data = malloc(sizeof(simterpose_data_t));
   global_data->msec_per_flop = msec_per_flop;
@@ -36,7 +36,7 @@ void init_global_data(float msec_per_flop)
   }
 }
 
-void destroy_global_data()
+void simterpose_globals_exit()
 {
   xbt_dynar_free(&(global_data->launching_time));
   xbt_dict_free(&(global_data->list_station));

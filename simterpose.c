@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
   } while (child_amount);
 
 
-  destroy_global_data();
+  simterpose_globals_exit();
   xbt_dynar_free(&sched_list);
   xbt_dynar_free(&idle_process);
   xbt_dynar_free(&mediate_list);

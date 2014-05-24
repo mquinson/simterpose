@@ -1,12 +1,15 @@
-#ifndef INCLUDE_DATA_UTILS_H
-#define INCLUDE_DATA_UTILS_H
+#ifndef SIMTERPOSE_GLOBALS_H
+#define SIMTERPOSE_GLOBALS_H
 
 #include <sys/types.h>
 #include "simdag/simdag.h"
 #include "sockets.h"
 
-void init_global_data(float msec_per_flop);
+void simterpose_globals_init(float msec_per_flop);
+void simterpose_globals_exit();
+
 double simterpose_get_msec_per_flop();
+
 xbt_dict_t simterpose_get_station_list();
 xbt_dict_t simterpose_get_ip_list();
 
@@ -25,8 +28,6 @@ int has_sleeping_to_launch();
 void add_timeout(pid_t pid, double start_time);
 
 void remove_timeout(pid_t pid);
-
-void destroy_global_data();
 
 void destroy_simterpose_station(void *station);
 
@@ -62,4 +63,4 @@ translate_desc *get_translation(int real_port);
 
 int get_real_port(pid_t pid, unsigned int ip, int port);
 
-#endif
+#endif /* SIMTERPOSE_GLOBALS_H */

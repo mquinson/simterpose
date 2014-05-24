@@ -72,7 +72,7 @@ void simterpose_init(int argc, char **argv)
   if (!flop_option)
     benchmark_matrix_product(&msec_per_flop);
 
-  init_global_data(msec_per_flop);
+  simterpose_globals_init(msec_per_flop);
 
   init_socket_gestion();
   init_comm();
