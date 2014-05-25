@@ -262,8 +262,7 @@ run_from (sendto/recvfrom) address: Error in `./run_trace': double free or corru
 plantuml
 toolindent *.[ch]
 
-* <2014-05-24 sam.>
-(Entrée écrite par Martin)
+* <2014-05-24 sam.> (Entrée par Martin)
 - Nettoyé pas mal de code 
   - J'ai augmenté l'encapsulation des globales de simterpose.
   - J'ai réindenté à 120 caractères (en utilisant un <simgrid>/tools/indent modifié)
@@ -308,3 +307,89 @@ toolindent *.[ch]
   - TODO: il faut refaire la même interface que xbt_os_timer, mais avec netlink
     pour écouter le CPUtime des autres. On va faire ca dans simterpose pour
     l'instant, quite à le réintégrer à xbt plus tard.
+* <2014-05-25 dim.> (Entrée par Martin)
+- Le code utilise par endroit des valeurs numériques qui sont le mal absolu
+  - Par exemple dans process_getpeername_call(), on a:
+      arg->ret = -107;
+  - Quand on lit /usr/include/asm-generic/errno.h, on découvre que 107 est la
+    valeur numérique de ENOTCONN, ce qui rend le tout assez logique puisque
+    getpeername renvoie -1 et met errno à ENOTCONN en cas de problème
+  - Reste à comprendre pourquoi c'est négatif, et comment on donne cette valeur
+    en retour dans le processus appelant
+  - A minima, quand on comprend la valeur numérique, il faut l'écrire en commentaire.
+- Un gros point de blocage à nettoyer est la fonction syscall_process.c::process_handle()
+  - Elle fait quand meme un peu plus de 700 lignes, et construite de façon très
+    difficile à suivre.
+  - J'ai ajouté un commentaire expliquant (ce que je comprend de) ce qu'elle fait
+  - Comprendre *comment* elle le fait est une autre paire de manche, justifiant la
+    réécriture de la fonction.
+  - Chaque fois qu'on intercepte un syscall dans l'application, on fait :
+    - un éventuel traitement avant le syscall
+    - éventuellement on laisse le syscall se faire dans le noyau, ou bien on l'annule
+    - une éventuelle médiation dans le simulateur
+    - un éventuel traitement après le syscall
+  - Pour l'instant, elle semble être organisée de la facon suivante. Attention,
+    ce code est vraiment plein de surprise. Ce qui suit est ma compréhension du
+    truc, faut pas prendre ca pour vérité d'airain.
+#+verbatim
+    while (1) {
+      if (je suis en pre-syscall) { // ie  if (process_in_syscall(proc)==0) {
+
+         switch (le syscall intercepté) {
+           Une centaine de cas pour chaque syscall. Chacun fait:
+             - ce qu'il faut faire avant la médiation (réécrire les paramètres
+               du syscall)
+             - on peut neutraliser le syscall en le remplaçant par le syscall
+               184 (qui est tuxcall(), qui n'est pas implémenté sous linux) puis
+               en le faisant avancer d'un pas
+             - Si le syscall est bloquant, de la magie noire compliquée pour que
+               la médiation au travers de simdag
+               (on replacera cela par MSG un jour et ce sera bien plus simple,
+               mais le code n'est pas prêt à cela, laissons cela ainsi)
+             - souvent, on bascule en mode postsyscall avec l'appel process_set_out_syscall(proc)
+         }
+      } else { // je suis alors en post-syscall
+
+         switch (le syscall intercepté) {
+           Une centaine de cas pour chaque syscall, ou chacun fait le traitement
+           nécessaire après la médiation, et retourne dans un handle ou bien
+           coupe (avec un return?) pour rendre la main à simdag
+         }
+      }
+      faire avancer le processus tracké d'un pas (ptrace_resume/waitpid)
+    }
+#+endverbatim
+  - Il faut tout changer, mais ce n'est pas simple de modifier 700 lignes aussi
+    complexes que celles-ci. La première étape est de sortir chaque case du
+    switch dans des fonctions séparées.
+    - TODO: créer des syscall_XXX_pre, avec le traitement du premier switch, et
+      changer le switch pour les utiliser
+    - TODO: créer des syscall_XXX_post, avec le traitement du second switch
+    - Pour que ca marche, chacune de ces fonctions devra renvoyer l'un des codes
+      de retour actuels de process_handle (genre PROCESS_DEAD quand le pid
+      tracké est terminé), ou bien PROCESS_CONTINUE pour dire qu'il faut continuer.
+    - TODO pour chaque XXX, écrire syscall_XXX_pre juste avant syscall_XXX_post
+      dans le fichier
+    - TODO réécrire les switch pour en faire des tableaux de pointeur sur fonction
+  - L'objectif est de réécrire le fichier pour que le traitement de chaque
+    syscall soit écrit dans l'ordre logique. Une fois ceci fait, il faudra
+    simplifier chacun d'entre eux. J'ai l'impression que certaines fonctions
+    sont appelées une seule fois (=> à inliner si elles sont courtes)
+  - TODO: ajouter un flag --strace à simterpose qui controle si les fonctions
+    print_XXX_syscall sont appelées, au lieu de s'appuyer sur un #define debug.
+    Ces fonctions visent à produire une sortie qui ressemble à strace. On
+    pourrait aussi inliner ces fonctions si elles sont appellées à un seul
+    endroit comme je le pense.
+- le module ptrace_utils, qui englobe de façon plus simple les fonctionnalités
+  offertes par ptrace me semble ok en l'état. J'ai donc ajouté les entêtes de
+  licence et tout. Je propose de pas ajouter ces trucs sur le code qu'on n'a pas
+  repris en main.
+- TODO: est ce qu'on peut tuer le code dans MSG/ ?
+- Je pense qu'il faut maintenant se concentrer sur le nettoyage du code de
+  traçage. On fera un gros coup de balai sur le rejeu pour passer de simdag à
+  MSG plus tard. Faire les deux en même temps, ou bien tenter de modifier le
+  rejeu en profondeur avec un traçage aussi incompréhensible me semble pas
+  raisonnable. On s'autorise à corriger le rejeu pour l'adapter à nos nettoyages
+  coté traçage, afin d'avoir au moins un test ou deux qui marchent (voir qu'on
+  part pas trop dans le mur). C'est ok de casser certains tests en chemin, on
+  réparera de l'autre coté du gué. Bon courage.
