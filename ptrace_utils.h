@@ -1,5 +1,13 @@
-#ifndef __PEEK_DATA_H
-#define __PEEK_DATA_H
+/* ptrace_utils -- helper functions to not call ptrace manually            */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
+
+#ifndef PTRACE_UTILS_H
+#define PTRACE_UTILS_H
 
 #include <sys/types.h>
 
@@ -27,8 +35,6 @@ void ptrace_get_register(const pid_t pid, reg_s * arg);
 
 unsigned long ptrace_get_pid_fork(const pid_t pid);
 
-void ptrace_set_register(const pid_t pid);
-
 void ptrace_rewind_syscalls(const pid_t pid);
 
 void ptrace_neutralize_syscall(const pid_t pid);
@@ -42,4 +48,4 @@ int ptrace_record_socket(pid_t pid);
 
 int ptrace_find_free_binding_port(const pid_t pid);
 
-#endif
+#endif /* PTRACE_UTILS_H */
