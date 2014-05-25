@@ -248,7 +248,7 @@ void process_getpeername_call(pid_t pid, syscall_arg_u * sysarg)
         arg->in = in;
         arg->ret = 0;
       } else
-        arg->ret = -107;
+        arg->ret = -107; /* - ENOTCONN (end point not connected) */
 
       ptrace_neutralize_syscall(pid);
       process_set_out_syscall(process_get_descriptor(pid));
@@ -900,7 +900,18 @@ int process_handle_mediate(pid_t pid)
   return PROCESS_ON_MEDIATION;
 }
 
-
+/** @brief Handle all syscalls of the tracked pid until it does a blocking action.
+ *
+ *  Blocking actions are stuff that must be reported to the simulator and which
+ *  completion takes time. The most prominent examples are related to sending and
+ *  receiving data.
+ *
+ *  The tracked pid can run more than one syscall in this function if theses calls
+ *  are about the metadata that we maintain in simterpose without exposing them to
+ *  simgrid. For example, if you call socket() or accept(), we only have to maintain
+ *  our metadata but there is no need to inform the simulator, nor to ask for the
+ *  completion time of these things.
+ */
 
 int process_handle(pid_t pid, int status)
 {
@@ -1374,7 +1385,9 @@ int process_handle(pid_t pid, int status)
       if (state >= 0)
         return state;
     }
-    ////////////// OUT ///////////////////
+    //////////////////////////////////////
+    ////////////// OUT /////////////////// That's where we stop handling presyscalls, and start handling postsyscalls
+    //////////////////////////////////////
     else {
       process_set_out_syscall(proc);
       ptrace_get_register(pid, &arg);
