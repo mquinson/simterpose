@@ -18,7 +18,6 @@
 #include <linux/futex.h>
 
 #define SYSCALL_ARG1 rdi
-#define DEBUG
 extern int strace_option;
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process log");
@@ -1038,6 +1037,19 @@ int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   return PROCESS_CONTINUE;
 }
 
+// no syscall_futex_post
+int syscall_futex_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+  //    XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)reg->arg4, reg->arg2 == FUTEX_WAIT);
+  XBT_DEBUG("futex_in %p %d", (void *) reg->arg4, reg->arg2 == FUTEX_WAIT);
+  //TODO add real gestion of timeout
+  if (reg->arg2 == FUTEX_WAIT) {
+    ptrace_resume_process(pid);
+    return PROCESS_IDLE_STATE;
+  }
+  return PROCESS_CONTINUE;
+}
+
 // same as syscall_listen_post
 int syscall_listen_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -1119,6 +1131,41 @@ int syscall_accept_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 #endif
   if(strace_option)
     print_accept_syscall(pid, sysarg);
+  return PROCESS_CONTINUE;
+}
+
+int syscall_getsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+  get_args_getsockopt(pid, reg, sysarg);
+  process_getsockopt_syscall(pid, sysarg);
+  if(strace_option)
+    print_getsockopt_syscall(pid, sysarg);
+  return PROCESS_CONTINUE;
+}
+
+int syscall_getsockopt_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+  get_args_getsockopt(pid, reg, sysarg);
+  if(strace_option)
+    print_getsockopt_syscall(pid, sysarg);
+  return PROCESS_CONTINUE;
+}
+
+int syscall_setsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+  get_args_setsockopt(pid, reg, sysarg);
+  process_setsockopt_syscall(pid, sysarg);
+  if(strace_option)
+    print_setsockopt_syscall(pid, sysarg);
+  free(sysarg->setsockopt.optval);
+  return PROCESS_CONTINUE;
+}
+
+int syscall_setsockopt_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+  get_args_setsockopt(pid, reg, sysarg);
+  if(strace_option)
+    print_setsockopt_syscall(pid, sysarg);
   return PROCESS_CONTINUE;
 }
 
@@ -1204,7 +1251,6 @@ int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
 
 int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
-
   // XBT_DEBUG("[%d] RECVFROM_out", pid);
   XBT_DEBUG("RECVFROM_out");
   get_args_recvfrom(pid, reg, sysarg);
@@ -1403,6 +1449,38 @@ int syscall_open_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_de
   return PROCESS_CONTINUE;
 }
 
+// no syscall_creat_pre
+int syscall_creat_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+  if ((int) reg->ret >= 0) {
+    fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+    file_desc->fd = (int) reg->ret;
+    file_desc->proc = proc;
+    file_desc->type = FD_CLASSIC;
+    proc->fd_list[(int) reg->ret] = file_desc;
+  }
+  return PROCESS_CONTINUE;
+}
+
+// no syscall_clone_pre
+int syscall_clone_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+  THROW_UNIMPLEMENTED;
+  if (reg->ret < MAX_PID) {
+    process_clone_call(pid, reg);
+    return PROCESS_IDLE_STATE;
+  } else
+    process_set_in_syscall(proc);
+  return PROCESS_CONTINUE;
+}
+
+// no syscall_socket_pre
+int syscall_socket_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
+  get_args_socket(pid, reg, sysarg);
+  if(strace_option)
+    print_socket_syscall(pid, sysarg);
+  process_socket_call(pid, sysarg);
+  return PROCESS_CONTINUE;
+}
+
 /** @brief Handle all syscalls of the tracked pid until it does a blocking action.
  *
  *  Blocking actions are stuff that must be reported to the simulator and which
@@ -1423,12 +1501,10 @@ int process_handle(pid_t pid, int status)
   syscall_arg_u *sysarg = &(proc->sysarg);
   XBT_DEBUG("process handle");
   while (1) {
-    // XBT_DEBUG("while 1");
     if (process_in_syscall(proc) == 0) {
       ////////////// IN ///////////////////
       process_set_in_syscall(proc);
       ptrace_get_register(pid, &arg);
-      //  XBT_DEBUG("intercepted syscall in : %s", syscall_list[arg.reg_orig]);
       int state = -1;
       switch (arg.reg_orig) {
       case SYS_read:
@@ -1484,12 +1560,10 @@ int process_handle(pid_t pid, int status)
         break;
 
       case SYS_futex:
-        //    XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
-        XBT_DEBUG("futex_in %p %d", (void *) arg.arg4, arg.arg2 == FUTEX_WAIT);
-        //TODO add real gestion of timeout
-        if (arg.arg2 == FUTEX_WAIT) {
-          ptrace_resume_process(pid);
-          return PROCESS_IDLE_STATE;
+        {
+          int ret = syscall_futex_pre(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         }
         break;
 
@@ -1526,20 +1600,15 @@ int process_handle(pid_t pid, int status)
 
 #ifndef address_translation
       case SYS_getsockopt:
-        get_args_getsockopt(pid, &arg, sysarg);
-        process_getsockopt_syscall(pid, sysarg);
-	if(strace_option)
-	  print_getsockopt_syscall(pid, sysarg);
+        // always returns PROCESS_CONTINUE
+        syscall_getsockopt_pre(pid, &arg, sysarg);
         break;
 #endif
 
 #ifndef address_translation
       case SYS_setsockopt:
-        get_args_setsockopt(pid, &arg, sysarg);
-        process_setsockopt_syscall(pid, sysarg);
-	if(strace_option)
-	  print_setsockopt_syscall(pid, sysarg);
-        free(sysarg->setsockopt.optval);
+        // always returns PROCESS_CONTINUE
+        syscall_setsockopt_pre(pid, &arg, sysarg);
         break;
 #endif
 
@@ -1643,24 +1712,16 @@ int process_handle(pid_t pid, int status)
         break;
 
       case SYS_creat:
-        {
-          if ((int) arg.ret >= 0) {
-            fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
-            file_desc->fd = (int) arg.ret;
-            file_desc->proc = proc;
-            file_desc->type = FD_CLASSIC;
-            proc->fd_list[(int) arg.ret] = file_desc;
-          }
-        }
+        // always returns PROCESS_CONTINUE
+        syscall_creat_post(pid, &arg, sysarg, proc);
         break;
 
       case SYS_clone:
-        THROW_UNIMPLEMENTED;
-        if (arg.ret < MAX_PID) {
-          process_clone_call(pid, &arg);
-          return PROCESS_IDLE_STATE;
-        } else
-          process_set_in_syscall(proc);
+        {
+          int ret = syscall_clone_post(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
         break;
 
       case SYS_close:
@@ -1697,10 +1758,8 @@ int process_handle(pid_t pid, int status)
         break;
 
       case SYS_socket:
-        get_args_socket(pid, &arg, sysarg);
-	if(strace_option)
-	  print_socket_syscall(pid, sysarg);
-        process_socket_call(pid, sysarg);
+        // always returns PROCESS_CONTINUE
+        syscall_socket_post(pid, &arg, sysarg);
         break;
 
       case SYS_bind:
@@ -1767,16 +1826,14 @@ int process_handle(pid_t pid, int status)
         process_shutdown_call(pid, sysarg);
         break;
 
-      case SYS_getsockopt:
-        get_args_getsockopt(pid, &arg, sysarg);
-	if(strace_option)
-	  print_getsockopt_syscall(pid, sysarg);
+      case SYS_getsockopt:	
+        // always returns PROCESS_CONTINUE
+        syscall_getsockopt_post(pid, &arg, sysarg);
         break;
 
       case SYS_setsockopt:
-        get_args_setsockopt(pid, &arg, sysarg);
-	if(strace_option)
-	  print_setsockopt_syscall(pid, sysarg);
+        // always returns PROCESS_CONTINUE
+        syscall_setsockopt_post(pid, &arg, sysarg);
         break;
 
       default:
