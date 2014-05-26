@@ -15,6 +15,8 @@
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SIMTERPOSE);
 
+int strace_option = 0;
+
 extern xbt_cfg_t _sg_cfg_set;
 
 static void benchmark_matrix_product(float *msec_per_flop);
@@ -31,7 +33,7 @@ static inline float str_to_double(const char *string)
 
 void usage(char *progName, int retcode)
 {
-  printf("usage : %s [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
+  printf("usage : %s [-s] [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
   exit(retcode);
 }
 
@@ -48,8 +50,11 @@ void simterpose_init(int argc, char **argv)
     usage(argv[0],1);
   } else {
     int c;
-    while ((c = getopt(argc, argv, "+p:")) != EOF) {
+    while ((c = getopt(argc, argv, "s+p:")) != EOF) {
       switch (c) {
+      case's':
+	strace_option = 1;
+	break;
       case 'p':
         flop_option = 1;
         msec_per_flop = 1000000 / str_to_double(optarg);
