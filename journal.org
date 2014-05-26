@@ -258,9 +258,18 @@ run_from (sendto/recvfrom) full: Cannot add a dependency between task 'communica
 run_from (sendto/recvfrom) address: Error in `./run_trace': double free or corruption (!prev): 0x000000000147edd0 ***
 
 * <2014-05-21 mer.>
-
-plantuml
-toolindent *.[ch]
+révisions sur la forme du code
+* <2014-05-22 jeu.>
+C/système
+* <2014-05-23 ven.>
+** cwrap
+*** sockets
+utilise dlopen, dlsym avec des handle
+ne touche pas à gettimeofday
+*** nss 
+modifie les etc/groups, etc/hosts (noms de domaines) etc/password
+*** uid
+** C 
 
 * <2014-05-24 sam.> (Entrée par Martin)
 - Nettoyé pas mal de code 
@@ -393,3 +402,9 @@ toolindent *.[ch]
   coté traçage, afin d'avoir au moins un test ou deux qui marchent (voir qu'on
   part pas trop dans le mur). C'est ok de casser certains tests en chemin, on
   réparera de l'autre coté du gué. Bon courage.
+
+* <2014-05-26 lun.>
+- Chez moi si j'envoie suffisamment de messages ça part souvent en boucle infinie 
+(50 suffit généralement à faire péter le truc)
+- ok je tue MSG/
+- ajout de syscall_XXX_pre et syscall_XXX_post

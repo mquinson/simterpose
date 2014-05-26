@@ -12,7 +12,7 @@
 #define PROCESS_NO_TASK_FOUND   4
 #define PROCESS_ON_MEDIATION    5
 #define PROCESS_ON_COMPUTATION  6
-
+#define PROCESS_CONTINUE        7
 
 #define RECV_CLOSE              10
 
