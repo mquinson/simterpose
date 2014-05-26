@@ -247,7 +247,7 @@ void process_getpeername_call(pid_t pid, syscall_arg_u * sysarg)
         arg->in = in;
         arg->ret = 0;
       } else
-        arg->ret = -107; /* - ENOTCONN (end point not connected) */
+        arg->ret = -107;        /* - ENOTCONN (end point not connected) */
 
       ptrace_neutralize_syscall(pid);
       process_set_out_syscall(process_get_descriptor(pid));
@@ -901,112 +901,117 @@ int process_handle_mediate(pid_t pid)
 
 // pre and post gestion of syscalls
 
-int syscall_read_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc, int *state){
-          get_args_read(pid, reg, sysarg);
-          if (socket_registered(pid, reg->arg1) != -1) {
-            if (!process_recv_in_call(pid, reg->arg1)) {
-#ifndef address_translation
-              int flags = socket_get_flags(pid, reg->arg1);
-              if (flags & O_NONBLOCK) {
-                sysarg->read.ret = -11;
-#ifdef DEBUG
-                print_read_syscall(pid, sysarg);
-#endif
-                ptrace_neutralize_syscall(pid);
-                process_set_out_syscall(proc);
-                process_read_out_call(pid);
-              } else {
-                process_set_state(proc, PROC_READ);
-                process_on_mediation(proc);
-                *state = PROCESS_ON_MEDIATION;
-              }
-            } else {
-              int res = process_recv_call(pid, sysarg);
-              if (res == PROCESS_TASK_FOUND) {
-#ifdef DEBUG
-                print_read_syscall(pid, sysarg);
-#endif
-                ptrace_neutralize_syscall(pid);
-                process_set_out_syscall(proc);
-                process_set_state(proc, PROC_READ);
-                return PROCESS_TASK_FOUND;
-              } else {
-                if (res == RECV_CLOSE)
-                  sysarg->read.ret = 0;
-#ifdef DEBUG
-                print_read_syscall(pid, sysarg);
-#endif
-                ptrace_neutralize_syscall(pid);
-                process_set_out_syscall(proc);
-                process_read_out_call(pid);
-              }
-#else
-              int flags = socket_get_flags(pid, reg->arg1);
-              if (!(flags & O_NONBLOCK)) {
-                process_set_state(proc, PROC_READ);
-                *state = PROCESS_ON_MEDIATION;
-                process_on_mediation(proc);
-              }
-#endif
-            }
-          }
-	  return PROCESS_CONTINUE;
-}
-
-int syscall_read_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
+int syscall_read_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+{
   get_args_read(pid, reg, sysarg);
+  if (socket_registered(pid, reg->arg1) != -1) {
+    if (!process_recv_in_call(pid, reg->arg1)) {
+#ifndef address_translation
+      int flags = socket_get_flags(pid, reg->arg1);
+      if (flags & O_NONBLOCK) {
+        sysarg->read.ret = -11;
 #ifdef DEBUG
         print_read_syscall(pid, sysarg);
 #endif
-#ifdef address_translation
-        if ((int) reg->ret > 0) {
-          if (socket_registered(pid, sysarg->read.fd) != -1) {
-            if (process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
-              return PROCESS_TASK_FOUND;
-          }
-        }
+        ptrace_neutralize_syscall(pid);
+        process_set_out_syscall(proc);
+        process_read_out_call(pid);
+      } else {
+        process_set_state(proc, PROC_READ);
+        process_on_mediation(proc);
+        *state = PROCESS_ON_MEDIATION;
+      }
+    } else {
+      int res = process_recv_call(pid, sysarg);
+      if (res == PROCESS_TASK_FOUND) {
+#ifdef DEBUG
+        print_read_syscall(pid, sysarg);
 #endif
-	return PROCESS_CONTINUE;
+        ptrace_neutralize_syscall(pid);
+        process_set_out_syscall(proc);
+        process_set_state(proc, PROC_READ);
+        return PROCESS_TASK_FOUND;
+      } else {
+        if (res == RECV_CLOSE)
+          sysarg->read.ret = 0;
+#ifdef DEBUG
+        print_read_syscall(pid, sysarg);
+#endif
+        ptrace_neutralize_syscall(pid);
+        process_set_out_syscall(proc);
+        process_read_out_call(pid);
+      }
+#else
+      int flags = socket_get_flags(pid, reg->arg1);
+      if (!(flags & O_NONBLOCK)) {
+        process_set_state(proc, PROC_READ);
+        *state = PROCESS_ON_MEDIATION;
+        process_on_mediation(proc);
+      }
+#endif
+    }
+  }
+  return PROCESS_CONTINUE;
 }
 
-int syscall_write_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc){
-  
-        // XBT_DEBUG("[%d] write_in", pid);
-        XBT_DEBUG(" write_in");
-        get_args_write(pid, reg, sysarg);
-        if (socket_registered(pid, sysarg->write.fd) != -1) {
-          if (process_send_call(pid, sysarg)) {
-            ptrace_neutralize_syscall(pid);
-            sys_build_sendto(pid, sysarg);
+int syscall_read_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+  get_args_read(pid, reg, sysarg);
 #ifdef DEBUG
-            print_write_syscall(pid, sysarg);
-#endif
-            process_set_out_syscall(proc);
-            return PROCESS_TASK_FOUND;
-          }
-        }
-	return PROCESS_CONTINUE;
-}
-
-int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
-   //    XBT_DEBUG("[%d] write_out", pid);
-        get_args_write(pid, reg, sysarg);
-#ifdef DEBUG
-        print_write_syscall(pid, sysarg);
+  print_read_syscall(pid, sysarg);
 #endif
 #ifdef address_translation
-        if ((int) reg->ret > 0) {
-          if (socket_registered(pid, sysarg->write.fd) != -1) {
-            if (process_send_call(pid, sysarg))
-              return PROCESS_TASK_FOUND;
-          }
-        }
+  if ((int) reg->ret > 0) {
+    if (socket_registered(pid, sysarg->read.fd) != -1) {
+      if (process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
+        return PROCESS_TASK_FOUND;
+    }
+  }
 #endif
-	return PROCESS_CONTINUE;
+  return PROCESS_CONTINUE;
+}
+
+int syscall_write_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+
+  // XBT_DEBUG("[%d] write_in", pid);
+  XBT_DEBUG(" write_in");
+  get_args_write(pid, reg, sysarg);
+  if (socket_registered(pid, sysarg->write.fd) != -1) {
+    if (process_send_call(pid, sysarg)) {
+      ptrace_neutralize_syscall(pid);
+      sys_build_sendto(pid, sysarg);
+#ifdef DEBUG
+      print_write_syscall(pid, sysarg);
+#endif
+      process_set_out_syscall(proc);
+      return PROCESS_TASK_FOUND;
+    }
+  }
+  return PROCESS_CONTINUE;
+}
+
+int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+  //    XBT_DEBUG("[%d] write_out", pid);
+  get_args_write(pid, reg, sysarg);
+#ifdef DEBUG
+  print_write_syscall(pid, sysarg);
+#endif
+#ifdef address_translation
+  if ((int) reg->ret > 0) {
+    if (socket_registered(pid, sysarg->write.fd) != -1) {
+      if (process_send_call(pid, sysarg))
+        return PROCESS_TASK_FOUND;
+    }
+  }
+#endif
+  return PROCESS_CONTINUE;
 }
 
 // no syscall_poll_post
-int syscall_poll_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc, int *state){
+int syscall_poll_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+{
   get_args_poll(pid, reg, sysarg);
 #ifdef DEBUG
   print_poll_syscall(pid, sysarg);
@@ -1024,13 +1029,14 @@ int syscall_poll_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
 }
 
 // no syscall_time_post
-int syscall_time_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc){
+int syscall_time_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
   get_args_time(pid, reg, sysarg);
 #ifdef DEBUG
   print_time_syscall(pid, sysarg);
 #endif
   ptrace_neutralize_syscall(pid);
-  sysarg->time.ret = get_simulated_timestamp();   // (time_t)25; //
+  sysarg->time.ret = get_simulated_timestamp(); // (time_t)25; //
   sys_build_time(pid, sysarg);
   process_set_out_syscall(proc);
   return PROCESS_CONTINUE;
@@ -1038,7 +1044,8 @@ int syscall_time_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
 
 
 // no syscall_gettimeofday_post
-int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc){
+int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
 
   get_args_gettimeofday(pid, reg, sysarg);
 #ifdef DEBUG
@@ -1051,7 +1058,8 @@ int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
 }
 
 // no syscall_clock_gettime_post
-int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc){
+int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
   get_args_clockgettime(pid, reg, sysarg);
   ptrace_neutralize_syscall(pid);
   sys_build_clockgettime(pid, sysarg);
@@ -1060,7 +1068,8 @@ int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 }
 
 // same as syscall_listen_post
-int syscall_listen_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
+int syscall_listen_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
   get_args_listen(pid, reg, sysarg);
   process_listen_call(pid, sysarg);
 #ifdef DEBUG
@@ -1069,7 +1078,8 @@ int syscall_listen_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
   return PROCESS_CONTINUE;
 }
 
-int syscall_bind_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
+int syscall_bind_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
   //    XBT_DEBUG("[%d] bind_in ", pid);
   XBT_DEBUG("bind_in ");
   get_args_bind_connect(pid, 0, reg, sysarg);
@@ -1080,8 +1090,9 @@ int syscall_bind_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
   return PROCESS_CONTINUE;
 }
 
-int syscall_bind_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
-  
+int syscall_bind_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+
   // XBT_DEBUG("[%d] bind_out", pid);
   XBT_DEBUG("bind_out");
   get_args_bind_connect(pid, 0, reg, sysarg);
@@ -1091,7 +1102,8 @@ int syscall_bind_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
   return PROCESS_CONTINUE;
 }
 
-int syscall_connect_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, int *state){
+int syscall_connect_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, int *state)
+{
   //    XBT_DEBUG("[%d] connect_in", pid);
   XBT_DEBUG("connect_in");
   get_args_bind_connect(pid, 0, reg, sysarg);
@@ -1103,7 +1115,8 @@ int syscall_connect_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, int *sta
   return PROCESS_CONTINUE;
 }
 
-int syscall_connect_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc){
+int syscall_connect_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
   //    XBT_DEBUG("[%d] connect_out", pid);
   XBT_DEBUG("connect_out");
 
@@ -1118,7 +1131,8 @@ int syscall_connect_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
   return PROCESS_CONTINUE;
 }
 
-int syscall_accept_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, int *state){
+int syscall_accept_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, int *state)
+{
   //    XBT_DEBUG("[%d] accept_in", pid);
   XBT_DEBUG("accept_in");
   get_args_accept(pid, reg, sysarg);
@@ -1131,7 +1145,8 @@ int syscall_accept_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, int *stat
   return PROCESS_CONTINUE;
 }
 
-int syscall_accept_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
+int syscall_accept_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
   XBT_DEBUG("[%d] accept_out", pid);
   get_args_accept(pid, reg, sysarg);
 #ifdef address_translation
@@ -1144,7 +1159,8 @@ int syscall_accept_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
 }
 
 // no syscall_select_post
-int syscall_select_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc, int *state){
+int syscall_select_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+{
   get_args_select(pid, reg, sysarg);
 #ifdef DEBUG
   print_select_syscall(pid, sysarg);
@@ -1161,93 +1177,96 @@ int syscall_select_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
   return PROCESS_CONTINUE;
 }
 
-int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc, int *state){
-          // XBT_DEBUG("[%d] RECVFROM_in", pid);
-          XBT_DEBUG("RECVFROM_in");
-          get_args_recvfrom(pid, reg, sysarg);
+int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+{
+  // XBT_DEBUG("[%d] RECVFROM_in", pid);
+  XBT_DEBUG("RECVFROM_in");
+  get_args_recvfrom(pid, reg, sysarg);
 #ifdef address_translation
-          if (socket_registered(pid, reg->arg1) != -1) {
-            if (socket_network(pid, reg->arg1)) {
-              sys_translate_recvfrom_in(pid, sysarg);
-            }
-          }
+  if (socket_registered(pid, reg->arg1) != -1) {
+    if (socket_network(pid, reg->arg1)) {
+      sys_translate_recvfrom_in(pid, sysarg);
+    }
+  }
 #endif
-          // XBT_DEBUG("[%d] Seeing if %d receive something", pid, (int)reg->arg1);
-          XBT_DEBUG("Seeing if %d receive something", (int) reg->arg1);
-          if (!process_recv_in_call(pid, sysarg->recvfrom.sockfd)) {
+  // XBT_DEBUG("[%d] Seeing if %d receive something", pid, (int)reg->arg1);
+  XBT_DEBUG("Seeing if %d receive something", (int) reg->arg1);
+  if (!process_recv_in_call(pid, sysarg->recvfrom.sockfd)) {
 #ifndef address_translation
-            XBT_DEBUG("recvfrom_in, full mediation");
-            int flags = socket_get_flags(pid, reg->arg1);
-            if (flags & O_NONBLOCK) {
-              sysarg->recvfrom.ret = -11;
-              ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(proc);
-              process_recvmsg_out_call(pid);
-            } else {
-              process_set_state(proc, PROC_RECVFROM);
-              process_on_mediation(proc);
-              *state = PROCESS_ON_MEDIATION;
-            }
-          } else                // comment on a ça?
-          {
-            int res = process_recv_call(pid, sysarg);
-            if (res == PROCESS_TASK_FOUND) {
-              ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(proc);
-              process_set_state(proc, PROC_RECVFROM);
-              return PROCESS_TASK_FOUND;
-            } else {
-              if (res == RECV_CLOSE)
-                sysarg->recvfrom.ret = 0;
-              ptrace_neutralize_syscall(pid);
-              process_set_out_syscall(proc);
-              process_recvfrom_out_call(pid);
-            }
+    XBT_DEBUG("recvfrom_in, full mediation");
+    int flags = socket_get_flags(pid, reg->arg1);
+    if (flags & O_NONBLOCK) {
+      sysarg->recvfrom.ret = -11;
+      ptrace_neutralize_syscall(pid);
+      process_set_out_syscall(proc);
+      process_recvmsg_out_call(pid);
+    } else {
+      process_set_state(proc, PROC_RECVFROM);
+      process_on_mediation(proc);
+      *state = PROCESS_ON_MEDIATION;
+    }
+  } else                        // comment on a ça?
+  {
+    int res = process_recv_call(pid, sysarg);
+    if (res == PROCESS_TASK_FOUND) {
+      ptrace_neutralize_syscall(pid);
+      process_set_out_syscall(proc);
+      process_set_state(proc, PROC_RECVFROM);
+      return PROCESS_TASK_FOUND;
+    } else {
+      if (res == RECV_CLOSE)
+        sysarg->recvfrom.ret = 0;
+      ptrace_neutralize_syscall(pid);
+      process_set_out_syscall(proc);
+      process_recvfrom_out_call(pid);
+    }
 #ifdef DEBUG
-            XBT_DEBUG("partie bizarre");
-            print_recvfrom_syscall(pid, sysarg);
+    XBT_DEBUG("partie bizarre");
+    print_recvfrom_syscall(pid, sysarg);
 #endif
 #else
-            XBT_DEBUG("recvfrom_in, address translation");
-            int flags = socket_get_flags(pid, reg->arg1);
-            printf("flag %d \n", flags);
-            if (!(flags & O_NONBLOCK)) {
-              process_set_state(proc, PROC_RECVFROM);
-              *state = PROCESS_ON_MEDIATION;
-              process_on_mediation(proc);
-            }
+    XBT_DEBUG("recvfrom_in, address translation");
+    int flags = socket_get_flags(pid, reg->arg1);
+    printf("flag %d \n", flags);
+    if (!(flags & O_NONBLOCK)) {
+      process_set_state(proc, PROC_RECVFROM);
+      *state = PROCESS_ON_MEDIATION;
+      process_on_mediation(proc);
+    }
 #ifdef DEBUG
-            print_recvfrom_syscall(pid, sysarg);
+    print_recvfrom_syscall(pid, sysarg);
 #endif
 
 #endif
-          }
+  }
   return PROCESS_CONTINUE;
 }
 
-int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
-  
-        // XBT_DEBUG("[%d] RECVFROM_out", pid);
-        XBT_DEBUG("RECVFROM_out");
-        get_args_recvfrom(pid, reg, sysarg);
+int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
+
+  // XBT_DEBUG("[%d] RECVFROM_out", pid);
+  XBT_DEBUG("RECVFROM_out");
+  get_args_recvfrom(pid, reg, sysarg);
 #ifdef DEBUG
-        print_recvfrom_syscall(pid, sysarg);
+  print_recvfrom_syscall(pid, sysarg);
 #endif
 #ifdef address_translation
-        if (socket_registered(pid, reg->arg1) != -1) {
-          if (socket_network(pid, reg->arg1)) {
-            sys_translate_recvfrom_out(pid, sysarg);
-          }
-        }
-        if (reg->ret > 0) {
-          if (process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
-            return PROCESS_TASK_FOUND;
-        }
+  if (socket_registered(pid, reg->arg1) != -1) {
+    if (socket_network(pid, reg->arg1)) {
+      sys_translate_recvfrom_out(pid, sysarg);
+    }
+  }
+  if (reg->ret > 0) {
+    if (process_recv_call(pid, sysarg) == PROCESS_TASK_FOUND)
+      return PROCESS_TASK_FOUND;
+  }
 #endif
   return PROCESS_CONTINUE;
 }
 
-int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc){
+int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
   //  XBT_DEBUG("[%d] sendmsg_in", pid);
   XBT_DEBUG("sendmsg_in");
   get_args_sendmsg(pid, reg, sysarg);
@@ -1263,7 +1282,8 @@ int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
   return PROCESS_CONTINUE;
 }
 
-int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
+int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
   // XBT_DEBUG("[%d] sendmsg_out", pid);
   XBT_DEBUG("sendmsg_out");
   get_args_sendmsg(pid, reg, sysarg);
@@ -1279,7 +1299,8 @@ int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
   return PROCESS_CONTINUE;
 }
 
-int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc, int *state){
+int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+{
   //  XBT_DEBUG("[%d] recvmsg_in", pid);
   XBT_DEBUG("recvmsg_in");
   get_args_recvmsg(pid, reg, sysarg);
@@ -1291,7 +1312,7 @@ int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
 #ifndef address_translation
     if (socket_registered(pid, sysarg->recvmsg.sockfd))
       if (!socket_network(pid, sysarg->recvmsg.sockfd))
-	return PROCESS_CONTINUE;
+        return PROCESS_CONTINUE;
 
     int flags = socket_get_flags(pid, reg->arg1);
     if (flags & O_NONBLOCK) {
@@ -1316,7 +1337,7 @@ int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
       return PROCESS_TASK_FOUND;
     } else {
       if (res == RECV_CLOSE)
-	sysarg->recvfrom.ret = 0;
+        sysarg->recvfrom.ret = 0;
       ptrace_neutralize_syscall(pid);
       process_set_out_syscall(proc);
       process_recvmsg_out_call(pid);
@@ -1340,7 +1361,8 @@ int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
   return PROCESS_CONTINUE;
 }
 
-int syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
+int syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
   // XBT_DEBUG("[%d] recvmsg_out", pid);
   XBT_DEBUG("recvmsg_out");
   get_args_recvmsg(pid, reg, sysarg);
@@ -1356,39 +1378,41 @@ int syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
   return PROCESS_CONTINUE;
 }
 
-int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc){
+int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
 
-        //  XBT_DEBUG("[%d] sendto_in", pid);
-        XBT_DEBUG("sendto_in");
-        get_args_sendto(pid, reg, sysarg);
+  //  XBT_DEBUG("[%d] sendto_in", pid);
+  XBT_DEBUG("sendto_in");
+  get_args_sendto(pid, reg, sysarg);
 #ifndef address_translation
-        if (process_send_call(pid, sysarg)) {
-          XBT_DEBUG("process_handle -> PROCESS_TASK_FOUND");
-          ptrace_neutralize_syscall(pid);
-          sys_build_sendto(pid, sysarg);
-          process_set_out_syscall(proc);
+  if (process_send_call(pid, sysarg)) {
+    XBT_DEBUG("process_handle -> PROCESS_TASK_FOUND");
+    ptrace_neutralize_syscall(pid);
+    sys_build_sendto(pid, sysarg);
+    process_set_out_syscall(proc);
 #ifdef DEBUG
-          print_sendto_syscall(pid, sysarg);
+    print_sendto_syscall(pid, sysarg);
 #endif
-          return PROCESS_TASK_FOUND;
-        }
+    return PROCESS_TASK_FOUND;
+  }
 #ifdef DEBUG
-        print_sendto_syscall(pid, sysarg);
+  print_sendto_syscall(pid, sysarg);
 #endif
 #else
-        if (socket_registered(pid, reg->arg1) != -1) {
-          if (socket_network(pid, reg->arg1)) {
-            sys_translate_sendto_in(pid, sysarg);
-          }
+  if (socket_registered(pid, reg->arg1) != -1) {
+    if (socket_network(pid, reg->arg1)) {
+      sys_translate_sendto_in(pid, sysarg);
+    }
 #ifdef DEBUG
-          print_sendto_syscall(pid, sysarg);
+    print_sendto_syscall(pid, sysarg);
 #endif
-        }
+  }
 #endif
   return PROCESS_CONTINUE;
 }
 
-int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
+int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+{
   // XBT_DEBUG("[%d] sendto_out", pid);
   XBT_DEBUG("sendto_out");
   get_args_sendto(pid, reg, sysarg);
@@ -1410,10 +1434,9 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg){
   return PROCESS_CONTINUE;
 }
 
-
-
 // no syscall_open_pre
-int syscall_open_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t *proc){
+int syscall_open_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
 
 //           printf("[%d] open(\"...\",", pid);
 //           switch (reg->arg2) {
@@ -1423,14 +1446,14 @@ int syscall_open_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_de
 //             default :printf("no_flags");break;
 //           }    
 //           printf(") = %ld\n", reg->ret);
-          if ((int) reg->ret >= 0) {
-            fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
-            file_desc->fd = (int) reg->ret;
-            file_desc->proc = proc;
-            file_desc->type = FD_CLASSIC;
-            proc->fd_list[(int) reg->ret] = file_desc;
-          }
-	return PROCESS_CONTINUE;
+  if ((int) reg->ret >= 0) {
+    fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+    file_desc->fd = (int) reg->ret;
+    file_desc->proc = proc;
+    file_desc->type = FD_CLASSIC;
+    proc->fd_list[(int) reg->ret] = file_desc;
+  }
+  return PROCESS_CONTINUE;
 }
 
 /** @brief Handle all syscalls of the tracked pid until it does a blocking action.
@@ -1455,74 +1478,72 @@ int process_handle(pid_t pid, int status)
   while (1) {
     // XBT_DEBUG("while 1");
     if (process_in_syscall(proc) == 0) {
-      ////////////// IN /////////////////// (out l 1462)
+      ////////////// IN ///////////////////
       process_set_in_syscall(proc);
-
       ptrace_get_register(pid, &arg);
       //  XBT_DEBUG("intercepted syscall in : %s", syscall_list[arg.reg_orig]);
-
       int state = -1;
       switch (arg.reg_orig) {
       case SYS_read:
         {
-	  int ret = syscall_read_pre(pid, &arg, sysarg, proc, &state);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
+          int ret = syscall_read_pre(pid, &arg, sysarg, proc, &state);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         }
         break;
 
 #ifndef address_translation
       case SYS_write:
-	{
-	  int ret = syscall_write_pre(pid, &arg, sysarg, proc);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
-	}
+        {
+          int ret = syscall_write_pre(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
         break;
 #endif
 
-      case SYS_poll: 
-	// always returns PROCESS_CONTINUE
-	syscall_poll_pre(pid, &arg, sysarg, proc, &state);
+      case SYS_poll:
+        // always returns PROCESS_CONTINUE
+        syscall_poll_pre(pid, &arg, sysarg, proc, &state);
         break;
 
       case SYS_exit_group:
-          //    XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
-          XBT_DEBUG("exit_group(%ld) called", arg.arg1);
-          ptrace_detach_process(pid);
-          return PROCESS_DEAD;
+        //    XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
+        XBT_DEBUG("exit_group(%ld) called", arg.arg1);
+        ptrace_detach_process(pid);
+        return PROCESS_DEAD;
         break;
 
       case SYS_exit:
-          //    XBT_DEBUG("[%d] exit(%ld) called", pid, arg.arg1);
-          XBT_DEBUG("exit(%ld) called", arg.arg1);
-          ptrace_detach_process(pid);
-          return PROCESS_DEAD;
+        //    XBT_DEBUG("[%d] exit(%ld) called", pid, arg.arg1);
+        XBT_DEBUG("exit(%ld) called", arg.arg1);
+        ptrace_detach_process(pid);
+        return PROCESS_DEAD;
         break;
 
       case SYS_time:
-       	// always returns PROCESS_CONTINUE
-	syscall_time_pre(pid, &arg, sysarg, proc);
+        // always returns PROCESS_CONTINUE
+        syscall_time_pre(pid, &arg, sysarg, proc);
         break;
 
       case SYS_gettimeofday:
-	// always returns PROCESS_CONTINUE
-	syscall_gettimeofday_pre(pid, &arg, sysarg, proc);
+        // always returns PROCESS_CONTINUE
+        syscall_gettimeofday_pre(pid, &arg, sysarg, proc);
         break;
 
       case SYS_clock_gettime:
-	// always returns PROCESS_CONTINUE
-	syscall_clock_gettime_pre(pid, &arg, sysarg, proc);
+        // always returns PROCESS_CONTINUE
+        syscall_clock_gettime_pre(pid, &arg, sysarg, proc);
         break;
 
       case SYS_futex:
-          //    XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
-          XBT_DEBUG("futex_in %p %d", (void *) arg.arg4, arg.arg2 == FUTEX_WAIT);
-          //TODO add real gestion of timeout
-          if (arg.arg2 == FUTEX_WAIT) {
-            ptrace_resume_process(pid);
-            return PROCESS_IDLE_STATE;
-          }
+        //    XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)arg.arg4, arg.arg2 == FUTEX_WAIT);
+        XBT_DEBUG("futex_in %p %d", (void *) arg.arg4, arg.arg2 == FUTEX_WAIT);
+        //TODO add real gestion of timeout
+        if (arg.arg2 == FUTEX_WAIT) {
+          ptrace_resume_process(pid);
+          return PROCESS_IDLE_STATE;
+        }
         break;
 
       case SYS_getpeername:
@@ -1532,29 +1553,29 @@ int process_handle(pid_t pid, int status)
 
 
 #ifndef address_translation
-      case SYS_listen: 
-	//  XBT_DEBUG("[%d] listen_in", pid);
-	XBT_DEBUG("listen_in");
-       // always returns PROCESS_CONTINUE
-	syscall_listen_pre(pid, &arg, sysarg);
+      case SYS_listen:
+        //  XBT_DEBUG("[%d] listen_in", pid);
+        XBT_DEBUG("listen_in");
+        // always returns PROCESS_CONTINUE
+        syscall_listen_pre(pid, &arg, sysarg);
         break;
 #endif
 
 // #ifndef address_translation
       case SYS_bind:
-       // always returns PROCESS_CONTINUE
-	syscall_bind_pre(pid, &arg, sysarg);
+        // always returns PROCESS_CONTINUE
+        syscall_bind_pre(pid, &arg, sysarg);
         break;
 // #endif
 
       case SYS_connect:
-	// always returns PROCESS_CONTINUE
-	syscall_connect_pre(pid, &arg, sysarg, &state);
+        // always returns PROCESS_CONTINUE
+        syscall_connect_pre(pid, &arg, sysarg, &state);
         break;
 
       case SYS_accept:
-	// always returns PROCESS_CONTINUE
-	syscall_accept_pre(pid, &arg, sysarg, &state);
+        // always returns PROCESS_CONTINUE
+        syscall_accept_pre(pid, &arg, sysarg, &state);
         break;
 
 #ifndef address_translation
@@ -1589,41 +1610,41 @@ int process_handle(pid_t pid, int status)
 #endif
 
       case SYS_select:
-	// always returns PROCESS_CONTINUE
-	syscall_select_pre(pid, &arg, sysarg, proc, &state);
+        // always returns PROCESS_CONTINUE
+        syscall_select_pre(pid, &arg, sysarg, proc, &state);
         break;
 
       case SYS_recvfrom:
         {
-	  int ret = syscall_recvfrom_pre(pid, &arg, sysarg, proc, &state);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
+          int ret = syscall_recvfrom_pre(pid, &arg, sysarg, proc, &state);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         }
         break;
 
 #ifndef address_translation
       case SYS_sendmsg:
         {
-	  int ret = syscall_sendmsg_pre(pid, &arg, sysarg, proc);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
+          int ret = syscall_sendmsg_pre(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         }
         break;
 #endif
 
       case SYS_recvmsg:
-        { 
-	  int ret = syscall_recvmsg_pre(pid, &arg, sysarg, proc, &state);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
+        {
+          int ret = syscall_recvmsg_pre(pid, &arg, sysarg, proc, &state);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         }
         break;
 
       case SYS_sendto:
-	{ 
-	  int ret = syscall_sendto_pre(pid, &arg, sysarg, proc);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
+        {
+          int ret = syscall_sendto_pre(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         }
         break;
       }
@@ -1647,19 +1668,19 @@ int process_handle(pid_t pid, int status)
       switch (arg.reg_orig) {
 
       case SYS_write:
-       	{
-	int ret = syscall_write_post(pid, &arg, sysarg);
-	if(ret != PROCESS_CONTINUE)
-	  return ret;
-	}
+        {
+          int ret = syscall_write_post(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
         break;
 
       case SYS_read:
-	{
-	int ret = syscall_read_post(pid, &arg, sysarg);
-	if(ret != PROCESS_CONTINUE)
-	  return ret;
-	}
+        {
+          int ret = syscall_read_post(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
         break;
 
       case SYS_fork:
@@ -1672,9 +1693,9 @@ int process_handle(pid_t pid, int status)
 
       case SYS_open:
         {
-	  int ret = syscall_open_post(pid, &arg, sysarg, proc);
-	if(ret != PROCESS_CONTINUE)
-	  return ret;
+          int ret = syscall_open_post(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         }
         break;
 
@@ -1744,61 +1765,61 @@ int process_handle(pid_t pid, int status)
         break;
 
       case SYS_bind:
-	// always returns PROCESS_CONTINUE
-	syscall_bind_post(pid, &arg, sysarg);
+        // always returns PROCESS_CONTINUE
+        syscall_bind_post(pid, &arg, sysarg);
         break;
 
-      case SYS_connect:      
-	// always returns PROCESS_CONTINUE
-	syscall_connect_post(pid, &arg, sysarg, proc);
+      case SYS_connect:
+        // always returns PROCESS_CONTINUE
+        syscall_connect_post(pid, &arg, sysarg, proc);
         break;
 
       case SYS_accept:
-	// always returns PROCESS_CONTINUE
-	syscall_accept_post(pid, &arg, sysarg);
+        // always returns PROCESS_CONTINUE
+        syscall_accept_post(pid, &arg, sysarg);
         break;
 
       case SYS_listen:
-       XBT_DEBUG("[%d] listen_out", pid);
+        XBT_DEBUG("[%d] listen_out", pid);
 #ifdef address_translation
-       // always returns PROCESS_CONTINUE
-       syscall_listen_pre(pid, &arg, sysarg); // same as post
+        // always returns PROCESS_CONTINUE
+        syscall_listen_pre(pid, &arg, sysarg);  // same as post
 #else
-  THROW_IMPOSSIBLE;
+        THROW_IMPOSSIBLE;
 #endif
 
         break;
 
       case SYS_sendto:
-	{
-	  int ret = syscall_sendto_post(pid, &arg, sysarg);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
-	}
+        {
+          int ret = syscall_sendto_post(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
         break;
 
       case SYS_recvfrom:
-	{
-	  int ret = syscall_recvfrom_post(pid, &arg, sysarg);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
-	}
+        {
+          int ret = syscall_recvfrom_post(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
         break;
 
       case SYS_sendmsg:
-	{
-	  int ret = syscall_sendmsg_post(pid, &arg, sysarg);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
-	}
+        {
+          int ret = syscall_sendmsg_post(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
         break;
 
       case SYS_recvmsg:
-	{
-	  int ret = syscall_recvmsg_post(pid, &arg, sysarg);
-	  if(ret != PROCESS_CONTINUE)	   
-	    return ret;
-	}
+        {
+          int ret = syscall_recvmsg_post(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
         break;
 
       case SYS_shutdown:
