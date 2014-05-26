@@ -29,7 +29,6 @@ void process_read_out_call(pid_t pid);
 void process_recvmsg_out_call(pid_t pid);
 void process_accept_out_call(pid_t pid, syscall_arg_u * sysarg);
 
-
 //TODO test the possibility to remove incomplete checking
 //There is no need to return value because send always bring a task
 int process_send_call(int pid, syscall_arg_u * sysarg)
@@ -89,13 +88,6 @@ int process_recv_call(int pid, syscall_arg_u * sysarg)
 
   return 0;
 }
-
-int process_fork_call(int pid)
-{
-  THROW_UNIMPLEMENTED;
-  return 1;
-}
-
 
 int process_select_call(pid_t pid)
 {
@@ -1551,7 +1543,6 @@ int process_handle(pid_t pid, int status)
         process_getpeername_call(pid, sysarg);
         break;
 
-
 #ifndef address_translation
       case SYS_listen:
         //  XBT_DEBUG("[%d] listen_in", pid);
@@ -1740,7 +1731,6 @@ int process_handle(pid_t pid, int status)
         THROW_UNIMPLEMENTED;    //
         break;
 
-
       case SYS_fcntl:
         get_args_fcntl(pid, &arg, sysarg);
 #ifdef DEBUG
@@ -1750,7 +1740,6 @@ int process_handle(pid_t pid, int status)
         process_fcntl_call(pid, sysarg);
 #endif
         break;
-
 
       case SYS_select:
         THROW_IMPOSSIBLE;
@@ -1787,7 +1776,6 @@ int process_handle(pid_t pid, int status)
 #else
         THROW_IMPOSSIBLE;
 #endif
-
         break;
 
       case SYS_sendto:
@@ -1844,11 +1832,9 @@ int process_handle(pid_t pid, int status)
 #endif
         break;
 
-
       default:
         // XBT_DEBUG("[%d] Unhandle syscall (%ld) %s = %ld", pid,arg.reg_orig, syscall_list[arg.reg_orig], arg.ret);
         break;
-
       }
     }
     // XBT_DEBUG("Resume syscall");
