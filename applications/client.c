@@ -28,15 +28,13 @@ int main(int argc, char **argv)
   int msg_count = atoi(argv[1]);
   int message_size = atoi(argv[2]);
 
-  struct timeval begin;
   struct timespec tvcl;
-  gettimeofday(&begin, NULL);
   clock_gettime(NULL, &tvcl);
-  fprintf(stderr, "Client starting: #msg: %d; size: %d (gettimeofday %f; time: %d; clock_gettime: %f)\n",
+  fprintf(stderr, "Client starting: #msg: %d; size: %d (time: %d; clock_gettime: %f)\n",
 		  msg_count,message_size,
-		  begin.tv_sec + begin.tv_usec/1000000.0,
 		  time(NULL),
 		  tvcl.tv_sec + tvcl.tv_nsec/1000000000.0);
+
 
   int clientSocket;
   u_short port;
@@ -74,7 +72,7 @@ int main(int argc, char **argv)
       perror("Client: cannot send message");
       exit(1);
     }
-    fprintf(stderr,"Client: sent message #%d\n",msg_number,buff);
+    fprintf(stderr,"Client: sent message #%d\n",msg_number);
 
     int length = message_size;
     while (length > 0) {
@@ -97,15 +95,12 @@ int main(int argc, char **argv)
   shutdown(clientSocket, 2);
   close(clientSocket);
 
-  struct timeval end;
   struct timespec end_tvcl;
-  gettimeofday(&end, NULL);
   clock_gettime(NULL, &end_tvcl);
-  fprintf(stderr, "Client exiting after %d msgs (gettimeofday %f; time: %d; clock_gettime: %f)\n",
-		  msg_count,message_size,
-		  end.tv_sec + end.tv_usec/1000000.0,
+  fprintf(stderr, "Client exiting after %d msgs (time: %d; clock_gettime: %f)\n",
+		  msg_count,
 		  time(NULL),
-		  end_tvcl.tv_sec + end_tvcl.tv_nsec/1000000000.0);
+	  end_tvcl.tv_sec + end_tvcl.tv_nsec/1000000000.0);
 
   return 0;
 }
