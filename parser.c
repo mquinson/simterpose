@@ -30,10 +30,10 @@ static void parse_process(sg_platf_process_cbarg_t args)
   proc->executable = strdup(args->function);
   proc->launching_time = args->start_time;
 
-  proc->command_line_argument = xbt_dynar_new(sizeof(char*), &xbt_free_ref);
-  for (i=0;i < args->argc; i++) {
-	  char *val = (args->argv[i] == NULL) ? NULL: xbt_strdup(args->argv[i]);
-	  xbt_dynar_push(proc->command_line_argument, &val );
+  proc->command_line_argument = xbt_dynar_new(sizeof(char *), &xbt_free_ref);
+  for (i = 0; i < args->argc; i++) {
+    char *val = (args->argv[i] == NULL) ? NULL : xbt_strdup(args->argv[i]);
+    xbt_dynar_push(proc->command_line_argument, &val);
   }
 
   ++proc_amount;
@@ -53,6 +53,7 @@ static int compare_time(const void *proc1, const void *proc2)
   else
     return 1;
 }
+
 void parse_deployment_file(const char *filename)
 {
   surf_parse_reset_callbacks();

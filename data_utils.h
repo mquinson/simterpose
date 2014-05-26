@@ -63,4 +63,4 @@ translate_desc *get_translation(int real_port);
 
 int get_real_port(pid_t pid, unsigned int ip, int port);
 
-#endif /* SIMTERPOSE_GLOBALS_H */
+#endif                          /* SIMTERPOSE_GLOBALS_H */

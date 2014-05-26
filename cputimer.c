@@ -60,7 +60,8 @@ error:
   return -1;
 }
 
-static void netlink_sock_send(int sd, __u16 nlmsg_type, __u32 nlmsg_pid, __u8 genl_cmd, __u16 nla_type, void *nla_data, int nla_len)
+static void netlink_sock_send(int sd, __u16 nlmsg_type, __u32 nlmsg_pid, __u8 genl_cmd, __u16 nla_type, void *nla_data,
+                              int nla_len)
 {
   struct nlattr *na;
   struct sockaddr_nl nladdr;
@@ -90,7 +91,7 @@ static void netlink_sock_send(int sd, __u16 nlmsg_type, __u32 nlmsg_pid, __u8 ge
       buf += r;
       buflen -= r;
     } else if (errno != EAGAIN)
-    	xbt_die("Error while sending a command over netlink: %s", strerror(errno));
+      xbt_die("Error while sending a command over netlink: %s", strerror(errno));
   }
 }
 
@@ -114,14 +115,13 @@ int get_family_id(int sd)
 
   strcpy(name, TASKSTATS_GENL_NAME);
   netlink_sock_send(sd, GENL_ID_CTRL, getpid(), CTRL_CMD_GETFAMILY,
-                     CTRL_ATTR_FAMILY_NAME, (void *) name, strlen(TASKSTATS_GENL_NAME) + 1);
+                    CTRL_ATTR_FAMILY_NAME, (void *) name, strlen(TASKSTATS_GENL_NAME) + 1);
 
   rep_len = recv(sd, &ans, sizeof(ans), 0);
-  xbt_assert(rep_len >= 0,
-		  "Answer to request on the family id is zero-sized");
+  xbt_assert(rep_len >= 0, "Answer to request on the family id is zero-sized");
 
-  xbt_assert( ans.n.nlmsg_type != NLMSG_ERROR && NLMSG_OK((&ans.n), rep_len),
-		  "Error while retrieving the family id thru netlink: %s", strerror(errno));
+  xbt_assert(ans.n.nlmsg_type != NLMSG_ERROR && NLMSG_OK((&ans.n), rep_len),
+             "Error while retrieving the family id thru netlink: %s", strerror(errno));
 
   na = (struct nlattr *) GENLMSG_DATA(&ans);
   na = (struct nlattr *) ((char *) na + NLA_ALIGN(na->nla_len));
@@ -139,7 +139,7 @@ void cputimer_init()
 {
   pid = getpid();
   _nl_sd = netlink_sock_new(NETLINK_GENERIC);
-  xbt_assert(_nl_sd >=0, "error creating Netlink socket to retrieve the time");
+  xbt_assert(_nl_sd >= 0, "error creating Netlink socket to retrieve the time");
 
   _id = get_family_id(_nl_sd);
   xbt_assert(_id, "Error getting family id: %s\n", strerror(errno));
@@ -160,13 +160,13 @@ void cputimer_get(int tid, long long int *times)
   struct nlattr *na;
   struct taskstats *stats;
 
-  netlink_sock_send(_nl_sd, _id, pid, TASKSTATS_CMD_GET,  TASKSTATS_CMD_ATTR_PID, &tid, sizeof(__u32));
+  netlink_sock_send(_nl_sd, _id, pid, TASKSTATS_CMD_GET, TASKSTATS_CMD_ATTR_PID, &tid, sizeof(__u32));
 
   rep_len = recv(_nl_sd, &msg, sizeof(msg), 0);
-  xbt_assert(rep_len>=0, "error while receiving the answer from netlink socket: %s", strerror(errno));
+  xbt_assert(rep_len >= 0, "error while receiving the answer from netlink socket: %s", strerror(errno));
 
-  xbt_assert( (msg.n.nlmsg_type != NLMSG_ERROR && NLMSG_OK((&msg.n), rep_len)) ,
-    	"received a fatal error from the netlink socket: %s", strerror(errno));
+  xbt_assert((msg.n.nlmsg_type != NLMSG_ERROR && NLMSG_OK((&msg.n), rep_len)),
+             "received a fatal error from the netlink socket: %s", strerror(errno));
 
   rep_len = GENLMSG_PAYLOAD(&msg.n);
 

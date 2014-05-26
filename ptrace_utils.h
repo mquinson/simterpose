@@ -48,4 +48,4 @@ int ptrace_record_socket(pid_t pid);
 
 int ptrace_find_free_binding_port(const pid_t pid);
 
-#endif /* PTRACE_UTILS_H */
+#endif                          /* PTRACE_UTILS_H */

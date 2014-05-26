@@ -308,14 +308,15 @@ int main(int argc, char *argv[])
   cputimer_exit();
   char *interposer_name =
 #ifdef address_translation
-          "Address translation (connect pipes instead of sockets)";
+      "Address translation (connect pipes instead of sockets)";
 #else
-          "Full mediation (peek/poke every data)";
+      "Full mediation (peek/poke every data)";
 #endif
-  XBT_INFO("End of simulation. Simulated time: %lf. Used interposer: %s", SD_get_clock(),interposer_name);
-  XBT_INFO("Total amount of ptrace(): %d (peek/poke: %d/%d, getregs/setregs: %d/%d, detach: %d, syscall: %d, geteventmsg: %d, setoption: %d)",
-           nb_peek + nb_poke + nb_getregs + nb_setregs + nb_detach + nb_syscall + nb_geteventmsg + nb_setoptions,
-           nb_peek,nb_poke, nb_getregs,nb_setregs, nb_detach, nb_syscall, nb_geteventmsg,nb_setoptions);
+  XBT_INFO("End of simulation. Simulated time: %lf. Used interposer: %s", SD_get_clock(), interposer_name);
+  XBT_INFO
+      ("Total amount of ptrace(): %d (peek/poke: %d/%d, getregs/setregs: %d/%d, detach: %d, syscall: %d, geteventmsg: %d, setoption: %d)",
+       nb_peek + nb_poke + nb_getregs + nb_setregs + nb_detach + nb_syscall + nb_geteventmsg + nb_setoptions, nb_peek,
+       nb_poke, nb_getregs, nb_setregs, nb_detach, nb_syscall, nb_geteventmsg, nb_setoptions);
   SD_exit();
   return 0;
 }

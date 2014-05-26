@@ -550,8 +550,8 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u * sysarg)
   sendto_arg_t arg = &(sysarg->sendto);
   int domain = get_domain_socket(pid, arg->sockfd);
 
-  // fprintf(stderr,"[%d] RECVFROM(", pid);
-  fprintf(stderr, "RECVFROM(");
+  // fprintf(stderr,"[%d] recvfrom(", pid);
+  fprintf(stderr, "recvfrom(");
 #ifndef address_translation
   if (arg->ret) {
     char buff[500];

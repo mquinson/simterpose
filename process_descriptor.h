@@ -43,7 +43,7 @@
 
 typedef struct process_descriptor process_descriptor_t;
 
-typedef struct  {
+typedef struct {
   int type;
   process_descriptor_t *proc;
   int fd;

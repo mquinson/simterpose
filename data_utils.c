@@ -392,18 +392,23 @@ process_descriptor_t *process_get_descriptor(pid_t pid)
 {
   return global_data->process_desc[pid];
 }
+
 void process_set_descriptor(pid_t pid, process_descriptor_t * proc)
 {
   global_data->process_desc[pid] = proc;
 }
 
-double simterpose_get_msec_per_flop() {
-	return global_data->msec_per_flop;
+double simterpose_get_msec_per_flop()
+{
+  return global_data->msec_per_flop;
 }
 
-xbt_dict_t simterpose_get_station_list() {
-	return global_data->list_station;
+xbt_dict_t simterpose_get_station_list()
+{
+  return global_data->list_station;
 }
-xbt_dict_t simterpose_get_ip_list() {
-	return global_data->list_ip;
+
+xbt_dict_t simterpose_get_ip_list()
+{
+  return global_data->list_ip;
 }

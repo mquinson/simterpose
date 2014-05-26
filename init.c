@@ -47,14 +47,14 @@ void simterpose_init(int argc, char **argv)
 
   // Initialize simterpose
   if (argc < 3) {
-    usage(argv[0],1);
+    usage(argv[0], 1);
   } else {
     int c;
     while ((c = getopt(argc, argv, "s+p:")) != EOF) {
       switch (c) {
-      case's':
-	strace_option = 1;
-	break;
+      case 's':
+        strace_option = 1;
+        break;
       case 'p':
         flop_option = 1;
         msec_per_flop = 1000000 / str_to_double(optarg);
@@ -63,7 +63,7 @@ void simterpose_init(int argc, char **argv)
         break;
 
       default:
-        usage(argv[0],0);
+        usage(argv[0], 0);
         break;
       }
     }
@@ -71,7 +71,7 @@ void simterpose_init(int argc, char **argv)
   }
 
   if (argc - optind < 2) {
-    usage(argv[0],1);
+    usage(argv[0], 1);
   }
 
   if (!flop_option)
