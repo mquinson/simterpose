@@ -1504,283 +1504,254 @@ int process_handle(pid_t pid, int status)
   syscall_arg_u *sysarg = &(proc->sysarg);
   XBT_DEBUG("process handle");
   while (1) {
-    if (process_in_syscall(proc) == 0) {
-      ////////////// IN ///////////////////
-      process_set_in_syscall(proc);
-      ptrace_get_register(pid, &arg);
-      int state = -1;
-      switch (arg.reg_orig) {
-      case SYS_read:
-        {
+    ptrace_get_register(pid, &arg);
+    int state;
+
+    switch (arg.reg_orig) {
+    case SYS_read:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
           int ret = syscall_read_pre(pid, &arg, sysarg, proc, &state);
           if (ret != PROCESS_CONTINUE)
             return ret;
-        }
-        break;
-
-#ifndef address_translation
-      case SYS_write:
-        {
-          int ret = syscall_write_pre(pid, &arg, sysarg, proc);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
-        }
-        break;
-#endif
-
-      case SYS_poll:
-        // always returns PROCESS_CONTINUE
-        syscall_poll_pre(pid, &arg, sysarg, proc, &state);
-        break;
-
-      case SYS_exit_group:
-        //    XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
-        XBT_DEBUG("exit_group(%ld) called", arg.arg1);
-        ptrace_detach_process(pid);
-        return PROCESS_DEAD;
-        break;
-
-      case SYS_exit:
-        //    XBT_DEBUG("[%d] exit(%ld) called", pid, arg.arg1);
-        XBT_DEBUG("exit(%ld) called", arg.arg1);
-        ptrace_detach_process(pid);
-        return PROCESS_DEAD;
-        break;
-
-      case SYS_time:
-        // always returns PROCESS_CONTINUE
-        syscall_time_pre(pid, &arg, sysarg, proc);
-        break;
-
-      case SYS_gettimeofday:
-        // always returns PROCESS_CONTINUE
-        syscall_gettimeofday_pre(pid, &arg, sysarg, proc);
-        break;
-
-      case SYS_clock_gettime:
-        // always returns PROCESS_CONTINUE
-        syscall_clock_gettime_pre(pid, &arg, sysarg, proc);
-        break;
-
-      case SYS_futex:
-        {
-          int ret = syscall_futex_pre(pid, &arg, sysarg);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
-        }
-        break;
-
-      case SYS_getpeername:
-        get_args_getpeername(pid, &arg, sysarg);
-        process_getpeername_call(pid, sysarg);
-        break;
-
-#ifndef address_translation
-      case SYS_listen:
-        //  XBT_DEBUG("[%d] listen_in", pid);
-        XBT_DEBUG("listen_in");
-        // always returns PROCESS_CONTINUE
-        syscall_listen_pre(pid, &arg, sysarg);
-        break;
-#endif
-
-        // #ifndef address_translation
-      case SYS_bind:
-        // always returns PROCESS_CONTINUE
-        syscall_bind_pre(pid, &arg, sysarg);
-        break;
-        // #endif
-
-      case SYS_connect:
-        // always returns PROCESS_CONTINUE
-        syscall_connect_pre(pid, &arg, sysarg, &state);
-        break;
-
-      case SYS_accept:
-        // always returns PROCESS_CONTINUE
-        syscall_accept_pre(pid, &arg, sysarg, &state);
-        break;
-
-#ifndef address_translation
-      case SYS_getsockopt:
-        // always returns PROCESS_CONTINUE
-        syscall_getsockopt_pre(pid, &arg, sysarg);
-        break;
-#endif
-
-#ifndef address_translation
-      case SYS_setsockopt:
-        // always returns PROCESS_CONTINUE
-        syscall_setsockopt_pre(pid, &arg, sysarg);
-        break;
-#endif
-
-#ifndef address_translation
-      case SYS_fcntl:
-        get_args_fcntl(pid, &arg, sysarg);
-        if (strace_option)
-          print_fcntl_syscall(pid, sysarg);
-        process_fcntl_call(pid, sysarg);
-        break;
-#endif
-
-      case SYS_select:
-        // always returns PROCESS_CONTINUE
-        syscall_select_pre(pid, &arg, sysarg, proc, &state);
-        break;
-
-      case SYS_recvfrom:
-        {
-          int ret = syscall_recvfrom_pre(pid, &arg, sysarg, proc, &state);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
-        }
-        break;
-
-#ifndef address_translation
-      case SYS_sendmsg:
-        {
-          int ret = syscall_sendmsg_pre(pid, &arg, sysarg, proc);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
-        }
-        break;
-#endif
-
-      case SYS_recvmsg:
-        {
-          int ret = syscall_recvmsg_pre(pid, &arg, sysarg, proc, &state);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
-        }
-        break;
-
-      case SYS_sendto:
-        {
-          int ret = syscall_sendto_pre(pid, &arg, sysarg, proc);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
-        }
-        break;
-      }
-      //No verify if we have compuation task to simulate.
-      if (calculate_computation_time(pid)) {
-        //if we have computation to simulate
-        schedule_computation_task(pid);
-        process_on_simulation(proc, 1);
-        state = PROCESS_ON_COMPUTATION;
-      }
-      if (state >= 0)
-        return state;
-    }
-    //////////////////////////////////////
-    ////////////// OUT /////////////////// That's where we stop handling presyscalls, and start handling postsyscalls
-    //////////////////////////////////////
-    else {
-      process_set_out_syscall(proc);
-      ptrace_get_register(pid, &arg);
-      //XBT_DEBUG("intercepted syscall out : %s", syscall_list[arg.reg_orig]);
-      switch (arg.reg_orig) {
-
-      case SYS_write:
-        {
-          int ret = syscall_write_post(pid, &arg, sysarg);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
-        }
-        break;
-
-      case SYS_read:
-        {
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
           int ret = syscall_read_post(pid, &arg, sysarg);
           if (ret != PROCESS_CONTINUE)
             return ret;
         }
-        break;
+      }
+      break;
 
-      case SYS_fork:
-        THROW_UNIMPLEMENTED;    //Fork are not handle yet
-        break;
 
-      case SYS_poll:
-        THROW_IMPOSSIBLE;
-        break;
-
-      case SYS_open:
-        {
-          int ret = syscall_open_post(pid, &arg, sysarg, proc);
+    case SYS_write:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
+#ifndef address_translation
+          int ret = syscall_write_pre(pid, &arg, sysarg, proc);
           if (ret != PROCESS_CONTINUE)
             return ret;
-        }
-        break;
-
-      case SYS_creat:
-        // always returns PROCESS_CONTINUE
-        syscall_creat_post(pid, &arg, sysarg, proc);
-        break;
-
-      case SYS_clone:
-        {
-          int ret = syscall_clone_post(pid, &arg, sysarg, proc);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
-        }
-        break;
-
-      case SYS_close:
-        //XBT_DEBUG("[%d] close(%ld) = %ld",pid, arg.arg1,arg.ret);
-        process_close_call(pid, (int) arg.arg1);
-        break;
-
-      case SYS_dup:
-        XBT_ERROR("[%d] dup not handle yet (%ld) = %ld", pid, arg.arg1, arg.ret);
-        //      THROW_UNIMPLEMENTED; //Dup are not handle yet
-        break;
-
-      case SYS_dup2:
-        XBT_ERROR("[%d] dup2 not handle yet (%ld, %ld) = %ld", pid, arg.arg1, arg.arg2, arg.ret);
-        //    THROW_UNIMPLEMENTED; //Dup are not handle yet
-        break;
-
-      case SYS_execve:
-        XBT_ERROR("[%d] execve called", pid);
-        THROW_UNIMPLEMENTED;    //
-        break;
-
-      case SYS_fcntl:
-        get_args_fcntl(pid, &arg, sysarg);
-        if (strace_option)
-          print_fcntl_syscall(pid, sysarg);
-#ifdef address_translation
-        process_fcntl_call(pid, sysarg);
 #endif
-        break;
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
+          int ret = syscall_write_post(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
+      }
+      break;
 
-      case SYS_select:
+    case SYS_poll:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        // always returns PROCESS_CONTINUE
+        syscall_poll_pre(pid, &arg, sysarg, proc, &state);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
         THROW_IMPOSSIBLE;
-        break;
+      }
+      break;
 
-      case SYS_socket:
+    case SYS_exit_group:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //    XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
+        XBT_DEBUG("exit_group(%ld) called", arg.arg1);
+        ptrace_detach_process(pid);
+        return PROCESS_DEAD;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+      }
+      break;
+
+    case SYS_exit:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //    XBT_DEBUG("[%d] exit(%ld) called", pid, arg.arg1);
+        XBT_DEBUG("exit(%ld) called", arg.arg1);
+        ptrace_detach_process(pid);
+        return PROCESS_DEAD;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+      }
+      break;
+
+    case SYS_time:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
         // always returns PROCESS_CONTINUE
-        syscall_socket_post(pid, &arg, sysarg);
-        break;
+        syscall_time_pre(pid, &arg, sysarg, proc);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+      }
+      break;
 
-      case SYS_bind:
+    case SYS_gettimeofday:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
         // always returns PROCESS_CONTINUE
-        syscall_bind_post(pid, &arg, sysarg);
-        break;
+        syscall_gettimeofday_pre(pid, &arg, sysarg, proc);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+      }
+      break;
 
-      case SYS_connect:
+    case SYS_clock_gettime:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
         // always returns PROCESS_CONTINUE
-        syscall_connect_post(pid, &arg, sysarg, proc);
-        break;
+        syscall_clock_gettime_pre(pid, &arg, sysarg, proc);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+      }
+      break;
 
-      case SYS_accept:
+    case SYS_futex:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
+          int ret = syscall_futex_pre(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
+        }
+      }
+      break;
+
+    case SYS_getpeername:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        get_args_getpeername(pid, &arg, sysarg);
+        process_getpeername_call(pid, sysarg);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+      }
+      break;
+
+    case SYS_listen:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+#ifndef address_translation
+        //  XBT_DEBUG("[%d] listen_in", pid);
+        XBT_DEBUG("listen_in");
         // always returns PROCESS_CONTINUE
-        syscall_accept_post(pid, &arg, sysarg);
-        break;
-
-      case SYS_listen:
+        syscall_listen_pre(pid, &arg, sysarg);
+#endif
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
         XBT_DEBUG("[%d] listen_out", pid);
 #ifdef address_translation
         // always returns PROCESS_CONTINUE
@@ -1788,70 +1759,520 @@ int process_handle(pid_t pid, int status)
 #else
         THROW_IMPOSSIBLE;
 #endif
-        break;
+      }
+      break;
 
-      case SYS_sendto:
-        {
-          int ret = syscall_sendto_post(pid, &arg, sysarg);
+    case SYS_bind:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        // always returns PROCESS_CONTINUE
+        syscall_bind_pre(pid, &arg, sysarg);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        // always returns PROCESS_CONTINUE
+        syscall_bind_post(pid, &arg, sysarg);
+      }
+      break;
+
+    case SYS_connect:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        // always returns PROCESS_CONTINUE
+        syscall_connect_pre(pid, &arg, sysarg, &state);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        // always returns PROCESS_CONTINUE
+        syscall_connect_post(pid, &arg, sysarg, proc);
+      }
+      break;
+
+    case SYS_accept:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        // always returns PROCESS_CONTINUE
+        syscall_accept_pre(pid, &arg, sysarg, &state);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        // always returns PROCESS_CONTINUE
+        syscall_accept_post(pid, &arg, sysarg);
+      }
+      break;
+
+    case SYS_getsockopt:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+#ifndef address_translation
+        // always returns PROCESS_CONTINUE
+        syscall_getsockopt_pre(pid, &arg, sysarg);
+#endif
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        // always returns PROCESS_CONTINUE
+        syscall_getsockopt_post(pid, &arg, sysarg);
+      }
+      break;
+
+    case SYS_setsockopt:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+#ifndef address_translation
+        // always returns PROCESS_CONTINUE
+        syscall_setsockopt_pre(pid, &arg, sysarg);
+#endif
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        // always returns PROCESS_CONTINUE
+        syscall_setsockopt_post(pid, &arg, sysarg);
+      }
+      break;
+
+    case SYS_fcntl:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+#ifndef address_translation
+        get_args_fcntl(pid, &arg, sysarg);
+        if (strace_option)
+          print_fcntl_syscall(pid, sysarg);
+        process_fcntl_call(pid, sysarg);
+#endif
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        get_args_fcntl(pid, &arg, sysarg);
+        if (strace_option)
+          print_fcntl_syscall(pid, sysarg);
+#ifdef address_translation
+        process_fcntl_call(pid, sysarg);
+#endif
+      }
+      break;
+
+    case SYS_select:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        // always returns PROCESS_CONTINUE
+        syscall_select_pre(pid, &arg, sysarg, proc, &state);
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        THROW_IMPOSSIBLE;
+      }
+      break;
+
+    case SYS_recvfrom:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
+          int ret = syscall_recvfrom_pre(pid, &arg, sysarg, proc, &state);
           if (ret != PROCESS_CONTINUE)
             return ret;
-        }
-        break;
-
-      case SYS_recvfrom:
-        {
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
           int ret = syscall_recvfrom_post(pid, &arg, sysarg);
           if (ret != PROCESS_CONTINUE)
             return ret;
         }
-        break;
+      }
+      break;
 
-      case SYS_sendmsg:
-        {
+    case SYS_sendmsg:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
+#ifndef address_translation
+          int ret = syscall_sendmsg_pre(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+#endif
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
           int ret = syscall_sendmsg_post(pid, &arg, sysarg);
           if (ret != PROCESS_CONTINUE)
             return ret;
         }
-        break;
+      }
+      break;
 
-      case SYS_recvmsg:
-        {
+    case SYS_recvmsg:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
+          int ret = syscall_recvmsg_pre(pid, &arg, sysarg, proc, &state);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
           int ret = syscall_recvmsg_post(pid, &arg, sysarg);
           if (ret != PROCESS_CONTINUE)
             return ret;
         }
-        break;
+      }
+      break;
 
-      case SYS_shutdown:
+    case SYS_sendto:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
+          int ret = syscall_sendto_pre(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
+          int ret = syscall_sendto_post(pid, &arg, sysarg);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
+      }
+      break;
+
+    case SYS_fork:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        THROW_UNIMPLEMENTED;    //Fork are not handle yet
+      }
+      break;
+
+    case SYS_open:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
+          int ret = syscall_open_post(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
+      }
+      break;
+
+    case SYS_creat:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        // always returns PROCESS_CONTINUE
+        syscall_creat_post(pid, &arg, sysarg, proc);
+      }
+      break;
+
+    case SYS_clone:
+      {
+        if (process_in_syscall(proc) == 0) {
+          process_set_in_syscall(proc);
+          state = -1;
+          //Now verify if we have compuation task to simulate.
+          if (calculate_computation_time(pid)) {
+            //if we have computation to simulate
+            schedule_computation_task(pid);
+            process_on_simulation(proc, 1);
+            state = PROCESS_ON_COMPUTATION;
+          }
+          if (state >= 0)
+            return state;
+        } else {
+          process_set_out_syscall(proc);
+          int ret = syscall_clone_post(pid, &arg, sysarg, proc);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
+        }
+      }
+      break;
+
+    case SYS_close:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        //XBT_DEBUG("[%d] close(%ld) = %ld",pid, arg.arg1,arg.ret);
+        process_close_call(pid, (int) arg.arg1);
+      }
+      break;
+
+    case SYS_dup:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        XBT_ERROR("[%d] dup not handle yet (%ld) = %ld", pid, arg.arg1, arg.ret);
+        //      THROW_UNIMPLEMENTED; //Dup are not handle yet
+      }
+      break;
+
+
+    case SYS_dup2:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        XBT_ERROR("[%d] dup2 not handle yet (%ld, %ld) = %ld", pid, arg.arg1, arg.arg2, arg.ret);
+        //    THROW_UNIMPLEMENTED; //Dup are not handle yet
+      }
+      break;
+
+
+    case SYS_execve:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        XBT_ERROR("[%d] execve called", pid);
+        THROW_UNIMPLEMENTED;    //
+      }
+      break;
+
+    case SYS_socket:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+        // always returns PROCESS_CONTINUE
+        syscall_socket_post(pid, &arg, sysarg);
+      }
+      break;
+
+    case SYS_shutdown:
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
         get_args_shutdown(pid, &arg, sysarg);
         if (strace_option)
           print_shutdown_syscall(pid, sysarg);
         process_shutdown_call(pid, sysarg);
-        break;
-
-      case SYS_getsockopt:
-        // always returns PROCESS_CONTINUE
-        syscall_getsockopt_post(pid, &arg, sysarg);
-        break;
-
-      case SYS_setsockopt:
-        // always returns PROCESS_CONTINUE
-        syscall_setsockopt_post(pid, &arg, sysarg);
-        break;
-
-      default:
-        // XBT_DEBUG("[%d] Unhandle syscall (%ld) %s = %ld", pid,arg.reg_orig, syscall_list[arg.reg_orig], arg.ret);
-        break;
       }
-    }
+      break;
+
+
+    default:
+      // XBT_DEBUG("[%d] Unhandle syscall (%ld) %s = %ld", pid,arg.reg_orig, syscall_list[arg.reg_orig], arg.ret);
+      if (process_in_syscall(proc) == 0) {
+        process_set_in_syscall(proc);
+        state = -1;
+        //Now verify if we have compuation task to simulate.
+        if (calculate_computation_time(pid)) {
+          //if we have computation to simulate
+          schedule_computation_task(pid);
+          process_on_simulation(proc, 1);
+          state = PROCESS_ON_COMPUTATION;
+        }
+        if (state >= 0)
+          return state;
+      } else {
+        process_set_out_syscall(proc);
+      }
+      break;
+    }                           // switch
+
+    // truc 4
     // XBT_DEBUG("Resume syscall");
     ptrace_resume_process(pid);
 
     //waitpid sur le fils
     waitpid(pid, &status, 0);
-  }
+    //truc4
+
+  }                             // while(1)
 
   THROW_IMPOSSIBLE;             //There's no way to quit the loop
-
   return 0;
 }

@@ -404,7 +404,13 @@ modifie les etc/groups, etc/hosts (noms de domaines) etc/password
   réparera de l'autre coté du gué. Bon courage.
 
 * <2014-05-26 lun.>
-- Chez moi si j'envoie suffisamment de messages ça part souvent en boucle infinie 
-(50 suffit généralement à faire péter le truc)
 - ok je tue MSG/
+- ajout de l'option -s pour produire un log de type strace
+** dans syscall_process.c::process_handle() :
 - ajout de syscall_XXX_pre et syscall_XXX_post
+- inversion du switch du if. Maintenant on traite le syscall au meme endroit,
+que ce soit l'entree ou la sortie. Necessite encore du nettoyage
+** TODO
+- encore beaucoup de redondances à supprimer: recreer une fonction pour les
+manips communes à tous les syscall
+- inliner les get_args
