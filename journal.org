@@ -414,3 +414,12 @@ que ce soit l'entree ou la sortie. Necessite encore du nettoyage
 - encore beaucoup de redondances à supprimer: recreer une fonction pour les
 manips communes à tous les syscall
 - inliner les get_args
+
+* <2014-05-27 mar.>
+- J'ai créé une fonction syscall_process.c::syscall_pre() qui est 
+commune à tous les syscall, c'est en fait ce qu'on faisait avant 
+entre la fin du switch et le début du else.
+- simplification des différents syscall, pour avoir le moins possible
+de bazard dans syscall_process.c::process_handle()
+- inline des sys_build_XXX ou get_args_XXX 
+qui ne sont appelés qu'une fois et/ou sont très petits

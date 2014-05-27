@@ -11,40 +11,13 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, SIMTERPOSE, "args trace log");
 
-void get_args_socket(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
-{
-
-  socket_arg_t arg = &sysarg->socket;
-  arg->ret = reg->ret;
-
-  arg->domain = (int) reg->arg1;
-  arg->type = (int) reg->arg2;
-  arg->protocol = (int) reg->arg3;
-}
-
-
-void sys_build_connect(pid_t pid, syscall_arg_u * sysarg)
-{
-  connect_arg_t arg = &(sysarg->connect);
-  ptrace_restore_syscall(pid, SYS_connect, arg->ret);
-}
-
-void sys_build_bind(pid_t pid, syscall_arg_u * sysarg)
-{
-  bind_arg_t arg = &(sysarg->bind);
-  ptrace_restore_syscall(pid, SYS_bind, arg->ret);
-}
-
-
 void get_args_bind_connect(pid_t child, int syscall, reg_s * reg, syscall_arg_u * sysarg)
 {
-
   connect_arg_t arg = &(sysarg->connect);
 
   arg->ret = (int) reg->ret;
   if (arg->ret == -EINPROGRESS)
     arg->ret = 0;
-
 
   arg->sockfd = (int) reg->arg1;
   int domain = get_domain_socket(child, arg->sockfd);
@@ -58,23 +31,10 @@ void get_args_bind_connect(pid_t child, int syscall, reg_s * reg, syscall_arg_u 
 }
 
 
-void sys_build_accept(pid_t pid, syscall_arg_u * sysarg)
-{
-  accept_arg_t arg = &(sysarg->accept);
-  ptrace_restore_syscall(pid, SYS_accept, arg->ret);
-
-  ptrace_poke(pid, arg->addr_dest, &(arg->sai), sizeof(struct sockaddr_in));
-//   ptrace_poke(pid, arg->len_dest, &(arg->addrlen), sizeof(socklen_t));
-}
-
-
 void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
 {
-
   accept_arg_t arg = &(sysarg->accept);
-
   arg->ret = reg->ret;
-
   arg->sockfd = (int) reg->arg1;
   XBT_DEBUG("Socket for accepting %lu", reg->arg1);
 
@@ -92,12 +52,6 @@ void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
   arg->len_dest = (void *) reg->arg3;
 }
 
-void sys_build_listen(pid_t pid, syscall_arg_u * sysarg)
-{
-  listen_arg_t arg = &(sysarg->listen);
-  ptrace_restore_syscall(pid, SYS_listen, arg->ret);
-}
-
 void get_args_listen(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
@@ -107,25 +61,12 @@ void get_args_listen(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
   arg->ret = (int) reg->ret;
 }
 
-void get_args_send_recv(pid_t child, int syscall, reg_s * reg, syscall_arg_u * sysarg)
-{
-  recv_arg_t arg = &(sysarg->recv);
-
-  arg->ret = (int) reg->ret;
-
-  arg->sockfd = (int) reg->arg1;
-  arg->len = (size_t) reg->arg3;
-  arg->flags = (int) reg->arg4;
-}
-
-
 void get_args_select(pid_t child, reg_s * r, syscall_arg_u * sysarg)
 {
   select_arg_t arg = &(sysarg->select);
 
   arg->fd_state = 0;
   arg->maxfd = (int) r->arg1;
-
 
   if (r->arg2 != 0) {
     ptrace_cpy(child, &arg->fd_read, (void *) r->arg2, sizeof(fd_set), "select");
@@ -177,13 +118,6 @@ void sys_build_select(pid_t pid, int match)
   }
 }
 
-
-void sys_build_setsockopt(pid_t pid, syscall_arg_u * sysarg)
-{
-  setsockopt_arg_t arg = &(sysarg->setsockopt);
-  ptrace_restore_syscall(pid, SYS_setsockopt, arg->ret);
-}
-
 void get_args_setsockopt(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
@@ -201,18 +135,6 @@ void get_args_setsockopt(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 #endif
 }
 
-
-void sys_build_getsockopt(pid_t pid, syscall_arg_u * sysarg)
-{
-  getsockopt_arg_t arg = &(sysarg->getsockopt);
-  ptrace_restore_syscall(pid, SYS_getsockopt, arg->ret);
-
-  if (arg->optname == SO_REUSEADDR) {
-    ptrace_poke(pid, (void *) arg->dest, &(arg->optval), sizeof(arg->optlen));
-    ptrace_poke(pid, (void *) arg->dest_optlen, &(arg->optlen), sizeof(socklen_t));
-  }
-}
-
 void get_args_getsockopt(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
 {
 
@@ -226,12 +148,6 @@ void get_args_getsockopt(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
   arg->dest_optlen = (void *) reg->arg5;
 
   ptrace_cpy(child, &arg->optlen, (void *) reg->arg5, sizeof(socklen_t), "getsockopt");
-}
-
-void sys_build_sendto(pid_t pid, syscall_arg_u * sysarg)
-{
-  sendto_arg_t arg = &(sysarg->sendto);
-  ptrace_restore_syscall(pid, SYS_sendto, arg->ret);
 }
 
 void get_args_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
@@ -266,15 +182,6 @@ void get_args_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
   } else
     arg->addrlen = 0;
 
-}
-
-void sys_build_recvfrom(pid_t pid, syscall_arg_u * sysarg)
-{
-  recvfrom_arg_t arg = &(sysarg->recvfrom);
-  ptrace_restore_syscall(pid, SYS_recvfrom, arg->ret);
-  XBT_DEBUG("%p", arg->dest);
-  ptrace_poke(pid, (void *) arg->dest, arg->data, arg->ret);
-  free(arg->data);
 }
 
 
@@ -351,12 +258,6 @@ void get_args_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 #endif
 }
 
-void sys_build_sendmsg(pid_t pid, syscall_arg_u * sysarg)
-{
-  sendmsg_arg_t arg = &(sysarg->sendmsg);
-  ptrace_restore_syscall(pid, SYS_sendmsg, arg->ret);
-}
-
 void sys_build_recvmsg(pid_t pid, syscall_arg_u * sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->recvmsg);
@@ -418,12 +319,6 @@ void get_args_poll(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
     arg->fd_list = NULL;
 }
 
-void sys_build_fcntl(pid_t pid, syscall_arg_u * sysarg)
-{
-  fcntl_arg_t arg = &(sysarg->fcntl);
-  ptrace_restore_syscall(pid, SYS_fcntl, arg->ret);
-}
-
 void get_args_fcntl(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
@@ -431,20 +326,7 @@ void get_args_fcntl(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
   arg->cmd = (int) reg->arg2;
   //TODO make a real gestion of fcntl arg
   arg->arg = (int) reg->arg3;
-
   arg->ret = (int) reg->ret;
-
-}
-
-void sys_build_read(pid_t pid, syscall_arg_u * sysarg)
-{
-  read_arg_t arg = &(sysarg->read);
-  ptrace_restore_syscall(pid, SYS_read, arg->ret);
-
-  if (arg->ret > 0) {
-    ptrace_poke(pid, (void *) arg->dest, arg->data, arg->ret);
-    free(arg->data);
-  }
 }
 
 void get_args_read(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
@@ -473,90 +355,6 @@ void get_args_write(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
     }
   }
 #endif
-}
-
-void get_args_shutdown(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
-{
-  shutdown_arg_t arg = &(sysarg->shutdown);
-  arg->fd = reg->arg1;
-  arg->how = reg->arg2;
-  arg->ret = reg->ret;
-}
-
-void sys_build_getpeername(pid_t pid, syscall_arg_u * sysarg)
-{
-  getpeername_arg_t arg = &(sysarg->getpeername);
-
-  ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
-  if (arg->ret == 0) {
-    ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
-    ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
-  }
-}
-
-void get_args_getpeername(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
-{
-  getpeername_arg_t arg = &(sysarg->getpeername);
-
-  arg->ret = reg->ret;
-  arg->sockfd = reg->arg1;
-  arg->sockaddr_dest = (void *) reg->arg2;
-  arg->len_dest = (void *) reg->arg3;
-
-  ptrace_cpy(pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
-}
-
-
-void get_args_time(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
-{
-  time_arg_t arg = &(sysarg->time);
-  arg->ret = reg->ret;
-}
-
-void sys_build_time(pid_t pid, syscall_arg_u * sysarg)
-{
-  time_arg_t arg = &(sysarg->time);
-  ptrace_restore_syscall(pid, SYS_time, arg->ret);
-}
-
-void get_args_gettimeofday(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
-{
-  gettimeofday_arg_t arg = &(sysarg->gettimeofday);
-  arg->ret = reg->ret;
-  arg->tv = (void *) reg->arg1;
-}
-
-void sys_build_gettimeofday(pid_t pid, syscall_arg_u * sysarg)
-{
-  gettimeofday_arg_t arg = &(sysarg->gettimeofday);
-
-  ptrace_restore_syscall(pid, SYS_gettimeofday, arg->ret);
-
-  struct timeval tv;
-  tv.tv_sec = get_simulated_timestamp();        // (time_t)42; //
-  tv.tv_usec = 0;
-
-  ptrace_poke(pid, arg->tv, &(tv), sizeof(struct timeval));
-}
-
-void get_args_clockgettime(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
-{
-  clockgettime_arg_t arg = &(sysarg->clockgettime);
-  arg->ret = reg->ret;
-  arg->tp = (void *) reg->arg2;
-}
-
-void sys_build_clockgettime(pid_t pid, syscall_arg_u * sysarg)
-{
-  clockgettime_arg_t arg = &(sysarg->clockgettime);
-
-  ptrace_restore_syscall(pid, SYS_clock_gettime, arg->ret);
-
-  struct timespec tp;
-  tp.tv_sec = get_simulated_timestamp();        // (time_t)42; //
-  tp.tv_nsec = 0;
-
-  ptrace_poke(pid, arg->tp, &(tp), sizeof(struct timespec));
 }
 
 void sys_translate_accept(pid_t pid, syscall_arg_u * sysarg)
