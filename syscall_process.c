@@ -1072,10 +1072,10 @@ int syscall_time_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
   *state = -1;
   time_arg_t arg = &(sysarg->time);
   arg->ret = reg->ret;
-  if (strace_option)
-    print_time_syscall(pid, sysarg);
   ptrace_neutralize_syscall(pid);
   sysarg->time.ret = get_simulated_timestamp(); // (time_t)25; //
+  if (strace_option)
+    print_time_syscall(pid, sysarg);
   ptrace_restore_syscall(pid, SYS_time, arg->ret);
   process_set_out_syscall(proc);
   return (syscall_pre(pid, proc, state));
@@ -1215,8 +1215,6 @@ int syscall_connect_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
   get_args_bind_connect(pid, 0, reg, sysarg);
   if (process_connect_in_call(pid, sysarg))
     *state = PROCESS_ON_MEDIATION;
-  if (strace_option)
-    print_connect_syscall(pid, sysarg);
   return (syscall_pre(pid, proc, state));
 }
 
@@ -1246,8 +1244,6 @@ int syscall_accept_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
   pid_t conn_pid = process_accept_in_call(pid, sysarg);
   if (!conn_pid)
     *state = PROCESS_ON_MEDIATION;
-  if (strace_option)
-    print_accept_syscall(pid, sysarg);
   return (syscall_pre(pid, proc, state));
 }
 
@@ -1431,6 +1427,8 @@ int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
       return PROCESS_TASK_FOUND;
   }
 #endif
+  if (strace_option)
+    print_recvfrom_syscall(pid, &(proc->sysarg));
   return PROCESS_CONTINUE;
 }
 
@@ -1570,15 +1568,11 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
       print_sendto_syscall(pid, sysarg);
     return PROCESS_TASK_FOUND;
   }
-  if (strace_option)
-    print_sendto_syscall(pid, sysarg);
 #else
   if (socket_registered(pid, reg->arg1) != -1) {
     if (socket_network(pid, reg->arg1)) {
       sys_translate_sendto_in(pid, sysarg);
     }
-    if (strace_option)
-      print_sendto_syscall(pid, sysarg);
   }
 #endif
   return (syscall_pre(pid, proc, state));
