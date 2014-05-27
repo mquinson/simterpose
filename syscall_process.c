@@ -375,13 +375,11 @@ void process_recvfrom_out_call(int pid)
   //     return;
 
   process_reset_state(proc);
-  if (strace_option)
-    print_recvfrom_syscall(pid, &(proc->sysarg));
-  // sys_build_recvfrom(pid, &(proc->sysarg));
   syscall_arg_u *sysarg =  &(proc->sysarg);
   recvfrom_arg_t arg = &(sysarg->recvfrom);
+  if (strace_option)
+    print_recvfrom_syscall(pid, &(proc->sysarg));
   ptrace_restore_syscall(pid, SYS_recvfrom, arg->ret);
-  XBT_DEBUG("%p", arg->dest);
   ptrace_poke(pid, (void *) arg->dest, arg->data, arg->ret);
   free(arg->data);
 }
@@ -1419,8 +1417,8 @@ int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
 int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   process_set_out_syscall(proc);
-  // XBT_DEBUG("[%d] RECVFROM_out", pid);
-  XBT_DEBUG("RECVFROM_out");
+  // XBT_DEBUG("[%d] recvfrom_out", pid);
+  XBT_DEBUG("recvfrom_out");
   get_args_recvfrom(pid, reg, sysarg);
   if (strace_option)
     print_recvfrom_syscall(pid, sysarg);
