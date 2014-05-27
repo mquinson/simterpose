@@ -96,32 +96,9 @@ void get_args_select(pid_t child, reg_s * r, syscall_arg_u * sysarg)
   arg->ret = (int) r->ret;
 }
 
-
-//FIXME make this function use unified union syscall_arg_u
-void sys_build_select(pid_t pid, int match)
-{
-  ptrace_restore_syscall(pid, SYS_select, match);
-  reg_s r;
-  ptrace_get_register(pid, &r);
-
-  process_descriptor_t *proc = process_get_descriptor(pid);
-  select_arg_t arg = &(proc->sysarg.select);
-
-  if (arg->fd_state & SELECT_FDRD_SET) {
-    ptrace_poke(pid, (void *) r.arg2, &(arg->fd_read), sizeof(fd_set));
-  }
-  if (arg->fd_state & SELECT_FDWR_SET) {
-    ptrace_poke(pid, (void *) r.arg3, &(arg->fd_write), sizeof(fd_set));
-  }
-  if (arg->fd_state & SELECT_FDEX_SET) {
-    ptrace_poke(pid, (void *) r.arg4, &(arg->fd_except), sizeof(fd_set));
-  }
-}
-
 void get_args_setsockopt(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
-
   arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg1;
   arg->level = (int) reg->arg2;
@@ -137,9 +114,7 @@ void get_args_setsockopt(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 
 void get_args_getsockopt(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
 {
-
   getsockopt_arg_t arg = &(sysarg->getsockopt);
-
   arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg1;
   arg->level = (int) reg->arg2;
@@ -181,7 +156,6 @@ void get_args_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
     arg->addrlen = (socklen_t) reg->arg6;
   } else
     arg->addrlen = 0;
-
 }
 
 
@@ -212,7 +186,6 @@ void get_args_recvfrom(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
   if (reg->arg5 != 0) {         // syscall "recv" doesn't exist on x86_64, it's recvfrom with struct sockaddr=NULL and addrlen=0
     ptrace_cpy(child, &len, (void *) reg->arg6, sizeof(socklen_t), "recvfrom");
   }
-
   arg->addrlen = len;
 }
 
@@ -256,48 +229,6 @@ void get_args_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
     arg->len += temp.iov_len;
   }
 #endif
-}
-
-void sys_build_recvmsg(pid_t pid, syscall_arg_u * sysarg)
-{
-  recvmsg_arg_t arg = &(sysarg->recvmsg);
-  ptrace_restore_syscall(pid, SYS_recvmsg, arg->ret);
-
-  int length = arg->ret;
-  int global_size = 0;
-  int i;
-  for (i = 0; i < arg->msg.msg_iovlen; ++i) {
-    if (length < 0)
-      break;
-
-    struct iovec temp;
-    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
-
-    if (length < temp.iov_len)
-      temp.iov_len = length;
-
-    ptrace_poke(pid, arg->msg.msg_iov + i * sizeof(struct iovec), &temp, sizeof(struct iovec));
-
-    ptrace_poke(pid, temp.iov_base, arg->data + global_size, temp.iov_len);
-
-  }
-  free(arg->data);
-}
-
-
-void sys_build_poll(pid_t pid, int match)
-{
-  ptrace_restore_syscall(pid, SYS_poll, match);
-  reg_s r;
-  ptrace_get_register(pid, &r);
-
-  process_descriptor_t *proc = process_get_descriptor(pid);
-  poll_arg_t arg = &(proc->sysarg.poll);
-  arg->ret = match;
-
-  if (r.arg1 != 0) {
-    ptrace_poke(pid, (void *) r.arg1, arg->fd_list, sizeof(struct pollfd) * arg->nbfd);
-  }
 }
 
 
@@ -356,6 +287,71 @@ void get_args_write(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
   }
 #endif
 }
+
+
+//FIXME make this function use unified union syscall_arg_u
+void sys_build_select(pid_t pid, int match)
+{
+  ptrace_restore_syscall(pid, SYS_select, match);
+  reg_s r;
+  ptrace_get_register(pid, &r);
+
+  process_descriptor_t *proc = process_get_descriptor(pid);
+  select_arg_t arg = &(proc->sysarg.select);
+
+  if (arg->fd_state & SELECT_FDRD_SET) {
+    ptrace_poke(pid, (void *) r.arg2, &(arg->fd_read), sizeof(fd_set));
+  }
+  if (arg->fd_state & SELECT_FDWR_SET) {
+    ptrace_poke(pid, (void *) r.arg3, &(arg->fd_write), sizeof(fd_set));
+  }
+  if (arg->fd_state & SELECT_FDEX_SET) {
+    ptrace_poke(pid, (void *) r.arg4, &(arg->fd_except), sizeof(fd_set));
+  }
+}
+
+void sys_build_recvmsg(pid_t pid, syscall_arg_u * sysarg)
+{
+  recvmsg_arg_t arg = &(sysarg->recvmsg);
+  ptrace_restore_syscall(pid, SYS_recvmsg, arg->ret);
+
+  int length = arg->ret;
+  int global_size = 0;
+  int i;
+  for (i = 0; i < arg->msg.msg_iovlen; ++i) {
+    if (length < 0)
+      break;
+
+    struct iovec temp;
+    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
+
+    if (length < temp.iov_len)
+      temp.iov_len = length;
+
+    ptrace_poke(pid, arg->msg.msg_iov + i * sizeof(struct iovec), &temp, sizeof(struct iovec));
+
+    ptrace_poke(pid, temp.iov_base, arg->data + global_size, temp.iov_len);
+
+  }
+  free(arg->data);
+}
+
+
+void sys_build_poll(pid_t pid, int match)
+{
+  ptrace_restore_syscall(pid, SYS_poll, match);
+  reg_s r;
+  ptrace_get_register(pid, &r);
+
+  process_descriptor_t *proc = process_get_descriptor(pid);
+  poll_arg_t arg = &(proc->sysarg.poll);
+  arg->ret = match;
+
+  if (r.arg1 != 0) {
+    ptrace_poke(pid, (void *) r.arg1, arg->fd_list, sizeof(struct pollfd) * arg->nbfd);
+  }
+}
+
 
 void sys_translate_accept(pid_t pid, syscall_arg_u * sysarg)
 {
