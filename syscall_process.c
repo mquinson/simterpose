@@ -253,7 +253,7 @@ void process_getpeername_call(pid_t pid, syscall_arg_u * sysarg)
 
 int process_handle_active(pid_t pid)
 {
-  XBT_DEBUG("process_handle_active");
+  XBT_DEBUG("PROCESS HANDLE ACTIVE");
   int status;
   process_descriptor_t *proc = process_get_descriptor(pid);
   int proc_state = process_get_state(proc);
@@ -819,15 +819,14 @@ void process_close_call(pid_t pid, int fd)
 }
 
 
-
 int process_handle_mediate(pid_t pid)
 {
-  XBT_DEBUG("process_handle_mediate");
+  XBT_DEBUG("PROCESS HANDLE MEDIATE");
   process_descriptor_t *proc = process_get_descriptor(pid);
   int state = process_get_state(proc);
 
   if (state & PROC_RECVFROM_IN) {
-    XBT_DEBUG("receive_mediate");
+    XBT_DEBUG("mediate recvfrom_in");
     if (process_recv_in_call(pid, proc->sysarg.recvfrom.sockfd)) {
 #ifndef address_translation
       int res = process_recv_call(pid, &(proc->sysarg));
@@ -1399,7 +1398,6 @@ int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
 #else
     XBT_DEBUG("recvfrom_in, address translation");
     int flags = socket_get_flags(pid, reg->arg1);
-    printf("flag %d \n", flags);
     if (!(flags & O_NONBLOCK)) {
       process_set_state(proc, PROC_RECVFROM);
       *state = PROCESS_ON_MEDIATION;
@@ -1696,7 +1694,7 @@ int process_handle(pid_t pid, int status)
   reg_s arg;
   process_descriptor_t *proc = process_get_descriptor(pid);
   syscall_arg_u *sysarg = &(proc->sysarg);
-  XBT_DEBUG("process handle");
+  XBT_DEBUG("PROCESS HANDLE");
   while (1) {
     ptrace_get_register(pid, &arg);
     int state;

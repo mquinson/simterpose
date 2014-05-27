@@ -423,3 +423,9 @@ entre la fin du switch et le début du else.
 de bazard dans syscall_process.c::process_handle()
 - inline des sys_build_XXX ou get_args_XXX 
 qui ne sont appelés qu'une fois et/ou sont très petits
+- résolution d'un bug: en adress translation simterpose ne terminait pas correctement.
+Des syscall sont printés avant d'être corrects, et ça arrêtait le programme
+pour une raison qui m'est inconnue
+- print les syscall au bon endroit (uniquement en post et pas en pre)
+- commencé à travailler sur cputimer.c pour le rendre réentrant, en 
+s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
