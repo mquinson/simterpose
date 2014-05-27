@@ -1420,8 +1420,6 @@ int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
   // XBT_DEBUG("[%d] recvfrom_out", pid);
   XBT_DEBUG("recvfrom_out");
   get_args_recvfrom(pid, reg, sysarg);
-  if (strace_option)
-    print_recvfrom_syscall(pid, sysarg);
 #ifdef address_translation
   if (socket_registered(pid, reg->arg1) != -1) {
     if (socket_network(pid, reg->arg1)) {
