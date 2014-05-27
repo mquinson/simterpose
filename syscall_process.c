@@ -946,7 +946,7 @@ int syscall_read_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
 #endif
     }
   }
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_read_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -985,7 +985,7 @@ int syscall_write_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_de
     }
   }
 #endif
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1022,7 +1022,7 @@ int syscall_poll_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
   process_set_out_syscall(proc);
   process_set_state(proc, PROC_POLL);
   *state = PROCESS_ON_MEDIATION;
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1030,7 +1030,7 @@ int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
   process_set_in_syscall(proc);
   *state = -1;
   ptrace_detach_process(pid);
-  return PROCESS_DEAD;  
+  return PROCESS_DEAD;
 }
 
 int syscall_time_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1044,7 +1044,7 @@ int syscall_time_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
   sysarg->time.ret = get_simulated_timestamp(); // (time_t)25; //
   sys_build_time(pid, sysarg);
   process_set_out_syscall(proc);
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1057,7 +1057,7 @@ int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
   ptrace_neutralize_syscall(pid);
   sys_build_gettimeofday(pid, sysarg);
   process_set_out_syscall(proc);
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1068,7 +1068,7 @@ int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   ptrace_neutralize_syscall(pid);
   sys_build_clockgettime(pid, sysarg);
   process_set_out_syscall(proc);
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_futex_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1082,7 +1082,7 @@ int syscall_futex_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_de
     ptrace_resume_process(pid);
     return PROCESS_IDLE_STATE;
   }
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1091,7 +1091,7 @@ int syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
   *state = -1;
   get_args_getpeername(pid, reg, sysarg);
   process_getpeername_call(pid, sysarg);
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_listen_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1106,7 +1106,7 @@ int syscall_listen_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
   if (strace_option)
     print_listen_syscall(pid, sysarg);
 #endif
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_listen_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1120,7 +1120,7 @@ int syscall_listen_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
     print_listen_syscall(pid, sysarg);
   return PROCESS_CONTINUE;
 #else
-        THROW_IMPOSSIBLE;
+  THROW_IMPOSSIBLE;
 #endif
 }
 
@@ -1134,11 +1134,11 @@ int syscall_bind_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
   process_bind_call(pid, sysarg);
   if (strace_option)
     print_bind_syscall(pid, sysarg);
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_bind_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{        
+{
   process_set_out_syscall(proc);
   // XBT_DEBUG("[%d] bind_out", pid);
   XBT_DEBUG("bind_out");
@@ -1159,7 +1159,7 @@ int syscall_connect_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
     *state = PROCESS_ON_MEDIATION;
   if (strace_option)
     print_connect_syscall(pid, sysarg);
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_connect_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1190,7 +1190,7 @@ int syscall_accept_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
     *state = PROCESS_ON_MEDIATION;
   if (strace_option)
     print_accept_syscall(pid, sysarg);
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_accept_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1216,7 +1216,7 @@ int syscall_getsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proce
   if (strace_option)
     print_getsockopt_syscall(pid, sysarg);
 #endif
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_getsockopt_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1239,7 +1239,7 @@ int syscall_setsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proce
     print_setsockopt_syscall(pid, sysarg);
   free(sysarg->setsockopt.optval);
 #endif
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_setsockopt_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1256,15 +1256,16 @@ int syscall_fcntl_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_de
   process_set_in_syscall(proc);
   *state = -1;
 #ifndef address_translation
-        get_args_fcntl(pid, reg, sysarg);
-        if (strace_option)
-          print_fcntl_syscall(pid, sysarg);
-        process_fcntl_call(pid, sysarg);
+  get_args_fcntl(pid, reg, sysarg);
+  if (strace_option)
+    print_fcntl_syscall(pid, sysarg);
+  process_fcntl_call(pid, sysarg);
 #endif
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
-int syscall_fcntl_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+int syscall_fcntl_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
   process_set_out_syscall(proc);
   get_args_fcntl(pid, reg, sysarg);
   if (strace_option)
@@ -1291,7 +1292,7 @@ int syscall_select_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
   process_set_out_syscall(proc);
   process_set_state(proc, PROC_SELECT);
   *state = PROCESS_ON_MEDIATION;
-  return(syscall_pre(pid, proc, state)); 
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1352,7 +1353,7 @@ int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
     }
 #endif
   }
-  return(syscall_pre(pid, proc, state));
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1394,7 +1395,7 @@ int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
     return PROCESS_TASK_FOUND;
   }
 #endif
-  return(syscall_pre(pid, proc, state));
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1470,7 +1471,7 @@ int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
     if (strace_option)
       print_read_syscall(pid, sysarg);
   }
-  return(syscall_pre(pid, proc, state));
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1518,11 +1519,11 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
       print_sendto_syscall(pid, sysarg);
   }
 #endif
-  return(syscall_pre(pid, proc, state));
+  return (syscall_pre(pid, proc, state));
 }
 
 int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{         
+{
   process_set_out_syscall(proc);
   // XBT_DEBUG("[%d] sendto_out", pid);
   XBT_DEBUG("sendto_out");
@@ -1655,8 +1656,8 @@ int process_handle(pid_t pid, int status)
     case SYS_poll:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_poll_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
         THROW_IMPOSSIBLE;
@@ -1667,18 +1668,18 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         //    XBT_DEBUG("[%d] exit(%ld) called", pid, arg.arg1);
         XBT_DEBUG("exit(%ld) called", arg.arg1);
-	return syscall_exit_pre(pid, &arg, sysarg, proc, &state);
-      
+        return syscall_exit_pre(pid, &arg, sysarg, proc, &state);
+
       } else {
-	process_set_out_syscall(proc);
+        process_set_out_syscall(proc);
       }
       break;
 
     case SYS_exit_group:
       if (process_in_syscall(proc) == 0) {
-	//    XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
-	XBT_DEBUG("exit_group(%ld) called", arg.arg1);
-	return syscall_exit_pre(pid, &arg, sysarg, proc, &state);
+        //    XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
+        XBT_DEBUG("exit_group(%ld) called", arg.arg1);
+        return syscall_exit_pre(pid, &arg, sysarg, proc, &state);
       } else {
         process_set_out_syscall(proc);
       }
@@ -1687,8 +1688,8 @@ int process_handle(pid_t pid, int status)
     case SYS_time:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_time_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
       }
@@ -1697,8 +1698,8 @@ int process_handle(pid_t pid, int status)
     case SYS_gettimeofday:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_gettimeofday_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
       }
@@ -1707,8 +1708,8 @@ int process_handle(pid_t pid, int status)
     case SYS_clock_gettime:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_clock_gettime_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
       }
@@ -1728,9 +1729,9 @@ int process_handle(pid_t pid, int status)
 
     case SYS_getpeername:
       if (process_in_syscall(proc) == 0) {
-          int ret = syscall_getpeername_pre(pid, &arg, sysarg, proc, &state);
-          if (ret != PROCESS_CONTINUE)
-            return ret;
+        int ret = syscall_getpeername_pre(pid, &arg, sysarg, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
       }
@@ -1738,19 +1739,19 @@ int process_handle(pid_t pid, int status)
 
     case SYS_listen:
       if (process_in_syscall(proc) == 0) {
-	int ret = syscall_listen_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_listen_pre(pid, &arg, sysarg, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
-        syscall_listen_post(pid, &arg, sysarg, proc);  
+        syscall_listen_post(pid, &arg, sysarg, proc);
       }
       break;
 
     case SYS_bind:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_bind_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         syscall_bind_post(pid, &arg, sysarg, proc);
       }
@@ -1759,8 +1760,8 @@ int process_handle(pid_t pid, int status)
     case SYS_connect:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_connect_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         syscall_connect_post(pid, &arg, sysarg, proc);
       }
@@ -1769,8 +1770,8 @@ int process_handle(pid_t pid, int status)
     case SYS_accept:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_accept_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         syscall_accept_post(pid, &arg, sysarg, proc);
       }
@@ -1779,8 +1780,8 @@ int process_handle(pid_t pid, int status)
     case SYS_getsockopt:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_getsockopt_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         syscall_getsockopt_post(pid, &arg, sysarg, proc);
       }
@@ -1789,8 +1790,8 @@ int process_handle(pid_t pid, int status)
     case SYS_setsockopt:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_setsockopt_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         syscall_setsockopt_post(pid, &arg, sysarg, proc);
       }
@@ -1799,10 +1800,10 @@ int process_handle(pid_t pid, int status)
     case SYS_fcntl:
       if (process_in_syscall(proc) == 0) {
         int ret = syscall_fcntl_pre(pid, &arg, sysarg, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
-	syscall_fcntl_post(pid, &arg, sysarg, proc);
+        syscall_fcntl_post(pid, &arg, sysarg, proc);
       }
       break;
 
@@ -1873,11 +1874,11 @@ int process_handle(pid_t pid, int status)
 
     case SYS_fork:
       if (process_in_syscall(proc) == 0) {
-	process_set_in_syscall(proc);
-	state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-            return ret;
+        process_set_in_syscall(proc);
+        state = -1;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
         THROW_UNIMPLEMENTED;    //Fork are not handle yet
@@ -1889,9 +1890,9 @@ int process_handle(pid_t pid, int status)
         if (process_in_syscall(proc) == 0) {
           process_set_in_syscall(proc);
           state = -1;
-	  int ret = syscall_pre(pid, proc, &state);
-	  if (ret != PROCESS_CONTINUE)
-	    return ret;
+          int ret = syscall_pre(pid, proc, &state);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         } else {
           syscall_open_post(pid, &arg, sysarg, proc);
         }
@@ -1902,9 +1903,9 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         syscall_creat_post(pid, &arg, sysarg, proc);
       }
@@ -1915,9 +1916,9 @@ int process_handle(pid_t pid, int status)
         if (process_in_syscall(proc) == 0) {
           process_set_in_syscall(proc);
           state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+          int ret = syscall_pre(pid, proc, &state);
+          if (ret != PROCESS_CONTINUE)
+            return ret;
         } else {
           int ret = syscall_clone_post(pid, &arg, sysarg, proc);
           if (ret != PROCESS_CONTINUE)
@@ -1930,9 +1931,9 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
         //XBT_DEBUG("[%d] close(%ld) = %ld",pid, arg.arg1,arg.ret);
@@ -1944,9 +1945,9 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
         XBT_ERROR("[%d] dup not handle yet (%ld) = %ld", pid, arg.arg1, arg.ret);
@@ -1958,9 +1959,9 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
         XBT_ERROR("[%d] dup2 not handle yet (%ld, %ld) = %ld", pid, arg.arg1, arg.arg2, arg.ret);
@@ -1972,9 +1973,9 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
         XBT_ERROR("[%d] execve called", pid);
@@ -1986,9 +1987,9 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         syscall_socket_post(pid, &arg, sysarg, proc);
       }
@@ -1998,9 +1999,9 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
         get_args_shutdown(pid, &arg, sysarg);
@@ -2015,14 +2016,14 @@ int process_handle(pid_t pid, int status)
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
-	int ret = syscall_pre(pid, proc, &state);
-	if (ret != PROCESS_CONTINUE)
-	  return ret;
+        int ret = syscall_pre(pid, proc, &state);
+        if (ret != PROCESS_CONTINUE)
+          return ret;
       } else {
         process_set_out_syscall(proc);
       }
       break;
-    }                           
+    }
 
     // XBT_DEBUG("Resume syscall");
     ptrace_resume_process(pid);
