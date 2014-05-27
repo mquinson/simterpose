@@ -13,8 +13,6 @@ long long int times_syscall[3];
 
 int calculate_computation_time(int pid)
 {
-  fprintf(stderr, "entering calculate_computation_time \n");
-
   cputimer_get(pid, times_syscall);
   process_descriptor_t *proc = process_get_descriptor(pid);
   long long int diff_cpu = 0;
@@ -31,7 +29,6 @@ int calculate_computation_time(int pid)
   }
   return 0;
 }
-
 
 
 // char * trace_header(int pid, char * syscall) {

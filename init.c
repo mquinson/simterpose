@@ -80,7 +80,7 @@ void simterpose_init(int argc, char **argv)
   simterpose_globals_init(msec_per_flop);
 
   init_socket_gestion();
-  init_comm();
+  comm_init();
   cputimer_init();              // creates socket
 
   SD_create_environment(argv[optind]);

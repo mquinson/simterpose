@@ -14,7 +14,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION, SIMTERPOSE, "communication log");
 
 xbt_dynar_t comm_list;
 
-void init_comm()
+void comm_init()
 {
   comm_list = xbt_dynar_new(sizeof(comm_t), NULL);
 }
@@ -272,8 +272,6 @@ int comm_get_socket_state(struct infos_socket *is)
     res = res | SOCKET_WR_NBLK;
   if (comm->state == COMM_SHUT)
     res = res | SOCKET_SHUT;
-
-
 
   return res;
 }

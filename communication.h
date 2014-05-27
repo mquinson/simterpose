@@ -31,7 +31,7 @@ struct comm_s {
   xbt_dynar_t conn_wait;
 };
 
-void init_comm();
+void comm_init();
 
 void comm_exit();
 
