@@ -10,7 +10,7 @@ typedef struct {
   xbt_dynar_t command_line_argument;
 } launcher_procdesc;
 
-launcher_procdesc **proc_list;
+extern launcher_procdesc **proc_list;
 
 
 void parse_deployment_file(const char *filename);

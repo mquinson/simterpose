@@ -11,7 +11,7 @@
 #include "sysdep.h"
 
 typedef struct s_xbt_cpu_timer *xbt_cpu_timer_t;
-xbt_cpu_timer_t timer;
+extern xbt_cpu_timer_t global_timer;
 
 xbt_cpu_timer_t cputimer_new(void);
 void cputimer_init(xbt_cpu_timer_t timer);

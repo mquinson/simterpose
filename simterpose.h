@@ -32,14 +32,14 @@ typedef struct translate_desc translate_desc;
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
 
 
-int nb_peek;
-int nb_poke;
-int nb_getregs;
-int nb_setregs;
-int nb_syscall;
-int nb_setoptions;
-int nb_detach;
-int nb_geteventmsg;
+extern int nb_peek;
+extern int nb_poke;
+extern int nb_getregs;
+extern int nb_setregs;
+extern int nb_syscall;
+extern int nb_setoptions;
+extern int nb_detach;
+extern int nb_geteventmsg;
 
 
 

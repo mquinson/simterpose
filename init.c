@@ -80,8 +80,8 @@ void simterpose_init(int argc, char **argv)
   init_socket_gestion();
   comm_init();
 
-  timer = cputimer_new();
-  cputimer_init(timer);
+  global_timer = cputimer_new();
+  cputimer_init(global_timer);
 
   SD_create_environment(argv[optind]);
   parse_deployment_file(argv[optind + 1]);

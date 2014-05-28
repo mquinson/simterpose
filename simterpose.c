@@ -21,6 +21,15 @@
 #include "communication.h"
 #include "syscall_process.h"
 
+int nb_peek = 0;
+int nb_poke = 0;
+int nb_getregs = 0;
+int nb_setregs = 0;
+int nb_syscall = 0;
+int nb_setoptions = 0;
+int nb_detach = 0;
+int nb_geteventmsg = 0;
+
 #define equal_d(X, Y) (fabs(X-Y) < 1e-9)
 
 #define BUFFER_SIZE 512
@@ -160,15 +169,6 @@ int main(int argc, char *argv[])
   //xbt_log_control_set("TASK.:debug");
   //xbt_log_control_set("PTRACE_UTILS.:debug");
 
-  nb_peek = 0;
-  nb_poke = 0;
-  nb_getregs = 0;
-  nb_setregs = 0;
-  nb_syscall = 0;
-  nb_setoptions = 0;
-  nb_detach = 0;
-  nb_geteventmsg = 0;
-
   simterpose_init(argc, argv);
 
   // Install our SIGINT handler
@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
   xbt_dynar_free(&mediate_list);
   comm_exit();
   socket_exit();
-  cputimer_exit(timer);
+  cputimer_exit(global_timer);
   const char *interposer_name =
 #ifdef address_translation
       "Address translation (connect pipes instead of sockets)";

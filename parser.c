@@ -11,6 +11,7 @@
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PARSE, SIMTERPOSE, "parsing of command-line");
 
 int proc_amount = 0;
+launcher_procdesc **proc_list = NULL;
 
 void destruct_process_descriptor(launcher_procdesc * proc)
 {

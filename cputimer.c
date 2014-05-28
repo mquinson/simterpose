@@ -11,6 +11,7 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CPUTIMER, SIMTERPOSE, "Retrieve the CPU time of a given thread using netlink");
 
+xbt_cpu_timer_t global_timer = NULL;
 
 /*
  * Generic macros for dealing with netlink sockets. Might be duplicated
