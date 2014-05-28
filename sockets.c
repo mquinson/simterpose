@@ -167,10 +167,8 @@ struct infos_socket *register_socket(pid_t pid, int sockfd, int domain, int prot
 //   printf("Registering socket %d for processus %d\n", sockfd, pid);
   if (process_get_descriptor(pid)->fd_list[sockfd] != NULL) {
     xbt_die("Inconsistence found in model. Socket already exist");
-  } else {
-    return confirm_register_socket(pid, sockfd, domain, protocol);
   }
-
+    return confirm_register_socket(pid, sockfd, domain, protocol);
 }
 
 
