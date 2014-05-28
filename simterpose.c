@@ -173,10 +173,9 @@ int main(int argc, char *argv[])
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
   mediate_list = xbt_dynar_new(sizeof(pid_t), NULL);
-  int i = 10;                   //debug
   int child_amount = 0;
   do {
-    //We calculate the time of simulation.
+    // compute how long the simulation should run
     double next_start_time = get_next_start_time();
     if (next_start_time != -1)
       time_to_simulate = next_start_time - SD_get_clock();
@@ -279,7 +278,6 @@ int main(int argc, char *argv[])
 
 
     XBT_DEBUG("child_amount = %d", child_amount);
-    i--;
   } while (child_amount);
 
 
