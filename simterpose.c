@@ -52,30 +52,22 @@ xbt_dynar_t mediate_list;
 
 static void remove_from_idle_list(pid_t pid)
 {
-  xbt_ex_t e;
-  TRY {
-    int i = xbt_dynar_search(idle_process, &pid);
+    int i = xbt_dynar_search_or_negative(idle_process, &pid);
+    xbt_assert(i>=0, "Pid not found in idle list. Inconsistency found in model");
+
     xbt_dynar_remove_at(idle_process, i, NULL);
     process_descriptor_t *proc = process_get_descriptor(pid);
     proc->idle_list = 0;
-  }
-  CATCH(e) {
-    xbt_die("Pid not found in list. Inconsistance found in model");
-  }
 }
 
 static void remove_from_mediate_list(pid_t pid)
 {
-  xbt_ex_t e;
-  TRY {
-    int i = xbt_dynar_search(mediate_list, &pid);
+    int i = xbt_dynar_search_or_negative(mediate_list, &pid);
+    xbt_assert(i>=0, "Pid not found in mediate list. Inconsistency found in model");
+
     xbt_dynar_remove_at(mediate_list, i, NULL);
     process_descriptor_t *proc = process_get_descriptor(pid);
     proc->on_mediation = 0;
-  }
-  CATCH(e) {
-    xbt_die("Pid not found in list. Inconsistance found in model");
-  }
 }
 
 
@@ -144,8 +136,7 @@ static void move_mediate_to_sched()
 
     proc->on_mediation = 0;
     proc->scheduled = 1;
-    //  XBT_DEBUG("Move mediate process to sched %d", pid);
-    XBT_DEBUG("Move mediate process to sched");
+    XBT_DEBUG("Move mediated process %d to scheduling", pid);
 
     xbt_dynar_push_as(sched_list, pid_t, pid);
   }
