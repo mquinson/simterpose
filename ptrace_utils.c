@@ -15,7 +15,7 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_UTILS, SIMTERPOSE, "ptrace utils log");
 
-static char *syscall_list[] = {
+static const char *syscall_list[] = {
   "read", "write", "open", "close", "stat", "fstat", "lstat", "poll", "lseek", "mmap", "mprotect", "munmap", "brk",
   "rt_sigaction", "rt_sigprocmask", "rt_sigreturn", "ioctl", "pread64", "pwrite64", "readv", "writev", "access", "pipe",
       "select",
@@ -75,7 +75,7 @@ static char *syscall_list[] = {
 #define SYSERROR(...) THROWF(system_error, errno, __VA_ARGS__)
 
 
-void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, char *syscall)
+void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, const char *syscall)
 {
 
   int i = 0;
@@ -87,7 +87,7 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, char *syscall)
   long *temp_dest = (long *) dst;
 
   while (size_copy < len) {
-    ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
+    ret = ptrace(PTRACE_PEEKDATA, child, (char*)src + i * sizeof(long), NULL);
     nb_peek++;
 
     if (ret == -1 && errno != 0)
@@ -100,7 +100,7 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, char *syscall)
   }
   size_t rest = length & 0x8;
   if (rest) {
-    ret = ptrace(PTRACE_PEEKDATA, child, src + i * sizeof(long), NULL);
+    ret = ptrace(PTRACE_PEEKDATA, child, (char*)src + i * sizeof(long), NULL);
     nb_peek++;
 
     if (ret == -1 && errno != 0)
@@ -116,7 +116,7 @@ void ptrace_poke(pid_t pid, void *dst, void *src, size_t len)
   long ret;
   errno = 0;
   while (size_copy < len) {
-    ret = ptrace(PTRACE_POKEDATA, pid, dst + size_copy, *((long *) (src + size_copy)));
+    ret = ptrace(PTRACE_POKEDATA, pid, (char*)dst + size_copy, *((long *) ((char*)src + size_copy)));
     nb_poke++;
     if (ret == -1 && errno != 0)
       SYSERROR("[%d] Unable to write at memory address %p\n", pid, dst);

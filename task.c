@@ -17,7 +17,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, SIMTERPOSE, "task log");
 //Contains all informations necessary to make receive task when happen with passing only the info_socket
 
 
-void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char *name)
+static void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const char *name)
 {
   XBT_DEBUG("Scheduling last computation task %s", name);
   process_descriptor_t *proc = process_get_descriptor(pid);

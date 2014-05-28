@@ -13,7 +13,6 @@ typedef struct {
 launcher_procdesc **proc_list;
 
 
-
 void parse_deployment_file(const char *filename);
 
 void destruct_process_descriptor(launcher_procdesc * proc);
@@ -24,9 +23,9 @@ char *parser_get_workstation(int rank);
 
 double parser_get_start_time(int rank);
 
-int parser_get_amount();
+int parser_get_amount(void);
 
-void parser_free_all();
+void parser_free_all(void);
 
 
 #endif

@@ -28,17 +28,17 @@ int nb_sockets = 0;
 int get_addr_port_sock(pid_t pid, int fd, int addr);
 void print_infos_socket(struct infos_socket *is);
 
-void init_socket_gestion()
+void init_socket_gestion(void)
 {
   all_sockets = xbt_dynar_new(sizeof(struct infos_socket *), NULL);
 }
 
-void socket_exit()
+void socket_exit(void)
 {
   xbt_dynar_free(&all_sockets);
 }
 
-recv_information *recv_information_new()
+recv_information *recv_information_new(void)
 {
   recv_information *res = malloc(sizeof(recv_information));
   res->quantity_recv = 0;
@@ -69,7 +69,7 @@ void register_accepting_socket(struct infos_socket *is, pid_t pid, int sockfd)
   xbt_dynar_push(all_sockets, &is);
 }
 
-struct infos_socket *confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol)
+static struct infos_socket *confirm_register_socket(pid_t pid, int sockfd, int domain, int protocol)
 {
 
   process_descriptor_t *proc = process_get_descriptor(pid);
@@ -219,7 +219,7 @@ void print_infos_socket(struct infos_socket *is)
 
 #define INODE_OFFSET 91
 
-int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, int addr)
+static int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, int addr)
 {
 
   FILE *file;
@@ -511,7 +511,7 @@ int handle_new_receive(int pid, syscall_arg_u * sysarg)
       enough = 0;
     }
     data_recv = realloc(data_recv, global_size + size);
-    memcpy(data_recv + global_size, (ds->data) + recv->quantity_recv, size);
+    memcpy(data_recv + global_size, (char*)(ds->data) + recv->quantity_recv, size);
     global_size += size;
 
     if (enough) {

@@ -17,7 +17,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CPUTIMER, SIMTERPOSE, "Retrieve the CPU time of 
  * elsewhere. It is recommended that commercial grade applications use
  * libnl or libnetlink and use the interfaces provided by the library
  */
-#define GENLMSG_DATA(glh)	((void *)(NLMSG_DATA(glh) + GENL_HDRLEN))
+#define GENLMSG_DATA(glh)	((void *)((char*)NLMSG_DATA(glh) + GENL_HDRLEN))
 #define GENLMSG_PAYLOAD(glh)	(NLMSG_PAYLOAD(glh, 0) - GENL_HDRLEN)
 #define NLA_DATA(na)		((void *)((char*)(na) + NLA_HDRLEN))
 #define NLA_PAYLOAD(len)	(len - NLA_HDRLEN)
@@ -107,7 +107,7 @@ static void netlink_sock_send(__u16 nlmsg_type, __u8 genl_cmd, __u16 nla_type, v
  * Probe the controller in genetlink to find the family id
  * for the TASKSTATS family
  */
-int get_family_id(xbt_cpu_timer_t timer)
+static int get_family_id(xbt_cpu_timer_t timer)
 {
   struct {
     struct nlmsghdr n;
@@ -217,6 +217,6 @@ void cputimer_get(int tid, long long int *times, xbt_cpu_timer_t timer)
       XBT_ERROR("Unknown nla_type %d\n", na->nla_type);
       break;
     }
-    na = (struct nlattr *) (GENLMSG_DATA(&msg) + len);
+    na = (struct nlattr *) ((char*)GENLMSG_DATA(&msg) + len);
   }
 }

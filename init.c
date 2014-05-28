@@ -18,8 +18,8 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SIMTERPOSE);
 int strace_option = 0;
 
 static void benchmark_matrix_product(float *msec_per_flop);
-static void start_all_processes();
-static void init_station_list();
+static void start_all_processes(void);
+static void init_station_list(void);
 
 static inline float str_to_double(const char *string)
 {
@@ -29,7 +29,7 @@ static inline float str_to_double(const char *string)
   return value;
 }
 
-void usage(char *progName, int retcode)
+static void usage(char *progName, int retcode)
 {
   printf("usage : %s [-s] [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
   exit(retcode);

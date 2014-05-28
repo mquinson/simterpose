@@ -44,15 +44,15 @@ struct infos_socket {
   int binded;
 };
 
-recv_information *recv_information_new();
+void init_socket_gestion(void);
+
+void socket_exit(void);
+
+recv_information *recv_information_new(void);
 
 void delete_socket(struct infos_socket *is);
 
 void recv_information_destroy(recv_information * recv);
-
-void init_socket_gestion();
-
-void socket_exit();
 
 int handle_new_receive(int pid, syscall_arg_u * sysarg);
 

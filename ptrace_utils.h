@@ -23,7 +23,7 @@ typedef struct {
 } reg_s;
 
 
-void ptrace_cpy(pid_t child, void *dst, void *src, size_t len, char *syscall);
+void ptrace_cpy(pid_t child, void *dst, void *src, size_t len, const char *syscall);
 
 void ptrace_poke(pid_t pid, void *dst, void *src, size_t len);
 

@@ -11,10 +11,6 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
 {
   process_descriptor_t *result = malloc(sizeof(process_descriptor_t));
   result->name = strdup(name);
-//   char buff[256];
-//   strcpy(buff, name);
-//   strcat(buff, ".txt");
-//   result->trace = fopen(buff, "w");
   result->fd_list = malloc(sizeof(fd_descriptor_t *) * MAX_FD);
   result->pid = pid;
   result->tgid = pid;           //By default, we consider that process is the first of this pgid
@@ -24,7 +20,6 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   result->mediate_state = 0;
   result->last_computation_task = NULL;
   result->timeout = NULL;
-
   result->in_timeout = PROC_NO_TIMEOUT;
   result->scheduled = 0;
   result->idle_list = 0;
@@ -54,14 +49,11 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   file_desc->fd = 2;
   result->fd_list[2] = file_desc;
 
-
   result->station = SD_workstation_get_by_name(result->name);
-
   return result;
 }
 
-
-void process_descriptor_destroy(process_descriptor_t * proc)
+static void process_descriptor_destroy(process_descriptor_t * proc)
 {
   free(proc->name);
   //We don't free each fd beacuse application do this before
@@ -78,8 +70,6 @@ void process_descriptor_destroy(process_descriptor_t * proc)
   free(proc);
 }
 
-
-
 void process_set_idle(process_descriptor_t * proc, int idle_state)
 {
   proc->idle = idle_state;
@@ -89,9 +79,6 @@ int process_get_idle(process_descriptor_t * proc)
 {
   return proc->idle;
 }
-
-
-
 
 int process_update_cputime(process_descriptor_t * proc, long long int new_cputime)
 {

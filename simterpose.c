@@ -36,19 +36,12 @@ static void sigint_handler(int sig)
   exit(0);
 }
 
-
-void print_trace_header(FILE * trace)
-{
-  fprintf(trace, "%8s %12s %8s %10s %10s %21s %21s\n", "pidX", "syscall", "pidY", "return", "diff_cpu",
-          "local_addr:port", "remote_addr:port");
-}
-
 xbt_dynar_t idle_process;
 xbt_dynar_t sched_list;
 xbt_dynar_t mediate_list;
 
 
-void remove_from_idle_list(pid_t pid)
+static void remove_from_idle_list(pid_t pid)
 {
   xbt_ex_t e;
   TRY {
@@ -62,7 +55,7 @@ void remove_from_idle_list(pid_t pid)
   }
 }
 
-void remove_from_mediate_list(pid_t pid)
+static void remove_from_mediate_list(pid_t pid)
 {
   xbt_ex_t e;
   TRY {
@@ -77,7 +70,7 @@ void remove_from_mediate_list(pid_t pid)
 }
 
 
-void add_to_idle(pid_t pid)
+static void add_to_idle(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
   if (proc->idle_list)
@@ -89,7 +82,7 @@ void add_to_idle(pid_t pid)
   xbt_dynar_push_as(idle_process, pid_t, pid);
 }
 
-void add_to_mediate(pid_t pid)
+static void add_to_mediate(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
   if (proc->on_mediation)
@@ -119,7 +112,7 @@ void add_to_sched_list(pid_t pid)
 }
 
 
-void move_idle_to_sched()
+static void move_idle_to_sched()
 {
   pid_t pid;
   while (!xbt_dynar_is_empty(idle_process)) {
@@ -133,7 +126,7 @@ void move_idle_to_sched()
   }
 }
 
-void move_mediate_to_sched()
+static void move_mediate_to_sched()
 {
   pid_t pid;
   while (!xbt_dynar_is_empty(mediate_list)) {
@@ -156,15 +149,15 @@ int main(int argc, char *argv[])
 
   uid_t uid = getuid(), euid = geteuid();
   if (uid > 0 && uid == euid)
-    xbt_die("Simterpose must be run with the super-user privileges.");
+	  xbt_die("Simterpose must be run with the super-user privileges.");
 
   xbt_log_control_set("SIMTERPOSE.:info");
   //xbt_log_control_set("RUN_TRACE.:debug");
   //xbt_log_control_set("ARGS_TRACE.:debug");
-  xbt_log_control_set("SYSCALL_PROCESS.:debug");
+  //xbt_log_control_set("SYSCALL_PROCESS.:debug");
   //xbt_log_control_set("CALC_TIMES_PROC.:error");
   //xbt_log_control_set("COMMUNICATION.:debug");
-  xbt_log_control_set("TASK.:debug");
+  //xbt_log_control_set("TASK.:debug");
   //xbt_log_control_set("PTRACE_UTILS.:debug");
 
   nb_peek = 0;
@@ -306,7 +299,7 @@ int main(int argc, char *argv[])
   comm_exit();
   socket_exit();
   cputimer_exit(timer);
-  char *interposer_name =
+  const char *interposer_name =
 #ifdef address_translation
       "Address translation (connect pipes instead of sockets)";
 #else

@@ -16,10 +16,6 @@
 
 #define RECV_CLOSE              10
 
-int process_send_call(pid_t pid, syscall_arg_u * sysarg);
-
-int process_recv_call(pid_t pid, syscall_arg_u * sysarg);
-
 int process_handle(pid_t pid, int status);
 
 int process_handle_active(pid_t pid);
@@ -27,7 +23,5 @@ int process_handle_active(pid_t pid);
 int process_handle_idle(pid_t pid);
 
 int process_handle_mediate(pid_t pid);
-
-int process_clone_call(pid_t pid, reg_s * arg);
 
 #endif

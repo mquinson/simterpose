@@ -31,12 +31,14 @@ struct comm_s {
   xbt_dynar_t conn_wait;
 };
 
-void comm_init();
+void comm_init(void);
 
-void comm_exit();
+void comm_exit(void);
 
 //Create a new communication and register socket passed into
 comm_t comm_new(struct infos_socket *socket);
+
+void comm_destroy(comm_t comm);
 
 comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket *is);
 

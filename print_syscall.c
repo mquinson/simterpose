@@ -421,7 +421,7 @@ void print_listen_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
-void print_flags_send(int flags)
+static void print_flags_send(int flags)
 {
   if (flags & MSG_CONFIRM)
     fprintf(stderr, " MSG_CONFIRM |");
@@ -441,7 +441,7 @@ void print_flags_send(int flags)
 }
 
 
-void print_flags_recv(int flags)
+static void print_flags_recv(int flags)
 {
   if (flags & MSG_DONTWAIT)
     fprintf(stderr, " MSG_DONTWAIT |");
@@ -657,7 +657,7 @@ void print_sendmsg_syscall(pid_t pid, syscall_arg_u * sysarg)
 
 
 
-void get_events_poll(short events)
+static void get_events_poll(short events)
 {
   fprintf(stderr, "events=");
   if ((events & POLLIN) != 0)
@@ -674,7 +674,7 @@ void get_events_poll(short events)
     fprintf(stderr, "POLLNVAL |");
 }
 
-void get_revents_poll(short revents)
+static void get_revents_poll(short revents)
 {
   fprintf(stderr, ", revents=");
   if ((revents & POLLIN) != 0)
@@ -692,7 +692,7 @@ void get_revents_poll(short revents)
   fprintf(stderr, "} ");
 }
 
-void disp_pollfd(struct pollfd *fds, int nfds)
+static void disp_pollfd(struct pollfd *fds, int nfds)
 {
   int i;
   for (i = 0; i < nfds - 1; i++) {
@@ -726,7 +726,7 @@ void print_poll_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, "%lf) = %d\n", arg->timeout, arg->ret);
 }
 
-void disp_fd(fd_set * fd)
+static void disp_fd(fd_set * fd)
 {
   int i;
   fprintf(stderr, "[ ");
@@ -828,7 +828,7 @@ void print_write_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, "write(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
-void print_shutdown_option(int how)
+static void print_shutdown_option(int how)
 {
   switch (how) {
   case 0:
