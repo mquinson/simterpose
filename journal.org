@@ -430,7 +430,9 @@ pour une raison qui m'est inconnue
 s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
 
 * <2014-05-28 mer.>
-
-- TODO réimplémenter gettimeofday avec un LD_PRELOAD de l'application,
- de façon à le forcer à appeller l'appel système qu'on sait intercepter
-faut que simterpose perde les droits suid avant de forker
+- le cputimer est fonctionnel. On utilise une structure de xbt_cpu_timer
+- TODO déplacer le timer global. il est dans cputimer.h pour l'instant
+mais ça n'a pas l'air très propre
+- traitement de la plupart des warning
+- TODO finir les structures pour les stats
+- TODO nettoyer process_descriptor
