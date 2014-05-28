@@ -371,20 +371,20 @@ modifie les etc/groups, etc/hosts (noms de domaines) etc/password
   - Il faut tout changer, mais ce n'est pas simple de modifier 700 lignes aussi
     complexes que celles-ci. La première étape est de sortir chaque case du
     switch dans des fonctions séparées.
-    - TODO: créer des syscall_XXX_pre, avec le traitement du premier switch, et
+    - DONE: créer des syscall_XXX_pre, avec le traitement du premier switch, et
       changer le switch pour les utiliser
-    - TODO: créer des syscall_XXX_post, avec le traitement du second switch
+    - DONE: créer des syscall_XXX_post, avec le traitement du second switch
     - Pour que ca marche, chacune de ces fonctions devra renvoyer l'un des codes
       de retour actuels de process_handle (genre PROCESS_DEAD quand le pid
       tracké est terminé), ou bien PROCESS_CONTINUE pour dire qu'il faut continuer.
-    - TODO pour chaque XXX, écrire syscall_XXX_pre juste avant syscall_XXX_post
+    - DONE pour chaque XXX, écrire syscall_XXX_pre juste avant syscall_XXX_post
       dans le fichier
     - TODO réécrire les switch pour en faire des tableaux de pointeur sur fonction
   - L'objectif est de réécrire le fichier pour que le traitement de chaque
     syscall soit écrit dans l'ordre logique. Une fois ceci fait, il faudra
     simplifier chacun d'entre eux. J'ai l'impression que certaines fonctions
     sont appelées une seule fois (=> à inliner si elles sont courtes)
-  - TODO: ajouter un flag --strace à simterpose qui controle si les fonctions
+  - DONE: ajouter un flag --strace à simterpose qui controle si les fonctions
     print_XXX_syscall sont appelées, au lieu de s'appuyer sur un #define debug.
     Ces fonctions visent à produire une sortie qui ressemble à strace. On
     pourrait aussi inliner ces fonctions si elles sont appellées à un seul
@@ -393,7 +393,7 @@ modifie les etc/groups, etc/hosts (noms de domaines) etc/password
   offertes par ptrace me semble ok en l'état. J'ai donc ajouté les entêtes de
   licence et tout. Je propose de pas ajouter ces trucs sur le code qu'on n'a pas
   repris en main.
-- TODO: est ce qu'on peut tuer le code dans MSG/ ?
+- DONE: est ce qu'on peut tuer le code dans MSG/ ?
 - Je pense qu'il faut maintenant se concentrer sur le nettoyage du code de
   traçage. On fera un gros coup de balai sur le rejeu pour passer de simdag à
   MSG plus tard. Faire les deux en même temps, ou bien tenter de modifier le
@@ -410,10 +410,9 @@ modifie les etc/groups, etc/hosts (noms de domaines) etc/password
 - ajout de syscall_XXX_pre et syscall_XXX_post
 - inversion du switch du if. Maintenant on traite le syscall au meme endroit,
 que ce soit l'entree ou la sortie. Necessite encore du nettoyage
-** TODO
-- encore beaucoup de redondances à supprimer: recreer une fonction pour les
+- DONE encore beaucoup de redondances à supprimer: recreer une fonction pour les
 manips communes à tous les syscall
-- inliner les get_args
+- DONE inliner les get_args
 
 * <2014-05-27 mar.>
 - J'ai créé une fonction syscall_process.c::syscall_pre() qui est 
@@ -429,3 +428,9 @@ pour une raison qui m'est inconnue
 - print les syscall au bon endroit (uniquement en post et pas en pre)
 - commencé à travailler sur cputimer.c pour le rendre réentrant, en 
 s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
+
+* <2014-05-28 mer.>
+
+- TODO réimplémenter gettimeofday avec un LD_PRELOAD de l'application,
+ de façon à le forcer à appeller l'appel système qu'on sait intercepter
+faut que simterpose perde les droits suid avant de forker
