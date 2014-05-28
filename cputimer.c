@@ -27,19 +27,18 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CPUTIMER, SIMTERPOSE, "Retrieve the CPU time of 
 /* Maximum number of cpus expected to be specified in a cpumask */
 #define MAX_CPUS	32
 
-struct s_xbt_cpu_timer {
-  struct timespec start, stop, elapse;
-};
-
-typedef struct s_xbt_cpu_timer *xbt_cpu_timer_t;
-
 struct msgtemplate {
   struct nlmsghdr n;
   struct genlmsghdr g;
   char buf[MAX_MSG_SIZE];
-} msg;
+};
 
-pid_t pid;
+struct s_xbt_cpu_timer {
+	pid_t pid;
+	struct msgtemplate msg;
+	int _nl_sd;
+	__u16 _id;
+};
 
 /*
  * Create a raw netlink socket and bind
@@ -66,13 +65,14 @@ error:
 }
 
 static void netlink_sock_send(int sd, __u16 nlmsg_type, __u32 nlmsg_pid, __u8 genl_cmd, __u16 nla_type, void *nla_data,
-                              int nla_len)
+                              int nla_len, xbt_cpu_timer_t timer)
 {
   struct nlattr *na;
   struct sockaddr_nl nladdr;
   int r, buflen;
   char *buf;
 
+  struct msgtemplate msg = timer->msg;
 
   msg.n.nlmsg_len = NLMSG_LENGTH(GENL_HDRLEN);
   msg.n.nlmsg_type = nlmsg_type;
@@ -105,7 +105,7 @@ static void netlink_sock_send(int sd, __u16 nlmsg_type, __u32 nlmsg_pid, __u8 ge
  * Probe the controller in genetlink to find the family id
  * for the TASKSTATS family
  */
-int get_family_id(int sd)
+int get_family_id(int sd, xbt_cpu_timer_t timer)
 {
   struct {
     struct nlmsghdr n;
@@ -118,9 +118,10 @@ int get_family_id(int sd)
   int rep_len;
   char name[100];
 
+
   strcpy(name, TASKSTATS_GENL_NAME);
   netlink_sock_send(sd, GENL_ID_CTRL, getpid(), CTRL_CMD_GETFAMILY,
-                    CTRL_ATTR_FAMILY_NAME, (void *) name, strlen(TASKSTATS_GENL_NAME) + 1);
+                    CTRL_ATTR_FAMILY_NAME, (void *) name, strlen(TASKSTATS_GENL_NAME) + 1, timer);
 
   rep_len = recv(sd, &ans, sizeof(ans), 0);
   xbt_assert(rep_len >= 0, "Answer to request on the family id is zero-sized");
@@ -136,67 +137,42 @@ int get_family_id(int sd)
   return id;
 }
 
-static int _nl_sd;
-static __u16 _id;
-
 xbt_cpu_timer_t cputimer_new(void)
 {
   return xbt_new0(struct s_xbt_cpu_timer, 1);
 }
 
 /* initialization */
-void cputimer_init()
+void cputimer_init(xbt_cpu_timer_t timer)
 {
-  pid = getpid();
-  _nl_sd = netlink_sock_new(NETLINK_GENERIC);
-  xbt_assert(_nl_sd >= 0, "error creating Netlink socket to retrieve the time");
+  timer->pid = getpid();
+  timer->_nl_sd = netlink_sock_new(NETLINK_GENERIC);
+  xbt_assert(timer->_nl_sd >= 0, "error creating Netlink socket to retrieve the time");
 
-  _id = get_family_id(_nl_sd);
-  xbt_assert(_id, "Error getting family id: %s\n", strerror(errno));
+  timer->_id = get_family_id(timer->_nl_sd, timer);
+  xbt_assert(timer->_id, "Error getting family id: %s\n", strerror(errno));
 
-  memset(&msg, 0, sizeof(struct msgtemplate));
+  memset(&(timer->msg), 0, sizeof(struct msgtemplate));
 }
 
-// TODO continuer
-void cputimer_start(xbt_cpu_timer_t timer)
-{
-  timer->elapse.tv_sec = 0;
-  timer->elapse.tv_nsec = 0;
-  clock_gettime(CLOCK_REALTIME, &(timer->start));
-
-  pid = getpid();
-  _nl_sd = netlink_sock_new(NETLINK_GENERIC);
-  xbt_assert(_nl_sd >= 0, "error creating Netlink socket to retrieve the time");
-
-  _id = get_family_id(_nl_sd);
-  xbt_assert(_id, "Error getting family id: %s\n", strerror(errno));
-
-  memset(&msg, 0, sizeof(struct msgtemplate));
-}
 
 /* cleaning up */
-void cputimer_exit()
+void cputimer_exit(xbt_cpu_timer_t timer)
 {
-  close(_nl_sd);
+  close(timer->_nl_sd);
+  free(timer);
 }
 
-// TODO continuer
-void cputimer_stop(xbt_cpu_timer_t timer)
-{
-  clock_gettime(CLOCK_REALTIME, &(timer->stop));
-  close(_nl_sd);
-}
-
-void cputimer_get(int tid, long long int *times)
+void cputimer_get(int tid, long long int *times, xbt_cpu_timer_t timer)
 {
   struct msgtemplate msg;
   int rep_len;
   struct nlattr *na;
   struct taskstats *stats;
 
-  netlink_sock_send(_nl_sd, _id, pid, TASKSTATS_CMD_GET, TASKSTATS_CMD_ATTR_PID, &tid, sizeof(__u32));
+  netlink_sock_send(timer->_nl_sd, timer->_id, timer->pid, TASKSTATS_CMD_GET, TASKSTATS_CMD_ATTR_PID, &tid, sizeof(__u32), timer);
 
-  rep_len = recv(_nl_sd, &msg, sizeof(msg), 0);
+  rep_len = recv(timer->_nl_sd, &msg, sizeof(msg), 0);
   xbt_assert(rep_len >= 0, "error while receiving the answer from netlink socket: %s", strerror(errno));
 
   xbt_assert((msg.n.nlmsg_type != NLMSG_ERROR && NLMSG_OK((&msg.n), rep_len)),
@@ -223,8 +199,8 @@ void cputimer_get(int tid, long long int *times)
           /* here we collect info */
           stats = (struct taskstats *) NLA_DATA(na);
           //times[0] = (long long int)stats->ac_etime;
-          times[1] = (long long int) stats->ac_utime;
-          times[2] = (long long int) stats->ac_stime;
+          times[1] = (long long int) stats->ac_utime;	/* User CPU time [usec] */
+          times[2] = (long long int) stats->ac_stime; 	/* SYstem CPU time [usec] */
           break;
         default:
           XBT_ERROR("Unknown nested" " nla_type %d\n", na->nla_type);
@@ -240,67 +216,4 @@ void cputimer_get(int tid, long long int *times)
     }
     na = (struct nlattr *) (GENLMSG_DATA(&msg) + len);
   }
-}
-
-// TODO
-double cputimer_elapsed(int tid, long long int *times, xbt_cpu_timer_t timer)
-{
-  struct msgtemplate msg;
-  int rep_len;
-  struct nlattr *na;
-  struct taskstats *stats;
-
-  netlink_sock_send(_nl_sd, _id, pid, TASKSTATS_CMD_GET, TASKSTATS_CMD_ATTR_PID, &tid, sizeof(__u32));
-
-  rep_len = recv(_nl_sd, &msg, sizeof(msg), 0);
-  xbt_assert(rep_len >= 0, "error while receiving the answer from netlink socket: %s", strerror(errno));
-
-  xbt_assert((msg.n.nlmsg_type != NLMSG_ERROR && NLMSG_OK((&msg.n), rep_len)),
-             "received a fatal error from the netlink socket: %s", strerror(errno));
-
-  rep_len = GENLMSG_PAYLOAD(&msg.n);
-
-  na = (struct nlattr *) GENLMSG_DATA(&msg);
-  int len = 0;
-  int aggr_len, len2;
-  while (len < rep_len) {
-    len += NLA_ALIGN(na->nla_len);
-    switch (na->nla_type) {
-    case TASKSTATS_TYPE_AGGR_PID:
-      aggr_len = NLA_PAYLOAD(na->nla_len);
-      len2 = 0;
-      /* For nested attributes, na follows */
-      na = (struct nlattr *) NLA_DATA(na);
-      while (len2 < aggr_len) {
-        switch (na->nla_type) {
-        case TASKSTATS_TYPE_PID:
-          break;
-        case TASKSTATS_TYPE_STATS:
-          /* here we collect info */
-          stats = (struct taskstats *) NLA_DATA(na);
-
-	  // FIXME : use a variable for the conversion
-          timer->stop.tv_nsec = (long long int) stats->ac_utime*1e3;
-          timer->stop.tv_sec = (long long int) stats->ac_stime;
-          break;
-        default:
-          XBT_ERROR("Unknown nested" " nla_type %d\n", na->nla_type);
-          break;
-        }
-        len2 += NLA_ALIGN(na->nla_len);
-        na = (struct nlattr *) ((char *) na + len2);
-      }
-      break;
-    default:
-      XBT_ERROR("Unknown nla_type %d\n", na->nla_type);
-      break;
-    }
-    na = (struct nlattr *) (GENLMSG_DATA(&msg) + len);
-  }
-
-
-  return ((double) timer->stop.tv_sec) - ((double) timer->start.tv_sec) +
-                                          ((double) timer->elapse.tv_sec ) +
-      ((((double) timer->stop.tv_nsec) -
-        ((double) timer->start.tv_nsec) + ((double) timer->elapse.tv_nsec )) / 1e9);
 }

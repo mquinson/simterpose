@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
   xbt_dynar_free(&mediate_list);
   comm_exit();
   socket_exit();
-  cputimer_exit();
+  cputimer_exit(timer);
   char *interposer_name =
 #ifdef address_translation
       "Address translation (connect pipes instead of sockets)";

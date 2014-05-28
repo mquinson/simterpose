@@ -81,7 +81,9 @@ void simterpose_init(int argc, char **argv)
 
   init_socket_gestion();
   comm_init();
-  cputimer_init();              // creates socket
+
+  timer = cputimer_new();
+  cputimer_init(timer);
 
   SD_create_environment(argv[optind]);
   parse_deployment_file(argv[optind + 1]);
@@ -227,10 +229,11 @@ static void benchmark_matrix_product(float *msec_per_flop)
 
   pid_t pid = getpid();
 
-  cputimer_init();
+  xbt_cpu_timer_t timer_benchmark = cputimer_new();
+  cputimer_init(timer_benchmark);
 
   // run the experiment for real
-  cputimer_get(pid, times);
+  cputimer_get(pid, times, timer_benchmark);
   long long int initialTime = times[1] + times[2];
   int i_result, j_result;
 
@@ -243,7 +246,7 @@ static void benchmark_matrix_product(float *msec_per_flop)
     }
   }
 
-  cputimer_get(pid, times);
+  cputimer_get(pid, times, timer_benchmark);
   result = (times[1] + times[2]) - initialTime;
   XBT_DEBUG("Duration of benchmark : %lld", result);
 
@@ -253,5 +256,5 @@ static void benchmark_matrix_product(float *msec_per_flop)
   XBT_INFO("Your machine was benchmarked at %.0f flop/s (use -p %.0f to avoid that benchmarking)", flop_per_sec,
            flop_per_sec);
 
-  cputimer_exit();
+  cputimer_exit(timer_benchmark);
 }

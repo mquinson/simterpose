@@ -10,8 +10,12 @@
 
 #include "sysdep.h"
 
-void cputimer_init();
-void cputimer_exit();
-void cputimer_get(int tid, long long int *times);
+typedef struct s_xbt_cpu_timer *xbt_cpu_timer_t;
+xbt_cpu_timer_t timer;
+
+xbt_cpu_timer_t cputimer_new(void);
+void cputimer_init(xbt_cpu_timer_t timer);
+void cputimer_exit(xbt_cpu_timer_t timer);
+void cputimer_get(int tid, long long int *times, xbt_cpu_timer_t timer);
 
 #endif

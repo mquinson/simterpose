@@ -13,7 +13,7 @@ long long int times_syscall[3];
 
 int calculate_computation_time(int pid)
 {
-  cputimer_get(pid, times_syscall);
+  cputimer_get(pid, times_syscall, timer);
   process_descriptor_t *proc = process_get_descriptor(pid);
   long long int diff_cpu = 0;
 
