@@ -17,8 +17,6 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SIMTERPOSE);
 
 int strace_option = 0;
 
-extern xbt_cfg_t _sg_cfg_set;
-
 static void benchmark_matrix_product(float *msec_per_flop);
 static void start_all_processes();
 static void init_station_list();
