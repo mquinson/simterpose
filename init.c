@@ -111,7 +111,7 @@ static void init_station_list()
       xbt_dynar_push_as(no_ip_list, int, i);
       continue;
     } else {
-      simterpose_station *temp = malloc(sizeof(simterpose_station));
+      simterpose_station_t *temp = malloc(sizeof(simterpose_station_t));
       temp->ip = inet_addr(prop);
       temp->port = xbt_dict_new_homogeneous(free);
       xbt_dict_set(list_s, SD_workstation_get_name(work_list[i]), temp, NULL);
@@ -140,7 +140,7 @@ static void init_station_list()
       }
     }
     struct in_addr in = { temp_ip };
-    simterpose_station *temp = malloc(sizeof(simterpose_station));
+    simterpose_station_t *temp = malloc(sizeof(simterpose_station_t));
     temp->ip = temp_ip;
     temp->port = xbt_dict_new_homogeneous(NULL);
     xbt_dict_set(list_s, SD_workstation_get_name(work_list[i]), temp, NULL);

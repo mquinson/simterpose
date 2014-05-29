@@ -20,10 +20,9 @@
 #define PORT_LOCAL      0x2
 #define PORT_REMOTE     0x4
 
-typedef struct time_desc time_desc;
-typedef struct simterpose_station simterpose_station;
-typedef struct port_desc port_desc;
-typedef struct translate_desc translate_desc;
+typedef struct simterpose_station simterpose_station_t;
+typedef struct port_desc port_desc_t;
+typedef struct translate_desc translate_desc_t;
 
 //For num syscall see 
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
@@ -40,10 +39,10 @@ extern int nb_geteventmsg;
 
 
 
-struct time_desc {
+typedef struct time_desc {
   pid_t pid;
   double start_time;
-};
+} time_desc_t;
 
 struct port_desc {
   int port_num;

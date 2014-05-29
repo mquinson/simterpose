@@ -397,7 +397,7 @@ void sys_translate_connect_out(pid_t pid, syscall_arg_u * sysarg)
   reg_s reg;
   ptrace_get_register(pid, &reg);
 
-  translate_desc *td = get_translation(ntohs(arg->sai.sin_port));
+  translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));
   arg->sai.sin_port = htons(td->port_num);
   arg->sai.sin_addr.s_addr = td->ip;
 
@@ -436,7 +436,7 @@ void sys_translate_sendto_out(pid_t pid, syscall_arg_u * sysarg)
   if (reg.arg5 == 0)
     return;
 
-  translate_desc *td = get_translation(ntohs(arg->sai.sin_port));
+  translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));
   //struct in_addr in = {td->ip};
   //XBT_DEBUG("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
   arg->sai.sin_port = htons(td->port_num);
@@ -473,7 +473,7 @@ void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u * sysarg)
   if (reg.arg5 == 0)
     return;
 
-  translate_desc *td = get_translation(ntohs(arg->sai.sin_port));
+  translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));
   //struct in_addr in = {td->ip};
   //XBT_DEBUG("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
   arg->sai.sin_port = htons(td->port_num);

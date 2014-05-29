@@ -64,7 +64,7 @@ struct process_descriptor {
   long long int cpu_time;
   char *name;
   FILE *trace;
-  time_desc *timeout;           //point to the next timeout of process, NULL there is not timeout
+  time_desc_t *timeout;           //point to the next timeout of process, NULL there is not timeout
   SD_workstation_t station;
   SD_task_t last_computation_task;
   fd_descriptor_t **fd_list;
