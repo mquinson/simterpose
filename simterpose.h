@@ -11,6 +11,7 @@
 //#define address_translation
 
 #include <sys/types.h>
+#include <xbt.h>
 
 #define MAX_FD 1024
 #define MAX_PID 32768
@@ -23,10 +24,6 @@ typedef struct time_desc time_desc;
 typedef struct simterpose_station simterpose_station;
 typedef struct port_desc port_desc;
 typedef struct translate_desc translate_desc;
-
-#include "process_descriptor.h"
-#include "sockets.h"
-#include "xbt.h"
 
 //For num syscall see 
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
