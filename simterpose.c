@@ -168,31 +168,33 @@ int main(int argc, char *argv[])
   nvt.sa_handler = &sigint_handler;
   sigaction(SIGINT, &nvt, &old);
 
-  double time_to_simulate = 0;
+  double max_duration = 0;
 
   idle_process = xbt_dynar_new(sizeof(pid_t), NULL);
   sched_list = xbt_dynar_new(sizeof(pid_t), NULL);
   mediate_list = xbt_dynar_new(sizeof(pid_t), NULL);
   int child_amount = 0;
   do {
-    // compute how long the simulation should run
-    double next_start_time = FES_peek_next_date();
-    if (next_start_time != -1)
-      time_to_simulate = next_start_time - SD_get_clock();
+    // Compute how long the simulation should run
+	//	 - if we have a timeout ongoing, that will be the duration
+	//   - if not, then simulate for -1, which in SD means "as long as you can"
+	//   - simulating for at most 0 means to run only the tasks that are immediately runnable
+    double next_event_date = FES_peek_next_date();
+    if (next_event_date != -1)
+      max_duration = next_event_date - SD_get_clock();
     else
-      time_to_simulate = -1;
+      max_duration = -1;
 
-    if (fabs(time_to_simulate) < 1e-9)
-      time_to_simulate = 0.;
+    if (fabs(max_duration) < 1e-9)
+      max_duration = 0.;
 
-    //XBT_DEBUG("Next simulation time %.9lf (%.9lf - %.9lf)", time_to_simulate, get_next_start_time(), SD_get_clock());
-    if (time_to_simulate < 0 && time_to_simulate != -1) {
-      XBT_ERROR("Next simulation time going negative, aborting");
-      THROW_IMPOSSIBLE;
+    //XBT_DEBUG("Next simulation time %.9lf (%.9lf - %.9lf)", max_duration, get_next_start_time(), SD_get_clock());
+    if (max_duration < 0 && max_duration != -1) {
+      xbt_die("Next simulation time going negative, aborting");
     }
 
-    xbt_dynar_t arr = SD_simulate(time_to_simulate);
-    //XBT_DEBUG("NEW TURN %.9lf", SD_get_clock());
+    xbt_dynar_t arr = SD_simulate(max_duration);
+    // The simulation time did advance. We are now in the future :)
 
     //Now we gonna handle each son for which a watching task is over
     SD_task_t task_over = NULL;
@@ -246,32 +248,32 @@ int main(int argc, char *argv[])
       proc->scheduled = 0;
 
       XBT_DEBUG("Starting treatment");
-      int status;
+      int proc_next_state;
 
       if (proc->mediate_state)
-        status = process_handle_mediate(pid);
+        proc_next_state = process_handle_mediate(pid);
       else if (process_get_idle(proc) == PROC_IDLE)
-        status = process_handle_idle(pid);
+        proc_next_state = process_handle_idle(pid);
 
       else
-        status = process_handle_active(pid);
+        proc_next_state = process_handle_active(pid);
 
 
-      XBT_DEBUG("End of treatment, status = %d", status);
-      if (status == PROCESS_IDLE_STATE) {
+      XBT_DEBUG("End of treatment, status = %d", proc_next_state);
+      if (proc_next_state == PROCESS_IDLE_STATE) {
         XBT_DEBUG("status = PROCESS_IDLE_STATE");
         process_set_idle(proc, PROC_IDLE);
         add_to_idle(pid);
-      } else if (status == PROCESS_DEAD) {
+      } else if (proc_next_state == PROCESS_DEAD) {
         XBT_DEBUG("status = PROCESS_DEAD");
         process_die(pid);
         --child_amount;
-      } else if (status == PROCESS_ON_MEDIATION) {
+      } else if (proc_next_state == PROCESS_ON_MEDIATION) {
         XBT_DEBUG("status = PROCESS_ON_MEDIATION");
         add_to_mediate(pid);
-      } else if (status == PROCESS_TASK_FOUND) {
+      } else if (proc_next_state == PROCESS_TASK_FOUND) {
         XBT_DEBUG("status = PROCESS_TASK_FOUND");
-      } else if (status == PROCESS_ON_COMPUTATION) {
+      } else if (proc_next_state == PROCESS_ON_COMPUTATION) {
         XBT_DEBUG("status = PROCESS_ON_COMPUTATION");
       }
     }

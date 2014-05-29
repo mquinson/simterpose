@@ -178,8 +178,6 @@ void register_port(SD_workstation_t station, int port)
 
     xbt_dict_set(station_desc->port, buff, temp, NULL);
   }
-
-
 }
 
 int get_port_option(SD_workstation_t station, int port)
