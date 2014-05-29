@@ -15,19 +15,19 @@ xbt_dict_t simterpose_get_ip_list(void);
 
 double update_simulation_clock(void);
 
-pid_t pop_next_pid(void);
+pid_t FES_pop_next_pid(void);
 
-double get_next_start_time(void);
+double FES_peek_next_date(void);
 
-void add_launching_time(pid_t pid, double start_time);
+void FES_schedule_at(pid_t pid, double start_time);
 
-void set_next_launchment(pid_t pid);
+void FES_schedule_now(pid_t pid);
 
-int has_sleeping_to_launch(void);
+int FES_contains_events(void);
 
-void add_timeout(pid_t pid, double start_time);
+void FES_push_timeout(pid_t pid, double start_time);
 
-void remove_timeout(pid_t pid);
+void FES_remove_timeout(pid_t pid);
 
 void destroy_simterpose_station(void *station);
 

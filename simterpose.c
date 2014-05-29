@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
   int child_amount = 0;
   do {
     // compute how long the simulation should run
-    double next_start_time = get_next_start_time();
+    double next_start_time = FES_peek_next_date();
     if (next_start_time != -1)
       time_to_simulate = next_start_time - SD_get_clock();
     else
@@ -218,11 +218,11 @@ int main(int argc, char *argv[])
     move_idle_to_sched();
     move_mediate_to_sched();
 
-    while (has_sleeping_to_launch()) {
+    while (FES_contains_events()) {
       XBT_DEBUG("Trying to add waiting process");
       //if we have to launch them to this turn
-      if (equal_d(SD_get_clock(), get_next_start_time())) {
-        int temp_pid = pop_next_pid();
+      if (equal_d(SD_get_clock(), FES_peek_next_date())) {
+        int temp_pid = FES_pop_next_pid();
         add_to_sched_list(temp_pid);
         process_descriptor_t *proc = process_get_descriptor(temp_pid);
         if (proc->in_timeout == PROC_NO_TIMEOUT)

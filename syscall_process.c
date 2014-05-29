@@ -262,14 +262,14 @@ int process_handle_active(pid_t pid)
     //if the select match changment we have to run the child
     if (process_select_call(pid)) {
       if (proc->timeout != NULL)
-        remove_timeout(pid);
+        FES_remove_timeout(pid);
       process_reset_state(proc);
     } else
       return PROCESS_ON_MEDIATION;
   } else if (proc_state & PROC_POLL) {
     if (process_poll_call(pid)) {
       if (proc->timeout != NULL)
-        remove_timeout(pid);
+        FES_remove_timeout(pid);
       process_reset_state(proc);
     } else
       return PROCESS_ON_MEDIATION;
@@ -527,7 +527,7 @@ static int process_clone_call(pid_t pid, reg_s *arg)
    process_clone(tid, pid, flags);
 
    //Now add it to the launching time table to be the next process to be launch
-   set_next_launchment(tid);
+   FES_schedule_now(tid);
 
    int status;
 
@@ -1047,7 +1047,7 @@ static int syscall_poll_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
     print_poll_syscall(pid, sysarg);
   //  process_descriptor_t *proc = process_get_descriptor(pid);
   if (sysarg->poll.timeout >= 0)
-    add_timeout(pid, sysarg->poll.timeout + SD_get_clock());
+    FES_push_timeout(pid, sysarg->poll.timeout + SD_get_clock());
   else
     proc->in_timeout = 1;
   ptrace_neutralize_syscall(pid);
@@ -1338,7 +1338,7 @@ static int syscall_select_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
     print_select_syscall(pid, sysarg);
   //  process_descriptor_t *proc = process_get_descriptor(pid);
   if (sysarg->select.timeout >= 0)
-    add_timeout(pid, sysarg->select.timeout + SD_get_clock());
+    FES_push_timeout(pid, sysarg->select.timeout + SD_get_clock());
   else
     proc->in_timeout = 1;
   ptrace_neutralize_syscall(pid);

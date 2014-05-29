@@ -37,8 +37,7 @@ extern int nb_setoptions;
 extern int nb_detach;
 extern int nb_geteventmsg;
 
-
-
+/* This datastructure seems mainly used to add a process to the FES */
 typedef struct time_desc {
   pid_t pid;
   double start_time;

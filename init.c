@@ -192,7 +192,7 @@ static void start_all_processes()
       nb_setoptions++;
 
       process_set_descriptor(new_pid, process_descriptor_new(parser_get_workstation(rank), new_pid));
-      add_launching_time(new_pid, parser_get_start_time(rank));
+      FES_schedule_at(new_pid, parser_get_start_time(rank));
     }
   }                             // End of loop over all ranks to start
 }

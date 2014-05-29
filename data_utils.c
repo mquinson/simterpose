@@ -52,7 +52,7 @@ void destroy_simterpose_station(void *data)
   free(station);
 }
 
-double get_next_start_time()
+double FES_peek_next_date()
 {
   if (xbt_dynar_is_empty(global_data->future_events_set))
     return -1;
@@ -62,7 +62,7 @@ double get_next_start_time()
   return (*t)->start_time;
 }
 
-pid_t pop_next_pid()
+pid_t FES_pop_next_pid()
 {
   time_desc_t *t = NULL;
   xbt_dynar_shift(global_data->future_events_set, &t);
@@ -77,7 +77,7 @@ pid_t pop_next_pid()
   return res;
 }
 
-void add_launching_time(pid_t pid, double start_time)
+void FES_schedule_at(pid_t pid, double start_time)
 {
   time_desc_t *t = malloc(sizeof(time_desc_t));
   t->pid = pid;
@@ -89,7 +89,7 @@ void add_launching_time(pid_t pid, double start_time)
   xbt_dynar_push(global_data->future_events_set, &t);
 }
 
-void set_next_launchment(pid_t pid)
+void FES_schedule_now(pid_t pid)
 {
   time_desc_t *t = malloc(sizeof(time_desc_t));
   t->pid = pid;
@@ -101,12 +101,12 @@ void set_next_launchment(pid_t pid)
   xbt_dynar_unshift(global_data->future_events_set, &t);
 }
 
-int has_sleeping_to_launch()
+int FES_contains_events()
 {
   return !xbt_dynar_is_empty(global_data->future_events_set);
 }
 
-void add_timeout(pid_t pid, double start_time)
+void FES_push_timeout(pid_t pid, double start_time)
 {
 
   if (start_time == SD_get_clock())
@@ -130,7 +130,7 @@ void add_timeout(pid_t pid, double start_time)
   xbt_dynar_insert_at(global_data->future_events_set, i, &t);
 }
 
-void remove_timeout(pid_t pid)
+void FES_remove_timeout(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
   time_desc_t *t = proc->timeout;
