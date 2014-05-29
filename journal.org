@@ -431,8 +431,56 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
 
 * <2014-05-28 mer.>
 - le cputimer est fonctionnel. On utilise une structure de xbt_cpu_timer
-- TODO déplacer le timer global. il est dans cputimer.h pour l'instant
-mais ça n'a pas l'air très propre
-- traitement de la plupart des warning
+- DONE déplacer le timer global. il est dans cputimer.h pour l'instant
+  mais ça n'a pas l'air très propre
+  - [MT]: non, c'est un symbole faible du timer qui est dans cputimer. J'ai mis
+    le symbole fort dans cputimer.c (en y initialisant la variable hors de toute
+    fonction), ce qui est the right thing to do.
+- traitement de tous les warning créé par l'usage des flags parano de simgrid
 - TODO finir les structures pour les stats
-- TODO nettoyer process_descriptor
+  - [Mt] Une facon de faire est d'intégrer ces variables dans
+    simterpose_globals_t, et ajouter des fonctions pour les
+    incrémenter/décrémenter et afficher.
+- TODO nettoyer process_descriptor.
+* <2014-05-29 jeu.> (Entrée par Martin)
+- Il devient temps de nettoyer un peu le rejeu. Il n'est pas encore assez propre
+  pour qu'on puisse le passer à MSG, car ca va être une opération très
+  intrusive : on va passer au dual du code existant (désolé, c'est pas clair dit
+  comme ca). Pour l'instant on voit bien la boucle principale de simulation et
+  le traitement fait par chaque processus est coupé entre les fonctions sans
+  qu'on arrive à suivre ce qui se passe. En MSG, on voit bien le traitement de
+  chaque processus, et la boucle principale de simulation est cachée dans des
+  fonctions spécifiques. Faire la transition a donc des points communs avec le
+  passage à un graphe dual, où les états deviennent des transitions.
+- J'ai renommé quelques types et symboles en regardant ce qu'on a
+  - Le Futur Events Set (FES) est un truc classique en simulation à evts
+    discrets. C'est une liste (triée) de dates dans le futur avec ce qu'il
+    faudra faire à ces moments.
+  - On va probablement supprimer le FES en passant à MSG, mais j'ai pas fini de
+    comprendre le code, encore, alors il faut qu'on le nettoie pour voir clair.
+  - TODO: Vérifier que le FES est toujours trié.
+    - j'ai l'impression qu'il ne l'est pas quand on ajoute le processus
+      initialement, au moins. S'il n'est pas assez trié, cela peut expliquer les
+      deadlocks: si on sort un evt dans le futur, on bloque dessus. Mais s'il y
+      a plus loin dans la liste un evt à exécuter avant, ca peut tout bloquer.
+    - J'imagine que le assert en simterpose.c:189 sert à détecter ce pb, mais
+      c'est possiblement trop tard: si la liste merde, on deadlock avant meme de
+      détecter l'inconsistance.
+  - TODO: ranger les processus directement dans le FES
+    - Pour l'instant, on y range des éléments de type time_desc_t (fonction
+      FES_schedule_at et FES_push_timeout).
+    - Il serait bien plus simple de mettre un champ "double next_event" dans
+      process_descriptor_t puis de pousser un pointeur sur le processus dans le FES.
+- TODO: renommer tout ce qui est en XXX_station en XXX_host (les noms de fonction compris)
+  En SimDag, ca s'appelle une workstation et en MSG un host. Raccourci à
+  station, c'est carrément pas beau :)
+- Dans simpterpose.c, on voit 3 listes qui servent dans la boucle principale
+  (idle_process, sched_list et mediate_list). Ces listes ne contiennent que des
+  pid, ce qui force à utiliser process_get_descriptor() dans les fonctions 
+  move_mediate_to_sched, move_idle_to_sched, add_to_sched_list.
+  - TODO: Faire en sorte de stocker des pointeurs sur process_descriptor_t dans
+    ces listes.
+  - Il faut probablement relire la doc du xbt_dynar et l'exemple sur les valeurs
+    pointées (non scalaire), pour éviter les pièges de cette interface.
+- Il reste encore beaucoup à nettoyer après ca, mais je n'arrive pas à
+  comprendre sans que ceci soit fait...
