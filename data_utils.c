@@ -6,7 +6,7 @@
 #include "simdag/simdag.h"      /* For SD_get_clock() */
 
 struct simterpose_globals {
-  xbt_dynar_t launching_time;
+  xbt_dynar_t future_events_set;
   process_descriptor_t *process_desc[MAX_PID];
   xbt_dict_t list_station;
   xbt_dict_t list_ip;
@@ -24,7 +24,7 @@ void simterpose_globals_init(float msec_per_flop)
   global_data->msec_per_flop = msec_per_flop;
 
   global_data->child_amount = 0;
-  global_data->launching_time = xbt_dynar_new(sizeof(time_desc_t *), NULL);
+  global_data->future_events_set = xbt_dynar_new(sizeof(time_desc_t *), NULL);
   global_data->list_station = xbt_dict_new_homogeneous(&destroy_simterpose_station);
   global_data->list_ip = xbt_dict_new_homogeneous(&free);
   global_data->list_translate = xbt_dict_new_homogeneous(&free);
@@ -38,7 +38,7 @@ void simterpose_globals_init(float msec_per_flop)
 
 void simterpose_globals_exit()
 {
-  xbt_dynar_free(&(global_data->launching_time));
+  xbt_dynar_free(&(global_data->future_events_set));
   xbt_dict_free(&(global_data->list_station));
   xbt_dict_free(&(global_data->list_ip));
   xbt_dict_free(&(global_data->list_translate));
@@ -54,10 +54,10 @@ void destroy_simterpose_station(void *data)
 
 double get_next_start_time()
 {
-  if (xbt_dynar_is_empty(global_data->launching_time))
+  if (xbt_dynar_is_empty(global_data->future_events_set))
     return -1;
 
-  time_desc_t **t = (time_desc_t **) xbt_dynar_get_ptr(global_data->launching_time, 0);
+  time_desc_t **t = (time_desc_t **) xbt_dynar_get_ptr(global_data->future_events_set, 0);
 //   printf("Next start_time %lf\n", (*t)->start_time);
   return (*t)->start_time;
 }
@@ -65,7 +65,7 @@ double get_next_start_time()
 pid_t pop_next_pid()
 {
   time_desc_t *t = NULL;
-  xbt_dynar_shift(global_data->launching_time, &t);
+  xbt_dynar_shift(global_data->future_events_set, &t);
   int res = t->pid;
 
   process_descriptor_t *proc = process_get_descriptor(res);
@@ -86,7 +86,7 @@ void add_launching_time(pid_t pid, double start_time)
   process_descriptor_t *proc = process_get_descriptor(pid);
   proc->timeout = t;
 
-  xbt_dynar_push(global_data->launching_time, &t);
+  xbt_dynar_push(global_data->future_events_set, &t);
 }
 
 void set_next_launchment(pid_t pid)
@@ -98,12 +98,12 @@ void set_next_launchment(pid_t pid)
   process_descriptor_t *proc = process_get_descriptor(pid);
   proc->timeout = t;
 
-  xbt_dynar_unshift(global_data->launching_time, &t);
+  xbt_dynar_unshift(global_data->future_events_set, &t);
 }
 
 int has_sleeping_to_launch()
 {
-  return !xbt_dynar_is_empty(global_data->launching_time);
+  return !xbt_dynar_is_empty(global_data->future_events_set);
 }
 
 void add_timeout(pid_t pid, double start_time)
@@ -121,13 +121,13 @@ void add_timeout(pid_t pid, double start_time)
   proc->in_timeout = PROC_IN_TIMEOUT;
 
   int i = 0;
-  while (i < xbt_dynar_length(global_data->launching_time)) {
-    time_desc_t **t = xbt_dynar_get_ptr(global_data->launching_time, i);
+  while (i < xbt_dynar_length(global_data->future_events_set)) {
+    time_desc_t **t = xbt_dynar_get_ptr(global_data->future_events_set, i);
     if (start_time < (*t)->start_time)
       break;
     ++i;
   }
-  xbt_dynar_insert_at(global_data->launching_time, i, &t);
+  xbt_dynar_insert_at(global_data->future_events_set, i, &t);
 }
 
 void remove_timeout(pid_t pid)
@@ -139,11 +139,11 @@ void remove_timeout(pid_t pid)
 
   xbt_ex_t e;
   TRY {
-    int i = xbt_dynar_search(global_data->launching_time, &t);
-    xbt_dynar_remove_at(global_data->launching_time, i, NULL);
+    int i = xbt_dynar_search(global_data->future_events_set, &t);
+    xbt_dynar_remove_at(global_data->future_events_set, i, NULL);
   }
   CATCH(e) {
-    printf("Timeout not found %d\n", xbt_dynar_is_empty(global_data->launching_time));
+    printf("Timeout not found %d\n", xbt_dynar_is_empty(global_data->future_events_set));
   }
   free(t);
 }
