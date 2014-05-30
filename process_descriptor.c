@@ -25,6 +25,7 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   result->idle_list = 0;
   result->on_simulation = 0;
   result->on_mediation = 0;
+  result->next_event = 0;
 
   int i;
   for (i = 0; i < MAX_FD; ++i)

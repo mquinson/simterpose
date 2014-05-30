@@ -24,7 +24,7 @@ void simterpose_globals_init(float msec_per_flop)
   global_data->msec_per_flop = msec_per_flop;
 
   global_data->child_amount = 0;
-  global_data->future_events_set = xbt_dynar_new(sizeof(time_desc_t *), NULL);
+  global_data->future_events_set = xbt_dynar_new(sizeof(process_descriptor_t *), NULL);
   global_data->list_station = xbt_dict_new_homogeneous(&destroy_simterpose_station);
   global_data->list_ip = xbt_dict_new_homogeneous(&free);
   global_data->list_translate = xbt_dict_new_homogeneous(&free);
@@ -57,48 +57,38 @@ double FES_peek_next_date()
   if (xbt_dynar_is_empty(global_data->future_events_set))
     return -1;
 
-  time_desc_t **t = (time_desc_t **) xbt_dynar_get_ptr(global_data->future_events_set, 0);
+  process_descriptor_t **p = (process_descriptor_t **) xbt_dynar_get_ptr(global_data->future_events_set, 0);
 //   printf("Next start_time %lf\n", (*t)->start_time);
-  return (*t)->start_time;
+  return (*p)->next_event;
 }
 
 pid_t FES_pop_next_pid()
 {
-  time_desc_t *t = NULL;
-  xbt_dynar_shift(global_data->future_events_set, &t);
-  int res = t->pid;
+  process_descriptor_t *proc = NULL;
+  xbt_dynar_shift(global_data->future_events_set, &proc);
+  int res = proc->pid;
 
-  process_descriptor_t *proc = process_get_descriptor(res);
   if (proc->in_timeout == PROC_IN_TIMEOUT)
     proc->in_timeout = PROC_TIMEOUT_EXPIRE;
   proc->timeout = NULL;
 
-  free(t);
   return res;
 }
 
 void FES_schedule_at(pid_t pid, double start_time)
 {
-  time_desc_t *t = malloc(sizeof(time_desc_t));
-  t->pid = pid;
-  t->start_time = start_time;
+	process_descriptor_t *proc = process_get_descriptor(pid);
+  proc->next_event = start_time;
 
-  process_descriptor_t *proc = process_get_descriptor(pid);
-  proc->timeout = t;
-
-  xbt_dynar_push(global_data->future_events_set, &t);
+  xbt_dynar_push(global_data->future_events_set, &proc);
 }
 
 void FES_schedule_now(pid_t pid)
 {
-  time_desc_t *t = malloc(sizeof(time_desc_t));
-  t->pid = pid;
-  t->start_time = SD_get_clock();
-
   process_descriptor_t *proc = process_get_descriptor(pid);
-  proc->timeout = t;
+  proc->next_event = SD_get_clock();
 
-  xbt_dynar_unshift(global_data->future_events_set, &t);
+  xbt_dynar_unshift(global_data->future_events_set, &proc);
 }
 
 int FES_contains_events()
@@ -112,40 +102,34 @@ void FES_push_timeout(pid_t pid, double start_time)
   if (start_time == SD_get_clock())
     start_time += 0.0001;
 //   printf("Add new timeout of %lf for %d\n", start_time, pid);
-  time_desc_t *t = malloc(sizeof(time_desc_t));
-  t->pid = pid;
-  t->start_time = start_time;
 
   process_descriptor_t *proc = process_get_descriptor(pid);
-  proc->timeout = t;
+  proc->next_event = start_time;
   proc->in_timeout = PROC_IN_TIMEOUT;
 
   int i = 0;
   while (i < xbt_dynar_length(global_data->future_events_set)) {
-    time_desc_t **t = xbt_dynar_get_ptr(global_data->future_events_set, i);
-    if (start_time < (*t)->start_time)
+	process_descriptor_t **p = xbt_dynar_get_ptr(global_data->future_events_set, i);
+    if (start_time < (*p)->next_event)
       break;
     ++i;
   }
-  xbt_dynar_insert_at(global_data->future_events_set, i, &t);
+  xbt_dynar_insert_at(global_data->future_events_set, i, &proc);
 }
 
 void FES_remove_timeout(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
-  time_desc_t *t = proc->timeout;
-  proc->timeout = NULL;
   proc->in_timeout = PROC_NO_TIMEOUT;
 
   xbt_ex_t e;
   TRY {
-    int i = xbt_dynar_search(global_data->future_events_set, &t);
+    int i = xbt_dynar_search(global_data->future_events_set, &proc);
     xbt_dynar_remove_at(global_data->future_events_set, i, NULL);
   }
   CATCH(e) {
     printf("Timeout not found %d\n", xbt_dynar_is_empty(global_data->future_events_set));
   }
-  free(t);
 }
 
 int is_port_in_use(SD_workstation_t station, int port)
