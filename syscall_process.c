@@ -166,7 +166,7 @@ static int process_poll_call(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
 
-  XBT_DEBUG("Entering poll %lf %p\n", SD_get_clock(), proc->timeout);
+  XBT_DEBUG("Entering poll %lf \n", SD_get_clock());
   poll_arg_t arg = (poll_arg_t) & (proc->sysarg.poll);
 
   int match = 0;
@@ -261,14 +261,14 @@ int process_handle_active(pid_t pid)
   if (proc_state & PROC_SELECT) {
     //if the select match changment we have to run the child
     if (process_select_call(pid)) {
-      if (proc->timeout != NULL)
+      if (proc->in_timeout)
         FES_remove_timeout(pid);
       process_reset_state(proc);
     } else
       return PROCESS_ON_MEDIATION;
   } else if (proc_state & PROC_POLL) {
     if (process_poll_call(pid)) {
-      if (proc->timeout != NULL)
+      if (proc->in_timeout)
         FES_remove_timeout(pid);
       process_reset_state(proc);
     } else

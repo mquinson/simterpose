@@ -166,7 +166,6 @@ pid_t FES_pop_next_pid()
 
   if (proc->in_timeout == PROC_IN_TIMEOUT)
     proc->in_timeout = PROC_TIMEOUT_EXPIRE;
-  proc->timeout = NULL;
 
   return res;
 }

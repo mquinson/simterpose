@@ -19,7 +19,6 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   result->state = 0;
   result->mediate_state = 0;
   result->last_computation_task = NULL;
-  result->timeout = NULL;
   result->in_timeout = PROC_NO_TIMEOUT;
   result->scheduled = 0;
   result->in_idle_list = 0;
@@ -64,8 +63,6 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
       free(proc->fd_list[i]);
   }
   free(proc->fd_list);
-  if (proc->timeout)
-    free(proc->timeout);
   if (proc->last_computation_task)
     SD_task_destroy(proc->last_computation_task);
   free(proc);
