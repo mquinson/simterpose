@@ -134,9 +134,9 @@ void comm_set_listen(comm_t comm)
   XBT_DEBUG("Listen do %d", comm->state & COMM_LISTEN);
 }
 
-int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int device)
+int comm_ask_connect(SD_workstation_t host, int port, pid_t tid, int fd, int device)
 {
-  struct infos_socket *conn = get_binding_socket_workstation(station, port, device);
+  struct infos_socket *conn = get_binding_socket_host(host, port, device);
   if (!conn)
     return 0;
 
@@ -149,7 +149,7 @@ int comm_ask_connect(SD_workstation_t station, int port, pid_t tid, int fd, int 
     if (conn->fd.proc == is->fd.proc)
       comm->remote_ip = inet_addr("127.0.0.1");
     else
-      comm->remote_ip = get_ip_of_station(conn->fd.proc->station);
+      comm->remote_ip = get_ip_of_host(conn->fd.proc->host);
   } else
     comm->remote_ip = conn->ip_local;
   comm->remote_port = conn->port_local;

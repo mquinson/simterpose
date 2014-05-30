@@ -50,7 +50,7 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   file_desc->fd = 2;
   result->fd_list[2] = file_desc;
 
-  result->station = SD_workstation_get_by_name(result->name);
+  result->host = SD_workstation_get_by_name(result->name);
   return result;
 }
 
@@ -126,7 +126,7 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
   for (i = 0; i < MAX_FD; ++i)
     result->fd_list[i] = forked->fd_list[i];
 
-  result->station = forked->station;
+  result->host = forked->host;
 
   process_set_descriptor(new_pid, result);
 }
@@ -141,7 +141,7 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
   result->cpu_time = 0;
   result->idle = 0;
   result->last_computation_task = NULL;
-  result->station = cloned->station;
+  result->host = cloned->host;
 
   //Now we handle flags option to do the right cloning
 

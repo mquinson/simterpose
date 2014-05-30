@@ -8,7 +8,7 @@
 struct simterpose_globals {
   xbt_dynar_t future_events_set;
   process_descriptor_t *process_desc[MAX_PID];
-  xbt_dict_t list_station;
+  xbt_dict_t list_host;
   xbt_dict_t list_ip;
   xbt_dict_t list_translate;
   time_t init_time;
@@ -25,7 +25,7 @@ void simterpose_globals_init(float msec_per_flop)
 
   global_data->child_amount = 0;
   global_data->future_events_set = xbt_dynar_new(sizeof(process_descriptor_t *), NULL);
-  global_data->list_station = xbt_dict_new_homogeneous(&destroy_simterpose_station);
+  global_data->list_host = xbt_dict_new_homogeneous(&destroy_simterpose_host);
   global_data->list_ip = xbt_dict_new_homogeneous(&free);
   global_data->list_translate = xbt_dict_new_homogeneous(&free);
   global_data->init_time = time(NULL);
@@ -39,17 +39,17 @@ void simterpose_globals_init(float msec_per_flop)
 void simterpose_globals_exit()
 {
   xbt_dynar_free(&(global_data->future_events_set));
-  xbt_dict_free(&(global_data->list_station));
+  xbt_dict_free(&(global_data->list_host));
   xbt_dict_free(&(global_data->list_ip));
   xbt_dict_free(&(global_data->list_translate));
   free(global_data);
 }
 
-void destroy_simterpose_station(void *data)
+void destroy_simterpose_host(void *data)
 {
-  simterpose_station_t *station = (simterpose_station_t *) data;
-  xbt_dict_free(&(station->port));
-  free(station);
+  simterpose_host_t *host = (simterpose_host_t *) data;
+  xbt_dict_free(&(host->port));
+  free(host);
 }
 
 double FES_peek_next_date()
@@ -132,26 +132,26 @@ void FES_remove_timeout(pid_t pid)
   }
 }
 
-int is_port_in_use(SD_workstation_t station, int port)
+int is_port_in_use(SD_workstation_t host, int port)
 {
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
   return (xbt_dict_get_or_null(temp->port, buff) != NULL);
 }
 
-void register_port(SD_workstation_t station, int port)
+void register_port(SD_workstation_t host, int port)
 {
   //try to see if port isn't already use.
-  simterpose_station_t *station_desc =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *host_desc =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
   port_desc_t *temp = NULL;
 
 
-  if ((temp = (port_desc_t *) xbt_dict_get_or_null(station_desc->port, buff))) {
+  if ((temp = (port_desc_t *) xbt_dict_get_or_null(host_desc->port, buff))) {
     ++(temp->amount_socket);
   } else {
     temp = malloc(sizeof(port_desc_t));
@@ -160,14 +160,14 @@ void register_port(SD_workstation_t station, int port)
     temp->amount_socket = 1;
     temp->bind_socket = NULL;
 
-    xbt_dict_set(station_desc->port, buff, temp, NULL);
+    xbt_dict_set(host_desc->port, buff, temp, NULL);
   }
 }
 
-int get_port_option(SD_workstation_t station, int port)
+int get_port_option(SD_workstation_t host, int port)
 {
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
 
@@ -178,10 +178,10 @@ int get_port_option(SD_workstation_t station, int port)
     return desc->option;
 }
 
-void set_port_option(SD_workstation_t station, int port, int option)
+void set_port_option(SD_workstation_t host, int port, int option)
 {
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
 
@@ -190,10 +190,10 @@ void set_port_option(SD_workstation_t station, int port, int option)
     desc->option = option;
 }
 
-void set_port_on_binding(SD_workstation_t station, int port, struct infos_socket *is, int device)
+void set_port_on_binding(SD_workstation_t host, int port, struct infos_socket *is, int device)
 {
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
 
@@ -209,8 +209,8 @@ struct infos_socket *get_binding_socket(unsigned int ip, int port, int nature)
   struct in_addr in = { ip };
   char *ip_dot = inet_ntoa(in);
 
-  char *station_name = xbt_dict_get(global_data->list_ip, ip_dot);
-  simterpose_station_t *temp = (simterpose_station_t *) xbt_dict_get(global_data->list_station, station_name);
+  char *host_name = xbt_dict_get(global_data->list_ip, ip_dot);
+  simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, host_name);
   char buff[6];
   sprintf(buff, "%d", port);
   port_desc_t *desc = xbt_dict_get_or_null(temp->port, buff);
@@ -225,10 +225,10 @@ struct infos_socket *get_binding_socket(unsigned int ip, int port, int nature)
   return desc->bind_socket;
 }
 
-struct infos_socket *get_binding_socket_workstation(SD_workstation_t station, int port, int device)
+struct infos_socket *get_binding_socket_host(SD_workstation_t host, int port, int device)
 {
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
   port_desc_t *desc = xbt_dict_get_or_null(temp->port, buff);
@@ -242,11 +242,11 @@ struct infos_socket *get_binding_socket_workstation(SD_workstation_t station, in
   return desc->bind_socket;
 }
 
-void set_real_port(SD_workstation_t station, int port, int real_port)
+void set_real_port(SD_workstation_t host, int port, int real_port)
 {
 
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
   port_desc_t *desc = xbt_dict_get_or_null(temp->port, buff);
@@ -257,14 +257,14 @@ void set_real_port(SD_workstation_t station, int port, int real_port)
   desc->real_port = real_port;
 }
 
-unsigned int get_ip_of_station(SD_workstation_t station)
+unsigned int get_ip_of_host(SD_workstation_t host)
 {
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   return temp->ip;
 }
 
-SD_workstation_t get_station_by_ip(unsigned int ip)
+SD_workstation_t get_host_by_ip(unsigned int ip)
 {
   struct in_addr in = { ip };
   char *name = xbt_dict_get_or_null(global_data->list_ip, inet_ntoa(in));
@@ -274,10 +274,10 @@ SD_workstation_t get_station_by_ip(unsigned int ip)
   return SD_workstation_get_by_name(name);
 }
 
-int get_random_port(SD_workstation_t station)
+int get_random_port(SD_workstation_t host)
 {
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
   unsigned short port = 0;
   --port;
 
@@ -295,9 +295,9 @@ int get_random_port(SD_workstation_t station)
 
 void unset_socket(pid_t pid, struct infos_socket *is)
 {
-  SD_workstation_t station = is->station;
-  simterpose_station_t *temp =
-      (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(station));
+  SD_workstation_t host = is->host;
+  simterpose_host_t *temp =
+      (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(host));
 
   char buff[6];
   sprintf(buff, "%d", is->port_local);
@@ -351,14 +351,14 @@ translate_desc_t *get_translation(int real_port)
 int get_real_port(pid_t pid, unsigned int ip, int port)
 {
 //   printf("Searching for ral port of %s:%d\n", inet_ntoa(in), port);
-  simterpose_station_t *temp = NULL;
+  simterpose_host_t *temp = NULL;
   if (ip == inet_addr("127.0.0.1")) {
 //     printf("We are on local network %d\n",port);
     process_descriptor_t *proc = process_get_descriptor(pid);
-    temp = (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(proc->station));
+    temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(proc->host));
   } else
     temp =
-        (simterpose_station_t *) xbt_dict_get(global_data->list_station, SD_workstation_get_name(get_station_by_ip(ip)));
+        (simterpose_host_t *) xbt_dict_get(global_data->list_host, SD_workstation_get_name(get_host_by_ip(ip)));
   char buff[6];
   sprintf(buff, "%d", port);
   port_desc_t *desc = xbt_dict_get_or_null(temp->port, buff);
@@ -385,9 +385,9 @@ double simterpose_get_msec_per_flop()
   return global_data->msec_per_flop;
 }
 
-xbt_dict_t simterpose_get_station_list()
+xbt_dict_t simterpose_get_host_list()
 {
-  return global_data->list_station;
+  return global_data->list_host;
 }
 
 xbt_dict_t simterpose_get_ip_list()

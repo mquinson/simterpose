@@ -34,7 +34,7 @@ struct recv_information {
 struct infos_socket {
   fd_descriptor_t fd;
   comm_t comm;                  //point to the communication which socket involved in
-  SD_workstation_t station;
+  SD_workstation_t host;
   int domain;
   int protocol;
   unsigned int ip_local;

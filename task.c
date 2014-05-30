@@ -24,7 +24,7 @@ static void schedule_last_computation_task(pid_t pid, SD_task_t next_task, const
 
   double comp_size = SD_task_get_amount(proc->last_computation_task);
   double comm_amount = 0;
-  SD_workstation_t work_list = proc->station;
+  SD_workstation_t work_list = proc->host;
 
   SD_task_dependency_add(name, NULL, proc->last_computation_task, next_task);
   SD_task_schedule(proc->last_computation_task, 1, &work_list, &comp_size, &comm_amount, -1);
@@ -41,7 +41,7 @@ void schedule_computation_task(pid_t pid)
   process_descriptor_t *proc = process_get_descriptor(pid);
   double comp_size = SD_task_get_amount(proc->last_computation_task);
   double comm_amount = 0;
-  SD_workstation_t work_list = proc->station;
+  SD_workstation_t work_list = proc->host;
 
   SD_task_watch(proc->last_computation_task, SD_DONE);
 
@@ -142,7 +142,7 @@ SD_task_t create_send_communication_task(pid_t pid_sender, struct infos_socket *
 
   task_comm_info *temp = malloc(sizeof(task_comm_info));
   temp->task = task_receiving;
-  temp->sender_station = proc_sender->station;
+  temp->sender_host = proc_sender->host;
 
   comm_send_data(is, temp);
 
@@ -179,7 +179,7 @@ void create_and_schedule_communication_task(pid_t pid_sender, struct infos_socke
 
   task_comm_info *temp = malloc(sizeof(task_comm_info));
   temp->task = task_receiving;
-  temp->sender_station = proc_sender->station;
+  temp->sender_host = proc_sender->host;
 
   comm_send_data(is, temp);
 
@@ -221,7 +221,7 @@ void task_schedule_receive(struct infos_socket *is, pid_t pid)
   if (proc_receiver->last_computation_task)
     schedule_last_computation_task(proc_receiver->pid, tci->task, "calculation");
 
-  // schedule_comm_task(tci->sender_station, proc_receiver->station, tci->task);
+  // schedule_comm_task(tci->sender_host, proc_receiver->host, tci->task);
   proc_receiver->on_simulation = 1;
   free(tci);
 

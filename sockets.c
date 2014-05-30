@@ -81,7 +81,7 @@ static struct infos_socket *confirm_register_socket(pid_t pid, int sockfd, int d
   is->fd.proc = proc;
   is->fd.pid = pid;
 
-  is->station = proc->station;
+  is->host = proc->host;
   is->comm = NULL;
   is->domain = domain;
   is->protocol = protocol;

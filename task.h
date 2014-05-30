@@ -10,7 +10,7 @@ typedef struct task_comm_info task_comm_info;
 
 struct task_comm_info {
   SD_task_t task;
-  SD_workstation_t sender_station;
+  SD_workstation_t sender_host;
 };
 
 

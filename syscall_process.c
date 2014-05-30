@@ -52,8 +52,8 @@ static int process_send_call(int pid, syscall_arg_u * sysarg)
 
       //  SD_task_t task = create_send_communication_task(pid, is, arg->ret);
 
-      //  schedule_comm_task(is->fd.proc->station, s->fd.proc->station, task);
-      create_and_schedule_communication_task(pid, is, arg->ret, is->fd.proc->station, s->fd.proc->station);
+      //  schedule_comm_task(is->fd.proc->host, s->fd.proc->host, task);
+      create_and_schedule_communication_task(pid, is, arg->ret, is->fd.proc->host, s->fd.proc->host);
       is->fd.proc->on_simulation = 1;
       return 1;
     }
@@ -478,7 +478,7 @@ void process_accept_out_call(pid_t pid, syscall_arg_u * sysarg)
     comm_join_on_accept(is, pid, arg->sockfd);
 
     struct infos_socket *s = get_infos_socket(pid, arg->sockfd);
-    register_port(proc->station, s->port_local);
+    register_port(proc->host, s->port_local);
 
     struct in_addr in;
     if (s->ip_local == 0) {
@@ -487,7 +487,7 @@ void process_accept_out_call(pid_t pid, syscall_arg_u * sysarg)
       if (temp->ip_local == inet_addr("127.0.0.1"))
         in.s_addr = inet_addr("127.0.0.1");
       else
-        in.s_addr = get_ip_of_station(proc->station);
+        in.s_addr = get_ip_of_host(proc->host);
     } else
       in.s_addr = s->ip_local;
 
@@ -553,19 +553,19 @@ static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
     process_descriptor_t *proc = process_get_descriptor(pid);
     struct sockaddr_in *sai = &(arg->sai);
 
-    SD_workstation_t station;
+    SD_workstation_t host;
     int device;
     struct in_addr in;
 
     if (sai->sin_addr.s_addr == inet_addr("127.0.0.1")) {
       in.s_addr = inet_addr("127.0.0.1");
       device = PORT_LOCAL;
-      station = proc->station;
+      host = proc->host;
     } else {
-      in.s_addr = get_ip_of_station(proc->station);
+      in.s_addr = get_ip_of_host(proc->host);
       device = PORT_REMOTE;
-      station = get_station_by_ip(sai->sin_addr.s_addr);
-      if (station == NULL) {
+      host = get_host_by_ip(sai->sin_addr.s_addr);
+      if (host == NULL) {
         arg->ret = -ECONNREFUSED;
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(process_get_descriptor(pid));
@@ -576,7 +576,7 @@ static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
     }
 
     //We ask for a connection on the socket
-    int acc_pid = comm_ask_connect(station, ntohs(sai->sin_port), pid, arg->sockfd, device);
+    int acc_pid = comm_ask_connect(host, ntohs(sai->sin_port), pid, arg->sockfd, device);
 
     //if the processus waiting for connection, we add it to schedule list
     if (acc_pid) {
@@ -586,13 +586,13 @@ static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
         add_to_sched_list(acc_pid);
       // #ifndef address_translation
       //Now attribute ip and port to the socket.
-      int port = get_random_port(proc->station);
+      int port = get_random_port(proc->host);
 
       XBT_DEBUG("New socket %s:%d", inet_ntoa(in), port);
       set_localaddr_port_socket(pid, arg->sockfd, inet_ntoa(in), port);
-      register_port(proc->station, port);
+      register_port(proc->host, port);
       // #endif
-      XBT_DEBUG("Free port found on station %s (%s:%d)", SD_workstation_get_name(proc->station), inet_ntoa(in), port);
+      XBT_DEBUG("Free port found on host %s (%s:%d)", SD_workstation_get_name(proc->host), inet_ntoa(in), port);
     } else {
       XBT_DEBUG("No peer found");
       arg->ret = -ECONNREFUSED;
@@ -649,8 +649,8 @@ static void process_connect_out_call(pid_t pid, syscall_arg_u * sysarg)
 
     sys_translate_connect_out(pid, sysarg);
     int port = socket_get_local_port(pid, arg->sockfd);
-    set_real_port(proc->station, is->port_local, ntohs(port));
-    add_new_translation(ntohs(port), is->port_local, get_ip_of_station(proc->station));
+    set_real_port(proc->host, is->port_local, ntohs(port));
+    add_new_translation(ntohs(port), is->port_local, get_ip_of_host(proc->host));
   }
 #endif
   process_reset_state(proc);
@@ -665,9 +665,9 @@ static int process_bind_call(pid_t pid, syscall_arg_u * sysarg)
 
       process_descriptor_t *proc = process_get_descriptor(pid);
 
-      if (!is_port_in_use(proc->station, ntohs(arg->sai.sin_port))) {
+      if (!is_port_in_use(proc->host, ntohs(arg->sai.sin_port))) {
         XBT_DEBUG("Port %d is free", ntohs(arg->sai.sin_port));
-        register_port(proc->station, ntohs(arg->sai.sin_port));
+        register_port(proc->host, ntohs(arg->sai.sin_port));
 
         struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
         int device = 0;
@@ -678,7 +678,7 @@ static int process_bind_call(pid_t pid, syscall_arg_u * sysarg)
         else
           device = PORT_REMOTE;
 
-        set_port_on_binding(proc->station, ntohs(arg->sai.sin_port), is, device);
+        set_port_on_binding(proc->host, ntohs(arg->sai.sin_port), is, device);
 
         is->binded = 1;
 
@@ -688,8 +688,8 @@ static int process_bind_call(pid_t pid, syscall_arg_u * sysarg)
         int port = ptrace_find_free_binding_port(pid);
         XBT_DEBUG("Free port found %d", port);
         process_set_out_syscall(proc);
-        set_real_port(proc->station, ntohs(arg->sai.sin_port), port);
-        add_new_translation(port, ntohs(arg->sai.sin_port), get_ip_of_station(proc->station));
+        set_real_port(proc->host, ntohs(arg->sai.sin_port), port);
+        add_new_translation(port, ntohs(arg->sai.sin_port), get_ip_of_host(proc->host));
         return 0;
 #endif
       } else {

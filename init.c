@@ -19,7 +19,7 @@ int strace_option = 0;
 
 static void benchmark_matrix_product(float *msec_per_flop);
 static void start_all_processes(void);
-static void init_station_list(void);
+static void init_host_list(void);
 
 static inline float str_to_double(const char *string)
 {
@@ -86,13 +86,13 @@ void simterpose_init(int argc, char **argv)
   SD_create_environment(argv[optind]);
   parse_deployment_file(argv[optind + 1]);
 
-  init_station_list();
+  init_host_list();
   start_all_processes();
 }
 
-static void init_station_list()
+static void init_host_list()
 {
-  xbt_dict_t list_s = simterpose_get_station_list();
+  xbt_dict_t list_s = simterpose_get_host_list();
   xbt_dict_t list_ip = simterpose_get_ip_list();
 
   xbt_dynar_t no_ip_list = xbt_dynar_new(sizeof(int), NULL);
@@ -104,14 +104,14 @@ static void init_station_list()
   int size = SD_workstation_get_number();
 
   for (i = 0; i < size; ++i) {
-    //simterpose_station *temp = malloc(sizeof(simterpose_station));
+    //simterpose_host *temp = malloc(sizeof(simterpose_host_t));
     const char *prop = SD_workstation_get_property_value(work_list[i], "ip");
     //if there are no ip set, we store them to attribute one after.
     if (prop == NULL) {
       xbt_dynar_push_as(no_ip_list, int, i);
       continue;
     } else {
-      simterpose_station_t *temp = malloc(sizeof(simterpose_station_t));
+      simterpose_host_t *temp = malloc(sizeof(simterpose_host_t));
       temp->ip = inet_addr(prop);
       temp->port = xbt_dict_new_homogeneous(free);
       xbt_dict_set(list_s, SD_workstation_get_name(work_list[i]), temp, NULL);
@@ -140,7 +140,7 @@ static void init_station_list()
       }
     }
     struct in_addr in = { temp_ip };
-    simterpose_station_t *temp = malloc(sizeof(simterpose_station_t));
+    simterpose_host_t *temp = malloc(sizeof(simterpose_host_t));
     temp->ip = temp_ip;
     temp->port = xbt_dict_new_homogeneous(NULL);
     xbt_dict_set(list_s, SD_workstation_get_name(work_list[i]), temp, NULL);

@@ -20,7 +20,7 @@
 #define PORT_LOCAL      0x2
 #define PORT_REMOTE     0x4
 
-typedef struct simterpose_station simterpose_station_t;
+typedef struct simterpose_host simterpose_host_t;
 typedef struct port_desc port_desc_t;
 typedef struct translate_desc translate_desc_t;
 
@@ -56,7 +56,7 @@ struct translate_desc {
   unsigned int ip;
 };
 
-struct simterpose_station {
+struct simterpose_host {
   unsigned int ip;
   xbt_dict_t port;
 };

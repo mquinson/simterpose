@@ -364,14 +364,14 @@ void sys_translate_accept(pid_t pid, syscall_arg_u * sysarg)
   struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
 
   comm_get_ip_port_accept(is, &(arg->sai));
-  SD_workstation_t station;
+  SD_workstation_t host;
   if (arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1")) {
     process_descriptor_t *proc = process_get_descriptor(pid);
-    station = proc->station;
+    host = proc->host;
   } else
-    station = get_station_by_ip(arg->sai.sin_addr.s_addr);
+    host = get_host_by_ip(arg->sai.sin_addr.s_addr);
 
-  set_real_port(station, ntohs(arg->sai.sin_port), port);
+  set_real_port(host, ntohs(arg->sai.sin_port), port);
   add_new_translation(port, ntohs(arg->sai.sin_port), arg->sai.sin_addr.s_addr);
 
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
