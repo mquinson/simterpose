@@ -211,10 +211,8 @@ int main(int argc, char *argv[])
     move_idle_to_sched();
     move_mediate_to_sched();
 
-    while (FES_contains_events()) {
-      XBT_DEBUG("Trying to add waiting process");
-      //if we have to launch them to this turn
-      if (equal_d(SD_get_clock(), FES_peek_next_date())) {
+    XBT_DEBUG("Starting the waiting process that are now ready");
+    while (FES_contains_events() && equal_d(SD_get_clock(), FES_peek_next_date())) {
         int temp_pid = FES_pop_next_pid();
         add_to_sched_list(temp_pid);
         process_descriptor_t *proc = process_get_descriptor(temp_pid);
@@ -223,8 +221,6 @@ int main(int argc, char *argv[])
         //XBT_DEBUG("In_timeout = %d", proc->in_timeout);
 
         XBT_DEBUG("child_amount = %d", child_amount);
-      } else
-        break;
     }
 
     XBT_DEBUG("Size of sched_list %lu", xbt_dynar_length(sched_list));
