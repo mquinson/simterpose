@@ -27,16 +27,6 @@ typedef struct translate_desc translate_desc_t;
 //For num syscall see 
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
 
-
-extern int nb_peek;
-extern int nb_poke;
-extern int nb_getregs;
-extern int nb_setregs;
-extern int nb_syscall;
-extern int nb_setoptions;
-extern int nb_detach;
-extern int nb_geteventmsg;
-
 /* This datastructure seems mainly used to add a process to the FES */
 typedef struct time_desc {
   pid_t pid;

@@ -14,6 +14,14 @@ struct simterpose_globals {
   time_t init_time;
   int child_amount;
   float msec_per_flop;
+  int nb_peek;
+  int nb_poke;
+  int nb_getregs;
+  int nb_setregs;
+  int nb_syscall;
+  int nb_setoptions;
+  int nb_detach;
+  int nb_geteventmsg;
 };
 typedef struct simterpose_globals simterpose_data_t;
 simterpose_data_t *global_data;
@@ -34,6 +42,78 @@ void simterpose_globals_init(float msec_per_flop)
   for (i = 0; i < MAX_PID; ++i) {
     global_data->process_desc[i] = NULL;
   }
+  global_data->nb_peek = 0;
+  global_data->nb_poke = 0;
+  global_data->nb_getregs = 0;
+  global_data->nb_setregs = 0;
+  global_data->nb_syscall = 0;
+  global_data->nb_setoptions = 0;
+  global_data->nb_detach = 0;
+  global_data->nb_geteventmsg = 0;
+}
+
+int get_nb_peek(void){
+	return global_data->nb_peek;
+}
+
+int get_nb_poke(){
+	return global_data->nb_poke;
+}
+
+int get_nb_getregs(){
+	return global_data->nb_getregs;
+}
+
+int get_nb_setregs(){
+	return global_data->nb_setregs;
+}
+
+int get_nb_syscall(){
+	return global_data->nb_syscall;
+}
+
+int get_nb_setoptions(){
+	return global_data->nb_setoptions;
+}
+
+int get_nb_detach(){
+	return global_data->nb_detach;
+}
+
+int get_nb_geteventmsg(){
+	return global_data->nb_geteventmsg;
+}
+
+void increment_nb_peek(){
+	global_data->nb_peek++;
+}
+
+void increment_nb_poke(){
+	global_data->nb_poke++;
+}
+
+void increment_nb_getregs(){
+	global_data->nb_getregs++;
+}
+
+void increment_nb_setregs(){
+	global_data->nb_setregs++;
+}
+
+void increment_nb_syscall(){
+	global_data->nb_syscall++;
+}
+
+void increment_nb_setoptions(){
+	global_data->nb_setoptions++;
+}
+
+void increment_nb_detach(){
+	global_data->nb_detach++;
+}
+
+void increment_nb_geteventmsg(){
+	global_data->nb_geteventmsg++;
 }
 
 void simterpose_globals_exit()

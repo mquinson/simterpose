@@ -189,7 +189,7 @@ static void start_all_processes()
         perror("Error setoptions");
         exit(1);
       }
-      nb_setoptions++;
+      increment_nb_setoptions();
 
       process_set_descriptor(new_pid, process_descriptor_new(parser_get_workstation(rank), new_pid));
       FES_schedule_at(new_pid, parser_get_start_time(rank));

@@ -8,6 +8,38 @@
 void simterpose_globals_init(float msec_per_flop);
 void simterpose_globals_exit(void);
 
+int get_nb_peek(void);
+
+int get_nb_poke(void);
+
+int get_nb_getregs(void);
+
+int get_nb_setregs(void);
+
+int get_nb_syscall(void);
+
+int get_nb_setoptions(void);
+
+int get_nb_detach(void);
+
+int get_nb_geteventmsg(void);
+
+void increment_nb_peek(void);
+
+void increment_nb_poke(void);
+
+void increment_nb_getregs(void);
+
+void increment_nb_setregs(void);
+
+void increment_nb_syscall(void);
+
+void increment_nb_setoptions(void);
+
+void increment_nb_detach(void);
+
+void increment_nb_geteventmsg(void);
+
 double simterpose_get_msec_per_flop(void);
 
 xbt_dict_t simterpose_get_host_list(void);

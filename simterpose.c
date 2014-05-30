@@ -21,15 +21,6 @@
 #include "communication.h"
 #include "syscall_process.h"
 
-int nb_peek = 0;
-int nb_poke = 0;
-int nb_getregs = 0;
-int nb_setregs = 0;
-int nb_syscall = 0;
-int nb_setoptions = 0;
-int nb_detach = 0;
-int nb_geteventmsg = 0;
-
 #define equal_d(X, Y) (fabs(X-Y) < 1e-9)
 
 #define BUFFER_SIZE 512
@@ -282,8 +273,6 @@ int main(int argc, char *argv[])
     XBT_DEBUG("child_amount = %d", child_amount);
   } while (child_amount);
 
-
-  simterpose_globals_exit();
   xbt_dynar_free(&sched_list);
   xbt_dynar_free(&idle_list);
   xbt_dynar_free(&mediate_list);
@@ -296,11 +285,14 @@ int main(int argc, char *argv[])
 #else
       "Full mediation (peek/poke every data)";
 #endif
+
   XBT_INFO("End of simulation. Simulated time: %lf. Used interposer: %s", SD_get_clock(), interposer_name);
-  XBT_INFO
-      ("Total amount of ptrace(): %d (peek/poke: %d/%d, getregs/setregs: %d/%d, detach: %d, syscall: %d, geteventmsg: %d, setoption: %d)",
-       nb_peek + nb_poke + nb_getregs + nb_setregs + nb_detach + nb_syscall + nb_geteventmsg + nb_setoptions, nb_peek,
-       nb_poke, nb_getregs, nb_setregs, nb_detach, nb_syscall, nb_geteventmsg, nb_setoptions);
+
+  XBT_INFO("Total amount of ptrace(): %d (peek/poke: %d/%d, getregs/setregs: %d/%d, detach: %d, syscall: %d, geteventmsg: %d, setoption: %d) \n",
+    		  get_nb_peek() + get_nb_poke() + get_nb_getregs() + get_nb_setregs() +  get_nb_detach() +  get_nb_syscall() +  get_nb_geteventmsg() + get_nb_setoptions(), get_nb_peek(),
+    		  get_nb_poke(), get_nb_getregs(), get_nb_setregs(),  get_nb_detach(),  get_nb_syscall(),  get_nb_geteventmsg(),  get_nb_setoptions());
+
+  simterpose_globals_exit();
   SD_exit();
   return 0;
 }

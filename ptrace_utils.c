@@ -10,6 +10,7 @@
 
 #include "ptrace_utils.h"
 #include "sysdep.h"
+#include "data_utils.h"
 #include <xbt.h>
 #include "simterpose.h"         // FIXME: remove that circular dependency. Currently needed for statistics purposes (create a stats module then)
 
@@ -88,7 +89,7 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, const char *sy
 
   while (size_copy < len) {
     ret = ptrace(PTRACE_PEEKDATA, child, (char*)src + i * sizeof(long), NULL);
-    nb_peek++;
+    increment_nb_peek();
 
     if (ret == -1 && errno != 0)
       SYSERROR("%s : ptrace peekdata in %s\n", strerror(errno), syscall);
@@ -101,7 +102,7 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, const char *sy
   size_t rest = length & 0x8;
   if (rest) {
     ret = ptrace(PTRACE_PEEKDATA, child, (char*)src + i * sizeof(long), NULL);
-    nb_peek++;
+    increment_nb_peek();
 
     if (ret == -1 && errno != 0)
       SYSERROR("%s : ptrace peekdata in %s\n", strerror(errno), syscall);
@@ -117,7 +118,7 @@ void ptrace_poke(pid_t pid, void *dst, void *src, size_t len)
   errno = 0;
   while (size_copy < len) {
     ret = ptrace(PTRACE_POKEDATA, pid, (char*)dst + size_copy, *((long *) ((char*)src + size_copy)));
-    nb_poke++;
+    increment_nb_poke();
     if (ret == -1 && errno != 0)
       SYSERROR("[%d] Unable to write at memory address %p\n", pid, dst);
 
@@ -130,7 +131,7 @@ void ptrace_resume_process(const pid_t pid)
 {
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL) == -1)
     SYSERROR("[%d] Error while resuming until next syscall: %s\n", pid, strerror(errno));
-  nb_syscall++;
+  increment_nb_syscall();
 }
 
 /** @brief the tracked process is dead, don't follow it anymore */
@@ -138,7 +139,7 @@ void ptrace_detach_process(const pid_t pid)
 {
   if (ptrace(PTRACE_DETACH, pid, NULL, NULL) == -1)
     SYSERROR("[%d] Error while detaching process: %s\n", pid, strerror(errno));
-  nb_detach++;
+  increment_nb_detach();
 }
 
 
@@ -147,11 +148,11 @@ int ptrace_record_socket(pid_t pid)
   struct user_regs_struct save_reg, reg;
   if (ptrace(PTRACE_GETREGS, pid, NULL, &save_reg) == -1)
     SYSERROR("[%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_getregs++;
+  increment_nb_getregs();
 
   if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_getregs++;
+  increment_nb_getregs();
 
   reg.orig_rax = SYS_socket;
   reg.rdi = AF_INET;
@@ -160,7 +161,7 @@ int ptrace_record_socket(pid_t pid)
 
   if (ptrace(PTRACE_SETREGS, pid, NULL, &reg) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_setregs++;
+  increment_nb_setregs();
   ptrace_resume_process(pid);
 
   int status;
@@ -168,14 +169,14 @@ int ptrace_record_socket(pid_t pid)
 
   if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_getregs++;
+  increment_nb_getregs();
 
   int res = (int) reg.rax;
 
 
   if (ptrace(PTRACE_SETREGS, pid, NULL, &save_reg) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_setregs++;
+  increment_nb_setregs();
   ptrace_rewind_syscalls(pid);
   ptrace_resume_process(pid);
 
@@ -192,7 +193,7 @@ void ptrace_get_register(const pid_t pid, reg_s * arg)
   if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
 
-  nb_getregs++;
+  increment_nb_getregs();
 
   // FIXME: test architecture and use the right registers
   arg->reg_orig = regs.orig_rax;
@@ -216,13 +217,13 @@ void ptrace_neutralize_syscall(const pid_t pid)
   if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
 
-  nb_getregs++;
+  increment_nb_getregs();
   XBT_DEBUG("neutralize syscall %s", syscall_list[regs.orig_rax]);
   regs.orig_rax = 184;          /* FIXME: don't use the numerical value of SYS_tuxcall */
   if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
 
-  nb_setregs++;
+  increment_nb_setregs();
   ptrace_resume_process(pid);
   waitpid(pid, &status, 0);
 }
@@ -238,14 +239,14 @@ void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long resu
 
   if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_getregs++;
+  increment_nb_getregs();
 
   regs.orig_rax = syscall;
   regs.rax = result;
 
   if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace setregs %s\n", pid, strerror(errno));
-  nb_setregs++;
+  increment_nb_setregs();
 }
 
 void ptrace_restore_syscall_arg1(pid_t pid, unsigned long syscall, unsigned long arg1)
@@ -254,14 +255,14 @@ void ptrace_restore_syscall_arg1(pid_t pid, unsigned long syscall, unsigned long
 
   if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_getregs++;
+  increment_nb_getregs();
 
   regs.orig_rax = syscall;
   regs.rdi = arg1;
 
   if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_setregs++;
+  increment_nb_setregs();
 }
 
 
@@ -271,14 +272,14 @@ void ptrace_rewind_syscalls(const pid_t pid)
 
   if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_getregs++;
+  increment_nb_getregs();
 
   regs.rax = regs.orig_rax;
   regs.rip -= 2;
 
   if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s", pid, strerror(errno));
-  nb_setregs++;
+  increment_nb_setregs();
 
 }
 
@@ -287,7 +288,7 @@ unsigned long ptrace_get_pid_fork(const pid_t pid)
   unsigned long new_pid;
   if (ptrace(PTRACE_GETEVENTMSG, pid, 0, &new_pid) == -1)
     SYSERROR("[%d] ptrace geteventmsg %s", pid, strerror(errno));
-  nb_geteventmsg++;
+  increment_nb_geteventmsg();
   return new_pid;
 }
 
@@ -297,13 +298,13 @@ int ptrace_find_free_binding_port(const pid_t pid)
 
   if (ptrace(PTRACE_GETREGS, pid, NULL, &save_reg) == -1)
     SYSERROR(" [%d] ptrace getregs %s", pid, strerror(errno));
-  nb_getregs++;
+  increment_nb_getregs();
 
   struct user_regs_struct reg;
 
   if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-  nb_getregs++;
+  increment_nb_getregs();
   struct sockaddr_in in;
   struct sockaddr_in temp;
   ptrace_cpy(pid, &in, (void *) reg.rsi, reg.rdx, "");
@@ -321,7 +322,7 @@ int ptrace_find_free_binding_port(const pid_t pid)
     waitpid(pid, &status, 0);
     if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
       SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-    nb_getregs++;
+    increment_nb_getregs();
     if (reg.rax == 0)
       break;
 
