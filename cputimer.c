@@ -218,6 +218,6 @@ void cputimer_get(int tid, long long int *times, xbt_cpu_timer_t timer)
       XBT_ERROR("Unknown nla_type %d\n", na->nla_type);
       break;
     }
-    na = (struct nlattr *) ((char*)GENLMSG_DATA(&msg) + len);
+    na = (struct nlattr *) ((char *) GENLMSG_DATA(&msg) + len);
   }
 }

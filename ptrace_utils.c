@@ -19,57 +19,57 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_UTILS, SIMTERPOSE, "ptrace utils log");
 static const char *syscall_list[] = {
   "read", "write", "open", "close", "stat", "fstat", "lstat", "poll", "lseek", "mmap", "mprotect", "munmap", "brk",
   "rt_sigaction", "rt_sigprocmask", "rt_sigreturn", "ioctl", "pread64", "pwrite64", "readv", "writev", "access", "pipe",
-      "select",
+  "select",
   "sched_yield", "mremap", "msync", "mincore", "madvise", "shmget", "shmat", "shmctl", "dup", "dup2", "pause",
-      "nanosleep", "getitimer",
+  "nanosleep", "getitimer",
   "alarm", "setitimer", "getpid", "sendfile", "socket", "connect", "accept", "sendto", "recvfrom", "sendmsg", "recvmsg",
-      "shutdown", "bind",
+  "shutdown", "bind",
   "listen", "getsockname", "getpeername", "socketpair", "setsockopt", "getsockopt", "clone", "fork", "vfork", "execve",
-      "exit", "wait4",
+  "exit", "wait4",
   "kill", "uname", "semget", "semop", "semctl", "shmdt", "msgget", "msgsnd", "msgrcv", "msgctl", "fcntl", "flock",
-      "fsync", "fdatasync",
+  "fsync", "fdatasync",
   "truncate", "ftruncate", "getdents", "getcwd", "chdir", "fchdir", "rename", "mkdir", "rmdir", "creat", "link",
-      "unlink", "symlink",
+  "unlink", "symlink",
   "readlink", "chmod", "fchmod", "chown", "fchown", "lchown", "umask", "gettimeofday", "getrlimit", "getrusage",
-      "sysinfo", "times", "ptrace",
+  "sysinfo", "times", "ptrace",
   "getuid", "syslog", "getgid", "setuid", "setgid", "geteuid", "getegid", "setpgid", "getppid", "getpgrp", "setsid",
-      "setreuid", "setregid",
+  "setreuid", "setregid",
   "getgroups", "setgroups", "setresuid", "getresuid", "setresgid", "getresgid", "getpgid", "setfsuid", "setfsgid",
-      "getsid", "capget",
+  "getsid", "capget",
   "capset", "rt_sigpending", "rt_sigtimedwait", "rt_sigqueueinfo", "rt_sigsuspend", "sigaltstack", "utime", "mknod",
-      "uselib", "personality",
+  "uselib", "personality",
   "ustat", "statfs", "fstatfs", "sysfs", "getpriority", "setpriority", "sched_setparam", "sched_getparam",
-      "sched_setscheduler",
+  "sched_setscheduler",
   "sched_getscheduler", "sched_get_priority_max", "sched_get_priority_min", "sched_rr_get_interval", "mlock", "munlock",
-      "mlockall",
+  "mlockall",
   "munlockall", "vhangup", "modify_ldt", "pivot_root", "_sysctl", "prctl", "arch_prctl", "adjtimex", "setrlimit",
-      "chroot", "sync", "acct",
+  "chroot", "sync", "acct",
   "settimeofday", "mount", "umount2", "swapon", "swapoff", "reboot", "sethostname", "setdomainname", "iopl", "ioperm",
-      "create_module",
+  "create_module",
   "init_module", "delete_module", "get_kernel_syms", "query_module", "quotactl", "nfsservctl", "getpmsg", "putpmsg",
-      "afs_syscall", "tuxcall",
+  "afs_syscall", "tuxcall",
   "security", "gettid", "readahead", "setxattr", "lsetxattr", "fsetxattr", "getxattr", "lgetxattr", "fgetxattr",
-      "listxattr", "llistxattr",
+  "listxattr", "llistxattr",
   "flistxattr", "removexattr", "lremovexattr", "fremovexattr", "tkill", "time", "futex", "sched_setaffinity",
-      "sched_getaffinity",
+  "sched_getaffinity",
   "set_thread_area", "io_setup", "io_destroy", "io_getevents", "io_submit", "io_cancel", "get_thread_area",
-      "lookup_dcookie", "epoll_create",
+  "lookup_dcookie", "epoll_create",
   "epoll_ctl_old", "epoll_wait_old", "remap_file_pages", "getdents64", "set_tid_address", "restart_syscall",
-      "semtimedop", "fadvise64",
+  "semtimedop", "fadvise64",
   "timer_create", "timer_settime", "timer_gettime", "timer_getoverrun", "timer_delete", "clock_settime",
-      "clock_gettime", "clock_getres",
+  "clock_gettime", "clock_getres",
   "clock_nanosleep", "exit_group", "epoll_wait", "epoll_ctl", "tgkill", "utimes", "vserver", "mbind", "set_mempolicy",
-      "get_mempolicy",
+  "get_mempolicy",
   "mq_open", "mq_unlink", "mq_timedsend", "mq_timedreceive", "mq_notify", "mq_getsetattr", "kexec_load", "waitid",
-      "add_key", "request_key",
+  "add_key", "request_key",
   "keyctl", "ioprio_set", "ioprio_get", "inotify_init", "inotify_add_watch", "inotify_rm_watch", "migrate_pages",
-      "openat", "mkdirat",
+  "openat", "mkdirat",
   "mknodat", "fchownat", "futimesat", "newfstatat", "unlinkat", "renameat", "linkat", "symlinkat", "readlinkat",
-      "fchmodat", "faccessat",
+  "fchmodat", "faccessat",
   "pselect6", "ppoll", "unshare", "set_robust_list", "get_robust_list", "splice", "tee", "sync_file_range", "vmsplice",
-      "move_pages",
+  "move_pages",
   "utimensat", "epoll_pwait", "signalfd", "timerfd_create", "eventfd", "fallocate", "timerfd_settime",
-      "timerfd_gettime", "accept4",
+  "timerfd_gettime", "accept4",
   "signalfd4", "eventfd2", "epoll_create1", "dup3", "pipe2", "inotify_init1", "preadv", "pwritev"
 };
 
@@ -88,7 +88,7 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, const char *sy
   long *temp_dest = (long *) dst;
 
   while (size_copy < len) {
-    ret = ptrace(PTRACE_PEEKDATA, child, (char*)src + i * sizeof(long), NULL);
+    ret = ptrace(PTRACE_PEEKDATA, child, (char *) src + i * sizeof(long), NULL);
     increment_nb_peek();
 
     if (ret == -1 && errno != 0)
@@ -101,7 +101,7 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, const char *sy
   }
   size_t rest = length & 0x8;
   if (rest) {
-    ret = ptrace(PTRACE_PEEKDATA, child, (char*)src + i * sizeof(long), NULL);
+    ret = ptrace(PTRACE_PEEKDATA, child, (char *) src + i * sizeof(long), NULL);
     increment_nb_peek();
 
     if (ret == -1 && errno != 0)
@@ -117,7 +117,7 @@ void ptrace_poke(pid_t pid, void *dst, void *src, size_t len)
   long ret;
   errno = 0;
   while (size_copy < len) {
-    ret = ptrace(PTRACE_POKEDATA, pid, (char*)dst + size_copy, *((long *) ((char*)src + size_copy)));
+    ret = ptrace(PTRACE_POKEDATA, pid, (char *) dst + size_copy, *((long *) ((char *) src + size_copy)));
     increment_nb_poke();
     if (ret == -1 && errno != 0)
       SYSERROR("[%d] Unable to write at memory address %p\n", pid, dst);

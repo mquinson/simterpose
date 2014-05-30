@@ -241,8 +241,8 @@ static void process_getpeername_call(pid_t pid, syscall_arg_u * sysarg)
       process_set_out_syscall(process_get_descriptor(pid));
       ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
       if (arg->ret == 0) {
-	ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
-	ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
+        ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
+        ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
       }
       if (strace_option)
         print_getpeername_syscall(pid, sysarg);
@@ -375,7 +375,7 @@ void process_recvfrom_out_call(int pid)
   //     return;
 
   process_reset_state(proc);
-  syscall_arg_u *sysarg =  &(proc->sysarg);
+  syscall_arg_u *sysarg = &(proc->sysarg);
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   if (strace_option)
     print_recvfrom_syscall(pid, &(proc->sysarg));
@@ -390,7 +390,7 @@ void process_read_out_call(pid_t pid)
   process_descriptor_t *proc = process_get_descriptor(pid);
   process_reset_state(proc);
 
-  syscall_arg_u *sysarg =  &(proc->sysarg);
+  syscall_arg_u *sysarg = &(proc->sysarg);
   read_arg_t arg = &(sysarg->read);
   ptrace_restore_syscall(pid, SYS_read, arg->ret);
   if (arg->ret > 0) {
@@ -518,28 +518,28 @@ int process_handle_idle(pid_t pid)
     return PROCESS_IDLE_STATE;
 }
 
-static int process_clone_call(pid_t pid, reg_s *arg)
- {
-   unsigned long tid = arg->ret;
-   unsigned long flags = arg->arg1;
+static int process_clone_call(pid_t pid, reg_s * arg)
+{
+  unsigned long tid = arg->ret;
+  unsigned long flags = arg->arg1;
 
-   //Now create new process in model
-   process_clone(tid, pid, flags);
+  //Now create new process in model
+  process_clone(tid, pid, flags);
 
-   //Now add it to the launching time table to be the next process to be launch
-   FES_schedule_now(tid);
+  //Now add it to the launching time table to be the next process to be launch
+  FES_schedule_now(tid);
 
-   int status;
+  int status;
 
-   //wait for clone
-   waitpid(tid, &status, 0);
-   ptrace_resume_process(tid);
-   //place process to te first call after clone
-   waitpid(tid, &status, 0);
-   process_set_in_syscall(process_get_descriptor(tid));
+  //wait for clone
+  waitpid(tid, &status, 0);
+  ptrace_resume_process(tid);
+  //place process to te first call after clone
+  waitpid(tid, &status, 0);
+  process_set_in_syscall(process_get_descriptor(tid));
 
-   return 0;
- }
+  return 0;
+}
 
 
 static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
@@ -569,8 +569,8 @@ static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
         arg->ret = -ECONNREFUSED;
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(process_get_descriptor(pid));
-	connect_arg_t arg = &(sysarg->connect);
-	ptrace_restore_syscall(pid, SYS_connect, arg->ret);
+        connect_arg_t arg = &(sysarg->connect);
+        ptrace_restore_syscall(pid, SYS_connect, arg->ret);
         return 0;
       }
     }
@@ -696,8 +696,8 @@ static int process_bind_call(pid_t pid, syscall_arg_u * sysarg)
         XBT_DEBUG("Port %d isn't free", ntohs(arg->sai.sin_port));
         arg->ret = -98;
         ptrace_neutralize_syscall(pid);
-	bind_arg_t arg = &(sysarg->bind);
-	ptrace_restore_syscall(pid, SYS_bind, arg->ret);
+        bind_arg_t arg = &(sysarg->bind);
+        ptrace_restore_syscall(pid, SYS_bind, arg->ret);
         process_set_out_syscall(process_get_descriptor(pid));
         return 0;
       }
@@ -801,7 +801,7 @@ static void process_fcntl_call(pid_t pid, syscall_arg_u * sysarg)
   }
 #ifndef address_translation
   ptrace_neutralize_syscall(pid);
-  ptrace_restore_syscall(pid, SYS_fcntl, arg->ret);  
+  ptrace_restore_syscall(pid, SYS_fcntl, arg->ret);
   process_set_out_syscall(process_get_descriptor(pid));
 #endif
 }
@@ -1080,7 +1080,8 @@ static int syscall_time_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
   return syscall_pre(pid, proc, state);
 }
 
-static int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+static int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+                                    int *state)
 {
   process_set_in_syscall(proc);
   *state = -1;
@@ -1102,7 +1103,8 @@ static int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysa
   return syscall_pre(pid, proc, state);
 }
 
-static int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+static int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+                                     int *state)
 {
   process_set_in_syscall(proc);
   *state = -1;
@@ -1135,11 +1137,12 @@ static int syscall_futex_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
   return syscall_pre(pid, proc, state);
 }
 
-static int syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+static int syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+                                   int *state)
 {
   process_set_in_syscall(proc);
   *state = -1;
-  
+
   getpeername_arg_t arg = &(sysarg->getpeername);
   arg->ret = reg->ret;
   arg->sockfd = reg->arg1;
@@ -1259,7 +1262,8 @@ static int syscall_accept_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   return PROCESS_CONTINUE;
 }
 
-static int syscall_getsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+static int syscall_getsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+                                  int *state)
 {
   process_set_in_syscall(proc);
   *state = -1;
@@ -1281,7 +1285,8 @@ static int syscall_getsockopt_post(pid_t pid, reg_s * reg, syscall_arg_u * sysar
   return PROCESS_CONTINUE;
 }
 
-static int syscall_setsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+static int syscall_setsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+                                  int *state)
 {
   process_set_in_syscall(proc);
   *state = -1;
@@ -1441,7 +1446,7 @@ static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   if (process_send_call(pid, sysarg)) {
     ptrace_neutralize_syscall(pid);
 
-    syscall_arg_u *sysarg =  &(proc->sysarg);
+    syscall_arg_u *sysarg = &(proc->sysarg);
     sendmsg_arg_t arg = &(sysarg->sendmsg);
     ptrace_restore_syscall(pid, SYS_sendmsg, arg->ret);
 

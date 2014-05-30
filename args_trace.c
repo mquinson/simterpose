@@ -226,7 +226,7 @@ void get_args_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
     struct iovec temp;
     ptrace_cpy(pid, &temp, arg->msg.msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "sendmsg");
     arg->data = realloc(arg->data, arg->len + temp.iov_len);
-    ptrace_cpy(pid, (char*)arg->data + arg->len, temp.iov_base, temp.iov_len, "sendmsg");
+    ptrace_cpy(pid, (char *) arg->data + arg->len, temp.iov_base, temp.iov_len, "sendmsg");
     arg->len += temp.iov_len;
   }
 #endif
@@ -331,7 +331,7 @@ void sys_build_recvmsg(pid_t pid, syscall_arg_u * sysarg)
 
     ptrace_poke(pid, arg->msg.msg_iov + i * sizeof(struct iovec), &temp, sizeof(struct iovec));
 
-    ptrace_poke(pid, temp.iov_base, (char*)arg->data + global_size, temp.iov_len);
+    ptrace_poke(pid, temp.iov_base, (char *) arg->data + global_size, temp.iov_len);
 
   }
   free(arg->data);

@@ -63,8 +63,8 @@ struct process_descriptor {
   long long int cpu_time;
   char *name;
   FILE *trace;
-  time_desc_t *timeout;           //point to the next timeout of process, NULL there is not timeout
-  double next_event; // = start_time de time_desc_t *timeout
+  time_desc_t *timeout;         //point to the next timeout of process, NULL there is not timeout
+  double next_event;            // = start_time de time_desc_t *timeout
   SD_workstation_t host;
   SD_task_t last_computation_task;
   fd_descriptor_t **fd_list;
@@ -72,10 +72,10 @@ struct process_descriptor {
   int mediate_state;
   unsigned int idle_state:1;
   unsigned int in_timeout:2;
-  unsigned int scheduled:1; // in sched_list
+  unsigned int scheduled:1;     // in sched_list
   unsigned int in_idle_list:1;
   unsigned int on_simulation:1;
-  unsigned int on_mediation:1; // in mediate_list
+  unsigned int on_mediation:1;  // in mediate_list
 
 
   int state;

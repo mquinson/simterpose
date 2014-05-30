@@ -168,7 +168,7 @@ struct infos_socket *register_socket(pid_t pid, int sockfd, int domain, int prot
   if (process_get_descriptor(pid)->fd_list[sockfd] != NULL) {
     xbt_die("Inconsistence found in model. Socket already exist");
   }
-    return confirm_register_socket(pid, sockfd, domain, protocol);
+  return confirm_register_socket(pid, sockfd, domain, protocol);
 }
 
 
@@ -511,7 +511,7 @@ int handle_new_receive(int pid, syscall_arg_u * sysarg)
       enough = 0;
     }
     data_recv = realloc(data_recv, global_size + size);
-    memcpy(data_recv + global_size, (char*)(ds->data) + recv->quantity_recv, size);
+    memcpy(data_recv + global_size, (char *) (ds->data) + recv->quantity_recv, size);
     global_size += size;
 
     if (enough) {

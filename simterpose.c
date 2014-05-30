@@ -42,22 +42,22 @@ xbt_dynar_t mediate_list;
 
 static void remove_from_idle_list(pid_t pid)
 {
-    process_descriptor_t *proc = process_get_descriptor(pid);
-    int i = xbt_dynar_search_or_negative(idle_list, &proc);
-    xbt_assert(i>=0, "Pid not found in idle list. Inconsistency found in model");
+  process_descriptor_t *proc = process_get_descriptor(pid);
+  int i = xbt_dynar_search_or_negative(idle_list, &proc);
+  xbt_assert(i >= 0, "Pid not found in idle list. Inconsistency found in model");
 
-    xbt_dynar_remove_at(idle_list, i, NULL);
-    proc->in_idle_list = 0;
+  xbt_dynar_remove_at(idle_list, i, NULL);
+  proc->in_idle_list = 0;
 }
 
 static void remove_from_mediate_list(pid_t pid)
 {
-    process_descriptor_t *proc = process_get_descriptor(pid);
-    int i = xbt_dynar_search_or_negative(mediate_list, &proc);
-    xbt_assert(i>=0, "Pid not found in mediate list. Inconsistency found in model");
+  process_descriptor_t *proc = process_get_descriptor(pid);
+  int i = xbt_dynar_search_or_negative(mediate_list, &proc);
+  xbt_assert(i >= 0, "Pid not found in mediate list. Inconsistency found in model");
 
-    xbt_dynar_remove_at(mediate_list, i, NULL);
-    proc->on_mediation = 0;
+  xbt_dynar_remove_at(mediate_list, i, NULL);
+  proc->on_mediation = 0;
 }
 
 
@@ -121,7 +121,7 @@ static void move_idle_to_sched()
 static void move_mediate_to_sched()
 {
   while (!xbt_dynar_is_empty(mediate_list)) {
-	process_descriptor_t *proc;
+    process_descriptor_t *proc;
     xbt_dynar_shift(mediate_list, &proc);
 
     proc->on_mediation = 0;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 
   uid_t uid = getuid(), euid = geteuid();
   if (uid > 0 && uid == euid)
-	  xbt_die("Simterpose must be run with the super-user privileges.");
+    xbt_die("Simterpose must be run with the super-user privileges.");
 
   xbt_log_control_set("SIMTERPOSE.:info");
   //xbt_log_control_set("RUN_TRACE.:debug");
@@ -160,16 +160,16 @@ int main(int argc, char *argv[])
 
   double max_duration = 0;
 
-  idle_list = xbt_dynar_new(sizeof(process_descriptor_t*), NULL);
-  sched_list = xbt_dynar_new(sizeof(process_descriptor_t*), NULL);
-  mediate_list = xbt_dynar_new(sizeof(process_descriptor_t*), NULL);
+  idle_list = xbt_dynar_new(sizeof(process_descriptor_t *), NULL);
+  sched_list = xbt_dynar_new(sizeof(process_descriptor_t *), NULL);
+  mediate_list = xbt_dynar_new(sizeof(process_descriptor_t *), NULL);
 
   int child_amount = 0;
   do {
     // Compute how long the simulation should run
-	//	 - if we have a timeout ongoing, that will be the duration
-	//   - if not, then simulate for -1, which in SD means "as long as you can"
-	//   - simulating for at most 0 means to run only the tasks that are immediately runnable
+    //       - if we have a timeout ongoing, that will be the duration
+    //   - if not, then simulate for -1, which in SD means "as long as you can"
+    //   - simulating for at most 0 means to run only the tasks that are immediately runnable
     double next_event_date = FES_peek_next_date();
     if (next_event_date != -1)
       max_duration = next_event_date - SD_get_clock();
@@ -287,10 +287,11 @@ int main(int argc, char *argv[])
 #endif
 
   XBT_INFO("End of simulation. Simulated time: %lf. Used interposer: %s", SD_get_clock(), interposer_name);
-
-  XBT_INFO("Total amount of ptrace(): %d (peek/poke: %d/%d, getregs/setregs: %d/%d, detach: %d, syscall: %d, geteventmsg: %d, setoption: %d) \n",
-    		  get_nb_peek() + get_nb_poke() + get_nb_getregs() + get_nb_setregs() +  get_nb_detach() +  get_nb_syscall() +  get_nb_geteventmsg() + get_nb_setoptions(), get_nb_peek(),
-    		  get_nb_poke(), get_nb_getregs(), get_nb_setregs(),  get_nb_detach(),  get_nb_syscall(),  get_nb_geteventmsg(),  get_nb_setoptions());
+  XBT_INFO
+      ("Total amount of ptrace(): %d (peek/poke: %d/%d, getregs/setregs: %d/%d, detach: %d, syscall: %d, geteventmsg: %d, setoption: %d)",
+       get_nb_peek() + get_nb_poke() + get_nb_getregs() + get_nb_setregs() + get_nb_detach() + get_nb_syscall() +
+       get_nb_geteventmsg() + get_nb_setoptions(), get_nb_peek(), get_nb_poke(), get_nb_getregs(), get_nb_setregs(),
+       get_nb_detach(), get_nb_syscall(), get_nb_geteventmsg(), get_nb_setoptions());
 
   simterpose_globals_exit();
   SD_exit();
