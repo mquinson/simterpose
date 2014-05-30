@@ -313,7 +313,7 @@ modifie les etc/groups, etc/hosts (noms de domaines) etc/password
     est parfois problématique (d'après les commentaires)
   - Malheureusement, xbt_os_timer ne permet pas d'aller espionner les autres
     processus lourds comme cputimer permet de le faire.
-  - TODO: il faut refaire la même interface que xbt_os_timer, mais avec netlink
+  - DONE: il faut refaire la même interface que xbt_os_timer, mais avec netlink
     pour écouter le CPUtime des autres. On va faire ca dans simterpose pour
     l'instant, quite à le réintégrer à xbt plus tard.
 * <2014-05-25 dim.> (Entrée par Martin)
@@ -437,7 +437,7 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
     le symbole fort dans cputimer.c (en y initialisant la variable hors de toute
     fonction), ce qui est the right thing to do.
 - traitement de tous les warning créé par l'usage des flags parano de simgrid
-- TODO finir les structures pour les stats
+- DONE finir les structures pour les stats
   - [Mt] Une facon de faire est d'intégrer ces variables dans
     simterpose_globals_t, et ajouter des fonctions pour les
     incrémenter/décrémenter et afficher.
@@ -466,21 +466,31 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
     - J'imagine que le assert en simterpose.c:189 sert à détecter ce pb, mais
       c'est possiblement trop tard: si la liste merde, on deadlock avant meme de
       détecter l'inconsistance.
-  - TODO: ranger les processus directement dans le FES
+  - DONE: ranger les processus directement dans le FES
     - Pour l'instant, on y range des éléments de type time_desc_t (fonction
       FES_schedule_at et FES_push_timeout).
     - Il serait bien plus simple de mettre un champ "double next_event" dans
       process_descriptor_t puis de pousser un pointeur sur le processus dans le FES.
-- TODO: renommer tout ce qui est en XXX_station en XXX_host (les noms de fonction compris)
+- DONE: renommer tout ce qui est en XXX_station en XXX_host (les noms de fonction compris)
   En SimDag, ca s'appelle une workstation et en MSG un host. Raccourci à
   station, c'est carrément pas beau :)
 - Dans simpterpose.c, on voit 3 listes qui servent dans la boucle principale
   (idle_process, sched_list et mediate_list). Ces listes ne contiennent que des
   pid, ce qui force à utiliser process_get_descriptor() dans les fonctions 
   move_mediate_to_sched, move_idle_to_sched, add_to_sched_list.
-  - TODO: Faire en sorte de stocker des pointeurs sur process_descriptor_t dans
+  - DONE: Faire en sorte de stocker des pointeurs sur process_descriptor_t dans
     ces listes.
   - Il faut probablement relire la doc du xbt_dynar et l'exemple sur les valeurs
     pointées (non scalaire), pour éviter les pièges de cette interface.
 - Il reste encore beaucoup à nettoyer après ca, mais je n'arrive pas à
   comprendre sans que ceci soit fait...
+
+* <2014-05-30 ven.>
+- J'ai renommé toutes les stations en host
+- Je range directement les processus dans le FES au lieu d'utiliser des time_desc
+- Je range directement les processus dans les listes mediate, sched et idle au lieu d'utiliser des pid
+- J'ai renommé la idle liste pour qu'elle soit cohérente avec les autres listes de process
+  (une autre variable s'appelait idle_list dans le process descripteur)
+- J'ai commencer à regarder process_descriptor()
+  - TODO: dans la structure, marquer clairement si les variables concernent l'état ou la liste 
+  - TODO: certaines variables sont modifiées directement, d'autres avec des accesseurs: uniformiser 
