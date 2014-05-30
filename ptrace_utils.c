@@ -16,7 +16,7 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_UTILS, SIMTERPOSE, "ptrace utils log");
 
-static const char *syscall_list[] = {
+const char *syscall_list[] = {
   "read", "write", "open", "close", "stat", "fstat", "lstat", "poll", "lseek", "mmap", "mprotect", "munmap", "brk",
   "rt_sigaction", "rt_sigprocmask", "rt_sigreturn", "ioctl", "pread64", "pwrite64", "readv", "writev", "access", "pipe",
   "select",

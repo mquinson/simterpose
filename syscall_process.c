@@ -38,7 +38,7 @@ static int process_send_call(int pid, syscall_arg_u * sysarg)
   if (socket_registered(pid, arg->sockfd) != -1) {
     if (!socket_netlink(pid, arg->sockfd)) {
       XBT_DEBUG("%d This is not a netlink socket", arg->sockfd);
-      calculate_computation_time(pid);  // cree la computation task
+      compute_computation_time(pid);  // cree la computation task
       struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
       //        XBT_DEBUG("[%d] %d->%d", pid, arg->sockfd, arg->ret);
@@ -69,7 +69,7 @@ static int process_recv_call(int pid, syscall_arg_u * sysarg)
   XBT_DEBUG("Entering process_RECV_call, ret %d", arg->ret);
   if (socket_registered(pid, arg->sockfd) != -1) {
     if (!socket_netlink(pid, arg->sockfd)) {
-      calculate_computation_time(pid);
+      compute_computation_time(pid);
 
       //if handle_new_receive return 1, there is a task found
       if (handle_new_receive(pid, sysarg))
@@ -914,13 +914,13 @@ int process_handle_mediate(pid_t pid)
 
 ////// pre and post gestion of syscalls //////
 
-/** @brief  
- * called by all syscall at the end of "pre" state 
- * to verify if we have compuation task to simulate
+/**
+ * called by each syscall at the end of "pre" state
+ * to verify if we need to start a computation task
  */
 static int syscall_pre(pid_t pid, process_descriptor_t * proc, int *state)
 {
-  if (calculate_computation_time(pid)) {
+  if (compute_computation_time(pid)) {
     //if we have computation to simulate
     schedule_computation_task(pid);
     process_on_simulation(proc, 1);
@@ -1742,7 +1742,6 @@ int process_handle(pid_t pid, int status)
 
     case SYS_exit:
       if (process_in_syscall(proc) == 0) {
-        //    XBT_DEBUG("[%d] exit(%ld) called", pid, arg.arg1);
         XBT_DEBUG("exit(%ld) called", arg.arg1);
         return syscall_exit_pre(pid, &arg, sysarg, proc, &state);
       } else
@@ -1751,7 +1750,6 @@ int process_handle(pid_t pid, int status)
 
     case SYS_exit_group:
       if (process_in_syscall(proc) == 0) {
-        //    XBT_DEBUG("[%d] exit_group(%ld) called",pid, arg.arg1);
         XBT_DEBUG("exit_group(%ld) called", arg.arg1);
         return syscall_exit_pre(pid, &arg, sysarg, proc, &state);
       } else
@@ -2039,7 +2037,7 @@ int process_handle(pid_t pid, int status)
       break;
 
     default:
-      // XBT_DEBUG("[%d] Unhandle syscall (%ld) %s = %ld", pid,arg.reg_orig, syscall_list[arg.reg_orig], arg.ret);
+      XBT_INFO("Ignoring unhandled syscall (%ld) %s = %ld", arg.reg_orig, syscall_list[arg.reg_orig], arg.ret);
       if (process_in_syscall(proc) == 0) {
         process_set_in_syscall(proc);
         state = -1;
@@ -2051,9 +2049,8 @@ int process_handle(pid_t pid, int status)
       break;
     }
 
-    // XBT_DEBUG("Resume syscall");
+    // Step the traced process
     ptrace_resume_process(pid);
-    //waitpid sur le fils
     waitpid(pid, &status, 0);
   }                             // while(1)
 

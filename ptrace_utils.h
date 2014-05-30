@@ -22,6 +22,7 @@ typedef struct {
   unsigned long arg6;
 } reg_s;
 
+extern const char *syscall_list[];
 
 void ptrace_cpy(pid_t child, void *dst, void *src, size_t len, const char *syscall);
 
