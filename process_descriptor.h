@@ -27,9 +27,6 @@
 
 #define PROC_IDLE_IN_TASK       0x00100
 
-#define PROC_NO_IDLE            0
-#define PROC_IDLE               1
-
 #define PROC_NO_TIMEOUT         0
 #define PROC_IN_TIMEOUT         1
 #define PROC_TIMEOUT_EXPIRE     2
@@ -69,7 +66,7 @@ struct process_descriptor {
   fd_descriptor_t **fd_list;
 
   int mediate_state;
-  unsigned int idle_state:1;
+  unsigned int is_idling:1;
   unsigned int in_timeout:2;
   unsigned int scheduled:1;     // in sched_list
   unsigned int in_idle_list:1;
@@ -88,9 +85,10 @@ process_descriptor_t *process_get_descriptor(pid_t pid);
 
 void process_set_descriptor(pid_t pid, process_descriptor_t * proc);
 
-void process_set_idle(process_descriptor_t * proc, int idle_state);
+void process_idle_start(process_descriptor_t * proc);
+void process_idle_stop(process_descriptor_t * proc);
 
-int process_get_idle(process_descriptor_t * proc);
+int process_is_idle(process_descriptor_t * proc);
 
 void process_fork(pid_t new_pid, pid_t pid_fork);
 

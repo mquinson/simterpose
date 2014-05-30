@@ -507,15 +507,19 @@ static void process_shutdown_call(pid_t pid, syscall_arg_u * sysarg)
   comm_shutdown(is);
 }
 
-
+/** @brief checks if the idling process did any syscall and act correctly
+ *
+ * If it did a syscall, change the process to active state. If not, keep it idling.
+ */
 int process_handle_idle(pid_t pid)
 {
-  XBT_DEBUG("Handle idling process %d\n", pid);
   int status;
-  if (waitpid(pid, &status, WNOHANG))
+  XBT_DEBUG("Check if idling process %d did any syscall since last time\n", pid);
+  if (waitpid(pid, &status, WNOHANG)) { // pretty much so
+	// FIXME: we probably need a process_idle_stop() here
     return process_handle(pid, status);
-  else
-    return PROCESS_IDLE_STATE;
+  } else
+    return PROCESS_IDLE_STATE;        // nope, it's still idling
 }
 
 static int process_clone_call(pid_t pid, reg_s * arg)
@@ -1128,6 +1132,7 @@ static int syscall_futex_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
   process_set_in_syscall(proc);
   *state = -1;
   //    XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)reg->arg4, reg->arg2 == FUTEX_WAIT);
+  THROW_UNIMPLEMENTED;
   XBT_DEBUG("futex_in %p %d", (void *) reg->arg4, reg->arg2 == FUTEX_WAIT);
   //TODO add real gestion of timeout
   if (reg->arg2 == FUTEX_WAIT) {

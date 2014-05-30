@@ -15,7 +15,7 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   result->pid = pid;
   result->tgid = pid;           //By default, we consider that process is the first of this pgid
   result->cpu_time = 0;
-  result->idle_state = 0;
+  result->is_idling = 0;
   result->state = 0;
   result->mediate_state = 0;
   result->last_computation_task = NULL;
@@ -56,7 +56,7 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
 static void process_descriptor_destroy(process_descriptor_t * proc)
 {
   free(proc->name);
-  //We don't free each fd beacuse application do this before
+  //We don't free each fd because application do this before
   int i;
   for (i = 0; i < MAX_FD; ++i) {
     if (proc->fd_list[i])
@@ -68,14 +68,19 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
   free(proc);
 }
 
-void process_set_idle(process_descriptor_t * proc, int idle_state)
+void process_idle_start(process_descriptor_t * proc)
 {
-  proc->idle_state = idle_state;
+  proc->is_idling = 1;
+}
+void process_idle_stop(process_descriptor_t * proc)
+{
+  proc->is_idling = 0;
 }
 
-int process_get_idle(process_descriptor_t * proc)
+/** @brief returns true if the process is idling */
+int process_is_idle(process_descriptor_t * proc)
 {
-  return proc->idle_state;
+  return proc->is_idling;
 }
 
 int process_update_cputime(process_descriptor_t * proc, long long int new_cputime)
@@ -117,7 +122,7 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
   result->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
   result->pid = new_pid;
   result->cpu_time = 0;
-  result->idle_state = 0;
+  result->is_idling = 0;
   result->last_computation_task = NULL;
   int i;
   for (i = 0; i < MAX_FD; ++i)
@@ -136,7 +141,7 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
 
   result->pid = new_pid;
   result->cpu_time = 0;
-  result->idle_state = 0;
+  result->is_idling = 0;
   result->last_computation_task = NULL;
   result->host = cloned->host;
 

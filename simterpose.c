@@ -240,16 +240,15 @@ int main(int argc, char *argv[])
 
       if (proc->mediate_state)
         proc_next_state = process_handle_mediate(pid);
-      else if (process_get_idle(proc) == PROC_IDLE)
+      else if (process_is_idle(proc))
         proc_next_state = process_handle_idle(pid);
-
       else
         proc_next_state = process_handle_active(pid);
 
       XBT_DEBUG("End of treatment, status = %d", proc_next_state);
       if (proc_next_state == PROCESS_IDLE_STATE) {
         XBT_DEBUG("status = PROCESS_IDLE_STATE");
-        process_set_idle(proc, PROC_IDLE);
+        process_idle_start(proc);
         add_to_idle(pid);
       } else if (proc_next_state == PROCESS_DEAD) {
         XBT_DEBUG("status = PROCESS_DEAD");
