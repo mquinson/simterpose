@@ -22,7 +22,7 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   result->timeout = NULL;
   result->in_timeout = PROC_NO_TIMEOUT;
   result->scheduled = 0;
-  result->idle_list = 0;
+  result->in_idle_list = 0;
   result->on_simulation = 0;
   result->on_mediation = 0;
   result->next_event = 0;

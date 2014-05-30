@@ -45,18 +45,18 @@ static void sigint_handler(int sig)
   exit(0);
 }
 
-xbt_dynar_t idle_process;
+xbt_dynar_t idle_list;
 xbt_dynar_t sched_list;
 xbt_dynar_t mediate_list;
 
 static void remove_from_idle_list(pid_t pid)
 {
     process_descriptor_t *proc = process_get_descriptor(pid);
-    int i = xbt_dynar_search_or_negative(idle_process, &proc);
+    int i = xbt_dynar_search_or_negative(idle_list, &proc);
     xbt_assert(i>=0, "Pid not found in idle list. Inconsistency found in model");
 
-    xbt_dynar_remove_at(idle_process, i, NULL);
-    proc->idle_list = 0;
+    xbt_dynar_remove_at(idle_list, i, NULL);
+    proc->in_idle_list = 0;
 }
 
 static void remove_from_mediate_list(pid_t pid)
@@ -73,12 +73,12 @@ static void remove_from_mediate_list(pid_t pid)
 static void add_to_idle(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
-  if (proc->idle_list)
+  if (proc->in_idle_list)
     return;
   if (proc->on_mediation)
     THROW_IMPOSSIBLE;
-  proc->idle_list = 1;
-  xbt_dynar_push(idle_process, &proc);
+  proc->in_idle_list = 1;
+  xbt_dynar_push(idle_list, &proc);
 
   XBT_DEBUG("Add process %d to idle list", proc->pid);
 }
@@ -88,7 +88,7 @@ static void add_to_mediate(pid_t pid)
   process_descriptor_t *proc = process_get_descriptor(pid);
   if (proc->on_mediation)
     return;
-  if (proc->idle_list)
+  if (proc->in_idle_list)
     THROW_IMPOSSIBLE;
   proc->on_mediation = 1;
   xbt_dynar_push(mediate_list, &proc);
@@ -107,7 +107,7 @@ void add_to_sched_list(pid_t pid)
   xbt_dynar_push(sched_list, &proc);
   XBT_DEBUG("Add process %d to sched_list", pid);
 
-  if (proc->idle_list)
+  if (proc->in_idle_list)
     remove_from_idle_list(pid);
   else if (proc->on_mediation)
     remove_from_mediate_list(pid);
@@ -116,11 +116,11 @@ void add_to_sched_list(pid_t pid)
 
 static void move_idle_to_sched()
 {
-  while (!xbt_dynar_is_empty(idle_process)) {
+  while (!xbt_dynar_is_empty(idle_list)) {
     process_descriptor_t *proc;
-    xbt_dynar_shift(idle_process, &proc);
+    xbt_dynar_shift(idle_list, &proc);
 
-    proc->idle_list = 0;
+    proc->in_idle_list = 0;
     proc->scheduled = 1;
     xbt_dynar_push(sched_list, &proc);
     XBT_DEBUG("Move idle process %d on sched_list", proc->pid);
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 
   double max_duration = 0;
 
-  idle_process = xbt_dynar_new(sizeof(process_descriptor_t*), NULL);
+  idle_list = xbt_dynar_new(sizeof(process_descriptor_t*), NULL);
   sched_list = xbt_dynar_new(sizeof(process_descriptor_t*), NULL);
   mediate_list = xbt_dynar_new(sizeof(process_descriptor_t*), NULL);
 
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
 
   simterpose_globals_exit();
   xbt_dynar_free(&sched_list);
-  xbt_dynar_free(&idle_process);
+  xbt_dynar_free(&idle_list);
   xbt_dynar_free(&mediate_list);
   comm_exit();
   socket_exit();

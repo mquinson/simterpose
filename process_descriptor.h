@@ -73,7 +73,7 @@ struct process_descriptor {
   unsigned int idle:1;
   unsigned int in_timeout:2;
   unsigned int scheduled:1;
-  unsigned int idle_list:1;
+  unsigned int in_idle_list:1;
   unsigned int on_simulation:1;
   unsigned int on_mediation:1;
 
