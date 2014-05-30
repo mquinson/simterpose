@@ -15,7 +15,7 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   result->pid = pid;
   result->tgid = pid;           //By default, we consider that process is the first of this pgid
   result->cpu_time = 0;
-  result->idle = 0;
+  result->idle_state = 0;
   result->state = 0;
   result->mediate_state = 0;
   result->last_computation_task = NULL;
@@ -73,12 +73,12 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
 
 void process_set_idle(process_descriptor_t * proc, int idle_state)
 {
-  proc->idle = idle_state;
+  proc->idle_state = idle_state;
 }
 
 int process_get_idle(process_descriptor_t * proc)
 {
-  return proc->idle;
+  return proc->idle_state;
 }
 
 int process_update_cputime(process_descriptor_t * proc, long long int new_cputime)
@@ -120,7 +120,7 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
   result->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
   result->pid = new_pid;
   result->cpu_time = 0;
-  result->idle = 0;
+  result->idle_state = 0;
   result->last_computation_task = NULL;
   int i;
   for (i = 0; i < MAX_FD; ++i)
@@ -139,7 +139,7 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
 
   result->pid = new_pid;
   result->cpu_time = 0;
-  result->idle = 0;
+  result->idle_state = 0;
   result->last_computation_task = NULL;
   result->host = cloned->host;
 

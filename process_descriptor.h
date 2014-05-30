@@ -60,7 +60,6 @@ typedef struct {
 struct process_descriptor {
   pid_t pid;
   pid_t tgid;
-  int mediate_state;
   long long int cpu_time;
   char *name;
   FILE *trace;
@@ -70,12 +69,13 @@ struct process_descriptor {
   SD_task_t last_computation_task;
   fd_descriptor_t **fd_list;
 
-  unsigned int idle:1;
+  int mediate_state;
+  unsigned int idle_state:1;
   unsigned int in_timeout:2;
-  unsigned int scheduled:1;
+  unsigned int scheduled:1; // in sched_list
   unsigned int in_idle_list:1;
   unsigned int on_simulation:1;
-  unsigned int on_mediation:1;
+  unsigned int on_mediation:1; // in mediate_list
 
 
   int state;
