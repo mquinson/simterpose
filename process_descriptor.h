@@ -86,7 +86,6 @@ process_descriptor_t *process_get_descriptor(pid_t pid);
 void process_set_descriptor(pid_t pid, process_descriptor_t * proc);
 
 void process_idle_start(process_descriptor_t * proc);
-void process_idle_stop(process_descriptor_t * proc);
 
 int process_is_idle(process_descriptor_t * proc);
 

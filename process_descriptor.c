@@ -72,10 +72,6 @@ void process_idle_start(process_descriptor_t * proc)
 {
   proc->is_idling = 1;
 }
-void process_idle_stop(process_descriptor_t * proc)
-{
-  proc->is_idling = 0;
-}
 
 /** @brief returns true if the process is idling */
 int process_is_idle(process_descriptor_t * proc)
