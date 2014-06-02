@@ -496,7 +496,7 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
   - TODO: certaines variables sont modifiées directement, d'autres avec des accesseurs: uniformiser 
 * <2014-05-30 ven.> (Entrée par Martin)
 - coté rejeu, on est pas tout à fait au Grand Saut, mais on s'approche
-  - TODO: process_handle_mediate() et ses amis devraient prendre le processus
+  - DONE: process_handle_mediate() et ses amis devraient prendre le processus
     directement, pas le pid
   - TODO: tuer proc->is_idle de partout (et la fonction mediate_idle, et l'état, tout)
     - Pour l'instant, proc->is_idle n'est jamais remis à 0 une fois qu'il est mis à 1
@@ -504,9 +504,9 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
     - Les deux où on peut croire qu'ils le font, en fait y'a un
       THROW_UNIMPLEMENTED plus haut, donc on arrive jamais au return.
       On peut d'ailleurs nettoyer ces syscalls pour les marquer clairement unimplemented
-  - TODO: il faut faire un enum pour le next_state. Je parle de la poignée de
+  - DONE: il faut faire un enum pour le next_state. Je parle de la poignée de
     #define dans syscall_process.c
-  - TODO: on peut vouloir faire un tableau de chaînes de caractères contenant le
+  - DONE: on peut vouloir faire un tableau de chaînes de caractères contenant le
     nom de chaque état du next_state. C'est mieux pour les msg de debug
 - Il reste du propre à faire coté tracing. Ce n'est pas forcément bloquant, mais
   tu peux faire ca si je n'arrive pas à te donner suffisamment de choses à faire.
@@ -529,3 +529,8 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
 - Guillaume ne connaissait pas xbt_die() (ou ça marchait moins bien y'a 2 ans). 
   - TODO: remplacer tous les XBT_ERROR()+exit() en xbt_die()
 - Raah, il faut que j'arrête de procrastiner dans ce code. Suite au prochain épisode.
+
+* <2014-06-02 lun.>
+- les handler de process utilisent directement le process et plus le pid
+- les next state sont dans un enum, et leurs noms dans un tableau de chaines
+pour les appeler plus facilement
