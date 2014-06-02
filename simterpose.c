@@ -245,25 +245,16 @@ int main(int argc, char *argv[])
       else
         proc_next_state = process_handle_active(proc);
 
-      XBT_DEBUG("End of treatment, status = %d", proc_next_state);
+      XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
       if (proc_next_state == PROCESS_IDLE_STATE) {
-        XBT_DEBUG("status = PROCESS_IDLE_STATE");
         process_idle_start(proc);
         add_to_idle(pid);
       } else if (proc_next_state == PROCESS_DEAD) {
-        XBT_DEBUG("status = PROCESS_DEAD");
         process_die(pid);
         --child_amount;
-      } else if (proc_next_state == PROCESS_ON_MEDIATION) {
-        XBT_DEBUG("status = PROCESS_ON_MEDIATION");
+      } else if (proc_next_state == PROCESS_ON_MEDIATION)
         add_to_mediate(pid);
-      } else if (proc_next_state == PROCESS_TASK_FOUND) {
-        XBT_DEBUG("status = PROCESS_TASK_FOUND");
-      } else if (proc_next_state == PROCESS_ON_COMPUTATION) {
-        XBT_DEBUG("status = PROCESS_ON_COMPUTATION");
-      }
     }
-
 
     XBT_DEBUG("child_amount = %d", child_amount);
   } while (child_amount);
