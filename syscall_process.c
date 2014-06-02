@@ -251,11 +251,11 @@ static void process_getpeername_call(pid_t pid, syscall_arg_u * sysarg)
 }
 
 
-int process_handle_active(pid_t pid)
+int process_handle_active(process_descriptor_t *proc)
 {
   XBT_DEBUG("PROCESS HANDLE ACTIVE");
   int status;
-  process_descriptor_t *proc = process_get_descriptor(pid);
+  pid_t pid = proc->pid;
   int proc_state = process_get_state(proc);
 
   if (proc_state & PROC_SELECT) {
@@ -279,7 +279,7 @@ int process_handle_active(pid_t pid)
 #ifdef address_translation
   else if (proc_state & PROC_CONNECT_DONE) {
     waitpid(pid, &status, 0);
-    return process_handle(pid, status);
+    return process_handle(proc, status);
   }
 #endif
   else if (proc_state & PROC_ACCEPT_IN) {
@@ -335,7 +335,7 @@ int process_handle_active(pid_t pid)
     XBT_ERROR(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
     exit(1);
   }
-  return process_handle(pid, status);
+  return process_handle(proc, status);
 }
 
 
@@ -511,13 +511,13 @@ static void process_shutdown_call(pid_t pid, syscall_arg_u * sysarg)
  *
  * If it did a syscall, change the process to active state. If not, keep it idling.
  */
-int process_handle_idle(pid_t pid)
+int process_handle_idle(process_descriptor_t *proc)
 {
   int status;
-  XBT_DEBUG("Check if idling process %d did any syscall since last time\n", pid);
-  if (waitpid(pid, &status, WNOHANG)) { // pretty much so
+  XBT_DEBUG("Check if idling process %d did any syscall since last time\n", proc->pid);
+  if (waitpid(proc->pid, &status, WNOHANG)) { // pretty much so
 	// FIXME: we probably need a process_idle_stop() here
-    return process_handle(pid, status);
+    return process_handle(proc, status);
   } else
     return PROCESS_IDLE_STATE;        // nope, it's still idling
 }
@@ -823,11 +823,11 @@ static void process_close_call(pid_t pid, int fd)
 }
 
 
-int process_handle_mediate(pid_t pid)
+int process_handle_mediate(process_descriptor_t *proc)
 {
   XBT_DEBUG("PROCESS HANDLE MEDIATE");
-  process_descriptor_t *proc = process_get_descriptor(pid);
   int state = process_get_state(proc);
+  pid_t pid = proc->pid;
 
   if (state & PROC_RECVFROM_IN) {
     XBT_DEBUG("mediate recvfrom_in");
@@ -846,12 +846,12 @@ int process_handle_mediate(pid_t pid)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
-        return process_handle_active(pid);
+        return process_handle_active(proc);
       }
 #else
       process_end_mediation(proc);
       process_reset_state(proc);
-      return process_handle_active(pid);
+      return process_handle_active(proc);
 #endif
     }
   }
@@ -872,12 +872,12 @@ int process_handle_mediate(pid_t pid)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
-        return process_handle_active(pid);
+        return process_handle_active(proc);
       }
 #else
       process_end_mediation(proc);
       process_reset_state(proc);
-      return process_handle_active(pid);
+      return process_handle_active(proc);
 #endif
     }
   }
@@ -899,12 +899,12 @@ int process_handle_mediate(pid_t pid)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(proc);
-        return process_handle_active(pid);
+        return process_handle_active(proc);
       }
 #else
       process_end_mediation(proc);
       process_reset_state(proc);
-      return process_handle_active(pid);
+      return process_handle_active(proc);
 #endif
     }
   }
@@ -1699,11 +1699,11 @@ static int syscall_shutdown_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
  *  completion time of these things.
  */
 
-int process_handle(pid_t pid, int status)
+int process_handle(process_descriptor_t *proc, int status)
 {
   reg_s arg;
-  process_descriptor_t *proc = process_get_descriptor(pid);
   syscall_arg_u *sysarg = &(proc->sysarg);
+  pid_t pid = proc->pid;
   XBT_DEBUG("PROCESS HANDLE");
   while (1) {
     ptrace_get_register(pid, &arg);

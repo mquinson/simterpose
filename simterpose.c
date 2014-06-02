@@ -239,11 +239,11 @@ int main(int argc, char *argv[])
       pid_t pid = proc->pid;
 
       if (proc->mediate_state)
-        proc_next_state = process_handle_mediate(pid);
+        proc_next_state = process_handle_mediate(proc);
       else if (process_is_idle(proc))
-        proc_next_state = process_handle_idle(pid);
+        proc_next_state = process_handle_idle(proc);
       else
-        proc_next_state = process_handle_active(pid);
+        proc_next_state = process_handle_active(proc);
 
       XBT_DEBUG("End of treatment, status = %d", proc_next_state);
       if (proc_next_state == PROCESS_IDLE_STATE) {

@@ -4,6 +4,7 @@
 #include <sys/types.h>          //for pid_t
 #include "ptrace_utils.h"
 #include "syscall_data.h"
+#include "process_descriptor.h"
 
 #define PROCESS_DEAD            0
 #define PROCESS_GROUP_DEAD      1
@@ -16,12 +17,12 @@
 
 #define RECV_CLOSE              10
 
-int process_handle(pid_t pid, int status);
+int process_handle(process_descriptor_t *proc, int status);
 
-int process_handle_active(pid_t pid);
+int process_handle_active(process_descriptor_t *proc);
 
-int process_handle_idle(pid_t pid);
+int process_handle_idle(process_descriptor_t *proc);
 
-int process_handle_mediate(pid_t pid);
+int process_handle_mediate(process_descriptor_t *proc);
 
 #endif
