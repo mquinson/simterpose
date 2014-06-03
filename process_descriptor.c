@@ -105,7 +105,7 @@ void process_fork(pid_t new_pid, pid_t pid_fork)
 }
 
 //For detail on clone flags report to man clone
-void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
+/*void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
 {
   process_descriptor_t *result = malloc(sizeof(process_descriptor_t));
   process_descriptor_t *cloned = process_get_descriptor(pid_cloned);
@@ -134,7 +134,7 @@ void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags)
   }
 
   process_set_descriptor(new_pid, result);
-}
+}*/
 
 void process_die(pid_t pid)
 {

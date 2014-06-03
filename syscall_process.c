@@ -509,7 +509,7 @@ static void process_shutdown_call(pid_t pid, syscall_arg_u * sysarg)
   comm_shutdown(is);
 }
 
-static int process_clone_call(process_descriptor_t * proc, reg_s * arg)
+/*static int process_clone_call(process_descriptor_t * proc, reg_s * arg)
 {
   unsigned long tid = arg->ret;
   unsigned long flags = arg->arg1;
@@ -530,7 +530,7 @@ static int process_clone_call(process_descriptor_t * proc, reg_s * arg)
   process_get_descriptor(tid)->in_syscall = 1;
 
   return 0;
-}
+}*/
 
 
 static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
@@ -1116,21 +1116,6 @@ static int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sys
   return syscall_pre(pid, proc, state);
 }
 
-static int syscall_futex_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
-{
-  proc->in_syscall = 1;
-  *state = -1;
-  //    XBT_DEBUG("[%d] futex_in %p %d", pid, (void*)reg->arg4, reg->arg2 == FUTEX_WAIT);
-  THROW_UNIMPLEMENTED;
- /* XBT_DEBUG("futex_in %p %d", (void *) reg->arg4, reg->arg2 == FUTEX_WAIT);
-  //TODO add real gestion of timeout
-  if (reg->arg2 == FUTEX_WAIT) {
-    ptrace_resume_process(pid);
-    return PROCESS_IDLE_STATE;
-  }
-  return syscall_pre(pid, proc, state);*/
-}
-
 static int syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
                                    int *state)
 {
@@ -1631,18 +1616,6 @@ static int syscall_creat_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   return PROCESS_CONTINUE;
 }
 
-static int syscall_clone_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-  proc->in_syscall = 0;
-  THROW_UNIMPLEMENTED;
-  /*if (reg->ret < MAX_PID) {
-    process_clone_call(proc, reg);
-    return PROCESS_IDLE_STATE;
-  } else
-    proc->in_syscall = 1;
-  return PROCESS_CONTINUE;*/
-}
-
 static int syscall_socket_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1896,18 +1869,7 @@ int process_handle(process_descriptor_t * proc, int status)
         syscall_getsockopt_post(pid, &arg, sysarg, proc);
       break;
 
-    case SYS_clone:
-      if (!(proc->in_syscall)) {
-        proc->in_syscall = 1;
-        state = -1;
-        ret = syscall_pre(pid, proc, &state);
-      } else
-        ret = syscall_clone_post(pid, &arg, sysarg, proc);
-      if (ret != PROCESS_CONTINUE)
-        return ret;
-      break;
-
-      // ignore SYS_fork, SYS_vfork, SYS_execve
+      // ignore SYS_clone, SYS_fork, SYS_vfork, SYS_execve
 
     case SYS_exit:
       if (!(proc->in_syscall)) {
@@ -1978,16 +1940,7 @@ int process_handle(process_descriptor_t * proc, int status)
       }
       break;
 
-    case SYS_futex:
-      if (!(proc->in_syscall)) {
-        ret = syscall_futex_pre(pid, &arg, sysarg, proc, &state);
-        if (ret != PROCESS_CONTINUE)
-          return ret;
-      } else
-        proc->in_syscall = 0;
-      break;
-
-      // ignore SYS_sched_setaffinity, SYS_sched_getaffinity, SYS_set_thread_area, SYS_io_setup, SYS_io_destroy, SYS_io_getevents,
+      // ignore SYS_futex, SYS_sched_setaffinity, SYS_sched_getaffinity, SYS_set_thread_area, SYS_io_setup, SYS_io_destroy, SYS_io_getevents,
       // SYS_io_submit, SYS_io_cancel, SYS_get_thread_area, SYS_lookup_dcookie, SYS_epoll_create, SYS_epoll_ctl_old,
       // SYS_epoll_wait_old, SYS_remap_file_pages, SYS_getdents64, SYS_set_tid_address, SYS_restart_syscall, SYS_semtimedop,
       // SYS_fadvise64, SYS_timer_create, SYS_timer_settime, SYS_timer_gettime, SYS_timer_getoverrun, SYS_timer_delete, SYS_clock_settime

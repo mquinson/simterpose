@@ -58,20 +58,6 @@ static void remove_from_mediate_list(pid_t pid)
   proc->on_mediation = 0;
 }
 
-
-static void add_to_idle(pid_t pid)
-{
-  process_descriptor_t *proc = process_get_descriptor(pid);
-  if (proc->in_idle_list)
-    return;
-  if (proc->on_mediation)
-    THROW_IMPOSSIBLE;
-  proc->in_idle_list = 1;
-  xbt_dynar_push(idle_list, &proc);
-
-  XBT_DEBUG("Add process %d to idle list", proc->pid);
-}
-
 static void add_to_mediate(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
