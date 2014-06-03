@@ -333,11 +333,9 @@ int process_handle_active(process_descriptor_t * proc)
     process_recvmsg_out_call(pid);
 
   ptrace_resume_process(pid);
+  if (waitpid(pid, &status, 0) < 0)
+	  xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
 
-  if (waitpid(pid, &status, 0) < 0) {
-    XBT_ERROR(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-    exit(1);
-  }
   return process_handle(proc, status);
 }
 
@@ -370,7 +368,7 @@ void process_recvfrom_out_call(int pid)
   XBT_DEBUG("Entering process_RECVFROM_out_call");
   process_descriptor_t *proc = process_get_descriptor(pid);
   //   recvfrom_arg_t arg = &(proc->sysarg.recvfrom);
-  //   XBT_ERROR("[%d]Try to see if socket %d recv something", pid, fd);
+  //   XBT_DEBUG("[%d]Try to see if socket %d recv something", pid, fd);
   //   if(proc->fd_list[arg->sockfd]==NULL)
   //     return;
   //   
@@ -1922,21 +1920,7 @@ int process_handle(process_descriptor_t * proc, int status)
         return ret;
       break;
 
-      // ignore SYS_fork, SYS_vfork
-
-    case SYS_execve:
-      if (process_in_syscall(proc) == 0) {
-        process_set_in_syscall(proc);
-        state = -1;
-        ret = syscall_pre(pid, proc, &state);
-        if (ret != PROCESS_CONTINUE)
-          return ret;
-      } else {
-        process_set_out_syscall(proc);
-        XBT_ERROR("[%d] execve called", pid);
-        THROW_UNIMPLEMENTED;
-      }
-      break;
+      // ignore SYS_fork, SYS_vfork, SYS_execve
 
     case SYS_exit:
       if (process_in_syscall(proc) == 0) {

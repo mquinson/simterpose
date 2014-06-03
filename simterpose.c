@@ -31,9 +31,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(RUN_TRACE, SIMTERPOSE, "run_trace debug");
 /* A little handler for the Ctrl-C */
 static void sigint_handler(int sig)
 {
-  XBT_ERROR("Interruption request by user");
-  XBT_ERROR("Current time of simulation %lf", SD_get_clock());
-  exit(0);
+  xbt_die("Interruption request by user. Current time of simulation %lf", SD_get_clock());
 }
 
 xbt_dynar_t idle_list;
