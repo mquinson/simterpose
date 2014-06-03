@@ -1,9 +1,6 @@
 #ifndef __TIME_PROC_H_
 #define __TIME_PROC_H_
 
-#define SYSCALL_IN              0x1
-#define SYSCALL_OUT             0x0
-
 #define PROC_RECVMSG            0x000200
 #define PROC_READ               0x000400
 #define PROC_RECVFROM           0x000800
@@ -13,15 +10,9 @@
 #define PROC_SELECT             0x000010
 #define PROC_POLL               0x000020
 #define PROC_CONNECT            0x000040
-#define PROC_ACCEPT_IN          0x000080
+#define PROC_ACCEPT		        0x000080
 #define PROC_CONNECT_DONE       0x000100
-#define PROC_RECVFROM_IN        (PROC_RECVFROM | SYSCALL_IN)
-#define PROC_RECVFROM_OUT       (PROC_RECVFROM | SYSCALL_OUT)
-#define PROC_READ_IN            (PROC_READ | SYSCALL_IN)
-#define PROC_READ_OUT           (PROC_READ | SYSCALL_OUT)
-#define PROC_RECVMSG_IN         (PROC_RECVMSG | SYSCALL_IN)
-#define PROC_RECVMSG_OUT        (PROC_RECVMSG | SYSCALL_OUT)
-#define PROC_RECV_IN            (PROC_RECVMSG_IN | PROC_RECVFROM_IN | PROC_READ_IN)
+#define PROC_RECV            (PROC_RECVMSG | PROC_RECVFROM | PROC_READ)
 
 #define STATE_MASK              0x00FFF0
 
@@ -60,10 +51,11 @@ struct process_descriptor {
   long long int cpu_time;
   char *name;
   FILE *trace;
-  double next_event;            // = start_time de time_desc_t *timeout
+  double next_event;
   SD_workstation_t host;
   SD_task_t last_computation_task;
   fd_descriptor_t **fd_list;
+  int in_syscall;
 
   int mediate_state;
   unsigned int is_idling:1;

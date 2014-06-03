@@ -25,6 +25,7 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   result->on_simulation = 0;
   result->on_mediation = 0;
   result->next_event = 0;
+  result->in_syscall = 0;
 
   int i;
   for (i = 0; i < MAX_FD; ++i)
@@ -89,17 +90,17 @@ int process_update_cputime(process_descriptor_t * proc, long long int new_cputim
 
 int process_in_syscall(process_descriptor_t * proc)
 {
-  return (proc->state & 0x1);
+  return proc->in_syscall;
 }
 
 void process_set_in_syscall(process_descriptor_t * proc)
 {
-  proc->state = proc->state ^ 0x1;
+  proc->in_syscall = 1;
 }
 
 void process_set_out_syscall(process_descriptor_t * proc)
 {
-  proc->state = proc->state ^ 0x1;
+  proc->in_syscall = 0;
 }
 
 void process_reset_state(process_descriptor_t * proc)

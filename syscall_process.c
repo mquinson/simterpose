@@ -48,7 +48,7 @@ static int process_send_call(int pid, syscall_arg_u * sysarg)
       XBT_DEBUG("%d->%d", arg->sockfd, arg->ret);
       XBT_DEBUG("Sending data(%d) on socket %d", arg->ret, s->fd.fd);
       int peer_stat = process_get_state(s->fd.proc);
-      if (peer_stat == PROC_SELECT || peer_stat == PROC_POLL || peer_stat == PROC_RECV_IN)
+      if (peer_stat == PROC_SELECT || peer_stat == PROC_POLL || ((peer_stat == PROC_RECV) && (s->fd.proc->in_syscall)))
         add_to_sched_list(s->fd.proc->pid);
 
       handle_new_send(is, sysarg);
@@ -285,19 +285,19 @@ int process_handle_active(process_descriptor_t * proc)
     return process_handle(proc, status);
   }
 #endif
-  else if (proc_state & PROC_ACCEPT_IN) {
+  else if ((proc_state & PROC_ACCEPT) && (proc->in_syscall))  {
     pid_t conn_pid = process_accept_in_call(pid, &proc->sysarg);
     if (conn_pid)
       add_to_sched_list(conn_pid);      //We have to add conn_pid to the schedule list
     else
       return PROCESS_ON_MEDIATION;
-  } else if (proc_state & PROC_RECVFROM_OUT)
+  } else if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall))
     process_recvfrom_out_call(pid);
 
-  else if (proc_state & PROC_READ_OUT)
+  else if ((proc_state & PROC_READ) && !(proc->in_syscall))
     process_read_out_call(pid);
 
-  else if (proc_state == PROC_RECVFROM_IN)
+  else if ((proc_state == PROC_RECVFROM) && (proc->in_syscall))
 #ifndef address_translation
     THROW_IMPOSSIBLE;
 #else
@@ -307,18 +307,7 @@ int process_handle_active(process_descriptor_t * proc)
       return PROCESS_ON_MEDIATION;
 #endif
 
-  else if (proc_state == PROC_READ_IN)
-#ifndef address_translation
-    THROW_IMPOSSIBLE;
-#else
-    if (process_recv_in_call(pid, proc->sysarg.recv.sockfd))
-      process_reset_state(proc);
-    else
-      return PROCESS_ON_MEDIATION;
-#endif
-
-
-  else if (proc_state == PROC_RECVMSG_IN)
+  else if ((proc_state == PROC_READ) && (proc->in_syscall))
 #ifndef address_translation
     THROW_IMPOSSIBLE;
 #else
@@ -329,7 +318,18 @@ int process_handle_active(process_descriptor_t * proc)
 #endif
 
 
-  else if (proc_state & PROC_RECVMSG_OUT)
+  else if ((proc_state == PROC_RECVMSG) && (proc->in_syscall))
+#ifndef address_translation
+    THROW_IMPOSSIBLE;
+#else
+    if (process_recv_in_call(pid, proc->sysarg.recv.sockfd))
+      process_reset_state(proc);
+    else
+      return PROCESS_ON_MEDIATION;
+#endif
+
+
+  else if ((proc_state & PROC_RECVMSG) && !(proc->in_syscall))
     process_recvmsg_out_call(pid);
 
   ptrace_resume_process(pid);
@@ -457,7 +457,7 @@ int process_accept_in_call(pid_t pid, syscall_arg_u * sysarg)
 
     return conn_pid;
   } else {
-    process_set_state(proc, PROC_ACCEPT_IN);
+    process_set_state(proc, PROC_ACCEPT);
     return 0;
   }
 }
@@ -587,7 +587,7 @@ static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
     if (acc_pid) {
       process_descriptor_t *acc_proc = process_get_descriptor(acc_pid);
       int status = process_get_state(acc_proc);
-      if (status == PROC_ACCEPT_IN || status == PROC_SELECT || status == PROC_POLL)
+      if (status == PROC_ACCEPT || status == PROC_SELECT || status == PROC_POLL)
         add_to_sched_list(acc_pid);
       // #ifndef address_translation
       //Now attribute ip and port to the socket.
@@ -830,7 +830,7 @@ int process_handle_mediate(process_descriptor_t * proc)
   int state = process_get_state(proc);
   pid_t pid = proc->pid;
 
-  if (state & PROC_RECVFROM_IN) {
+  if ((state & PROC_RECVFROM) && (proc->in_syscall)) {
     XBT_DEBUG("mediate recvfrom_in");
     if (process_recv_in_call(pid, proc->sysarg.recvfrom.sockfd)) {
 #ifndef address_translation
@@ -857,7 +857,7 @@ int process_handle_mediate(process_descriptor_t * proc)
     }
   }
 
-  else if (state & PROC_READ_IN) {
+  else if ((state & PROC_READ) && (proc->in_syscall)) {
     if (process_recv_in_call(pid, proc->sysarg.recvfrom.sockfd)) {
 #ifndef address_translation
       int res = process_recv_call(pid, &(proc->sysarg));
@@ -883,7 +883,7 @@ int process_handle_mediate(process_descriptor_t * proc)
     }
   }
 
-  else if (state & PROC_RECVMSG_IN) {
+  else if ((state & PROC_RECVMSG)  && (proc->in_syscall)) {
 
     if (process_recv_in_call(pid, proc->sysarg.recvmsg.sockfd)) {
 #ifndef address_translation
