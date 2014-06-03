@@ -19,8 +19,7 @@
 
 #define SYSCALL_ARG1 rdi
 extern int strace_option;
-const char *state_names[7] =
-    { "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND", "PROCESS_NO_TASK_FOUND",
+const char *state_names[7] = { "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND", "PROCESS_NO_TASK_FOUND",
   "PROCESS_ON_MEDIATION", "PROCESS_ON_COMPUTATION", "PROCESS_CONTINUE"
 };
 

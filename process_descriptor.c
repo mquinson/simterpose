@@ -21,8 +21,8 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid)
   result->state = 0;
   result->in_syscall = 0;
 
-  result->scheduled = 0; // in sched_list
-  result->on_mediation = 0; // in mediate_list
+  result->scheduled = 0;        // in sched_list
+  result->on_mediation = 0;     // in mediate_list
   result->in_idle_list = 0;
 
   result->mediate_state = 0;

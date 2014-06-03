@@ -441,7 +441,7 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
   - [Mt] Une facon de faire est d'intégrer ces variables dans
     simterpose_globals_t, et ajouter des fonctions pour les
     incrémenter/décrémenter et afficher.
-- TODO nettoyer process_descriptor.
+- DONE nettoyer process_descriptor.
 * <2014-05-29 jeu.> (Entrée par Martin)
 - Il devient temps de nettoyer un peu le rejeu. Il n'est pas encore assez propre
   pour qu'on puisse le passer à MSG, car ca va être une opération très
@@ -492,13 +492,13 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
 - J'ai renommé la idle liste pour qu'elle soit cohérente avec les autres listes de process
   (une autre variable s'appelait idle_list dans le process descripteur)
 - J'ai commencer à regarder process_descriptor()
-  - TODO: dans la structure, marquer clairement si les variables concernent l'état ou la liste 
-  - TODO: certaines variables sont modifiées directement, d'autres avec des accesseurs: uniformiser 
+  - DONE: dans la structure, marquer clairement si les variables concernent l'état ou la liste 
+  - DONE: certaines variables sont modifiées directement, d'autres avec des accesseurs: uniformiser 
 * <2014-05-30 ven.> (Entrée par Martin)
 - coté rejeu, on est pas tout à fait au Grand Saut, mais on s'approche
   - DONE: process_handle_mediate() et ses amis devraient prendre le processus
     directement, pas le pid
-  - TODO: tuer proc->is_idle de partout (et la fonction mediate_idle, et l'état, tout)
+  - DONE: tuer proc->is_idle de partout (et la fonction mediate_idle, et l'état, tout)
     - Pour l'instant, proc->is_idle n'est jamais remis à 0 une fois qu'il est mis à 1
     - Mais c'est pas grave, car aucun syscall ne retourne jamais PROCESS_IDLE_STATE
     - Les deux où on peut croire qu'ils le font, en fait y'a un
@@ -510,7 +510,7 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
     nom de chaque état du next_state. C'est mieux pour les msg de debug
 - Il reste du propre à faire coté tracing. Ce n'est pas forcément bloquant, mais
   tu peux faire ca si je n'arrive pas à te donner suffisamment de choses à faire.
-  - TODO: faire la liste des syscalls existants, et vérifier qu'ils sont tous
+  - DONE: faire la liste des syscalls existants, et vérifier qu'ils sont tous
     traités par le gros switch
   - TODO: prendre chaque syscall et vérifier d'après la page man qu'on couvre la
     plupart des cas possibles. Indice: si on ne retourne pas possiblement tous
@@ -521,16 +521,39 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
   de lui faire ce qu'il faut à la ronde actuelle. Il faudrait parvenir à
   nettoyer tout ca pour y voir plus clair, et y'a du boulot.
   - Il faut arrêter d'utiliser un masque binaire pour le proc->state
-    - TODO: faire un boolean séparé pour dire si on rentre dans le syscall ou si
+    - DONE: faire un boolean séparé pour dire si on rentre dans le syscall ou si
       on en sort. Pour l'instant, c'est fait avec SYSCALL_IN / SYSCALL_OUT.
       - Il faut ajouter un flag boolean à proc, virer le define, et modifier les
         (proc_state & PROC_ACCEPT_IN) en ((proc->state & PROC_ACCEPT) && (proc->in_syscall))
       - C'est plus long à écrire, mais j'aime pas trop les flags.
 - Guillaume ne connaissait pas xbt_die() (ou ça marchait moins bien y'a 2 ans). 
-  - TODO: remplacer tous les XBT_ERROR()+exit() en xbt_die()
+  - DONE: remplacer tous les XBT_ERROR()+exit() en xbt_die()
 - Raah, il faut que j'arrête de procrastiner dans ce code. Suite au prochain épisode.
 
 * <2014-06-02 lun.>
 - les handler de process utilisent directement le process et plus le pid
 - les next state sont dans un enum, et leurs noms dans un tableau de chaines
 pour les appeler plus facilement
+
+* <2014-06-03 mar.>
+- J'ai vérifié qu'on traite tous les syscall:
+  - la liste des syscall est dans <bits/syscall.h>, et triés par numéro dans <asm/unistd_64.h>
+  - je les ai remis dans l'ordre des numéros dans le switch, et à chaque fois ajouté en 
+    commentaire ceux qu'on ignore
+- j'ai remplacé les erreurs numériques par leur nom
+- j'ai remplacé les XBT_ERROR()+exit() par des xbt_die()
+- j'ai remplacé le masque SYSCALL_IN/OUT par un booléen in_syscall
+- un certain nombre de fonctions utilisent directement le process et plus le pid:
+  - process_XXX_call, process_XXX_in_call et process_XXX_out_call
+  - insert_trace.c::compute_computation_time()
+  - fonctions qui gèrent les taches dans task.c
+- J'ai supprimé task.c::create_send_communication_task() et schedule_comm_task() que je n'utilisais
+plus puisque je les avais remplacées par create_and_schedule_communication_task(). Le but était
+de scheduler les tâches de communication proprement, avec des dépendances comme dans le tuto SimDag
+(ça n'avait pas completement débuggé le probleme cela dit)
+- j'ai nettoyé process_descriptor: 
+  - retiré les getters et les setters. Notamment certains ne sont plus nécessaires sans le mask, 
+    on utilise directement proc->state et proc->in_syscall
+  - supprimé proc->is_idling, PROCESS_IDLE_STATE et process_handle_idle()
+- Puisque futex et clone lançaient un THROW_UNIMPLEMENTED, je les ai retires du switch
+j'ai gardé les fonctions qui géraient le clone, mais commentées
