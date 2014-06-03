@@ -3,7 +3,6 @@
 #include "task.h"
 #include "sockets.h"
 #include "cputimer.h"
-#include "process_descriptor.h"
 #include "simterpose.h"
 #include "simdag/simdag.h"
 
@@ -11,19 +10,17 @@ char buftrace[512];
 long long int times_syscall[3];
 
 
-int compute_computation_time(int pid)
+int compute_computation_time(process_descriptor_t *proc)
 {
-  cputimer_get(pid, times_syscall, global_timer);
-  process_descriptor_t *proc = process_get_descriptor(pid);
+  cputimer_get(proc->pid, times_syscall, global_timer);
   long long int diff_cpu = 0;
 
   // On crée la tache seulement si le temps a avancé
   if ((diff_cpu = process_update_cputime(proc, times_syscall[1] + times_syscall[2])) > 0) {
-    //process_descriptor* proc = process_get_descriptor(pid);
     double amount = (diff_cpu / simterpose_get_msec_per_flop());
     //fprintf(proc->trace,"%s compute %10f\n", proc->name, amount);
 
-    SD_task_t comp_task = create_computation_task(pid, amount);
+    SD_task_t comp_task = create_computation_task(proc, amount);
     proc->last_computation_task = comp_task;
     return 1;
   }
