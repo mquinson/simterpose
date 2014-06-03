@@ -12,6 +12,6 @@ void insert_trace_fork_exit(pid_t pid, char *syscall, int res);
 
 void insert_init_trace(pid_t pid);
 
-int compute_computation_time(process_descriptor_t *proc);
+int compute_computation_time(process_descriptor_t * proc);
 
 #endif

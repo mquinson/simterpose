@@ -211,14 +211,14 @@ int main(int argc, char *argv[])
 
     XBT_DEBUG("Starting the waiting process that are now ready");
     while (FES_contains_events() && equal_d(SD_get_clock(), FES_peek_next_date())) {
-        int temp_pid = FES_pop_next_pid();
-        add_to_sched_list(temp_pid);
-        process_descriptor_t *proc = process_get_descriptor(temp_pid);
-        if (proc->in_timeout == PROC_NO_TIMEOUT)
-          ++child_amount;
-        //XBT_DEBUG("In_timeout = %d", proc->in_timeout);
+      int temp_pid = FES_pop_next_pid();
+      add_to_sched_list(temp_pid);
+      process_descriptor_t *proc = process_get_descriptor(temp_pid);
+      if (proc->in_timeout == PROC_NO_TIMEOUT)
+        ++child_amount;
+      //XBT_DEBUG("In_timeout = %d", proc->in_timeout);
 
-        XBT_DEBUG("child_amount = %d", child_amount);
+      XBT_DEBUG("child_amount = %d", child_amount);
     }
 
     XBT_DEBUG("Size of sched_list %lu", xbt_dynar_length(sched_list));

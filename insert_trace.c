@@ -10,7 +10,7 @@ char buftrace[512];
 long long int times_syscall[3];
 
 
-int compute_computation_time(process_descriptor_t *proc)
+int compute_computation_time(process_descriptor_t * proc)
 {
   cputimer_get(proc->pid, times_syscall, global_timer);
   long long int diff_cpu = 0;

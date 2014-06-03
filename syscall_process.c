@@ -21,28 +21,29 @@
 extern int strace_option;
 const char *state_names[8] =
     { "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_IDLE_STATE", "PROCESS_TASK_FOUND", "PROCESS_NO_TASK_FOUND",
-"PROCESS_ON_MEDIATION", "PROCESS_ON_COMPUTATION", "PROCESS_CONTINUE" };
+  "PROCESS_ON_MEDIATION", "PROCESS_ON_COMPUTATION", "PROCESS_CONTINUE"
+};
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process log");
 
-int process_accept_in_call(process_descriptor_t *proc, syscall_arg_u * sysarg);
-int process_recv_in_call(process_descriptor_t *proc, int fd);
-void process_recvfrom_out_call(process_descriptor_t *proc);
-void process_read_out_call(process_descriptor_t *proc);
-void process_recvmsg_out_call(process_descriptor_t *proc);
-void process_accept_out_call(process_descriptor_t *proc, syscall_arg_u * sysarg);
+int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
+int process_recv_in_call(process_descriptor_t * proc, int fd);
+void process_recvfrom_out_call(process_descriptor_t * proc);
+void process_read_out_call(process_descriptor_t * proc);
+void process_recvmsg_out_call(process_descriptor_t * proc);
+void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
 //TODO test the possibility to remove incomplete checking
 //There is no need to return value because send always bring a task
-static int process_send_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-	pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
   XBT_DEBUG("Entering process_send_call");
   send_arg_t arg = &(sysarg->send);
   if (socket_registered(pid, arg->sockfd) != -1) {
     if (!socket_netlink(pid, arg->sockfd)) {
       XBT_DEBUG("%d This is not a netlink socket", arg->sockfd);
-      compute_computation_time(proc);    // cree la computation task
+      compute_computation_time(proc);   // cree la computation task
       struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
       //        XBT_DEBUG("[%d] %d->%d", pid, arg->sockfd, arg->ret);
@@ -66,9 +67,9 @@ static int process_send_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
     THROW_IMPOSSIBLE;
 }
 
-static int process_recv_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static int process_recv_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-	pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
   recv_arg_t arg = &(sysarg->recv);
   XBT_DEBUG("Entering process_RECV_call, ret %d", arg->ret);
   if (socket_registered(pid, arg->sockfd) != -1) {
@@ -93,7 +94,7 @@ static int process_recv_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
   return 0;
 }
 
-static int process_select_call(process_descriptor_t *proc)
+static int process_select_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_select_call");
   pid_t pid = proc->pid;
@@ -166,7 +167,7 @@ static int process_select_call(process_descriptor_t *proc)
 }
 
 
-static int process_poll_call(process_descriptor_t *proc)
+static int process_poll_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering poll %lf \n", SD_get_clock());
   poll_arg_t arg = (poll_arg_t) & (proc->sysarg.poll);
@@ -223,7 +224,7 @@ static int process_poll_call(process_descriptor_t *proc)
   return match;
 }
 
-static void process_getpeername_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static void process_getpeername_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   getpeername_arg_t arg = &(sysarg->getpeername);
   pid_t pid = proc->pid;
@@ -239,7 +240,7 @@ static void process_getpeername_call(process_descriptor_t *proc, syscall_arg_u *
         arg->in = in;
         arg->ret = 0;
       } else
-        arg->ret = -ENOTCONN;  /* ENOTCONN 107 End point not connected */
+        arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
 
       ptrace_neutralize_syscall(pid);
       proc->in_syscall = 0;
@@ -286,7 +287,7 @@ int process_handle_active(process_descriptor_t * proc)
     return process_handle(proc, status);
   }
 #endif
-  else if ((proc_state & PROC_ACCEPT) && (proc->in_syscall))  {
+  else if ((proc_state & PROC_ACCEPT) && (proc->in_syscall)) {
     pid_t conn_pid = process_accept_in_call(proc, &proc->sysarg);
     if (conn_pid)
       add_to_sched_list(conn_pid);      //We have to add conn_pid to the schedule list
@@ -335,7 +336,7 @@ int process_handle_active(process_descriptor_t * proc)
 
   ptrace_resume_process(pid);
   if (waitpid(pid, &status, 0) < 0)
-	  xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
+    xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
 
   return process_handle(proc, status);
 }
@@ -386,7 +387,7 @@ void process_recvfrom_out_call(process_descriptor_t * proc)
   free(arg->data);
 }
 
-void process_read_out_call(process_descriptor_t *proc)
+void process_read_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_read_out_call");
   process_reset_state(proc);
@@ -401,7 +402,7 @@ void process_read_out_call(process_descriptor_t *proc)
   }
 }
 
-void process_recvmsg_out_call(process_descriptor_t *proc)
+void process_recvmsg_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_recvmsg_out_call");
   pid_t pid = proc->pid;
@@ -411,7 +412,7 @@ void process_recvmsg_out_call(process_descriptor_t *proc)
 
 
 //Return 0 if nobody wait or the pid of the one who wait
-int process_accept_in_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   XBT_DEBUG(" CONNEXION: process_accept_in_call");
   accept_arg_t arg = &(sysarg->accept);
@@ -463,7 +464,7 @@ int process_accept_in_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
   }
 }
 
-void process_accept_out_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   XBT_DEBUG(" CONNEXION: process_accept_out_call");
   accept_arg_t arg = &(sysarg->accept);
@@ -571,7 +572,7 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
       device = PORT_REMOTE;
       host = get_host_by_ip(sai->sin_addr.s_addr);
       if (host == NULL) {
-        arg->ret = -ECONNREFUSED; /* ECONNREFUSED	111 Connection refused */
+        arg->ret = -ECONNREFUSED;       /* ECONNREFUSED       111 Connection refused */
         ptrace_neutralize_syscall(pid);
         proc->in_syscall = 0;
         connect_arg_t arg = &(sysarg->connect);
@@ -600,7 +601,7 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
       XBT_DEBUG("Free port found on host %s (%s:%d)", SD_workstation_get_name(proc->host), inet_ntoa(in), port);
     } else {
       XBT_DEBUG("No peer found");
-      arg->ret = -ECONNREFUSED; /* ECONNREFUSED	111 Connection refused */
+      arg->ret = -ECONNREFUSED; /* ECONNREFUSED 111 Connection refused */
       ptrace_neutralize_syscall(pid);
       proc->in_syscall = 0;
       connect_arg_t arg = &(sysarg->connect);
@@ -611,7 +612,7 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     //Now we try to see if the socket is blocking of not
     int flags = socket_get_flags(pid, arg->sockfd);
     if (flags & O_NONBLOCK)
-      arg->ret = -EINPROGRESS; 	/* EINPROGRESS	115	 Operation now in progress */
+      arg->ret = -EINPROGRESS;  /* EINPROGRESS  115      Operation now in progress */
     else
       arg->ret = 0;
 
@@ -641,7 +642,7 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     return 0;
 }
 
-static void process_connect_out_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static void process_connect_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   XBT_DEBUG(" CONNEXION: process_connect_out_call");
 #ifdef address_translation
@@ -661,10 +662,10 @@ static void process_connect_out_call(process_descriptor_t *proc, syscall_arg_u *
   process_reset_state(proc);
 }
 
-static int process_bind_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static int process_bind_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   bind_arg_t arg = &(sysarg->bind);
-pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
   if (socket_registered(pid, arg->sockfd)) {
     if (socket_network(pid, arg->sockfd)) {
 
@@ -723,7 +724,7 @@ static int process_socket_call(pid_t pid, syscall_arg_u * arg)
   return 0;
 }
 
-static void process_setsockopt_syscall(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static void process_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
   pid_t pid = proc->pid;
@@ -742,10 +743,10 @@ static void process_setsockopt_syscall(process_descriptor_t *proc, syscall_arg_u
 }
 
 
-static void process_getsockopt_syscall(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static void process_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
-pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
 
   arg->ret = 0;
   if (arg->optname == SO_REUSEADDR) {
@@ -771,7 +772,7 @@ pid_t pid = proc->pid;
 }
 
 
-static int process_listen_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static int process_listen_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   //TODO make gestion of back_log
   listen_arg_t arg = &(sysarg->listen);
@@ -791,7 +792,7 @@ static int process_listen_call(process_descriptor_t *proc, syscall_arg_u * sysar
   return 0;
 }
 
-static void process_fcntl_call(process_descriptor_t *proc, syscall_arg_u * sysarg)
+static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
   pid_t pid = proc->pid;
@@ -813,7 +814,7 @@ static void process_fcntl_call(process_descriptor_t *proc, syscall_arg_u * sysar
 #endif
 }
 
-static void process_close_call(process_descriptor_t *proc, int fd)
+static void process_close_call(process_descriptor_t * proc, int fd)
 {
   fd_descriptor_t *file_desc = proc->fd_list[fd];
   if (file_desc->type == FD_SOCKET)
@@ -834,7 +835,7 @@ int process_handle_mediate(process_descriptor_t * proc)
     XBT_DEBUG("mediate recvfrom_in");
     if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
 #ifndef address_translation
-    		pid_t pid = proc->pid;
+      pid_t pid = proc->pid;
       int res = process_recv_call(proc, &(proc->sysarg));
       if (res == PROCESS_TASK_FOUND) {
         if (strace_option)
@@ -861,7 +862,7 @@ int process_handle_mediate(process_descriptor_t * proc)
   else if ((state & PROC_READ) && (proc->in_syscall)) {
     if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
 #ifndef address_translation
-    	  pid_t pid = proc->pid;
+      pid_t pid = proc->pid;
       int res = process_recv_call(proc, &(proc->sysarg));
       if (res == PROCESS_TASK_FOUND) {
         if (strace_option)
@@ -885,11 +886,11 @@ int process_handle_mediate(process_descriptor_t * proc)
     }
   }
 
-  else if ((state & PROC_RECVMSG)  && (proc->in_syscall)) {
+  else if ((state & PROC_RECVMSG) && (proc->in_syscall)) {
 
     if (process_recv_in_call(proc, proc->sysarg.recvmsg.sockfd)) {
 #ifndef address_translation
-    	  pid_t pid = proc->pid;
+      pid_t pid = proc->pid;
       int res = process_recv_call(proc, &(proc->sysarg));
       if (res == PROCESS_TASK_FOUND) {
         if (strace_option)
@@ -945,7 +946,7 @@ static int syscall_read_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
 #ifndef address_translation
       int flags = socket_get_flags(pid, reg->arg1);
       if (flags & O_NONBLOCK) {
-        sysarg->read.ret = -EAGAIN; /* EAGAIN 11 Try again */
+        sysarg->read.ret = -EAGAIN;     /* EAGAIN 11 Try again */
         if (strace_option)
           print_read_syscall(pid, sysarg);
         ptrace_neutralize_syscall(pid);
@@ -1381,7 +1382,7 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
     XBT_DEBUG("recvfrom_in, full mediation");
     int flags = socket_get_flags(pid, reg->arg1);
     if (flags & O_NONBLOCK) {
-      sysarg->recvfrom.ret = -EAGAIN; /* EAGAIN 11 Try again */
+      sysarg->recvfrom.ret = -EAGAIN;   /* EAGAIN 11 Try again */
       ptrace_neutralize_syscall(pid);
       proc->in_syscall = 0;
       process_recvmsg_out_call(proc);
@@ -1501,7 +1502,7 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 
     int flags = socket_get_flags(pid, reg->arg1);
     if (flags & O_NONBLOCK) {
-      sysarg->recvmsg.ret = -EAGAIN; /* EAGAIN 11 Try again */
+      sysarg->recvmsg.ret = -EAGAIN;    /* EAGAIN 11 Try again */
       ptrace_neutralize_syscall(pid);
       proc->in_syscall = 0;
       process_recvmsg_out_call(proc);

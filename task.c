@@ -16,7 +16,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, SIMTERPOSE, "task log");
 //Contains all informations necessary to make receive task when happen with passing only the info_socket
 
 
-static void schedule_last_computation_task(process_descriptor_t *proc, SD_task_t next_task, const char *name)
+static void schedule_last_computation_task(process_descriptor_t * proc, SD_task_t next_task, const char *name)
 {
   XBT_DEBUG("Scheduling last computation task %s", name);
 
@@ -31,7 +31,7 @@ static void schedule_last_computation_task(process_descriptor_t *proc, SD_task_t
 }
 
 //  et comm_task
-void schedule_computation_task(process_descriptor_t *proc)
+void schedule_computation_task(process_descriptor_t * proc)
 {
   XBT_DEBUG("Scheduling computation");
   //      XBT_DEBUG("Adding compuation task to process %d", pid);
@@ -51,7 +51,7 @@ void schedule_computation_task(process_descriptor_t *proc)
 static int num = 0;
 
 // appele par calculate_computation_time qui est appele par syscall_process
-SD_task_t create_computation_task(process_descriptor_t *proc, double amount)
+SD_task_t create_computation_task(process_descriptor_t * proc, double amount)
 {
   XBT_DEBUG("ENTERING create_computation_task");
 
@@ -69,7 +69,7 @@ SD_task_t create_computation_task(process_descriptor_t *proc, double amount)
 }
 
 // essaie de se calquer sur simgrid/examples/simdag/sd_comm_throttling.c
-void create_and_schedule_communication_task(process_descriptor_t *proc_sender, struct infos_socket *is, double amount,
+void create_and_schedule_communication_task(process_descriptor_t * proc_sender, struct infos_socket *is, double amount,
                                             SD_workstation_t sender, SD_workstation_t receiver)
 {
   XBT_DEBUG("Entering create_and_schedule_communication_task %s", proc_sender->name);
