@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
       //If data is not null, we schedule the process
       if (data != NULL) {
         XBT_DEBUG("End of task for %d", *data);
-        process_on_simulation(process_get_descriptor(*data), 0);
+        process_get_descriptor(*data)->on_simulation = 0;
         add_to_sched_list(*data);
       }
       SD_task_destroy(task_over);
@@ -238,16 +238,11 @@ int main(int argc, char *argv[])
 
       if (proc->mediate_state)
         proc_next_state = process_handle_mediate(proc);
-      else if (process_is_idle(proc))
-        proc_next_state = process_handle_idle(proc);
       else
         proc_next_state = process_handle_active(proc);
 
       XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
-      if (proc_next_state == PROCESS_IDLE_STATE) {
-        process_idle_start(proc);
-        add_to_idle(pid);
-      } else if (proc_next_state == PROCESS_DEAD) {
+      if (proc_next_state == PROCESS_DEAD) {
         process_die(pid);
         --child_amount;
       } else if (proc_next_state == PROCESS_ON_MEDIATION)

@@ -55,18 +55,18 @@ struct process_descriptor {
   SD_workstation_t host;
   SD_task_t last_computation_task;
   fd_descriptor_t **fd_list;
-  int in_syscall;
-
-  int mediate_state;
-  unsigned int is_idling:1;
-  unsigned int in_timeout:2;
-  unsigned int scheduled:1;     // in sched_list
-  unsigned int in_idle_list:1;
-  unsigned int on_simulation:1;
-  unsigned int on_mediation:1;  // in mediate_list
-
 
   int state;
+  int in_syscall;
+
+  unsigned int scheduled:1;     // in sched_list
+  unsigned int on_mediation:1;  // in mediate_list
+  unsigned int in_idle_list:1;
+
+  int mediate_state;
+  unsigned int in_timeout:2;
+  unsigned int on_simulation:1;
+
   syscall_arg_u sysarg;
 };
 
@@ -76,30 +76,15 @@ process_descriptor_t *process_descriptor_new(char *name, pid_t pid);
 process_descriptor_t *process_get_descriptor(pid_t pid);
 
 void process_set_descriptor(pid_t pid, process_descriptor_t * proc);
-
-void process_idle_start(process_descriptor_t * proc);
-
-int process_is_idle(process_descriptor_t * proc);
-
 void process_fork(pid_t new_pid, pid_t pid_fork);
 
 int process_update_cputime(process_descriptor_t * proc, long long int cputime_elapsed);
 
 void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags);
 
-int process_get_state(process_descriptor_t * proc);
-
 void process_reset_state(process_descriptor_t * proc);
 
-void process_set_state(process_descriptor_t * proc, int state);
-
 void process_die(pid_t pid);
-
-void process_on_simulation(process_descriptor_t * proc, int val);
-
-void process_on_mediation(process_descriptor_t * proc);
-
-void process_end_mediation(process_descriptor_t * proc);
 
 int process_get_free_fd(process_descriptor_t * proc);
 
