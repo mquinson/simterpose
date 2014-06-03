@@ -19,8 +19,8 @@
 
 #define SYSCALL_ARG1 rdi
 extern int strace_option;
-const char *state_names[7] = { "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND", "PROCESS_NO_TASK_FOUND",
-  "PROCESS_ON_MEDIATION", "PROCESS_ON_COMPUTATION", "PROCESS_CONTINUE"
+const char *state_names[7] = {  "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND", "PROCESS_NO_TASK_FOUND",
+  "PROCESS_ON_MEDIATION", "PROCESS_ON_COMPUTATION"
 };
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, SIMTERPOSE, "Syscall process log");
@@ -814,6 +814,7 @@ int process_handle_mediate(process_descriptor_t * proc)
 {
   XBT_DEBUG("PROCESS HANDLE MEDIATE");
   int state = proc->state;
+  xbt_assert(proc->in_syscall); //FIXME: simplify
 
   if ((state & PROC_RECVFROM) && (proc->in_syscall)) {
     XBT_DEBUG("mediate recvfrom_in");
@@ -907,7 +908,7 @@ int process_handle_mediate(process_descriptor_t * proc)
  * called by each syscall at the end of "pre" state
  * to verify if we need to start a computation task
  */
-static int syscall_pre(pid_t pid, process_descriptor_t * proc, int *state)
+static int syscall_pre(pid_t pid, process_descriptor_t * proc, int *state) // FIXME: can we kill that *state?
 {
   if (compute_computation_time(proc)) {
     //if we have computation to simulate
@@ -1693,7 +1694,7 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
         state = -1;
-        ret = syscall_pre(pid, proc, &state);
+        ret = syscall_pre(pid, proc, &state); // FIXME: simplify the ret and the state
         if (ret != PROCESS_CONTINUE)
           return ret;
       } else

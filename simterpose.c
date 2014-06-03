@@ -31,10 +31,11 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(RUN_TRACE, SIMTERPOSE, "run_trace debug");
 /* A little handler for the Ctrl-C */
 static void sigint_handler(int sig)
 {
+	// FIXME: kill all remaining children
   xbt_die("Interruption request by user. Current time of simulation %lf", SD_get_clock());
 }
 
-xbt_dynar_t idle_list;
+xbt_dynar_t idle_list; //FIXME: KILLME
 xbt_dynar_t sched_list;
 xbt_dynar_t mediate_list;
 
@@ -180,19 +181,19 @@ int main(int argc, char *argv[])
       if (SD_task_get_state(task_over) != SD_DONE)
         continue;
       XBT_DEBUG("A task is over: %s", SD_task_get_name(task_over));
-      int *data = (int *) SD_task_get_data(task_over);
       //If data is not null, we schedule the process
-      if (data != NULL) {
-        XBT_DEBUG("End of task for %d", *data);
-        process_get_descriptor(*data)->on_simulation = 0;
-        add_to_sched_list(*data);
+      if (SD_task_get_data(task_over) != NULL) {
+    	pid_t pid = *(pid_t *) SD_task_get_data(task_over);
+        XBT_DEBUG("End of task for %d", (int)pid);
+        process_get_descriptor(pid)->on_simulation = 0;
+        add_to_sched_list(pid);
       }
       SD_task_destroy(task_over);
     }
     xbt_dynar_free(&arr);
 
     //Now adding all idle process to the scheduled list
-    move_idle_to_sched();
+    move_idle_to_sched(); //FIXME: KILLME
     move_mediate_to_sched();
 
     XBT_DEBUG("Starting the waiting process that are now ready");
@@ -216,7 +217,7 @@ int main(int argc, char *argv[])
       xbt_dynar_shift(sched_list, &proc);
       //  XBT_DEBUG("Scheduling process %d", pid);
       XBT_DEBUG("Scheduling process");
-      proc->scheduled = 0;
+      proc->scheduled = 0; //FIXME: RENAME ME
 
       XBT_DEBUG("Starting treatment");
       int proc_next_state;

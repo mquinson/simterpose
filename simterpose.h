@@ -8,7 +8,7 @@
 #ifndef SIMTERPOSE_H
 #define SIMTERPOSE_H
 
-//#define address_translation
+#define address_translation
 
 #include <sys/types.h>
 #include <xbt.h>
