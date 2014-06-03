@@ -238,7 +238,7 @@ static void process_getpeername_call(pid_t pid, syscall_arg_u * sysarg)
         arg->in = in;
         arg->ret = 0;
       } else
-        arg->ret = -107;        /* - ENOTCONN (end point not connected) */
+        arg->ret = -ENOTCONN;  /* ENOTCONN 107 End point not connected */
 
       ptrace_neutralize_syscall(pid);
       process_set_out_syscall(process_get_descriptor(pid));
@@ -573,7 +573,7 @@ static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
       device = PORT_REMOTE;
       host = get_host_by_ip(sai->sin_addr.s_addr);
       if (host == NULL) {
-        arg->ret = -ECONNREFUSED;
+        arg->ret = -ECONNREFUSED; /* ECONNREFUSED	111 Connection refused */
         ptrace_neutralize_syscall(pid);
         process_set_out_syscall(process_get_descriptor(pid));
         connect_arg_t arg = &(sysarg->connect);
@@ -602,7 +602,7 @@ static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
       XBT_DEBUG("Free port found on host %s (%s:%d)", SD_workstation_get_name(proc->host), inet_ntoa(in), port);
     } else {
       XBT_DEBUG("No peer found");
-      arg->ret = -ECONNREFUSED;
+      arg->ret = -ECONNREFUSED; /* ECONNREFUSED	111 Connection refused */
       ptrace_neutralize_syscall(pid);
       process_set_out_syscall(process_get_descriptor(pid));
       connect_arg_t arg = &(sysarg->connect);
@@ -613,7 +613,7 @@ static int process_connect_in_call(pid_t pid, syscall_arg_u * sysarg)
     //Now we try to see if the socket is blocking of not
     int flags = socket_get_flags(pid, arg->sockfd);
     if (flags & O_NONBLOCK)
-      arg->ret = -115;
+      arg->ret = -EINPROGRESS; 	/* EINPROGRESS	115	 Operation now in progress */
     else
       arg->ret = 0;
 
@@ -701,7 +701,7 @@ static int process_bind_call(pid_t pid, syscall_arg_u * sysarg)
 #endif
       } else {
         XBT_DEBUG("Port %d isn't free", ntohs(arg->sai.sin_port));
-        arg->ret = -98;
+        arg->ret = -EADDRINUSE; /* EADDRINUSE 98 Address already in use */
         ptrace_neutralize_syscall(pid);
         bind_arg_t arg = &(sysarg->bind);
         ptrace_restore_syscall(pid, SYS_bind, arg->ret);
@@ -944,7 +944,7 @@ static int syscall_read_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
 #ifndef address_translation
       int flags = socket_get_flags(pid, reg->arg1);
       if (flags & O_NONBLOCK) {
-        sysarg->read.ret = -11;
+        sysarg->read.ret = -EAGAIN; /* EAGAIN 11 Try again */
         if (strace_option)
           print_read_syscall(pid, sysarg);
         ptrace_neutralize_syscall(pid);
@@ -1382,7 +1382,7 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
     XBT_DEBUG("recvfrom_in, full mediation");
     int flags = socket_get_flags(pid, reg->arg1);
     if (flags & O_NONBLOCK) {
-      sysarg->recvfrom.ret = -11;
+      sysarg->recvfrom.ret = -EAGAIN; /* EAGAIN 11 Try again */
       ptrace_neutralize_syscall(pid);
       process_set_out_syscall(proc);
       process_recvmsg_out_call(pid);
@@ -1502,7 +1502,7 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 
     int flags = socket_get_flags(pid, reg->arg1);
     if (flags & O_NONBLOCK) {
-      sysarg->recvmsg.ret = -11;
+      sysarg->recvmsg.ret = -EAGAIN; /* EAGAIN 11 Try again */
       ptrace_neutralize_syscall(pid);
       process_set_out_syscall(proc);
       process_recvmsg_out_call(pid);
