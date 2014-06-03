@@ -88,21 +88,6 @@ int process_update_cputime(process_descriptor_t * proc, long long int new_cputim
   return result;
 }
 
-int process_in_syscall(process_descriptor_t * proc)
-{
-  return proc->in_syscall;
-}
-
-void process_set_in_syscall(process_descriptor_t * proc)
-{
-  proc->in_syscall = 1;
-}
-
-void process_set_out_syscall(process_descriptor_t * proc)
-{
-  proc->in_syscall = 0;
-}
-
 void process_reset_state(process_descriptor_t * proc)
 {
   proc->state = proc->state & (~STATE_MASK);

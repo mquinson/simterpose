@@ -85,12 +85,6 @@ void process_fork(pid_t new_pid, pid_t pid_fork);
 
 int process_update_cputime(process_descriptor_t * proc, long long int cputime_elapsed);
 
-int process_in_syscall(process_descriptor_t * proc);
-
-void process_set_in_syscall(process_descriptor_t * proc);
-
-void process_set_out_syscall(process_descriptor_t * proc);
-
 void process_clone(pid_t new_pid, pid_t pid_cloned, unsigned long flags);
 
 int process_get_state(process_descriptor_t * proc);
