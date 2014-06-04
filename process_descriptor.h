@@ -59,8 +59,8 @@ struct process_descriptor {
   int state;
   int in_syscall;
 
-  unsigned int scheduled:1;     // in sched_list
-  unsigned int on_mediation:1;  // in mediate_list
+  unsigned int in_sched_list:1;
+  unsigned int in_mediate_list:1;
 
   int mediate_state;
   unsigned int in_timeout:2;

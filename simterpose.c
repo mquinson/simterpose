@@ -45,15 +45,15 @@ static void remove_from_mediate_list(pid_t pid)
   xbt_assert(i >= 0, "Pid not found in mediate list. Inconsistency found in model");
 
   xbt_dynar_remove_at(mediate_list, i, NULL);
-  proc->on_mediation = 0;
+  proc->in_mediate_list = 0;
 }
 
 static void add_to_mediate(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
-  if (proc->on_mediation)
+  if (proc->in_mediate_list)
     return;
-  proc->on_mediation = 1;
+  proc->in_mediate_list = 1;
   xbt_dynar_push(mediate_list, &proc);
 
   XBT_DEBUG("Add process %d to mediate list", proc->pid);
@@ -63,14 +63,14 @@ static void add_to_mediate(pid_t pid)
 void add_to_sched_list(pid_t pid)
 {
   process_descriptor_t *proc = process_get_descriptor(pid);
-  if (proc->scheduled || proc->on_simulation)
+  if (proc->in_sched_list || proc->on_simulation)
     return;
 
-  proc->scheduled = 1;
+  proc->in_sched_list = 1;
   xbt_dynar_push(sched_list, &proc);
   XBT_DEBUG("Add process %d to sched_list", pid);
 
-  if (proc->on_mediation)
+  if (proc->in_mediate_list)
     remove_from_mediate_list(pid);
 }
 
@@ -80,14 +80,13 @@ static void move_mediate_to_sched()
     process_descriptor_t *proc;
     xbt_dynar_shift(mediate_list, &proc);
 
-    proc->on_mediation = 0;
-    proc->scheduled = 1;
+    proc->in_mediate_list = 0;
+    proc->in_sched_list = 1;
 
     xbt_dynar_push(sched_list, &proc);
     XBT_DEBUG("Move mediated process %d to scheduling", proc->pid);
   }
 }
-
 
 
 int main(int argc, char *argv[])
@@ -186,7 +185,7 @@ int main(int argc, char *argv[])
       xbt_dynar_shift(sched_list, &proc);
       //  XBT_DEBUG("Scheduling process %d", pid);
       XBT_DEBUG("Scheduling process");
-      proc->scheduled = 0; //FIXME: RENAME ME
+      proc->in_sched_list = 0;
 
       XBT_DEBUG("Starting treatment");
       int proc_next_state;
