@@ -1057,10 +1057,9 @@ static int syscall_poll_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
     return *state;
 }
 
-static int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+static int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
-  *state = 0;
   ptrace_detach_process(pid);
   return PROCESS_DEAD;
 }
@@ -1748,8 +1747,7 @@ int process_handle(process_descriptor_t * proc, int status)
     case SYS_open:
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
-        state = 0;
-        ret = need_computation(pid, proc);      // FIXME: simplify the ret and the state
+        ret = need_computation(pid, proc);
         if (ret != PROCESS_CONTINUE)
           return ret;
       } else
@@ -1759,7 +1757,6 @@ int process_handle(process_descriptor_t * proc, int status)
     case SYS_close:
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
-        state = 0;
         if (need_computation(pid, proc))
           return PROCESS_ON_COMPUTATION;
       } else {
@@ -1800,7 +1797,6 @@ int process_handle(process_descriptor_t * proc, int status)
     case SYS_socket:
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
-        state = 0;
         if (need_computation(pid, proc))
           return PROCESS_ON_COMPUTATION;
       } else
@@ -1864,7 +1860,6 @@ int process_handle(process_descriptor_t * proc, int status)
     case SYS_shutdown:
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
-        state = 0;
         if (need_computation(pid, proc))
           return PROCESS_ON_COMPUTATION;
       } else
@@ -1926,7 +1921,7 @@ int process_handle(process_descriptor_t * proc, int status)
     case SYS_exit:
       if (!(proc->in_syscall)) {
         XBT_DEBUG("exit(%ld) called", arg.arg1);
-        return syscall_exit_pre(pid, &arg, sysarg, proc, &state);
+        return syscall_exit_pre(pid, &arg, sysarg, proc);
       } else
         proc->in_syscall = 0;
       break;
@@ -1948,7 +1943,6 @@ int process_handle(process_descriptor_t * proc, int status)
     case SYS_creat:
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
-        state = 0;
         if (need_computation(pid, proc))
           return PROCESS_ON_COMPUTATION;
       } else
@@ -2010,7 +2004,7 @@ int process_handle(process_descriptor_t * proc, int status)
     case SYS_exit_group:
       if (!(proc->in_syscall)) {
         XBT_DEBUG("exit_group(%ld) called", arg.arg1);
-        return syscall_exit_pre(pid, &arg, sysarg, proc, &state);
+        return syscall_exit_pre(pid, &arg, sysarg, proc);
       } else
         proc->in_syscall = 0;
       break;
@@ -2032,7 +2026,6 @@ int process_handle(process_descriptor_t * proc, int status)
       XBT_INFO("Ignoring unhandled syscall (%ld) %s = %ld", arg.reg_orig, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
-        state = 0;
         if (need_computation(pid, proc))
           return PROCESS_ON_COMPUTATION;
       } else
