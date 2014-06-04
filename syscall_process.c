@@ -262,6 +262,7 @@ int process_handle_active(process_descriptor_t * proc)
   int status;
   pid_t pid = proc->pid;
   int proc_state = proc->state;
+  xbt_assert(!(proc->mediate_state)); // TODO: vérifier. c'est vrai sauf si on vient de handle_mediate et que la socket a été fermée
 
   if (proc_state & PROC_SELECT) {
     //if the select match changment we have to run the child
@@ -815,7 +816,9 @@ int process_handle_mediate(process_descriptor_t * proc)
 {
   XBT_DEBUG("PROCESS HANDLE MEDIATE");
   int state = proc->state;
+
   xbt_assert(proc->in_syscall);
+  xbt_assert(proc->mediate_state);
 
   if (state & PROC_RECVFROM) {
     XBT_DEBUG("mediate recvfrom_in");
@@ -834,7 +837,7 @@ int process_handle_mediate(process_descriptor_t * proc)
         if (strace_option)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;
+        proc->in_syscall = 0; // TODO vérifier pourquoi on passe pas mediate_state à zéro, comment on gère le cas de la socket fermée dans active?
         return process_handle_active(proc);
       }
 #else
@@ -861,7 +864,7 @@ int process_handle_mediate(process_descriptor_t * proc)
         if (strace_option)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;
+        proc->in_syscall = 0; // TODO vérifier pourquoi on passe pas mediate_state à zéro
         return process_handle_active(proc);
       }
 #else
@@ -889,7 +892,7 @@ int process_handle_mediate(process_descriptor_t * proc)
         if (strace_option)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;
+        proc->in_syscall = 0;// TODO vérifier pourquoi on passe pas mediate_state à zéro
         return process_handle_active(proc);
       }
 #else
@@ -908,7 +911,7 @@ int process_handle_mediate(process_descriptor_t * proc)
  * called by each syscall at the end of "pre" state
  * to verify if we need to start a computation task
  */
-static int need_computation(pid_t pid, process_descriptor_t * proc)     // FIXME: can we kill that *state?
+static int need_computation(pid_t pid, process_descriptor_t * proc)
 {
   if (compute_computation_time(proc)) {
     //if we have computation to simulate
