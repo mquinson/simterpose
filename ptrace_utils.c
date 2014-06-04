@@ -219,7 +219,7 @@ void ptrace_neutralize_syscall(const pid_t pid)
 
   increment_nb_getregs();
   XBT_DEBUG("neutralize syscall %s", syscall_list[regs.orig_rax]);
-  regs.orig_rax = 184;          /* FIXME: don't use the numerical value of SYS_tuxcall */
+  regs.orig_rax = SYS_tuxcall;
   if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
 

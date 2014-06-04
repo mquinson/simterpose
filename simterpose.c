@@ -31,7 +31,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(RUN_TRACE, SIMTERPOSE, "run_trace debug");
 /* A little handler for the Ctrl-C */
 static void sigint_handler(int sig)
 {
-	// FIXME: kill all remaining children
+  // FIXME: kill all remaining children
   xbt_die("Interruption request by user. Current time of simulation %lf", SD_get_clock());
 }
 
@@ -152,8 +152,8 @@ int main(int argc, char *argv[])
       XBT_DEBUG("A task is over: %s", SD_task_get_name(task_over));
       //If data is not null, we schedule the process
       if (SD_task_get_data(task_over) != NULL) {
-    	pid_t pid = *(pid_t *) SD_task_get_data(task_over);
-        XBT_DEBUG("End of task for %d", (int)pid);
+        pid_t pid = *(pid_t *) SD_task_get_data(task_over);
+        XBT_DEBUG("End of task for %d", (int) pid);
         process_get_descriptor(pid)->on_simulation = 0;
         add_to_sched_list(pid);
       }
