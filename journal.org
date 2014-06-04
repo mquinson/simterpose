@@ -559,11 +559,17 @@ de scheduler les tâches de communication proprement, avec des dépendances comm
 j'ai gardé les fonctions qui géraient le clone, mais commentées
 
 * <2014-06-04 mer.>
+- j'ai supprimé toutes les références à idle_list
+- j'ai retiré les vérifications qu'on était dans le "in_syscall" dans 
+  process_handle_mediate() puisqu'on y est toujours
+- j'ai renommé les listes mediate et sched pour clarifier
 - Concernant la suppression du *state dans syscall_process.c::syscall_pre():
-  - en entrée il peut avoir soit la valeur PROCESS_ON_MEDIATION (5), soit 0
-    (c'était -1 mais j'ai changé pour avoir la même valeur que PROCESS_CONTINUE)
-  - soit on renvoie PROCESS_ON_COMPUTATION(6) et on garde cette valeur, soit on renvoie PROCESS_CONTINUE (0)
-    et là on garde l'ancienne valeur (qui vaut soit 0 soit 5)
-  - donc if(renvoi==0) return ancien, else return renvoi
-    donc if(renvoi) return renvoi, else return ancien
-    donc return(renvoi || ancien) ?
+  - Ma première tentative a échoué et je n'avais pas vu que ça avait tout cassé, d'où le revert du
+  commit 'simplify state', mais maintenant c'est bon !
+  - j'ai renommé syscall_pre() en need_computation()
+  - c'est un booléen et il n'utilise plus le *state
+  - tous les states sont initialisés à 0 (ce qui correspond à PROCESS_CONTINUE) au lieu de -1
+  - quand on appelle need_computation:
+    - s'il est à true on renvoie PROCESS_ON_COMPUTATION
+    - si false on renvoie le state
+  - j'ai nettoyé les states qui ne servaient à rien
