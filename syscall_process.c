@@ -908,7 +908,7 @@ int process_handle_mediate(process_descriptor_t * proc)
  * called by each syscall at the end of "pre" state
  * to verify if we need to start a computation task
  */
-static int syscall_pre(pid_t pid, process_descriptor_t * proc)
+static int need_computation(pid_t pid, process_descriptor_t * proc)
 {
   if (compute_computation_time(proc)) {
     //if we have computation to simulate
@@ -968,7 +968,7 @@ static int syscall_read_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
 #endif
     }
   }
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_read_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1009,7 +1009,7 @@ static int syscall_write_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
     }
   }
 #endif
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1045,7 +1045,7 @@ static int syscall_poll_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
   proc->in_syscall = 0;
   proc->state = PROC_POLL;
   *state = PROCESS_ON_MEDIATION;
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1068,7 +1068,7 @@ static int syscall_time_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
     print_time_syscall(pid, sysarg);
   ptrace_restore_syscall(pid, SYS_time, arg->ret);
   proc->in_syscall = 0;
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
@@ -1091,7 +1091,7 @@ static int syscall_gettimeofday_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysa
   ptrace_poke(pid, arg->tv, &(tv), sizeof(struct timeval));
 
   proc->in_syscall = 0;
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
@@ -1111,7 +1111,7 @@ static int syscall_clock_gettime_pre(pid_t pid, reg_s * reg, syscall_arg_u * sys
   ptrace_poke(pid, arg->tp, &(tp), sizeof(struct timespec));
 
   proc->in_syscall = 0;
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
@@ -1128,7 +1128,7 @@ static int syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysar
   ptrace_cpy(pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
 
   process_getpeername_call(proc, sysarg);
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_listen_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1143,7 +1143,7 @@ static int syscall_listen_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   if (strace_option)
     print_listen_syscall(pid, sysarg);
 #endif
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_listen_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1171,7 +1171,7 @@ static int syscall_bind_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
   process_bind_call(proc, sysarg);
   if (strace_option)
     print_bind_syscall(pid, sysarg);
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_bind_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1194,7 +1194,7 @@ static int syscall_connect_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   get_args_bind_connect(pid, 0, reg, sysarg);
   if (process_connect_in_call(proc, sysarg))
     *state = PROCESS_ON_MEDIATION;
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_connect_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1223,7 +1223,7 @@ static int syscall_accept_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   pid_t conn_pid = process_accept_in_call(proc, sysarg);
   if (!conn_pid)
     *state = PROCESS_ON_MEDIATION;
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_accept_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1250,7 +1250,7 @@ static int syscall_getsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg
   if (strace_option)
     print_getsockopt_syscall(pid, sysarg);
 #endif
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_getsockopt_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1274,7 +1274,7 @@ static int syscall_setsockopt_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg
     print_setsockopt_syscall(pid, sysarg);
   free(sysarg->setsockopt.optval);
 #endif
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_setsockopt_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1296,7 +1296,7 @@ static int syscall_fcntl_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
     print_fcntl_syscall(pid, sysarg);
   process_fcntl_call(proc, sysarg);
 #endif
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_fcntl_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1326,7 +1326,7 @@ static int syscall_select_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   proc->in_syscall = 0;
   proc->state = PROC_SELECT;
   *state = PROCESS_ON_MEDIATION;
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -1386,7 +1386,7 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
     }
 #endif
   }
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1432,7 +1432,7 @@ static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
     return PROCESS_TASK_FOUND;
   }
 #endif
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1508,7 +1508,7 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
     if (strace_option)
       print_read_syscall(pid, sysarg);
   }
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1554,7 +1554,7 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
     }
   }
 #endif
-  return (syscall_pre(pid, proc) || *state);
+  return (need_computation(pid, proc) || *state);
 }
 
 static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1692,7 +1692,7 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
         state = 0;
-        ret = (syscall_pre(pid, proc) || state);
+        ret = (need_computation(pid, proc) || state);
         if(ret)
           return ret;
       } else
@@ -1703,7 +1703,7 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
         state = 0;
-        ret = (syscall_pre(pid, proc) || state);
+        ret = (need_computation(pid, proc) || state);
         if(ret)
           return ret;
       } else {
@@ -1745,7 +1745,7 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
         state = 0;
-        ret = (syscall_pre(pid, proc) || state);
+        ret = (need_computation(pid, proc) || state);
         if(ret)
           return ret;
       } else
@@ -1810,7 +1810,7 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
         state = 0;
-        ret = (syscall_pre(pid, proc) || state);
+        ret = (need_computation(pid, proc) || state);
         if(ret)
           return ret;
       } else
@@ -1895,7 +1895,7 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
         state = 0;
-        ret = (syscall_pre(pid, proc) || state);
+        ret = (need_computation(pid, proc) || state);
         if(ret)
           return ret;
       } else
@@ -1980,7 +1980,7 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall)) {
         proc->in_syscall = 1;
         state = 0;
-        ret = (syscall_pre(pid, proc) || state);
+        ret = (need_computation(pid, proc) || state);
         if(ret)
           return ret;
       } else
