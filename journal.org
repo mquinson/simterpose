@@ -557,3 +557,13 @@ de scheduler les tâches de communication proprement, avec des dépendances comm
   - supprimé proc->is_idling, PROCESS_IDLE_STATE et process_handle_idle()
 - Puisque futex et clone lançaient un THROW_UNIMPLEMENTED, je les ai retires du switch
 j'ai gardé les fonctions qui géraient le clone, mais commentées
+
+* <2014-06-04 mer.>
+- Concernant la suppression du *state dans syscall_process.c::syscall_pre():
+  - en entrée il peut avoir soit la valeur PROCESS_ON_MEDIATION (5), soit 0
+    (c'était -1 mais j'ai changé pour avoir la même valeur que PROCESS_CONTINUE)
+  - soit on renvoie PROCESS_ON_COMPUTATION(6) et on garde cette valeur, soit on renvoie PROCESS_CONTINUE (0)
+    et là on garde l'ancienne valeur (qui vaut soit 0 soit 5)
+  - donc if(renvoi==0) return ancien, else return renvoi
+    donc if(renvoi) return renvoi, else return ancien
+    donc return(renvoi || ancien) ?
