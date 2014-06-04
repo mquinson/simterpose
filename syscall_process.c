@@ -814,9 +814,9 @@ int process_handle_mediate(process_descriptor_t * proc)
 {
   XBT_DEBUG("PROCESS HANDLE MEDIATE");
   int state = proc->state;
-  xbt_assert(proc->in_syscall); //FIXME: simplify
+  xbt_assert(proc->in_syscall);
 
-  if ((state & PROC_RECVFROM) && (proc->in_syscall)) {
+  if (state & PROC_RECVFROM) {
     XBT_DEBUG("mediate recvfrom_in");
     if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
 #ifndef address_translation
@@ -844,7 +844,7 @@ int process_handle_mediate(process_descriptor_t * proc)
     }
   }
 
-  else if ((state & PROC_READ) && (proc->in_syscall)) {
+  else if (state & PROC_READ) {
     if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
 #ifndef address_translation
       pid_t pid = proc->pid;
@@ -871,7 +871,7 @@ int process_handle_mediate(process_descriptor_t * proc)
     }
   }
 
-  else if ((state & PROC_RECVMSG) && (proc->in_syscall)) {
+  else if (state & PROC_RECVMSG) {
 
     if (process_recv_in_call(proc, proc->sysarg.recvmsg.sockfd)) {
 #ifndef address_translation
