@@ -61,7 +61,6 @@ struct process_descriptor {
 
   unsigned int scheduled:1;     // in sched_list
   unsigned int on_mediation:1;  // in mediate_list
-  unsigned int in_idle_list:1;
 
   int mediate_state;
   unsigned int in_timeout:2;
