@@ -87,7 +87,7 @@ static int simterpose_process_runner(int argc, char *argv[]) {
 		xbt_dynar_t cmdline_dynar = xbt_dynar_new(sizeof(char*), NULL);
 		int i;
 		for(i=0; i< argc; i++)
-			xbt_dynar_push(cmdline_dynar, argv[i]);
+			xbt_dynar_push(cmdline_dynar, &argv[i]);
 		char *cmdline_str = xbt_str_join(cmdline_dynar, " ");
 
 		XBT_INFO("Process %d is starting child: %s", getpid(), cmdline_str);
