@@ -9,7 +9,7 @@ CC=gcc
 
 LDFLAGS= -L/opt/simgrid/lib/ -lsimgrid -lm
 
-all : simterpose applications/client applications/server
+all : simterpose simterpose_msg applications/client applications/server
 
 simterpose: $(OBJS)
 	$(CC) $^ -o $@ $(LDFLAGS)
@@ -43,5 +43,11 @@ applications/server: applications/server.c
 clean:
 	rm -rf simterpose *.o
 	make -C applications clean
+	
+#################################################
+simterpose_msg: simterpose_msg.o
+	$(CC) $^ -o $@ $(LDFLAGS)
+	
+
 
 
