@@ -89,13 +89,14 @@ static int simterpose_process_runner(int argc, char *argv[]) {
 		for(i=0; i< argc; i++)
 			xbt_dynar_push(cmdline_dynar, &argv[i]);
 		char *cmdline_str = xbt_str_join(cmdline_dynar, " ");
+	    char **cmdline_array = (char **) xbt_dynar_to_array(cmdline_dynar);
 
 		XBT_INFO("Process %d is starting child: %s", getpid(), cmdline_str);
 
-		execv(argv[0], argv); // If successful, the execution flow does not go any further here
+		execv(cmdline_array[0], cmdline_array); // If successful, the execution flow does not go any further here
 
-		fprintf(stderr, "Error while starting %s: %s (full cmdline: %s)\n",
-				argv[0], strerror(errno), cmdline_str);
+		fprintf(stderr, "Error while starting %s: %s (full cmdline: %s)",
+				cmdline_array[0], strerror(errno), cmdline_str);
 		exit(1);
 
 	}
@@ -113,14 +114,17 @@ static int simterpose_process_runner(int argc, char *argv[]) {
 		exit(1);
 	}
 
+	double clock = MSG_get_clock();
 	// Main loop where we track our external process and do the simcall that represent its syscalls
 	while (1) {
 		ptrace_resume_process(tracked_pid);
 		if (waitpid(tracked_pid, &status, 0) < 0)
 			xbt_die("[%d] Error while stepping the tracked process: %s (%d)\n", tracked_pid, strerror(errno), errno);
 
-
-
+		if(MSG_get_clock()==clock){
+			MSG_process_sleep(0.1);
+			clock = MSG_get_clock();
+		}
 	}
 	return 0;
 }
