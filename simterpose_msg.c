@@ -12,17 +12,12 @@
 
 #include <msg/msg.h>
 #include <xbt.h>
+#include "ptrace_utils_msg.h"
+#include "syscall_process_msg.h"
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "High-level simterpose category");
 
 static int simterpose_process_runner(int argc, char *argv[]);
-
-/** @brief restart the tracked process until its next syscall */
-static void ptrace_resume_process(const pid_t pid)
-{
-  if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL) == -1)
-    xbt_die("[%d] Error while resuming until next syscall: %s\n", pid, strerror(errno));
-}
 
 static void usage(char *progName, int retcode)
 {
@@ -98,7 +93,6 @@ static int simterpose_process_runner(int argc, char *argv[]) {
 		fprintf(stderr, "Error while starting %s: %s (full cmdline: %s)",
 				cmdline_array[0], strerror(errno), cmdline_str);
 		exit(1);
-
 	}
 
 	// We are still in simterpose, so we are the thread that is the representative of the external process
@@ -117,6 +111,8 @@ static int simterpose_process_runner(int argc, char *argv[]) {
 	double clock = MSG_get_clock();
 	// Main loop where we track our external process and do the simcall that represent its syscalls
 	while (1) {
+		process_handle_msg(tracked_pid);
+
 		ptrace_resume_process(tracked_pid);
 		if (waitpid(tracked_pid, &status, 0) < 0)
 			xbt_die("[%d] Error while stepping the tracked process: %s (%d)\n", tracked_pid, strerror(errno), errno);

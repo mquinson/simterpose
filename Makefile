@@ -41,13 +41,15 @@ applications/server: applications/server.c
 
 
 clean:
-	rm -rf simterpose *.o
+	rm -rf simterpose simterpose_msg *.o
 	make -C applications clean
 	
 #################################################
-simterpose_msg: simterpose_msg.o
+simterpose_msg: args_trace_msg.o print_syscall_msg.o ptrace_utils_msg.o simterpose_msg.o syscall_process_msg.o
 	$(CC) $^ -o $@ $(LDFLAGS)
 	
-
-
-
+simterpose_msg.o: simterpose_msg.c ptrace_utils_msg.h 
+ptrace_utils_msg.o: ptrace_utils_msg.c ptrace_utils_msg.h sysdep.h
+syscall_process_msg.o: syscall_process_msg.c syscall_process_msg.h ptrace_utils_msg.h print_syscall_msg.h
+args_trace_msg.o: args_trace_msg.c args_trace_msg.h ptrace_utils_msg.h sysdep.h syscall_data_msg.h
+print_syscall_msg.o: print_syscall_msg.c print_syscall_msg.h syscall_data_msg.h
