@@ -262,7 +262,7 @@ int process_handle_active(process_descriptor_t * proc)
   int status;
   pid_t pid = proc->pid;
   int proc_state = proc->state;
-  xbt_assert(!(proc->mediate_state)); // TODO: vérifier. c'est vrai sauf si on vient de handle_mediate et que la socket a été fermée
+  xbt_assert(!(proc->mediate_state));   // TODO: vérifier. c'est vrai sauf si on vient de handle_mediate et que la socket a été fermée
 
   if (proc_state & PROC_SELECT) {
     //if the select match changment we have to run the child
@@ -837,7 +837,7 @@ int process_handle_mediate(process_descriptor_t * proc)
         if (strace_option)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0; // TODO vérifier pourquoi on passe pas mediate_state à zéro, comment on gère le cas de la socket fermée dans active?
+        proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro, comment on gère le cas de la socket fermée dans active?
         return process_handle_active(proc);
       }
 #else
@@ -864,7 +864,7 @@ int process_handle_mediate(process_descriptor_t * proc)
         if (strace_option)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0; // TODO vérifier pourquoi on passe pas mediate_state à zéro
+        proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro
         return process_handle_active(proc);
       }
 #else
@@ -892,7 +892,7 @@ int process_handle_mediate(process_descriptor_t * proc)
         if (strace_option)
           print_recvfrom_syscall(pid, &(proc->sysarg));
         ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;// TODO vérifier pourquoi on passe pas mediate_state à zéro
+        proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro
         return process_handle_active(proc);
       }
 #else

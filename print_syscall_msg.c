@@ -492,6 +492,7 @@ void print_send_syscall(pid_t pid, syscall_arg_u * sysarg)
 
   fprintf(stderr, ") = %d\n", arg->ret);
 }
+
 /*
 void print_sendto_syscall(pid_t pid, syscall_arg_u * sysarg)
 {

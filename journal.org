@@ -573,3 +573,20 @@ j'ai gardé les fonctions qui géraient le clone, mais commentées
     - s'il est à true on renvoie PROCESS_ON_COMPUTATION
     - si false on renvoie le state
   - j'ai nettoyé les states qui ne servaient à rien
+
+* <2014-06-05 jeu.>
+- lors d'un Ctrl-C on détache les processus et on libère tout
+
+* <2014-06-10 mar.>
+Je pars du squelette MSG:
+- j'ai modifié le Makefile et ajouté un launcher pour la version MSG (run_msg.sh)
+- j'ai résolu les warnings et autres problemes de compilation (msec_per_flop n'était pas utilisé, etc..)
+- je vérifie dans le while que l'horloge avance, sinon on sleep
+- dans le runner le client ne se lance pas si on execute directement argv (execv renvoie "Bad address")
+donc j'ai rajouté une variable
+- l'interception des syscall, même si on ne les modifie pas, fait qu'on renvoie nimporte quoi, donc la
+connexion ne se fait pas.
+- j'ai commencé à rajouter de quoi récupérer les arguments et printer les syscall
+Pour l'instant le handle ne fait que printer (et encore, pas tous)
+** TODO ajouter tous les trucs de sockets/communication
+** TODO ranger les descripteurs dans des MSG_process_set_data

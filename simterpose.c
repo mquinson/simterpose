@@ -84,28 +84,28 @@ static void move_mediate_to_sched()
 /* A little handler for the Ctrl-C */
 static void sigint_handler(int sig)
 {
-	XBT_ERROR("Interruption request by user. Current time of simulation %lf", SD_get_clock());
-	XBT_ERROR("Detaching all processes ...");
-	move_mediate_to_sched();
-	while (FES_contains_events()) {
-		int temp_pid = FES_pop_next_pid();
-		add_to_sched_list(temp_pid);
-	}
-    while (!xbt_dynar_is_empty(sched_list)) {
-      process_descriptor_t *proc;
-      xbt_dynar_shift(sched_list, &proc);
-      ptrace_detach_process(proc->pid);
-      process_die(proc->pid);
-    }
+  XBT_ERROR("Interruption request by user. Current time of simulation %lf", SD_get_clock());
+  XBT_ERROR("Detaching all processes ...");
+  move_mediate_to_sched();
+  while (FES_contains_events()) {
+    int temp_pid = FES_pop_next_pid();
+    add_to_sched_list(temp_pid);
+  }
+  while (!xbt_dynar_is_empty(sched_list)) {
+    process_descriptor_t *proc;
+    xbt_dynar_shift(sched_list, &proc);
+    ptrace_detach_process(proc->pid);
+    process_die(proc->pid);
+  }
 
-	XBT_ERROR("Closing everything ...");
-	xbt_dynar_free(&sched_list);
-    xbt_dynar_free(&mediate_list);
-    comm_exit();
-    socket_exit();
-    cputimer_exit(global_timer);
-    simterpose_globals_exit();
-    SD_exit();
+  XBT_ERROR("Closing everything ...");
+  xbt_dynar_free(&sched_list);
+  xbt_dynar_free(&mediate_list);
+  comm_exit();
+  socket_exit();
+  cputimer_exit(global_timer);
+  simterpose_globals_exit();
+  SD_exit();
 
   xbt_die("Done");
 }
