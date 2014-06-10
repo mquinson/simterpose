@@ -6,22 +6,34 @@
  * under the terms of the license (GNU LGPL) which comes with this package. */
 
 #include <sys/ptrace.h>
+#include <wait.h>
 #include <errno.h>
 #include <unistd.h>
 
 #include <msg/msg.h>
 #include <xbt.h>
 
-#include "xbt_stuff.h"
-
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "High-level simterpose category");
 
 static int simterpose_process_runner(int argc, char *argv[]);
 
-int main(int argc, char *argv[]) {
-	float msec_per_flop = 0;
-	int flop_option = 0;
+/** @brief restart the tracked process until its next syscall */
+static void ptrace_resume_process(const pid_t pid)
+{
+  if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL) == -1)
+    xbt_die("[%d] Error while resuming until next syscall: %s\n", pid, strerror(errno));
+}
 
+static void usage(char *progName, int retcode)
+{
+  printf("usage : %s [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
+  exit(retcode);
+}
+
+int main(int argc, char *argv[]) {
+	//float msec_per_flop = 0; // variable not used
+	//int flop_option = 0;
+	xbt_log_control_set("simterpose.:debug");
 	MSG_init(&argc, argv);
 
 	if (argc < 3) {
@@ -31,9 +43,10 @@ int main(int argc, char *argv[]) {
 		while ((c = getopt(argc, argv, "+p:")) != EOF) {
 			switch (c) {
 			case 'p':
-				flop_option = 1;
-				msec_per_flop = 1000000 / str_to_double(optarg);
-				XBT_INFO("Setting reference power to %s flop/s", optarg);
+				//flop_option = 1;
+				//msec_per_flop = 1000000 / str_to_double(optarg);
+				//XBT_INFO(Setting reference power to %s flop/s", optarg);
+				XBT_ERROR("désactivé");
 
 				break;
 
@@ -72,7 +85,9 @@ static int simterpose_process_runner(int argc, char *argv[]) {
 		}
 
 		xbt_dynar_t cmdline_dynar = xbt_dynar_new(sizeof(char*), NULL);
-		xbt_dynar_push_array(cmdline_dynar, argv, argc);
+		int i;
+		for(i=0; i< argc; i++)
+			xbt_dynar_push(cmdline_dynar, argv[i]);
 		char *cmdline_str = xbt_str_join(cmdline_dynar, " ");
 
 		XBT_INFO("Process %d is starting child: %s", getpid(), cmdline_str);
@@ -101,8 +116,8 @@ static int simterpose_process_runner(int argc, char *argv[]) {
 	// Main loop where we track our external process and do the simcall that represent its syscalls
 	while (1) {
 		ptrace_resume_process(tracked_pid);
-		if (waitpid(pid, &status, 0) < 0)
-			xbt_die("[%d] Error while stepping the tracked process: %s (%d)\n", pid, strerror(errno), errno);
+		if (waitpid(tracked_pid, &status, 0) < 0)
+			xbt_die("[%d] Error while stepping the tracked process: %s (%d)\n", tracked_pid, strerror(errno), errno);
 
 
 
