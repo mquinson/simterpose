@@ -588,5 +588,19 @@ donc j'ai rajouté une variable
 connexion ne se fait pas.
 - j'ai commencé à rajouter de quoi récupérer les arguments et printer les syscall
 Pour l'instant le handle ne fait que printer (et encore, pas tous)
-** TODO ajouter tous les trucs de sockets/communication
-** TODO ranger les descripteurs dans des MSG_process_set_data
+** DONE ajouter tous les trucs de sockets/communication
+** DONE ranger les descripteurs dans des MSG_process_set_data
+
+* <2014-06-11 mer.>
+- dans le get_args_bind_connect le booleen qui servait à savoir si on était en bind ou
+en connect n'était jamais utilisé, je l'ai supprimé
+- ajout des sockets, on print tous les syscall
+- ajout des descripteurs de process, qu'on met dans des MSG_process_set_data
+  - les MSG_process_set_data n'utilisent pas les mêmes pid que nous (numérotés 1 2 etc.)
+  - j'utilise du coup MSG_process_self()
+- j'utilise au maximum les process descriptors et pas les pid
+- je traite correctement le syscall bind
+- j'ai commencé à traiter le accept/connect et à gérer les tâches MSG
+  - j'essaie d'applatir les différents process_handle en un seul pour chaque syscall
+** TODO continuer la communication, MSG parallel task create..
+** TODO supprimer les restes de SD dans sockets_msg data_utils_msg ..
