@@ -1,11 +1,11 @@
-#include "print_syscall.h"
+#include "print_syscall_msg.h"
+#include "sockets_msg.h"
 #include "sysdep.h"
-#include "sockets.h"
-#include "simterpose.h"
+#include <xbt.h>
 
 #include <stdio.h>
 
-/*
+
 void print_accept_syscall(pid_t pid, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
@@ -79,7 +79,7 @@ void print_bind_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, "%d", arg->addrlen);
   fprintf(stderr, ") = %d\n", arg->ret);
 }
-*/
+
 
 
 void print_socket_syscall(pid_t pid, syscall_arg_u * sysarg)
@@ -493,7 +493,7 @@ void print_send_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
-/*
+
 void print_sendto_syscall(pid_t pid, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
@@ -600,7 +600,7 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, "%d", (int) arg->addrlen);
 
   fprintf(stderr, ") = %d\n", arg->ret);
-}*/
+}
 
 void print_recvmsg_syscall(pid_t pid, syscall_arg_u * sysarg)
 {

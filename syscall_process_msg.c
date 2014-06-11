@@ -4,6 +4,7 @@
 #include "args_trace_msg.h"
 #include "ptrace_utils_msg.h"
 #include "print_syscall_msg.h"
+#include "process_descriptor_msg.h"
 
 #include "xbt.h"
 #include "simdag/simdag.h"
@@ -17,21 +18,23 @@
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS_MSG, simterpose, "Syscall process log");
 
 
-void process_handle_msg(pid_t pid)
+void process_handle_msg(process_descriptor_t * proc)
 {
   reg_s arg;
-  syscall_arg_u sysarg;
+  syscall_arg_u *sysarg = &(proc->sysarg);
+  pid_t pid = proc->pid;
   ptrace_get_register(pid, &arg);
+  XBT_DEBUG("found syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
 
   switch (arg.reg_orig) {
   case SYS_read:
-    get_args_read(pid, &arg, &sysarg);
-    print_read_syscall(pid, &sysarg);
+    get_args_read(pid, &arg, sysarg);
+    print_read_syscall(pid, sysarg);
     break;
 
   case SYS_write:
-    get_args_write(pid, &arg, &sysarg);
-    print_write_syscall(pid, &sysarg);
+    get_args_write(pid, &arg, sysarg);
+    print_write_syscall(pid, sysarg);
     break;
 
     /* case SYS_open:
@@ -43,61 +46,65 @@ void process_handle_msg(pid_t pid)
     // ignore SYS_stat, SYS_fstat, SYS_lstat
 
   case SYS_poll:
-    get_args_poll(pid, &arg, &sysarg);
-    print_poll_syscall(pid, &sysarg);
+    get_args_poll(pid, &arg, sysarg);
+    print_poll_syscall(pid, sysarg);
     break;
 
     // ignore SYS_lseek, SYS_mmap, SYS_mprotect, SYS_munmap, SYS_rt_sigaction, SYS_rt_sigprocmask, SYS_rt_sigreturn,
     // SYS_ioctl, SYS_pread64, SYS_pwrite64 , SYS_readv, SYS_writev, SYS_access, SYS_pipe
 
   case SYS_select:
-    get_args_select(pid, &arg, &sysarg);
-    print_select_syscall(pid, &sysarg);
+    get_args_select(pid, &arg, sysarg);
+    print_select_syscall(pid, sysarg);
     break;
 
     // ignore SYS_sched_yield, SYS_mremap, SYS_msync, SYS_mincore, SYS_madvise, SYS_shmget, SYS_shmat, SYS_shmctl
     // SYS_dup, SYS_dup2, SYS_pause, SYS_nanosleep, SYS_getitimer, SYS_alarm, SYS_setitimer, SYS_getpid, SYS_sendfile
 
     /* case SYS_socket:
-       break;
+       break;*/
 
        case SYS_connect:
-       get_args_bind_connect(pid, &arg, &sysarg);
-       print_connect_syscall(pid, &sysarg);
+    	   get_args_bind_connect(pid, &arg, sysarg);
+       	   print_connect_syscall(pid, sysarg);
        break;
 
        case SYS_accept:
-       get_args_accept(pid, &arg, &sysarg);
-       print_accept_syscall(pid, &sysarg);
+    	get_args_accept(pid, &arg, sysarg);
+    	print_accept_syscall(pid, sysarg);
        break;
 
        case SYS_sendto:
+    	get_args_sendto(pid, &arg, sysarg);
+    	print_sendto_syscall(pid, sysarg);
        break;
 
        case SYS_recvfrom:
-       break; */
+       	get_args_recvfrom(pid, &arg, sysarg);
+       	print_recvfrom_syscall(pid, sysarg);
+       break;
 
   case SYS_sendmsg:
-    get_args_sendmsg(pid, &arg, &sysarg);
-    print_sendmsg_syscall(pid, &sysarg);
+    get_args_sendmsg(pid, &arg, sysarg);
+    print_sendmsg_syscall(pid, sysarg);
     break;
 
   case SYS_recvmsg:
-    get_args_recvmsg(pid, &arg, &sysarg);
-    print_recvmsg_syscall(pid, &sysarg);
+    get_args_recvmsg(pid, &arg, sysarg);
+    print_recvmsg_syscall(pid, sysarg);
     break;
 
     /*  case SYS_shutdown:
-       break;
+       break;*/
 
        case SYS_bind:
-       get_args_bind_connect(pid, &arg, &sysarg);
-       print_bind_syscall(pid, &sysarg);
-       break; */
+       get_args_bind_connect(pid, &arg, sysarg);
+       print_bind_syscall(pid, sysarg);
+       break;
 
   case SYS_listen:
-    get_args_listen(pid, &arg, &sysarg);
-    print_listen_syscall(pid, &sysarg);
+    get_args_listen(pid, &arg, sysarg);
+    print_listen_syscall(pid, sysarg);
     break;
 
     // ignore SYS_getsockname
@@ -108,13 +115,13 @@ void process_handle_msg(pid_t pid)
     // ignore SYS_socketpair
 
   case SYS_setsockopt:
-    get_args_setsockopt(pid, &arg, &sysarg);
-    print_setsockopt_syscall(pid, &sysarg);
+    get_args_setsockopt(pid, &arg, sysarg);
+    print_setsockopt_syscall(pid, sysarg);
     break;
 
   case SYS_getsockopt:
-    get_args_getsockopt(pid, &arg, &sysarg);
-    print_getsockopt_syscall(pid, &sysarg);
+    get_args_getsockopt(pid, &arg, sysarg);
+    print_getsockopt_syscall(pid, sysarg);
     break;
 
     // ignore SYS_clone, SYS_fork, SYS_vfork, SYS_execve
@@ -125,8 +132,8 @@ void process_handle_msg(pid_t pid)
     // ignore SYS_wait4, SYS_kill, SYS_uname, SYS_semget, SYS_semop, SYS_semctl, SYS_shmdt, SYS_msgget, SYS_msgsnd, SYS_msgrcv, SYS_msgctl
 
   case SYS_fcntl:
-    get_args_fcntl(pid, &arg, &sysarg);
-    print_fcntl_syscall(pid, &sysarg);
+    get_args_fcntl(pid, &arg, sysarg);
+    print_fcntl_syscall(pid, sysarg);
     break;
 
     // ignore SYS_flock, SYS_fsync, SYS_fdatasync, SYS_truncate, SYS_ftruncate, SYS_getdents
@@ -184,7 +191,7 @@ void process_handle_msg(pid_t pid)
     // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
   default:
-    XBT_DEBUG("Intercepted syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+    XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
     break;
   }
 }

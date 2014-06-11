@@ -7,9 +7,9 @@
 
 extern int nb_procs;
 
-/*void get_args_bind_connect(pid_t child, int syscall, reg_s * reg, syscall_arg_u * arg);
+void get_args_bind_connect(pid_t child, reg_s * reg, syscall_arg_u * arg);
 
-void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * arg);*/
+void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * arg);
 
 void get_args_listen(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
 
@@ -19,9 +19,9 @@ void get_args_setsockopt(pid_t pid, reg_s * reg, syscall_arg_u * sysarg);
 
 void get_args_getsockopt(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
 
-/*void get_args_sendto(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_sendto(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_recvfrom(pid_t child, reg_s * reg, syscall_arg_u * sysarg);*/
+void get_args_recvfrom(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
 
 void get_args_recvmsg(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
 

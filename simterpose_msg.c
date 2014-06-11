@@ -14,6 +14,7 @@
 #include <xbt.h>
 #include "ptrace_utils_msg.h"
 #include "syscall_process_msg.h"
+#include "process_descriptor_msg.h"
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "High-level simterpose category");
 
@@ -90,6 +91,8 @@ static int simterpose_process_runner(int argc, char *argv[])
 
     XBT_INFO("Process %d is starting child: %s", getpid(), cmdline_str);
 
+    process_set_descriptor(process_descriptor_new(MSG_process_get_name(MSG_process_self()), getpid()));
+
     execv(cmdline_array[0], cmdline_array);     // If successful, the execution flow does not go any further here
 
     fprintf(stderr, "Error while starting %s: %s (full cmdline: %s)", cmdline_array[0], strerror(errno), cmdline_str);
@@ -99,6 +102,7 @@ static int simterpose_process_runner(int argc, char *argv[])
 
   // Wait for the traceme to apply (ie, for the child to start)
   waitpid(tracked_pid, &status, 0);
+  process_set_descriptor(process_descriptor_new(MSG_process_get_name(MSG_process_self()), tracked_pid));
 
   // Trace the child and all upcoming granchilds
   if (ptrace(PTRACE_SETOPTIONS, tracked_pid, NULL,
@@ -109,9 +113,12 @@ static int simterpose_process_runner(int argc, char *argv[])
   }
 
   double clock = MSG_get_clock();
+  process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
+
   // Main loop where we track our external process and do the simcall that represent its syscalls
   while (1) {
-    process_handle_msg(tracked_pid);
+
+	process_handle_msg(proc);
 
     ptrace_resume_process(tracked_pid);
     if (waitpid(tracked_pid, &status, 0) < 0)
@@ -121,6 +128,7 @@ static int simterpose_process_runner(int argc, char *argv[])
       MSG_process_sleep(0.1);
       clock = MSG_get_clock();
     }
+    break;
   }
   return 0;
 }

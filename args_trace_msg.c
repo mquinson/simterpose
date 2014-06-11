@@ -1,4 +1,5 @@
 #include "args_trace_msg.h"
+#include "sockets_msg.h"
 #include "sysdep.h"
 #include <sys/uio.h>
 #include "xbt/log.h"
@@ -6,49 +7,49 @@
 #define address_translation
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
-/*
-void get_args_bind_connect(pid_t child, int syscall, reg_s * reg, syscall_arg_u * sysarg)
+
+void get_args_bind_connect(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
 
   arg->ret = (int) reg->ret;
-                                    if (arg->ret == -EINPROGRESS)*//* EINPROGRESS        115      Operation now in progress */
-   /* arg->ret = 0;
+  if (arg->ret == -EINPROGRESS) /* EINPROGRESS        115      Operation now in progress */
+    arg->ret = 0;
 
-      arg->sockfd = (int) reg->arg1;
-      int domain = get_domain_socket(child, arg->sockfd);
-      arg->addrlen = (socklen_t) reg->arg3;
-      const char *sysname = "bind ou connect";
-      if (domain == 2)              // PF_INET
-      ptrace_cpy(child, &arg->sai, (void *) reg->arg2, sizeof(struct sockaddr_in), sysname);
-      if (domain == 1)              // PF_UNIX
-      ptrace_cpy(child, &arg->sau, (void *) reg->arg2, sizeof(struct sockaddr_in), sysname);
-      if (domain == 16)             // PF_NETLINK
-      ptrace_cpy(child, &arg->sau, (void *) reg->arg2, sizeof(struct sockaddr_in), sysname);
-      }
+  arg->sockfd = (int) reg->arg1;
+  int domain = get_domain_socket(child, arg->sockfd);
+  arg->addrlen = (socklen_t) reg->arg3;
+  const char *sysname = "bind ou connect";
+  if (domain == 2)              // PF_INET
+    ptrace_cpy(child, &arg->sai, (void *) reg->arg2, sizeof(struct sockaddr_in), sysname);
+  if (domain == 1)              // PF_UNIX
+    ptrace_cpy(child, &arg->sau, (void *) reg->arg2, sizeof(struct sockaddr_in), sysname);
+  if (domain == 16)             // PF_NETLINK
+    ptrace_cpy(child, &arg->sau, (void *) reg->arg2, sizeof(struct sockaddr_in), sysname);
+}
 
 
-      void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
-      {
-      accept_arg_t arg = &(sysarg->accept);
-      arg->ret = reg->ret;
-      arg->sockfd = (int) reg->arg1;
-      XBT_DEBUG("Socket for accepting %lu", reg->arg1);
+void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
+{
+  accept_arg_t arg = &(sysarg->accept);
+  arg->ret = reg->ret;
+  arg->sockfd = (int) reg->arg1;
+  XBT_DEBUG("Socket for accepting %lu", reg->arg1);
 
-      int domain = get_domain_socket(child, arg->sockfd);
-      if (domain == 2)              // PF_INET
-      ptrace_cpy(child, &arg->sai, (void *) reg->arg2, sizeof(struct sockaddr_in), "accept");
-      if (domain == 1)              // PF_UINX
-      ptrace_cpy(child, &arg->sau, (void *) reg->arg2, sizeof(struct sockaddr_in), "accept");
-      if (domain == 16)             // PF_NETLINK
-      ptrace_cpy(child, &arg->snl, (void *) reg->arg2, sizeof(struct sockaddr_in), "accept");
+  int domain = get_domain_socket(child, arg->sockfd);
+  if (domain == 2)              // PF_INET
+    ptrace_cpy(child, &arg->sai, (void *) reg->arg2, sizeof(struct sockaddr_in), "accept");
+  if (domain == 1)              // PF_UINX
+    ptrace_cpy(child, &arg->sau, (void *) reg->arg2, sizeof(struct sockaddr_in), "accept");
+  if (domain == 16)             // PF_NETLINK
+    ptrace_cpy(child, &arg->snl, (void *) reg->arg2, sizeof(struct sockaddr_in), "accept");
 
-      ptrace_cpy(child, &arg->addrlen, (void *) reg->arg3, sizeof(socklen_t), "accept");
+  ptrace_cpy(child, &arg->addrlen, (void *) reg->arg3, sizeof(socklen_t), "accept");
 
-      arg->addr_dest = (void *) reg->arg2;
-      arg->len_dest = (void *) reg->arg3;
-      }
-    */
+  arg->addr_dest = (void *) reg->arg2;
+  arg->len_dest = (void *) reg->arg3;
+}
+
 void get_args_listen(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
@@ -122,7 +123,7 @@ void get_args_getsockopt(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
   ptrace_cpy(child, &arg->optlen, (void *) reg->arg5, sizeof(socklen_t), "getsockopt");
 }
 
-/*
+
 void get_args_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
@@ -186,7 +187,7 @@ void get_args_recvfrom(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
   }
   arg->addrlen = len;
 }
-*/
+
 
 void get_args_recvmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -348,7 +349,7 @@ void sys_build_poll(pid_t pid, syscall_arg_u * sysarg, int match)
   }
 }
 
-/*
+/* TODO
 void sys_translate_accept(pid_t pid, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
