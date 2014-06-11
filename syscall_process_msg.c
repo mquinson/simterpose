@@ -2,12 +2,14 @@
 #include "syscall_data_msg.h"
 #include "sysdep.h"
 #include "args_trace_msg.h"
+#include "data_utils_msg.h"
 #include "ptrace_utils_msg.h"
 #include "print_syscall_msg.h"
 #include "process_descriptor_msg.h"
+#include "sockets_msg.h"
+#include "simterpose_msg.h"
 
 #include "xbt.h"
-#include "simdag/simdag.h"
 #include "xbt/log.h"
 
 #include <time.h>
@@ -17,6 +19,74 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS_MSG, simterpose, "Syscall process log");
 
+static int process_bind_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  bind_arg_t arg = &(sysarg->bind);
+  pid_t pid = proc->pid;
+  if (socket_registered(proc, arg->sockfd)) {
+    if (socket_network(proc, arg->sockfd)) {
+
+      if (!is_port_in_use(proc->host, ntohs(arg->sai.sin_port))) {
+        XBT_DEBUG("Port %d is free", ntohs(arg->sai.sin_port));
+        register_port(proc->host, ntohs(arg->sai.sin_port));
+
+        struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+        int device = 0;
+        if (arg->sai.sin_addr.s_addr == INADDR_ANY)
+          device = (PORT_LOCAL | PORT_REMOTE);
+        else if (arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
+          device = PORT_LOCAL;
+        else
+          device = PORT_REMOTE;
+
+        set_port_on_binding(proc->host, ntohs(arg->sai.sin_port), is, device);
+
+        is->binded = 1;
+
+        set_localaddr_port_socket(proc, arg->sockfd, inet_ntoa(arg->sai.sin_addr), ntohs(arg->sai.sin_port));
+        arg->ret = 0;
+#ifdef address_translation
+        int port = ptrace_find_free_binding_port(pid);
+        XBT_DEBUG("Free port found %d", port);
+        proc->in_syscall = 0;
+        set_real_port(proc->host, ntohs(arg->sai.sin_port), port);
+        add_new_translation(port, ntohs(arg->sai.sin_port), get_ip_of_host(proc->host));
+        return 0;
+#endif
+      } else {
+        XBT_DEBUG("Port %d isn't free", ntohs(arg->sai.sin_port));
+        arg->ret = -EADDRINUSE; /* EADDRINUSE 98 Address already in use */
+        ptrace_neutralize_syscall(pid);
+        bind_arg_t arg = &(sysarg->bind);
+        ptrace_restore_syscall(pid, SYS_bind, arg->ret);
+        proc->in_syscall = 0;
+        return 0;
+      }
+#ifndef address_translation
+      ptrace_neutralize_syscall(pid);
+      bind_arg_t arg = &(sysarg->bind);
+      ptrace_restore_syscall(pid, SYS_bind, arg->ret);
+      proc->in_syscall = 0;
+#endif
+    }
+  }
+  return 0;
+}
+
+void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 1;
+  get_args_bind_connect(proc, reg, sysarg);
+  process_bind_call(proc, sysarg);
+  print_bind_syscall(proc, sysarg);
+}
+
+void syscall_bind_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 0;
+  get_args_bind_connect(proc, reg, sysarg);
+  print_bind_syscall(proc, sysarg);
+}
 
 void process_handle_msg(process_descriptor_t * proc)
 {
@@ -64,25 +134,25 @@ void process_handle_msg(process_descriptor_t * proc)
     /* case SYS_socket:
        break;*/
 
-       case SYS_connect:
-    	   get_args_bind_connect(proc, &arg, sysarg);
-       	   print_connect_syscall(proc, sysarg);
-       break;
+   case SYS_connect:
+	   get_args_bind_connect(proc, &arg, sysarg);
+	   print_connect_syscall(proc, sysarg);
+   break;
 
-       case SYS_accept:
-    	get_args_accept(proc, &arg, sysarg);
-    	print_accept_syscall(proc, sysarg);
-       break;
+   case SYS_accept:
+	get_args_accept(proc, &arg, sysarg);
+	print_accept_syscall(proc, sysarg);
+   break;
 
-       case SYS_sendto:
-    	get_args_sendto(proc, &arg, sysarg);
-    	print_sendto_syscall(proc, sysarg);
-       break;
+   case SYS_sendto:
+	get_args_sendto(proc, &arg, sysarg);
+	print_sendto_syscall(proc, sysarg);
+   break;
 
-       case SYS_recvfrom:
-       	get_args_recvfrom(proc, &arg, sysarg);
-       	print_recvfrom_syscall(proc, sysarg);
-       break;
+   case SYS_recvfrom:
+	get_args_recvfrom(proc, &arg, sysarg);
+	print_recvfrom_syscall(proc, sysarg);
+   break;
 
   case SYS_sendmsg:
     get_args_sendmsg(proc, &arg, sysarg);
@@ -97,12 +167,12 @@ void process_handle_msg(process_descriptor_t * proc)
     /*  case SYS_shutdown:
        break;*/
 
-       case SYS_bind:
-    	 //  proc->in_syscall = 1;
-           get_args_bind_connect(proc, &arg, sysarg);
-    	  // process_bind_call(proc, sysarg);
-           print_bind_syscall(proc, sysarg);
-       break;
+   case SYS_bind:
+	  if (!(proc->in_syscall))
+		syscall_bind_pre(&arg, sysarg, proc);
+	  else
+		syscall_bind_post(&arg, sysarg, proc);
+   break;
 
   case SYS_listen:
     get_args_listen(proc, &arg, sysarg);

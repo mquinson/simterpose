@@ -12,13 +12,12 @@
 
 #include <msg/msg.h>
 #include <xbt.h>
+#include "simterpose_msg.h"
 #include "ptrace_utils_msg.h"
 #include "syscall_process_msg.h"
 #include "process_descriptor_msg.h"
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "High-level simterpose category");
-
-static int simterpose_process_runner(int argc, char *argv[]);
 
 static void usage(char *progName, int retcode)
 {
