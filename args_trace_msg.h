@@ -4,42 +4,43 @@
 
 #include "syscall_data_msg.h"
 #include "ptrace_utils_msg.h"
+#include "process_descriptor_msg.h"
 
 extern int nb_procs;
 
-void get_args_bind_connect(pid_t child, reg_s * reg, syscall_arg_u * arg);
+void get_args_bind_connect(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * arg);
 
-void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * arg);
+void get_args_accept(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * arg);
 
-void get_args_listen(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_listen(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_select(pid_t child, reg_s * r, syscall_arg_u * sysarg);
+void get_args_select(process_descriptor_t *proc, reg_s * r, syscall_arg_u * sysarg);
 
-void get_args_setsockopt(pid_t pid, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_setsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_getsockopt(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_getsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_sendto(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_sendto(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_recvfrom(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_recvfrom(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_recvmsg(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_recvmsg(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_sendmsg(pid_t child, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_sendmsg(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_poll(pid_t child, reg_s * arg, syscall_arg_u * sysarg);
+void get_args_poll(process_descriptor_t *proc, reg_s * arg, syscall_arg_u * sysarg);
 
-void get_args_fcntl(pid_t pid, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_fcntl(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_read(pid_t pid, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_read(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_write(pid_t pid, reg_s * reg, syscall_arg_u * sysarg);
+void get_args_write(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void sys_build_select(pid_t pid, syscall_arg_u * sysarg, int match);
+void sys_build_select(process_descriptor_t *proc, syscall_arg_u * sysarg, int match);
 
-void sys_build_recvmsg(pid_t pid, syscall_arg_u * sysarg);
+void sys_build_recvmsg(process_descriptor_t *proc, syscall_arg_u * sysarg);
 
-void sys_build_poll(pid_t pid, syscall_arg_u * sysarg, int match);
+void sys_build_poll(process_descriptor_t *proc, syscall_arg_u * sysarg, int match);
 /*
 void sys_translate_accept(pid_t pid, syscall_arg_u * sysarg);
 

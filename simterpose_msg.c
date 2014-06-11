@@ -128,7 +128,6 @@ static int simterpose_process_runner(int argc, char *argv[])
       MSG_process_sleep(0.1);
       clock = MSG_get_clock();
     }
-    break;
   }
   return 0;
 }

@@ -8,7 +8,7 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 
-void get_args_bind_connect(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_bind_connect(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
 
@@ -17,7 +17,8 @@ void get_args_bind_connect(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
     arg->ret = 0;
 
   arg->sockfd = (int) reg->arg1;
-  int domain = get_domain_socket(child, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
+  pid_t child = proc->pid;
   arg->addrlen = (socklen_t) reg->arg3;
   const char *sysname = "bind ou connect";
   if (domain == 2)              // PF_INET
@@ -29,14 +30,15 @@ void get_args_bind_connect(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
 }
 
 
-void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_accept(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
   arg->ret = reg->ret;
   arg->sockfd = (int) reg->arg1;
   XBT_DEBUG("Socket for accepting %lu", reg->arg1);
 
-  int domain = get_domain_socket(child, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
+  pid_t child = proc->pid;
   if (domain == 2)              // PF_INET
     ptrace_cpy(child, &arg->sai, (void *) reg->arg2, sizeof(struct sockaddr_in), "accept");
   if (domain == 1)              // PF_UINX
@@ -50,7 +52,7 @@ void get_args_accept(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
   arg->len_dest = (void *) reg->arg3;
 }
 
-void get_args_listen(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_listen(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
 
@@ -59,9 +61,10 @@ void get_args_listen(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
   arg->ret = (int) reg->ret;
 }
 
-void get_args_select(pid_t child, reg_s * r, syscall_arg_u * sysarg)
+void get_args_select(process_descriptor_t *proc, reg_s * r, syscall_arg_u * sysarg)
 {
   select_arg_t arg = &(sysarg->select);
+  pid_t child = proc->pid;
 
   arg->fd_state = 0;
   arg->maxfd = (int) r->arg1;
@@ -94,7 +97,7 @@ void get_args_select(pid_t child, reg_s * r, syscall_arg_u * sysarg)
   arg->ret = (int) r->ret;
 }
 
-void get_args_setsockopt(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_setsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
   arg->ret = (int) reg->ret;
@@ -110,7 +113,7 @@ void get_args_setsockopt(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 #endif
 }
 
-void get_args_getsockopt(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_getsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
   arg->ret = (int) reg->ret;
@@ -120,13 +123,14 @@ void get_args_getsockopt(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
   arg->dest = (void *) reg->arg4;
   arg->dest_optlen = (void *) reg->arg5;
 
-  ptrace_cpy(child, &arg->optlen, (void *) reg->arg5, sizeof(socklen_t), "getsockopt");
+  ptrace_cpy(proc->pid, &arg->optlen, (void *) reg->arg5, sizeof(socklen_t), "getsockopt");
 }
 
 
-void get_args_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_sendto(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
+  pid_t pid = proc->pid;
 
   arg->ret = reg->ret;
 
@@ -134,7 +138,7 @@ void get_args_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
   arg->len = (int) reg->arg3;
   arg->flags = (int) reg->arg4;
 
-  int domain = get_domain_socket(pid, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
   if (reg->arg5 != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     arg->is_addr = 1;
     if (domain == 2)            // PF_INET
@@ -158,7 +162,7 @@ void get_args_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 }
 
 
-void get_args_recvfrom(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_recvfrom(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
 
@@ -167,7 +171,8 @@ void get_args_recvfrom(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
   arg->len = (int) reg->arg3;
   arg->flags = (int) reg->arg4;
 
-  int domain = get_domain_socket(child, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
+  pid_t child = proc->pid;
   if (reg->arg5 != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     arg->is_addr = 1;
     if (domain == 2)            // PF_INET
@@ -189,9 +194,10 @@ void get_args_recvfrom(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
 }
 
 
-void get_args_recvmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_recvmsg(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->recvmsg);
+  pid_t pid = proc->pid;
 
   arg->sockfd = (int) reg->arg1;
   arg->flags = (int) reg->arg3;
@@ -207,9 +213,10 @@ void get_args_recvmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 }
 
 
-void get_args_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_sendmsg(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   sendmsg_arg_t arg = &(sysarg->sendmsg);
+  pid_t pid = proc->pid;
 
   arg->sockfd = (int) reg->arg1;
   arg->flags = (int) reg->arg3;
@@ -231,9 +238,10 @@ void get_args_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 }
 
 
-void get_args_poll(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_poll(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   poll_arg_t arg = &(sysarg->poll);
+  pid_t child = proc->pid;
 
   arg->ret = reg->ret;
 
@@ -249,7 +257,7 @@ void get_args_poll(pid_t child, reg_s * reg, syscall_arg_u * sysarg)
     arg->fd_list = NULL;
 }
 
-void get_args_fcntl(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_fcntl(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
   arg->fd = (int) reg->arg1;
@@ -259,7 +267,7 @@ void get_args_fcntl(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
   arg->ret = (int) reg->ret;
 }
 
-void get_args_read(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_read(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg1;
@@ -270,7 +278,7 @@ void get_args_read(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
   arg->count = reg->arg3;
 }
 
-void get_args_write(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_write(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg1;
@@ -289,8 +297,9 @@ void get_args_write(pid_t pid, reg_s * reg, syscall_arg_u * sysarg)
 
 
 //FIXME make this function use unified union syscall_arg_u
-void sys_build_select(pid_t pid, syscall_arg_u * sysarg, int match)
+void sys_build_select(process_descriptor_t *proc, syscall_arg_u * sysarg, int match)
 {
+	pid_t pid = proc->pid;
   ptrace_restore_syscall(pid, SYS_select, match);
   reg_s r;
   ptrace_get_register(pid, &r);
@@ -308,8 +317,9 @@ void sys_build_select(pid_t pid, syscall_arg_u * sysarg, int match)
   }
 }
 
-void sys_build_recvmsg(pid_t pid, syscall_arg_u * sysarg)
+void sys_build_recvmsg(process_descriptor_t *proc, syscall_arg_u * sysarg)
 {
+	pid_t pid = proc->pid;
   recvmsg_arg_t arg = &(sysarg->recvmsg);
   ptrace_restore_syscall(pid, SYS_recvmsg, arg->ret);
 
@@ -335,8 +345,9 @@ void sys_build_recvmsg(pid_t pid, syscall_arg_u * sysarg)
 }
 
 
-void sys_build_poll(pid_t pid, syscall_arg_u * sysarg, int match)
+void sys_build_poll(process_descriptor_t *proc, syscall_arg_u * sysarg, int match)
 {
+	pid_t pid = proc->pid;
   ptrace_restore_syscall(pid, SYS_poll, match);
   reg_s r;
   ptrace_get_register(pid, &r);

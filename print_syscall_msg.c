@@ -6,11 +6,11 @@
 #include <stdio.h>
 
 
-void print_accept_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_accept_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
 
-  int domain = get_domain_socket(pid, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
   // fprintf(stderr,"[%d] accept(", pid);
   fprintf(stderr, "accept(");
 
@@ -32,11 +32,11 @@ void print_accept_syscall(pid_t pid, syscall_arg_u * sysarg)
 }
 
 
-void print_connect_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_connect_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
 
-  int domain = get_domain_socket(pid, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
 
   // fprintf(stderr,"[%d] connect(", pid);
   fprintf(stderr, "connect(");
@@ -57,10 +57,10 @@ void print_connect_syscall(pid_t pid, syscall_arg_u * sysarg)
 }
 
 
-void print_bind_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_bind_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   bind_arg_t arg = &(sysarg->bind);
-  int domain = get_domain_socket(pid, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
 
   // fprintf(stderr,"[%d] bind(", pid);
   fprintf(stderr, "bind(");
@@ -82,7 +82,7 @@ void print_bind_syscall(pid_t pid, syscall_arg_u * sysarg)
 
 
 
-void print_socket_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   socket_arg_t arg = &(sysarg->socket);
 
@@ -210,7 +210,7 @@ void print_socket_syscall(pid_t pid, syscall_arg_u * sysarg)
 }
 
 
-void print_getsockopt_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
   // fprintf(stderr,"[%d] getsockopt(", pid);
@@ -310,7 +310,7 @@ void print_getsockopt_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, "%d\n", (int) arg->ret);
 }
 
-void print_setsockopt_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->setsockopt);
   // fprintf(stderr,"[%d] setsockopt(", pid);
@@ -410,7 +410,7 @@ void print_setsockopt_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, "%d\n", (int) arg->ret);
 }
 
-void print_listen_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_listen_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
 
@@ -459,7 +459,7 @@ static void print_flags_recv(int flags)
 }
 
 
-void print_recv_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_recv_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   recv_arg_t arg = &(sysarg->recv);
   // fprintf(stderr,"[%d] recv(", pid);
@@ -476,7 +476,7 @@ void print_recv_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
-void print_send_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_send_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   recv_arg_t arg = &(sysarg->send);
   // fprintf(stderr,"[%d] send( ", pid);
@@ -494,10 +494,10 @@ void print_send_syscall(pid_t pid, syscall_arg_u * sysarg)
 }
 
 
-void print_sendto_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
-  int domain = get_domain_socket(pid, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
 
   // fprintf(stderr,"[%d] sendto(", pid);
   fprintf(stderr, "sendto(");
@@ -546,10 +546,10 @@ void print_sendto_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
-void print_recvfrom_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
-  int domain = get_domain_socket(pid, arg->sockfd);
+  int domain = get_domain_socket(proc, arg->sockfd);
 
   // fprintf(stderr,"[%d] recvfrom(", pid);
   fprintf(stderr, "recvfrom(");
@@ -602,7 +602,7 @@ void print_recvfrom_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
-void print_recvmsg_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_recvmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->sendmsg);
 
@@ -621,7 +621,7 @@ void print_recvmsg_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
-void print_sendmsg_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_sendmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->sendmsg);
 
@@ -713,7 +713,7 @@ static void disp_pollfd(struct pollfd *fds, int nfds)
 
 }
 
-void print_poll_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_poll_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   poll_arg_t arg = &(sysarg->poll);
 
@@ -739,7 +739,7 @@ static void disp_fd(fd_set * fd)
   fprintf(stderr, "]");
 }
 
-void print_select_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_select_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   select_arg_t arg = &(sysarg->select);
   // fprintf(stderr,"[%d] select(%d,", pid, arg->maxfd);
@@ -766,7 +766,7 @@ void print_select_syscall(pid_t pid, syscall_arg_u * sysarg)
 
 }
 
-void print_fcntl_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
   //  fprintf(stderr,"[%d] fcntl( %d, ", pid, arg->fd);
@@ -815,14 +815,14 @@ void print_fcntl_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, " , %d) = %d\n", arg->arg, arg->ret);
 }
 
-void print_read_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_read_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   //  fprintf(stderr,"[%d] read(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
   fprintf(stderr, "read(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
-void print_write_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   write_arg_t arg = &(sysarg->read);
   //  fprintf(stderr,"[%d] write(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
@@ -844,7 +844,7 @@ static void print_shutdown_option(int how)
   }
 }
 
-void print_shutdown_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_shutdown_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   shutdown_arg_t arg = &(sysarg->shutdown);
   //  fprintf(stderr,"[%d] shutdown (%d, ", pid, arg->fd);
@@ -854,7 +854,7 @@ void print_shutdown_syscall(pid_t pid, syscall_arg_u * sysarg)
 }
 
 
-void print_getpeername_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_getpeername_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   getpeername_arg_t arg = &(sysarg->getpeername);
   //  fprintf(stderr,"[%d] getpeername (%d, ", pid, arg->sockfd);
@@ -864,14 +864,14 @@ void print_getpeername_syscall(pid_t pid, syscall_arg_u * sysarg)
   fprintf(stderr, "%d ) = %d\n", arg->len, arg->ret);
 }
 
-void print_time_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_time_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   time_arg_t arg = &(sysarg->time);
   //fprintf(stderr,"[%d] time = %ld\n", pid, arg->ret);
   fprintf(stderr, "time = %ld\n", arg->ret);
 }
 
-void print_gettimeofday_syscall(pid_t pid, syscall_arg_u * sysarg)
+void print_gettimeofday_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   //gettimeofday_arg_t arg = &(sysarg->gettimeofday);
   //  fprintf(stderr,"[%d] gettimeofday, tv = %ld\n", pid, arg->tv);
