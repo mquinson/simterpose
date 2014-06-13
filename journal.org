@@ -602,7 +602,7 @@ en connect n'était jamais utilisé, je l'ai supprimé
 - je traite correctement le syscall bind
 - j'ai commencé à traiter le accept/connect et à gérer les tâches MSG
   - j'essaie d'applatir les différents process_handle en un seul pour chaque syscall
-** TODO continuer la communication, MSG parallel task create..
+** DONE continuer la communication, MSG parallel task create..
 ** DONE supprimer les restes de SD dans sockets_msg data_utils_msg ..
 
 * <2014-06-12 jeu.>
@@ -614,4 +614,24 @@ en connect n'était jamais utilisé, je l'ai supprimé
 - je pensais procéder par petits morceaux mais en fait tout est dépendant et on
   peut difficilement choisir de traiter certains syscall puisqu'ils nécessitent
   des initialisations préalables. (d'où l'absence de commits réguliers)
-** TODO créer les mailbox et les tasks de MSG
+** DONE créer les mailbox et les tasks de MSG
+* <2014-06-13 ven.>
+- dans le process_descriptor au lieu de mettre le nom du hôte j'avais mis le nom
+  du processus, ce qui empêchait de retrouver l'hôte par la suite.
+- dans tasks j'ai modifié les fonctions pour créer des tâches en MSG puis les 
+  exécuter/envoyer/recevoir . Les mailbox sont en fait les hôtes.
+- je traite le sys_listen
+- gestion du accept dans la version SD:
+  on fait appel à handle:
+  - Si in_syscall: accept pre appelle accept in (qui renvoie soit le pid qui attend soit 0)
+    - s'il retourne le pid 
+      - en FULL on a remis in_syscall à 0 et appelé out., on sort c'est terminé
+      - en address on a in_syscall à 1 donc -> accept post
+    - sinon, pas de pid personne n'attend: on a PROC_ACCEPT donc
+      - on fait appel à handle_active qui va donc faire accept_in :
+	- si 0 on PROC_ON_MEDIATION (ie on boucle sur active)
+	- si pid on ajoute à sched, on resume le process, waitpid et on appelle process handle
+  - Si à la sortie du syscall: accept post (que en address) -> on fait accept out
+  Il est simplifié avec une boucle dans la nouvelle version 
+- la gestion du accept pose probleme
+** TODO  trouver comment boucler correctement sur le accept en attendant le connect
