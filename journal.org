@@ -634,4 +634,14 @@ en connect n'était jamais utilisé, je l'ai supprimé
   - Si à la sortie du syscall: accept post (que en address) -> on fait accept out
   Il est simplifié avec une boucle dans la nouvelle version 
 - la gestion du accept pose probleme
-** TODO  trouver comment boucler correctement sur le accept en attendant le connect
+** TODO trouver comment boucler correctement sur le accept en attendant le connect
+   
+
+* <2014-06-16 lun.>
+- la connexion ne fonctionne pas, le accepte bloque
+- je reviens au format comme dans l'ancienne version avec un handle mediate, un handle active
+   et un handle. Du coup j'ai tout recassé
+- dans syscall_accept_pre, je déclarais le state dans la fonction au lieu
+    de le passer en paramètre, et du coup  *state = PROCESS_ON_MEDIATION ne passait pas
+- en fait tout dépend de où on met le waitpid. Je n'arrive pas à gérer les mediate state 
+  et du coup ça libère les syscall au mauvais moment
