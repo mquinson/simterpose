@@ -41,19 +41,19 @@ void sys_build_select(process_descriptor_t *proc, syscall_arg_u * sysarg, int ma
 void sys_build_recvmsg(process_descriptor_t *proc, syscall_arg_u * sysarg);
 
 void sys_build_poll(process_descriptor_t *proc, syscall_arg_u * sysarg, int match);
-/*
-void sys_translate_accept(pid_t pid, syscall_arg_u * sysarg);
 
-void sys_translate_connect_in(pid_t pid, syscall_arg_u * sysarg);
+void sys_translate_accept(process_descriptor_t *proc,  syscall_arg_u * sysarg);
 
-void sys_translate_connect_out(pid_t pid, syscall_arg_u * sysarg);
+void sys_translate_connect_in(process_descriptor_t *proc,  syscall_arg_u * sysarg);
 
-void sys_translate_sendto_in(pid_t pid, syscall_arg_u * sysarg);
+void sys_translate_connect_out(process_descriptor_t *proc,  syscall_arg_u * sysarg);
 
-void sys_translate_sendto_out(pid_t pid, syscall_arg_u * sysarg);
+void sys_translate_sendto_in(process_descriptor_t *proc,  syscall_arg_u * sysarg);
 
-void sys_translate_recvfrom_in(pid_t pid, syscall_arg_u * arg);
+void sys_translate_sendto_out(process_descriptor_t *proc,  syscall_arg_u * sysarg);
 
-void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u * sysarg);*/
+void sys_translate_recvfrom_in(process_descriptor_t *proc,  syscall_arg_u * arg);
+
+void sys_translate_recvfrom_out(process_descriptor_t *proc,  syscall_arg_u * sysarg);
 
 #endif
