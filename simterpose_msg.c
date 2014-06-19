@@ -135,7 +135,7 @@ static int simterpose_process_runner(int argc, char *argv[])
     exit(1);
   }
 
- // double clock = MSG_get_clock();
+  double clock = MSG_get_clock();
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
 
   // Main loop where we track our external process and do the simcall that represent its syscalls
@@ -144,30 +144,19 @@ static int simterpose_process_runner(int argc, char *argv[])
 	  	XBT_DEBUG("Starting treatment");
 	  	int proc_next_state = process_handle_active(proc);
 
-	  	double clock = MSG_get_clock();
-	  	while(proc_next_state == PROCESS_ON_MEDIATION){
-	  		if (proc->mediate_state)
-	  			proc_next_state = process_handle_mediate(proc);
-	  		else
-	  			proc_next_state = process_handle_active(proc);
+	  //	double clock = MSG_get_clock();
+	  	//while(proc_next_state == PROCESS_ON_MEDIATION){
+	  		//	if (proc->mediate_state) // TODO gérer les mediate
+	  		//	proc_next_state = process_handle_mediate(proc);
+	  		//else
+	  		//	proc_next_state = process_handle_active(proc);
 
 	  		if (MSG_get_clock() == clock) {
 	  		  MSG_process_sleep(0.1);
 	  		  clock = MSG_get_clock();
 	  		}
-	  	}
+	  	//}
 	  	XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
-
-
-  /*  ptrace_resume_process(tracked_pid);
-    if (waitpid(tracked_pid, &status, 0) < 0)
-      xbt_die("[%d] Error while stepping the tracked process: %s (%d)\n", tracked_pid, strerror(errno), errno);
-*/
-
-  /*  if (MSG_get_clock() == clock) {
-      MSG_process_sleep(0.1);
-      clock = MSG_get_clock();
-    }*/
   }
   return 0;
 }

@@ -1327,20 +1327,7 @@ int process_handle_active(process_descriptor_t * proc)
       process_reset_state(proc);
     } else
       return PROCESS_ON_MEDIATION;
-  } else */ if (proc_state & PROC_CONNECT) {
-    return PROCESS_ON_MEDIATION;
-  }
-#ifdef address_translation
-  else if (proc_state & PROC_CONNECT_DONE) {
-    waitpid(pid, &status, 0);
-    return process_handle_msg(proc, status);
-  }
-#endif
-  else if ((proc_state & PROC_ACCEPT) && (proc->in_syscall)) {
-    pid_t conn_pid = process_accept_in_call(proc, &proc->sysarg);
-    if (!conn_pid)
-      return PROCESS_ON_MEDIATION;
-  } else if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall))
+  } else */  if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall))
     process_recvfrom_out_call(proc);
 
   else if ((proc_state & PROC_READ) && !(proc->in_syscall))
