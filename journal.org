@@ -657,5 +657,34 @@ en connect n'était jamais utilisé, je l'ai supprimé
   (avant on avait une sched list pour l'ordonnancement et le réveil du mec en face)
 - Solution: créer des sémaphores simix et les mettre dans les metadata de la socket
   on met un "puis-je" "vas y" d'un côté, et un "vas-y" "puis-je" en face.
-** TODO faire un essai à part
+** DONE faire un essai à part
 (j'ai trouvé un exemple de sémaphores MSG qui fonctionne dans examples/msg/semaphores)
+
+* <2014-06-18 mer.>
+- j'ai fait des essais à part avec les sémaphores
+- pour la synchronisation du couple connect/accept on va mettre
+des sémaphores (msg, simix?) avec une capacité de 0 
+- j'ai ajouté un champ msg_sem_t au process descriptor pour que chaque
+processus ait sa sémaphore, et ajouté des sémaphores aux endroits clé
+- ça ne fonctionne pas encore
+
+* <2014-06-19 jeu.>
+- Concernant la position des des sémaphores:
+  - pour le connect il faudrait la mettre juste après le process_connect_in_call
+    à l'endroit où on bouclait avant sur un handle_active tant que l'accept ne nous
+    avait pas débloqué en modifiant l'état 
+    - on prend notre sémaphore (connect) puis on libère celle d'en face (accept)
+      on connaît le processus d'en face via le process_connect_in_all
+  - pour l'accept je pensais la mettre avant le process_accept_in_call: ça laisse le temps au connect
+    in de se faire, et comme ça accept_in renverra toujours un pid (sauf si la connexion 
+    a été refusée ...). 
+- probleme: trouver qui est le processus en face. Sachant que si connect n'est pas encore
+  arrivé, accept ne sait pas qui c'est. Donc accept doit d'abord bloquer
+- nouveau probleme: dès que le accept a dit ok il continue, et le connect peut pas faire son out
+  je réutilise une sémaphore, à voir ensuite si on peut simplifier.
+- Connexion établie! en address translation
+- En full il a fallu ajuster
+  - remettre la 3e sémaphore dans un ifndef address parce qu'il ne passait pas au bon endroit
+  - le connect_pre se faisait deux fois: j'ai laissé le in_syscall à 1 pour ne pas boucler
+Ok pour les connexions, passons aux send/recv
+** TODO finir send recv
