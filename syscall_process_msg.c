@@ -683,8 +683,13 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
     ptrace_poke(pid, arg->addr_dest, &(arg->sai), sizeof(struct sockaddr_in));
 
     process_accept_out_call(proc, sysarg);
+
     if (strace_option)
       print_accept_syscall(proc, sysarg);
+
+	XBT_DEBUG(" ----> SEMAPHORES -> accept (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
+	MSG_sem_acquire(proc->sem);
+	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris! (2e episode)");
 #endif
 
     return conn_proc->pid;
@@ -724,8 +729,8 @@ static void syscall_accept_post(reg_s * reg, syscall_arg_u * sysarg, process_des
 #endif
   if (strace_option)
     print_accept_syscall(proc, sysarg);
-
-	XBT_DEBUG(" ----> SEMAPHORES -> accept: j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
+  // jamais appelé par full mediation
+	XBT_DEBUG(" ----> SEMAPHORES -> accept (address_translation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
 	MSG_sem_acquire(proc->sem);
 	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris! (2e episode)");
 }
@@ -798,7 +803,6 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
       arg->ret = 0;
 
     ptrace_neutralize_syscall(pid);
-    proc->in_syscall = 0;
     connect_arg_t arg = &(sysarg->connect);
     ptrace_restore_syscall(pid, SYS_connect, arg->ret);
 
