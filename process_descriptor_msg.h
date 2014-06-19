@@ -57,6 +57,7 @@ struct process_descriptor {
   fd_descriptor_t **fd_list;
 
   msg_sem_t sem;
+  process_descriptor_t *remote;
 
   int state;
   int in_syscall;

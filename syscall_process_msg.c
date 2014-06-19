@@ -701,9 +701,17 @@ static int syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descr
   proc->in_syscall = 1;
   *state = 0;
   get_args_accept(proc, reg, sysarg);
-  int conn_pid = process_accept_in_call(proc, sysarg);
-  if (!conn_pid)
-    *state = PROCESS_ON_MEDIATION;
+
+  // TODO: trouver comment connaitre celui en face (le mettre dans les infos par celui d'en face? qui lui connait)
+
+	XBT_DEBUG(" ----> SEMAPHORES -> accept: j'essaie de prendre accept");
+	MSG_sem_acquire(proc->sem);
+	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris!");
+	XBT_DEBUG(" ----> SEMAPHORES -> accept: je libère connect");
+	MSG_sem_release(proc->remote->sem);
+	XBT_DEBUG(" ----> SEMAPHORES -> accept: connect libéré");
+
+  process_accept_in_call(proc, sysarg);
   return *state;
 }
 
@@ -716,12 +724,16 @@ static void syscall_accept_post(reg_s * reg, syscall_arg_u * sysarg, process_des
 #endif
   if (strace_option)
     print_accept_syscall(proc, sysarg);
+
+	XBT_DEBUG(" ----> SEMAPHORES -> accept: j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
+	MSG_sem_acquire(proc->sem);
+	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris! (2e episode)");
 }
 
-static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc)
 {
   connect_arg_t arg = &(sysarg->connect);
-  XBT_DEBUG(" CONNEXION: process_connect_in_call");
+  XBT_DEBUG("CONNEXION: process_connect_in_call");
   pid_t pid = proc->pid;
   int domain = get_domain_socket(proc, arg->sockfd);
 
@@ -757,9 +769,10 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     //if the processus waiting for connection, we add it to schedule list
     if (acc_proc) {
 
-      // int status = acc_proc->state;
-      // if (status == PROC_ACCEPT || status == PROC_SELECT || status == PROC_POLL)
-      // add_to_sched_list(acc_pid);
+    	*remote_proc = *acc_proc;
+    	acc_proc->remote = proc; // pour les semaphores, pour qu'il sache nous débloquer TODO
+    	proc->remote = acc_proc;
+
       //Now attribute ip and port to the socket.
       int port = get_random_port(proc->host);
 
@@ -797,6 +810,7 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     proc->state = PROC_CONNECT;
     return 1;
 #else
+    XBT_DEBUG("connect_in full mediation");
     sys_translate_connect_in(proc, sysarg);
     int flags = socket_get_flags(proc, arg->sockfd);
     if (flags & O_NONBLOCK)
@@ -835,8 +849,22 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
   *state = 0;
   XBT_DEBUG("syscall_connect_pre");
   get_args_bind_connect(proc, reg, sysarg);
-  if (process_connect_in_call(proc, sysarg))
-    *state = PROCESS_ON_MEDIATION;
+  process_descriptor_t remote_proc;
+  if (process_connect_in_call(proc, sysarg, &remote_proc)){
+	  	// si on n'a pas process_connect_in_call alors la connexion est refusée.
+		XBT_DEBUG(" ----> SEMAPHORES -> connect: je libère accept en face");
+		MSG_sem_release(remote_proc.sem); // remote proc trouvé non?!
+		XBT_DEBUG(" ----> SEMAPHORES -> connect: accept libéré");
+		XBT_DEBUG(" ----> SEMAPHORES -> connect: j'essaie de prendre connect");
+		MSG_sem_acquire(proc->sem);
+		XBT_DEBUG(" ----> SEMAPHORES -> connect: connect pris!");
+
+		int status = 0;
+		return process_handle_msg(proc, status);
+  }
+  else{
+	  XBT_DEBUG("process_connect_in_call == 0  <--------- ");
+  }
   return *state;
 }
 
@@ -852,6 +880,11 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
 #endif
   if (strace_option)
     print_connect_syscall(proc, sysarg);
+
+
+	XBT_DEBUG(" ----> SEMAPHORES -> connect: j'ai fini mon connect out, je libère accept en face (2e episode)");
+	MSG_sem_release(proc->remote->sem); // remote proc trouvé non?!
+	XBT_DEBUG(" ----> SEMAPHORES -> connect: accept libéré  (2e episode)");
 }
 
 static int process_select_call(process_descriptor_t * proc)
@@ -1009,9 +1042,10 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
     case SYS_connect:
       if (!(proc->in_syscall)) {
-        ret = syscall_connect_pre(&arg, sysarg, proc, &state);
-        if (ret)
-          return ret;
+    	  syscall_connect_pre(&arg, sysarg, proc, &state);
+        //ret = syscall_connect_pre(&arg, sysarg, proc, &state);
+       // if (ret)
+       //   return ret;
       } else
         syscall_connect_post(&arg, sysarg, proc);
       break;

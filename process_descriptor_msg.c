@@ -26,6 +26,7 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
   result->on_simulation = 0;
 
   result->sem =  MSG_sem_init(0);
+  result->remote = NULL;
 
   int i;
   for (i = 0; i < MAX_FD; ++i)
