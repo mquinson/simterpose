@@ -688,3 +688,30 @@ processus ait sa sémaphore, et ajouté des sémaphores aux endroits clé
   - le connect_pre se faisait deux fois: j'ai laissé le in_syscall à 1 pour ne pas boucler
 Ok pour les connexions, passons aux send/recv
 ** TODO finir send recv
+
+* <2014-06-20 ven.>
+pour les send/recv c'est pas super clair, j'essaie de trouver où positionner les
+véritables envois/réception via MSG
+- structure actuelle du recvfrom:
+  - en traduction d'adresses:
+    - recvfrom_pre -> recvfrom_in nous envoie forcément en médiation
+    - on boucle eventuellement sur handle_mediate jusqu'à ce que recvfrom_in soit ok 
+    - alors on repart dans active puis handle et on passe en post
+    - C'est dans post que la réception de la tâche est vraiment faite en appelant 
+      sockets.c::handle_new_receive().  Il faudrait en fait le faire plus tôt ce qui 
+      éviterait de boucler indéfiniment
+  - en médiation totale: ça part dans tous les sens
+    - recvfrom_pre -> recvfrom_in
+      - si ok, directement recv
+	- si ok state=PROCESS_RECVFROM, in=0 donc on appelle handle active, qui rappelle recv_in
+	  - on boucle éventuellement en médiation un moment
+	  - on reset l'état et on appelle handle
+	- si non, socket fermée, recvmsgout et on termine
+      - si pas(recvfrom_in):
+	- soit c'est non bloquant et donc on n'a personne en face on recvmsgfrom out et on termine
+	- soit c'est bloquant et alors: PROC_RECVFROM, mediate = 1 on part sur handle_mediate
+	  qui appelle recv_in. On peut boucler un moment puis on appelle recv (enfin!)
+	  - soit ok: TASK FOUND, mediate=0, in=0
+	  - sinon socket fermée, in=0, active, out  et on termine ...
+- Concernant le sento, le véritable envoi de la tache est fait 
+  soit en pré (en mediation totale) soit en post (en traduction d'adresse)

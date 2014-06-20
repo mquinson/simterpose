@@ -1383,13 +1383,13 @@ int process_handle_active(process_descriptor_t * proc)
       process_reset_state(proc);
     } else
       return PROCESS_ON_MEDIATION;
-  } else */  if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall)) // TODO: <- quand ?
+  } else */  if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall)) // en full quand la socket est fermée
     process_recvfrom_out_call(proc);
 
   else if ((proc_state & PROC_READ) && !(proc->in_syscall))
     process_read_out_call(proc);
 
-  else if ((proc_state == PROC_RECVFROM) && (proc->in_syscall))// TODO: <- quand ?
+  else if ((proc_state == PROC_RECVFROM) && (proc->in_syscall))// en full translation
 #ifndef address_translation
     THROW_IMPOSSIBLE;
 #else
