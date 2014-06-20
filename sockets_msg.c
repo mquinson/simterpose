@@ -11,6 +11,8 @@
 #define UDP_PROTOCOL 1
 #define RAW_PROTOCOL 2
 
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SOCKETS, simterpose, "sockets log");
+
 typedef struct {
   void *data;
   int size;
@@ -462,7 +464,7 @@ struct infos_socket *getSocketInfoFromContext(unsigned int ip_local, int port_lo
 
 int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
 {
-//   printf("Entering Handle_new_receive\n");
+	XBT_DEBUG("Entering Handle_new_receive");
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
 
