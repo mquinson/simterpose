@@ -533,11 +533,10 @@ static void process_shutdown_call(pid_t pid, syscall_arg_u * sysarg)
   return 0;
 }*/
 
-
 static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
-  XBT_DEBUG(" CONNEXION: process_connect_in_call");
+  XBT_DEBUG("CONNEXION: process_connect_in_call");
   pid_t pid = proc->pid;
   int domain = get_domain_socket(pid, arg->sockfd);
 
@@ -1220,7 +1219,7 @@ static int syscall_connect_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   *state = 0;
   //    XBT_DEBUG("[%d] connect_in", pid);
   XBT_DEBUG("connect_in");
-  get_args_bind_connect(pid, 0, reg, sysarg);
+  get_args_bind_connect(pid, 1, reg, sysarg); // FIXME le 1/0 ne sert à rien
   if (process_connect_in_call(proc, sysarg))
     *state = PROCESS_ON_MEDIATION;
   if (need_computation(pid, proc))

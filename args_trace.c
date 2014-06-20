@@ -16,7 +16,7 @@ void get_args_bind_connect(pid_t child, int syscall, reg_s * reg, syscall_arg_u 
   connect_arg_t arg = &(sysarg->connect);
 
   arg->ret = (int) reg->ret;
-  if (arg->ret == -EINPROGRESS)
+  if (arg->ret == -EINPROGRESS) /* EINPROGRESS      115      Operation now in progress */
     arg->ret = 0;
 
   arg->sockfd = (int) reg->arg1;
