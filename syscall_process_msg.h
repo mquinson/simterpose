@@ -4,9 +4,17 @@
 #include "process_descriptor_msg.h"
 #include "ptrace_utils_msg.h"
 
-void process_handle_msg(process_descriptor_t * proc);
+enum { PROCESS_CONTINUE = 0,
+	PROCESS_DEAD, PROCESS_GROUP_DEAD, PROCESS_TASK_FOUND, PROCESS_NO_TASK_FOUND,
+  PROCESS_ON_MEDIATION, PROCESS_ON_COMPUTATION
+};
+extern const char *state_names[7];
 
-void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-void syscall_bind_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+#define RECV_CLOSE              10
+
+int process_handle_msg(process_descriptor_t * proc, int status);
+int process_handle_mediate(process_descriptor_t * proc);
+int process_handle_active(process_descriptor_t * proc);
+
 
 #endif

@@ -1,10 +1,9 @@
 #include "args_trace_msg.h"
 #include "sockets_msg.h"
+#include "data_utils_msg.h"
 #include "sysdep.h"
 #include <sys/uio.h>
 #include "xbt/log.h"
-
-#define address_translation
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 
@@ -109,7 +108,7 @@ void get_args_setsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u 
 
 #ifndef address_translation
   arg->optval = malloc(arg->optlen);
-  ptrace_cpy(pid, arg->optval, (void *) arg->dest, arg->optlen, "setsockopt");
+  ptrace_cpy(proc->pid, arg->optval, (void *) arg->dest, arg->optlen, "setsockopt");
 #endif
 }
 
@@ -286,8 +285,9 @@ void get_args_write(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sys
   arg->ret = reg->ret;
   arg->count = reg->arg3;
 #ifndef address_translation
-  if (socket_registered(pid, arg->fd)) {
-    if (socket_network(pid, arg->fd)) {
+	pid_t pid = proc->pid;
+  if (socket_registered(proc, arg->fd)) {
+    if (socket_network(proc, arg->fd)) {
       arg->data = malloc(arg->count);
       ptrace_cpy(pid, arg->data, (void *) reg->arg2, arg->count, "write");
     }
@@ -360,22 +360,21 @@ void sys_build_poll(process_descriptor_t *proc, syscall_arg_u * sysarg, int matc
   }
 }
 
-/* TODO
-void sys_translate_accept(pid_t pid, syscall_arg_u * sysarg)
+void sys_translate_accept(process_descriptor_t *proc,  syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
+  pid_t pid = proc->pid;
 
   reg_s reg;
   ptrace_get_register(pid, &reg);
   int port = ntohs(arg->sai.sin_port);
-  struct infos_socket *is = get_infos_socket(pid, arg->sockfd);
+  struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
 
   comm_get_ip_port_accept(is, &(arg->sai));
-  SD_workstation_t host;
-  if (arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1")) {
-    process_descriptor_t *proc = process_get_descriptor(pid);
+  msg_host_t host;
+  if (arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
     host = proc->host;
-  } else
+  else
     host = get_host_by_ip(arg->sai.sin_addr.s_addr);
 
   set_real_port(host, ntohs(arg->sai.sin_port), port);
@@ -384,22 +383,24 @@ void sys_translate_accept(pid_t pid, syscall_arg_u * sysarg)
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-void sys_translate_connect_in(pid_t pid, syscall_arg_u * sysarg)
+void sys_translate_connect_in(process_descriptor_t *proc,  syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
+  pid_t pid = proc->pid;
 
   reg_s reg;
   ptrace_get_register(pid, &reg);
 
-  arg->sai.sin_port = htons(get_real_port(pid, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port)));
+  arg->sai.sin_port = htons(get_real_port(proc, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port)));
   arg->sai.sin_addr.s_addr = inet_addr("127.0.0.1");
   XBT_DEBUG("Try to connect on 127.0.0.1:%d", arg->sai.sin_port);
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-void sys_translate_connect_out(pid_t pid, syscall_arg_u * sysarg)
+void sys_translate_connect_out(process_descriptor_t *proc,  syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
+  pid_t pid = proc->pid;
 
   reg_s reg;
   ptrace_get_register(pid, &reg);
@@ -412,9 +413,10 @@ void sys_translate_connect_out(pid_t pid, syscall_arg_u * sysarg)
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-void sys_translate_sendto_in(pid_t pid, syscall_arg_u * sysarg)
+void sys_translate_sendto_in(process_descriptor_t *proc,  syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
+  pid_t pid = proc->pid;
 
   reg_s reg;
   ptrace_get_register(pid, &reg);
@@ -426,16 +428,17 @@ void sys_translate_sendto_in(pid_t pid, syscall_arg_u * sysarg)
   XBT_DEBUG("Translate address %s:%d", inet_ntoa(in), ntohs(arg->sai.sin_port));
 
   struct sockaddr_in temp = arg->sai;
-  int port = get_real_port(pid, temp.sin_addr.s_addr, ntohs(temp.sin_port));
+  int port = get_real_port(proc, temp.sin_addr.s_addr, ntohs(temp.sin_port));
   temp.sin_addr.s_addr = inet_addr("127.0.0.1");
   temp.sin_port = htons(port);
   ptrace_poke(pid, (void *) reg.arg5, &temp, sizeof(struct sockaddr_in));
   XBT_DEBUG("Using 127.0.0.1:%d", port);
 }
 
-void sys_translate_sendto_out(pid_t pid, syscall_arg_u * sysarg)
+void sys_translate_sendto_out(process_descriptor_t *proc,  syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
+  pid_t pid = proc->pid;
 
   reg_s reg;
   ptrace_get_register(pid, &reg);
@@ -451,9 +454,10 @@ void sys_translate_sendto_out(pid_t pid, syscall_arg_u * sysarg)
   ptrace_poke(pid, (void *) reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-void sys_translate_recvfrom_in(pid_t pid, syscall_arg_u * sysarg)
+void sys_translate_recvfrom_in(process_descriptor_t *proc,  syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
+  pid_t pid = proc->pid;
 
   reg_s reg;
   ptrace_get_register(pid, &reg);
@@ -462,7 +466,7 @@ void sys_translate_recvfrom_in(pid_t pid, syscall_arg_u * sysarg)
     return;
 
   struct sockaddr_in temp = arg->sai;
-  int port = get_real_port(pid, temp.sin_addr.s_addr, ntohs(temp.sin_port));
+  int port = get_real_port(proc, temp.sin_addr.s_addr, ntohs(temp.sin_port));
   temp.sin_addr.s_addr = inet_addr("127.0.0.1");
   temp.sin_port = htons(port);
   ptrace_poke(pid, (void *) reg.arg5, &temp, sizeof(struct sockaddr_in));
@@ -470,9 +474,10 @@ void sys_translate_recvfrom_in(pid_t pid, syscall_arg_u * sysarg)
   XBT_DEBUG("Using 127.0.0.1:%d", port);
 }
 
-void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u * sysarg)
+void sys_translate_recvfrom_out(process_descriptor_t *proc,  syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
+  pid_t pid = proc->pid;
 
   reg_s reg;
   ptrace_get_register(pid, &reg);
@@ -486,4 +491,4 @@ void sys_translate_recvfrom_out(pid_t pid, syscall_arg_u * sysarg)
   arg->sai.sin_port = htons(td->port_num);
   arg->sai.sin_addr.s_addr = td->ip;
   ptrace_poke(pid, (void *) reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));
-}*/
+}
