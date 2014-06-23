@@ -715,3 +715,28 @@ véritables envois/réception via MSG
 	  - sinon socket fermée, in=0, active, out  et on termine ...
 - Concernant le sento, le véritable envoi de la tache est fait 
   soit en pré (en mediation totale) soit en post (en traduction d'adresse)
+
+* <2014-06-23 lun.>
+- Pour le recvfrom: le problème est que ça boucle en attendant le sendto. 
+  - On pourrait avancer le moment où on fait le recv via MSG pour
+  bloquer dessus en attendant le send, mais on n'a pas les
+  informations nécessaires (qui sont dans infos_sockets)
+  - Inversement si on essaie de ne pas boucler en mediate mais d'avancer
+  jusqu'au recvfrom_post pour bloquer à cet endroit, alors au moment
+  où on fait le waitpid de la fin du pre syscall, ça attend
+  indefiniment (puisque le syscall est pas correct)
+  - mettre une semaphore? attention à pas mettre la même on risquerait
+  ptet de débloquer quand il faut pas
+  - oups j'envoyais et je recevais sur des mailbox différentes
+  - manquait des include pour les #ifnef address_translation
+- Ca fonctionne en traduction d'adresse
+** TODO traiter le cas du full
+les send et les recv ont l'air de se mélanger entre le client et le
+serveur
+** TODO lorsqu'on cherche à connaître le processus distant pour libérer
+les sémaphores, utiliser les informations sur la socket et pas le
+champ remote du process_descriptor, (voir si ça pourrait poser pb pour les
+connexions multiples)
+** TODO la trace n'est pas toujours la même: (pas prioritaire)
+parfois sendto s'affiche, parfois c'est recvfrom, et il n'y a pas
+toujours le message dedans 
