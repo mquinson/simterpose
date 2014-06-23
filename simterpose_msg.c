@@ -145,7 +145,7 @@ static int simterpose_process_runner(int argc, char *argv[])
 	  	int proc_next_state = process_handle_active(proc);
 
 	  //	double clock = MSG_get_clock();
-	 // TODO	while(proc_next_state == PROCESS_ON_MEDIATION){
+	  	while(proc_next_state == PROCESS_ON_MEDIATION){
 	  		if (proc->mediate_state)
 	  			proc_next_state = process_handle_mediate(proc);
 	  		else
@@ -157,7 +157,7 @@ static int simterpose_process_runner(int argc, char *argv[])
 	  		  MSG_process_sleep(0.1);
 	  		  clock = MSG_get_clock();
 	  		}
-	  //	}
+	 	}
 	  	XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
   }
   return 0;

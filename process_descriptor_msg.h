@@ -56,7 +56,8 @@ struct process_descriptor {
   msg_host_t host;
   fd_descriptor_t **fd_list;
 
-  msg_sem_t sem;
+  msg_sem_t sem_conn;
+  msg_sem_t sem_comm;
   process_descriptor_t *remote;
 
   int state;
