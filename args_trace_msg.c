@@ -4,6 +4,7 @@
 #include "sysdep.h"
 #include <sys/uio.h>
 #include "xbt/log.h"
+#include "simterpose_msg.h"
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 

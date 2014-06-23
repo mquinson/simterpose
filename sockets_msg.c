@@ -3,6 +3,7 @@
 #include "xbt.h"
 #include "syscall_data_msg.h"
 #include "process_descriptor_msg.h"
+#include "simterpose_msg.h"
 
 #define LOCAL 1
 #define REMOTE 2
@@ -535,10 +536,10 @@ int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
     }
   }
   if (result) {
-//     printf("New receive data read\n");
+	  XBT_DEBUG("New receive data read\n");
 	  receive_task(is, proc);
   }
-//   printf("New global size %d\n", global_size);
+  XBT_DEBUG("New global size %d\n", global_size);
   arg->ret = global_size;
   arg->data = data_recv;
 #else
@@ -548,7 +549,7 @@ int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
   if (!ds)
     return 0;
 
-//   printf("%d ", xbt_fifo_size(recv->data_fifo));
+  XBT_DEBUG("%d ", xbt_fifo_size(recv->data_fifo));
   if (recv->quantity_recv == 0) {
     result = 1;
     receive_new_message = 1;
@@ -582,7 +583,7 @@ int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
 
         result = 1;
         if (receive_new_message) {
-//           fprintf(stderr, "Suppress a task_comm_info\n");
+        	XBT_DEBUG("Suppress a task_comm_info\n");
           task_comm_info *tci = (task_comm_info *) xbt_fifo_shift(recv->recv_task);
           MSG_task_destroy(tci->task);
           free(tci);
@@ -593,12 +594,12 @@ int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
     }
   }
   if (result)
-    task_schedule_receive(is, pid);
+	 receive_task(is, proc);
 
   arg->ret = global_size;
 #endif
-//   printf("->%d ", xbt_fifo_size(recv->data_fifo));
-//   printf("Handle new_receive return %d\n", result);
+  XBT_DEBUG("->%d ", xbt_fifo_size(recv->data_fifo));
+  XBT_DEBUG("Handle new_receive return %d\n", result);
   return result;
 }
 
