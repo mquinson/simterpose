@@ -43,7 +43,6 @@ msg_task_t create_send_communication_task(process_descriptor_t *proc_sender, str
    work_list[0] = sender;
    work_list[1] = receiver;
 
-   // TODO: parallele ou pas?
    msg_task_t task =  MSG_parallel_task_create(buff, 2, work_list, 0, &amount, &(proc_sender->pid));
 
   task_comm_info* temp = malloc(sizeof(task_comm_info));
@@ -68,7 +67,7 @@ void receive_task(struct infos_socket *is,  process_descriptor_t *proc_receiver)
   task_comm_info *tci = comm_get_send(is);
 
   MSG_task_set_data(tci->task, &(proc_receiver->pid));
-  MSG_task_receive(&(tci->task), MSG_host_get_name(tci->sender_host));
+  MSG_task_receive(&(tci->task), proc_receiver->name);
   proc_receiver->on_simulation = 1;
   free(tci);
 
