@@ -308,8 +308,6 @@ static void process_recvfrom_out_call(process_descriptor_t * proc)
   process_reset_state(proc);
   syscall_arg_u *sysarg = &(proc->sysarg);
   recvfrom_arg_t arg = &(sysarg->recvfrom);
-  if (strace_option)
-    print_recvfrom_syscall(proc, &(proc->sysarg));
   ptrace_restore_syscall(proc->pid, SYS_recvfrom, arg->ret);
   ptrace_poke(proc->pid, (void *) arg->dest, arg->data, arg->ret);
   free(arg->data);
@@ -392,6 +390,8 @@ static int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
   // XBT_DEBUG("[%d] recvfrom_out", pid);
   XBT_DEBUG("recvfrom_post");
   get_args_recvfrom(proc, reg, sysarg);
+  if (strace_option)
+    print_recvfrom_syscall(proc, &(proc->sysarg));
 #ifdef address_translation
   if (socket_registered(proc, reg->arg1) != -1) {
     if (socket_network(proc, reg->arg1)) {
@@ -399,12 +399,14 @@ static int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
     }
   }
   if (reg->ret > 0) {
-    if (process_recv_call(proc, sysarg) == PROCESS_TASK_FOUND)
-      return PROCESS_TASK_FOUND;
+    if (process_recv_call(proc, sysarg) == PROCESS_TASK_FOUND){
+
+  	  if (strace_option)
+  	    print_recvfrom_syscall(proc, &(proc->sysarg));
+    	return PROCESS_TASK_FOUND;
+    }
   }
 #endif
-  if (strace_option)
-    print_recvfrom_syscall(proc, &(proc->sysarg));
   return PROCESS_CONTINUE;
 }
 
