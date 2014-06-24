@@ -114,6 +114,7 @@ static int simterpose_process_runner(int argc, char *argv[])
 
     XBT_INFO("Process %d is starting child: %s", getpid(), cmdline_str);
 
+    // FIXME: what's the point of setting the description right before reseting the memory with execv??
     process_set_descriptor(process_descriptor_new(MSG_host_get_name(MSG_host_self()), getpid()));
 
     execv(cmdline_array[0], cmdline_array);     // If successful, the execution flow does not go any further here
