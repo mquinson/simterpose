@@ -548,15 +548,15 @@ pour les appeler plus facilement
   - insert_trace.c::compute_computation_time()
   - fonctions qui gèrent les taches dans task.c
 - J'ai supprimé task.c::create_send_communication_task() et schedule_comm_task() que je n'utilisais
-plus puisque je les avais remplacées par create_and_schedule_communication_task(). Le but était
-de scheduler les tâches de communication proprement, avec des dépendances comme dans le tuto SimDag
-(ça n'avait pas completement débuggé le probleme cela dit)
+  plus puisque je les avais remplacées par create_and_schedule_communication_task(). Le but était
+  de scheduler les tâches de communication proprement, avec des dépendances comme dans le tuto SimDag
+  (ça n'avait pas completement débuggé le probleme cela dit)
 - j'ai nettoyé process_descriptor: 
   - retiré les getters et les setters. Notamment certains ne sont plus nécessaires sans le mask, 
     on utilise directement proc->state et proc->in_syscall
   - supprimé proc->is_idling, PROCESS_IDLE_STATE et process_handle_idle()
 - Puisque futex et clone lançaient un THROW_UNIMPLEMENTED, je les ai retires du switch
-j'ai gardé les fonctions qui géraient le clone, mais commentées
+  j'ai gardé les fonctions qui géraient le clone, mais commentées
 
 * <2014-06-04 mer.>
 - j'ai supprimé toutes les références à idle_list
@@ -565,7 +565,7 @@ j'ai gardé les fonctions qui géraient le clone, mais commentées
 - j'ai renommé les listes mediate et sched pour clarifier
 - Concernant la suppression du *state dans syscall_process.c::syscall_pre():
   - Ma première tentative a échoué et je n'avais pas vu que ça avait tout cassé, d'où le revert du
-  commit 'simplify state', mais maintenant c'est bon !
+    commit 'simplify state', mais maintenant c'est bon !
   - j'ai renommé syscall_pre() en need_computation()
   - c'est un booléen et il n'utilise plus le *state
   - tous les states sont initialisés à 0 (ce qui correspond à PROCESS_CONTINUE) au lieu de -1
@@ -576,25 +576,26 @@ j'ai gardé les fonctions qui géraient le clone, mais commentées
 
 * <2014-06-05 jeu.>
 - lors d'un Ctrl-C on détache les processus et on libère tout
-
+** TODO Il faudrait mettre le même genre de handler sur SIGSEGV
+- Cela permettrait d'avoir simterpose qui nettoie tout derrière lui même quand
+  il segfault comme une bouse :)
 * <2014-06-10 mar.>
 Je pars du squelette MSG:
 - j'ai modifié le Makefile et ajouté un launcher pour la version MSG (run_msg.sh)
 - j'ai résolu les warnings et autres problemes de compilation (msec_per_flop n'était pas utilisé, etc..)
 - je vérifie dans le while que l'horloge avance, sinon on sleep
 - dans le runner le client ne se lance pas si on execute directement argv (execv renvoie "Bad address")
-donc j'ai rajouté une variable
-- l'interception des syscall, même si on ne les modifie pas, fait qu'on renvoie nimporte quoi, donc la
-connexion ne se fait pas.
-- j'ai commencé à rajouter de quoi récupérer les arguments et printer les syscall
-Pour l'instant le handle ne fait que printer (et encore, pas tous)
+  donc j'ai rajouté une variable
+- l'interception des syscall, même si on ne les modifie pas, fait qu'on renvoie n'importe quoi, donc la
+  connexion ne se fait pas.
+- j'ai commencé à rajouter de quoi récupérer les arguments et afficher les syscall
+  Pour l'instant le handle ne fait qu'afficher (et encore, pas tous)
 ** DONE ajouter tous les trucs de sockets/communication
 ** DONE ranger les descripteurs dans des MSG_process_set_data
-
 * <2014-06-11 mer.>
-- dans le get_args_bind_connect le booleen qui servait à savoir si on était en bind ou
-en connect n'était jamais utilisé, je l'ai supprimé
-- ajout des sockets, on print tous les syscall
+- dans le get_args_bind_connect, le booleen qui servait à savoir si on était en bind ou
+  en connect n'était jamais utilisé, je l'ai supprimé
+- ajout des sockets, on affiche tous les syscall
 - ajout des descripteurs de process, qu'on met dans des MSG_process_set_data
   - les MSG_process_set_data n'utilisent pas les mêmes pid que nous (numérotés 1 2 etc.)
   - j'utilise du coup MSG_process_self()
@@ -602,9 +603,8 @@ en connect n'était jamais utilisé, je l'ai supprimé
 - je traite correctement le syscall bind
 - j'ai commencé à traiter le accept/connect et à gérer les tâches MSG
   - j'essaie d'applatir les différents process_handle en un seul pour chaque syscall
-** DONE continuer la communication, MSG parallel task create..
-** DONE supprimer les restes de SD dans sockets_msg data_utils_msg ..
-
+** DONE continuer la communication, MSG parallel task create
+** DONE supprimer les restes de SD dans sockets_msg data_utils_msg
 * <2014-06-12 jeu.>
 - traitement de SYS_socket, ce qui permet d'avoir les bons file descriptors pour
   connect et accept
@@ -619,7 +619,7 @@ en connect n'était jamais utilisé, je l'ai supprimé
 - dans le process_descriptor au lieu de mettre le nom du hôte j'avais mis le nom
   du processus, ce qui empêchait de retrouver l'hôte par la suite.
 - dans tasks j'ai modifié les fonctions pour créer des tâches en MSG puis les 
-  exécuter/envoyer/recevoir . Les mailbox sont en fait les hôtes.
+  exécuter/envoyer/recevoir. Les mailbox sont en fait les hôtes.
 - je traite le sys_listen
 - gestion du accept dans la version SD:
   on fait appel à handle:
@@ -635,7 +635,6 @@ en connect n'était jamais utilisé, je l'ai supprimé
   Il est simplifié avec une boucle dans la nouvelle version 
 - la gestion du accept pose probleme
 ** DONE trouver comment boucler correctement sur le accept en attendant le connect
-
 * <2014-06-16 lun.>
 - la connexion ne fonctionne pas, le accepte bloque
 - je reviens au format comme dans l'ancienne version avec un handle mediate, un handle active
@@ -669,7 +668,7 @@ processus ait sa sémaphore, et ajouté des sémaphores aux endroits clé
 - ça ne fonctionne pas encore
 
 * <2014-06-19 jeu.>
-- Concernant la position des des sémaphores:
+- Concernant la position de sémaphores:
   - pour le connect il faudrait la mettre juste après le process_connect_in_call
     à l'endroit où on bouclait avant sur un handle_active tant que l'accept ne nous
     avait pas débloqué en modifiant l'état 
