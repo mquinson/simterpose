@@ -729,13 +729,26 @@ véritables envois/réception via MSG
   - oups j'envoyais et je recevais sur des mailbox différentes
   - manquait des include pour les #ifnef address_translation
 - Ca fonctionne en traduction d'adresse
-** TODO traiter le cas du full
-les send et les recv ont l'air de se mélanger entre le client et le
-serveur
-** TODO lorsqu'on cherche à connaître le processus distant pour libérer
+- Traiter le cas du full
+  les send et les recv ont l'air de se mélanger entre le client et le
+  serveur
+- Lorsqu'on cherche à connaître le processus distant pour libérer
 les sémaphores, utiliser les informations sur la socket et pas le
 champ remote du process_descriptor, (voir si ça pourrait poser pb pour les
 connexions multiples)
 ** TODO la trace n'est pas toujours la même: (pas prioritaire)
 parfois sendto s'affiche, parfois c'est recvfrom, et il n'y a pas
 toujours le message dedans 
+
+* <2014-06-25 mer.>
+- Je traite les appels exit et exit_group, et j'arrête de boucler dès
+  que le processus est mort: la simulation s'arrête correctement pour
+  l'address translation
+** DONE lire le papier de Cappello
+** TODO trouver une XP ou deux à refaire de ce qu'ils ont fait 	
+- Dans le file descriptor j'ai mis un objet stream qui contient les
+  sémaphores (server, client). Il est créé par le processus qui
+  accepte la connexion.
+** TODO finir de modifier les sémaphores
+** TODO ajouter les syscall manquants par rapport à la version SD
+** TODO cas de full
