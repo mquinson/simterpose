@@ -36,14 +36,15 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
       struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
 
-
-    	XBT_DEBUG(" ----> SEMAPHORES -> sendto: je libère recvfrom en face");
-    	MSG_sem_release(s->fd.proc->sem_comm); // Fixme connexions multiples?
-    	XBT_DEBUG(" ----> SEMAPHORES -> sendto: recvfrom libéré");
-
      	*remote_proc = *(s->fd.proc);
     	remote_proc->remote = proc; // pour les semaphores, pour qu'il sache nous débloquer TODO
     	proc->remote = s->fd.proc;
+
+//#ifdef address_translation
+    	XBT_DEBUG(" ----> SEMAPHORES sendto: je libère recvfrom en face");
+    	MSG_sem_release(proc->remote->sem_comm); // Fixme connexions multiples?
+    	XBT_DEBUG(" ----> SEMAPHORES sendto: recvfrom libéré");
+//#endif
 
       XBT_DEBUG("%d->%d", arg->sockfd, arg->ret);
       XBT_DEBUG("Sending data(%d) on socket %d", arg->ret, s->fd.fd);
@@ -121,9 +122,10 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 #ifndef address_translation
   process_descriptor_t remote_proc;
   if (process_send_call(proc, sysarg, &remote_proc)){
-	  XBT_DEBUG(" ----> SEMAPHORES -> sendto: j'essaie de prendre sendto");
+	  XBT_DEBUG(" \n\n ----> SEMAPHORES sendto (full mediation): j'essaie de prendre sendto \n\n ");
 	MSG_sem_acquire(proc->sem_comm);
-	XBT_DEBUG(" ----> SEMAPHORES -> sendto: sendto pris!");
+	XBT_DEBUG(" ----> SEMAPHORES sendto(full mediation): sendto pris!");
+
     XBT_DEBUG("process_handle -> PROCESS_TASK_FOUND");
     ptrace_neutralize_syscall(pid);
 
@@ -162,9 +164,9 @@ static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   if ((int) reg->ret > 0) {
 	process_descriptor_t remote_proc;
     if (process_send_call(proc, sysarg, &remote_proc)){
-    	XBT_DEBUG(" ----> SEMAPHORES -> sendto: j'essaie de prendre sendto");
+    	XBT_DEBUG(" ----> SEMAPHORES sendto (address translation): j'essaie de prendre sendto");
     	MSG_sem_acquire(proc->sem_comm);
-    	XBT_DEBUG(" ----> SEMAPHORES -> sendto: sendto pris!");
+    	XBT_DEBUG(" ----> SEMAPHORES sendto (address translation): sendto pris!");
       return PROCESS_TASK_FOUND;
     }
   }
@@ -332,12 +334,12 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
   // XBT_DEBUG("[%d] Seeing if %d receive something", pid, (int)reg->arg1);
   XBT_DEBUG("Seeing if %d receive something", (int) reg->arg1);
 
-	XBT_DEBUG(" ----> SEMAPHORES -> recvfrom: j'essaie de prendre recvfrom");
+	XBT_DEBUG(" ----> SEMAPHORES recvfrom: j'essaie de prendre recvfrom");
 	MSG_sem_acquire(proc->sem_comm);
-	XBT_DEBUG(" ----> SEMAPHORES -> recvfrom: recvfrom pris!");
-	XBT_DEBUG(" ----> SEMAPHORES -> recvfrom: je libère sendto");
+	XBT_DEBUG(" ----> SEMAPHORES recvfrom: recvfrom pris!");
+	XBT_DEBUG(" ----> SEMAPHORES recvfrom: je libère sendto en face");
 	MSG_sem_release(proc->remote->sem_comm); // FIXME: s'il y a plusieurs connexions il y a plusieurs remote
-	XBT_DEBUG(" ----> SEMAPHORES -> recvfrom: sendto libéré");
+	XBT_DEBUG(" ----> SEMAPHORES recvfrom: sendto libéré");
 
   if (!process_recv_in_call(proc, sysarg->recvfrom.sockfd)) {
 #ifndef address_translation
@@ -560,6 +562,36 @@ static void process_close_call(process_descriptor_t * proc, int fd)
   }
 }
 
+static void process_shutdown_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  shutdown_arg_t arg = &(sysarg->shutdown);
+  struct infos_socket *is = get_infos_socket(proc, arg->fd);
+  if (is == NULL)
+    return;
+  comm_shutdown(is);
+}
+
+static int syscall_shutdown_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 0;
+  shutdown_arg_t arg = &(sysarg->shutdown);
+  arg->fd = reg->arg1;
+  arg->how = reg->arg2;
+  arg->ret = reg->ret;
+
+  if (strace_option)
+    print_shutdown_syscall(proc, sysarg);
+  process_shutdown_call(proc, sysarg);
+  return PROCESS_CONTINUE;
+}
+
+static int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 1;
+  ptrace_detach_process(pid);
+  return PROCESS_DEAD;
+}
+
 static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
 {
   socket_arg_t sock = &(arg->socket);
@@ -748,7 +780,6 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
     arg->sai = in;
     int conn_state = conn_proc->state;
     if (conn_state & PROC_CONNECT) {
-      XBT_DEBUG("IF PROC CONNECT");
 #ifndef address_translation
       // add_to_sched_list(conn_proc->pid); // TODO: vérifier si ça suffit
       process_reset_state(conn_proc);
@@ -777,14 +808,13 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
     if (strace_option)
       print_accept_syscall(proc, sysarg);
 
-	XBT_DEBUG(" ----> SEMAPHORES -> accept (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
+//	XBT_DEBUG(" ----> SEMAPHORES -> accept (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
 	MSG_sem_acquire(proc->sem_conn);
-	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris! (2e episode)");
+//	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris! (2e episode)");
 #endif
 
     return conn_proc->pid;
   } else {
-    XBT_DEBUG("ELSE");
     proc->state = PROC_ACCEPT;
     return 0;
   }
@@ -799,12 +829,12 @@ static int syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descr
 
   // TODO: trouver comment connaitre celui en face (le mettre dans les infos par celui d'en face? qui lui connait)
 
-	XBT_DEBUG(" ----> SEMAPHORES -> accept: j'essaie de prendre accept");
+//	XBT_DEBUG(" ----> SEMAPHORES -> accept: j'essaie de prendre accept");
 	MSG_sem_acquire(proc->sem_conn);
-	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris!");
-	XBT_DEBUG(" ----> SEMAPHORES -> accept: je libère connect");
+//	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris!");
+//	XBT_DEBUG(" ----> SEMAPHORES -> accept: je libère connect");
 	MSG_sem_release(proc->remote->sem_conn);
-	XBT_DEBUG(" ----> SEMAPHORES -> accept: connect libéré");
+//	XBT_DEBUG(" ----> SEMAPHORES -> accept: connect libéré");
 
   process_accept_in_call(proc, sysarg);
   return *state;
@@ -820,9 +850,9 @@ static void syscall_accept_post(reg_s * reg, syscall_arg_u * sysarg, process_des
   if (strace_option)
     print_accept_syscall(proc, sysarg);
   // jamais appelé par full mediation
-	XBT_DEBUG(" ----> SEMAPHORES -> accept (address_translation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
+//	XBT_DEBUG(" ----> SEMAPHORES -> accept (address_translation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
 	MSG_sem_acquire(proc->sem_conn);
-	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris! (2e episode)");
+//	XBT_DEBUG(" ----> SEMAPHORES -> accept: accept pris! (2e episode)");
 }
 
 static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc)
@@ -946,12 +976,12 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
   process_descriptor_t remote_proc;
   if (process_connect_in_call(proc, sysarg, &remote_proc)){
 	  	// si on n'a pas process_connect_in_call alors la connexion est refusée.
-		XBT_DEBUG(" ----> SEMAPHORES -> connect: je libère accept en face");
+//		XBT_DEBUG(" ----> SEMAPHORES -> connect: je libère accept en face");
 		MSG_sem_release(remote_proc.sem_conn); // remote proc trouvé non?!
-		XBT_DEBUG(" ----> SEMAPHORES -> connect: accept libéré");
-		XBT_DEBUG(" ----> SEMAPHORES -> connect: j'essaie de prendre connect");
+//		XBT_DEBUG(" ----> SEMAPHORES -> connect: accept libéré");
+//		XBT_DEBUG(" ----> SEMAPHORES -> connect: j'essaie de prendre connect");
 		MSG_sem_acquire(proc->sem_conn);
-		XBT_DEBUG(" ----> SEMAPHORES -> connect: connect pris!");
+//		XBT_DEBUG(" ----> SEMAPHORES -> connect: connect pris!");
 
 		int status = 0;
 		return process_handle_msg(proc, status);
@@ -976,9 +1006,9 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
     print_connect_syscall(proc, sysarg);
 
 
-	XBT_DEBUG(" ----> SEMAPHORES -> connect: j'ai fini mon connect out, je libère accept en face (2e episode)");
+//	XBT_DEBUG(" ----> SEMAPHORES -> connect: j'ai fini mon connect out, je libère accept en face (2e episode)");
 	MSG_sem_release(proc->remote->sem_conn); // remote proc trouvé non?!
-	XBT_DEBUG(" ----> SEMAPHORES -> connect: accept libéré  (2e episode)");
+//	XBT_DEBUG(" ----> SEMAPHORES -> connect: accept libéré  (2e episode)");
 }
 
 static int process_select_call(process_descriptor_t * proc)
@@ -1181,8 +1211,12 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       print_recvmsg_syscall(proc, sysarg);
       break;
 */
-      /*  case SYS_shutdown:
-         break; */
+    case SYS_shutdown:
+        if (!(proc->in_syscall))
+          proc->in_syscall = 1;
+        else
+          syscall_shutdown_post(pid, &arg, sysarg, proc);
+         break;
 
     case SYS_bind:
       if (!(proc->in_syscall))
@@ -1217,8 +1251,13 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
       // ignore SYS_clone, SYS_fork, SYS_vfork, SYS_execve
 
-      /*  case SYS_exit:
-         break; */
+      case SYS_exit:
+          if (!(proc->in_syscall)) {
+            XBT_DEBUG("exit(%ld) called", arg.arg1);
+            return syscall_exit_pre(pid, &arg, sysarg, proc);
+          } else
+            proc->in_syscall = 0;
+         break;
 
       // ignore SYS_wait4, SYS_kill, SYS_uname, SYS_semget, SYS_semop, SYS_semctl, SYS_shmdt, SYS_msgget, SYS_msgsnd, SYS_msgrcv, SYS_msgctl
 
@@ -1252,7 +1291,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // SYS_security, SYS_gettid, SYS_readahead, SYS_setxattr, SYS_setxattr, SYS_fsetxattr, SYS_getxattr, SYS_lgetxattr, SYS_fgetxattr
       // SYS_listxattr, SYS_llistxattr, SYS_flistxattr, SYS_removexattr, SYS_lremovexattr, SYS_fremovexattr, SYS_tkill
 
-      /* case SYS_time:
+    	/*case SYS_time:
          break;
 
          // ignore SYS_futex, SYS_sched_setaffinity, SYS_sched_getaffinity, SYS_set_thread_area, SYS_io_setup, SYS_io_destroy, SYS_io_getevents,
@@ -1261,12 +1300,17 @@ int process_handle_msg(process_descriptor_t * proc, int status)
          // SYS_fadvise64, SYS_timer_create, SYS_timer_settime, SYS_timer_gettime, SYS_timer_getoverrun, SYS_timer_delete, SYS_clock_settime
 
          case SYS_clock_gettime:
-         break;
+         break;*/
 
          // ignore SYS_clock_getres, SYS_clock_nanosleep
 
          case SYS_exit_group:
-         break; */
+             if (!(proc->in_syscall)) {
+               XBT_DEBUG("exit_group(%ld) called", arg.arg1);
+               return syscall_exit_pre(pid, &arg, sysarg, proc);
+             } else
+               proc->in_syscall = 0;
+         break;
 
       // ignore SYS_epoll_wait, SYS_epoll_ctl, SYS_tgkill,
       // SYS_utimes, SYS_vserver, SYS_mbind, SYS_set_mempolicy, SYS_get_mempolicy, SYS_mq_open, SYS_mq_unlink, SYS_mq_timedsend,

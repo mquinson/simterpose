@@ -140,12 +140,12 @@ static int simterpose_process_runner(int argc, char *argv[])
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
 
   // Main loop where we track our external process and do the simcall that represent its syscalls
-  while (1) {
+  int proc_next_state;
+  while (proc_next_state != PROCESS_DEAD) {
 
 	  	XBT_DEBUG("Starting treatment");
-	  	int proc_next_state = process_handle_active(proc);
+	  	proc_next_state = process_handle_active(proc);
 
-	  //	double clock = MSG_get_clock();
 	  	while(proc_next_state == PROCESS_ON_MEDIATION){
 	  		if (proc->mediate_state)
 	  			proc_next_state = process_handle_mediate(proc);
