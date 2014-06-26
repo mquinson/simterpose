@@ -152,6 +152,12 @@ process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descri
     comm->remote_ip = conn->ip_local;
   comm->remote_port = conn->port_local;
 
+
+  if (comm->info[0].socket == is)
+    comm->info[1].socket = conn;
+  else
+    comm->info[0].socket = conn;
+
   struct in_addr in = { comm->remote_ip };
   XBT_DEBUG("%s:%d", inet_ntoa(in), comm->remote_port);
 
