@@ -25,10 +25,6 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
   result->in_timeout = PROC_NO_TIMEOUT;
   result->on_simulation = 0;
 
-  result->sem_conn =  MSG_sem_init(0);
-  result->sem_comm =  MSG_sem_init(0);
-  result->remote = NULL; // TODO: et s'il y a plusieurs connexions?
-
   int i;
   for (i = 0; i < MAX_FD; ++i)
     result->fd_list[i] = NULL;

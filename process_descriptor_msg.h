@@ -40,10 +40,16 @@
 typedef struct process_descriptor process_descriptor_t;
 
 typedef struct {
+  msg_sem_t sem_client;
+  msg_sem_t sem_server;
+} stream_t;
+
+typedef struct {
   int type;
   process_descriptor_t *proc;
   int fd;
   int pid;
+  stream_t *stream;
 } fd_descriptor_t;
 
 struct process_descriptor {
@@ -55,10 +61,6 @@ struct process_descriptor {
   double next_event;
   msg_host_t host;
   fd_descriptor_t **fd_list;
-
-  msg_sem_t sem_conn;
-  msg_sem_t sem_comm;
-  process_descriptor_t *remote;
 
   int state;
   int in_syscall;
