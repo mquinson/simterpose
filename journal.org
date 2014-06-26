@@ -752,3 +752,21 @@ toujours le message dedans
 ** TODO finir de modifier les sémaphores
 ** TODO ajouter les syscall manquants par rapport à la version SD
 ** TODO cas de full
+
+* <2014-06-26 jeu.>
+- le processus qui veut se connecter doit trouver qui est à l'autre
+  bout de la socket, or le file descriptor est propre à un
+  processus.
+  - Le seul endroit que j'ai trouvé pour obtenir le processus en face
+    c'est communication_msg.c::comm_get_peer() à partir des infos sur
+    la socket. Or ça fonctionne pas, il n'y a rien dedans
+  - J'ai donc rajouté au moment du comm_ask_connect() les champs
+    nécessaires pour pouvoir trouver le peer.
+  - Ca fonctionne jusqu'arrivée aux connect/accept_post. On dirait
+    que certains champs sont réinitialisés
+  - J'ai pensé que ça venait peut-être de la sémaphore qui est
+    détruite quant on arrive à zéro (Destroying synchro) mais même en
+    en prenant une nouvelle ça ne va pas
+  - En fait le stream est null dans le connect post. Or si je mets pas
+    une sémaphore ici, le accept finit sa vie, continue sur des recv
+    alors que le connect n'est pas terminé..
