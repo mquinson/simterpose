@@ -752,3 +752,42 @@ toujours le message dedans
 ** TODO finir de modifier les sémaphores
 ** TODO ajouter les syscall manquants par rapport à la version SD
 ** TODO cas de full
+
+* <2014-06-26 jeu.>
+- le processus qui veut se connecter doit trouver qui est à l'autre
+  bout de la socket, or le file descriptor est propre à un
+  processus.
+  - Le seul endroit que j'ai trouvé pour obtenir le processus en face
+    c'est communication_msg.c::comm_get_peer() à partir des infos sur
+    la socket. Or ça fonctionne pas, il n'y a rien dedans
+  - J'ai donc rajouté au moment du comm_ask_connect() les champs
+    nécessaires pour pouvoir trouver le peer.
+  - Ca fonctionne jusqu'arrivée aux connect/accept_post. On dirait
+    que certains champs sont réinitialisés
+  - J'ai pensé que ça venait peut-être de la sémaphore qui est
+    détruite quant on arrive à zéro (Destroying synchro) mais même en
+    en prenant une nouvelle ça ne va pas
+  - En fait le stream est null dans le connect post. Or si je mets pas
+    une sémaphore ici, le accept finit sa vie, continue sur des recv
+    alors que le connect n'est pas terminé..
+
+* <2014-06-27 ven.>
+- le stream est nul dans le send aussi. Il faut voir où il est détruit
+  et soit le maintenir, soit en refaire un nouveau (avec le risque
+  qu'à chaque syscall_post il soit redétruit)
+- la solution de recréer un stream dans le accept_out ne fonctionne
+  pas. Même si je mets deux objets stream dans le file descriptor, je
+  peux pas créer le deuxieme 
+- tenter de maintenir le meme ?
+  - dans connect_post, le get_peer s'obtient bien mais il n'a pas de
+    stream (en fait il n'a pas le bon numéro de file descriptor, mais
+    aucun des deux, local ou remote, n'a de stream)
+ - en fait le stream est nul dès la fin du connect pre, puisque le
+    accept post est passé par là ! le sockfd entre autres a changé
+    (donc si on garde le file descriptor il est bon, mais si on
+    retourne récupérer les arguments dans sysarg, ce ne sont plus les
+    bons)
+  - j'essaie de trouver où ça pose probleme dans le accept out. on re
+    register une socket ..
+  
+
