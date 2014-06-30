@@ -8,7 +8,7 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE_MSG, simterpose, "args trace log");
 
-void get_args_bind_connect(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
 
@@ -30,7 +30,7 @@ void get_args_bind_connect(process_descriptor_t *proc, reg_s * reg, syscall_arg_
 }
 
 
-void get_args_accept(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
   arg->ret = reg->ret;
@@ -52,7 +52,7 @@ void get_args_accept(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sy
   arg->len_dest = (void *) reg->arg3;
 }
 
-void get_args_listen(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
 
@@ -61,7 +61,7 @@ void get_args_listen(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sy
   arg->ret = (int) reg->ret;
 }
 
-void get_args_select(process_descriptor_t *proc, reg_s * r, syscall_arg_u * sysarg)
+void get_args_select(process_descriptor_t * proc, reg_s * r, syscall_arg_u * sysarg)
 {
   select_arg_t arg = &(sysarg->select);
   pid_t child = proc->pid;
@@ -97,7 +97,7 @@ void get_args_select(process_descriptor_t *proc, reg_s * r, syscall_arg_u * sysa
   arg->ret = (int) r->ret;
 }
 
-void get_args_setsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
   arg->ret = (int) reg->ret;
@@ -113,7 +113,7 @@ void get_args_setsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u 
 #endif
 }
 
-void get_args_getsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
   arg->ret = (int) reg->ret;
@@ -127,7 +127,7 @@ void get_args_getsockopt(process_descriptor_t *proc, reg_s * reg, syscall_arg_u 
 }
 
 
-void get_args_sendto(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
   pid_t pid = proc->pid;
@@ -162,7 +162,7 @@ void get_args_sendto(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sy
 }
 
 
-void get_args_recvfrom(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
 
@@ -194,7 +194,7 @@ void get_args_recvfrom(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * 
 }
 
 
-void get_args_recvmsg(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->recvmsg);
   pid_t pid = proc->pid;
@@ -213,7 +213,7 @@ void get_args_recvmsg(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * s
 }
 
 
-void get_args_sendmsg(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   sendmsg_arg_t arg = &(sysarg->sendmsg);
   pid_t pid = proc->pid;
@@ -238,7 +238,7 @@ void get_args_sendmsg(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * s
 }
 
 
-void get_args_poll(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   poll_arg_t arg = &(sysarg->poll);
   pid_t child = proc->pid;
@@ -257,7 +257,7 @@ void get_args_poll(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysa
     arg->fd_list = NULL;
 }
 
-void get_args_fcntl(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
   arg->fd = (int) reg->arg1;
@@ -267,7 +267,7 @@ void get_args_fcntl(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sys
   arg->ret = (int) reg->ret;
 }
 
-void get_args_read(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg1;
@@ -278,7 +278,7 @@ void get_args_read(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysa
   arg->count = reg->arg3;
 }
 
-void get_args_write(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
+void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg1;
@@ -286,7 +286,7 @@ void get_args_write(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sys
   arg->ret = reg->ret;
   arg->count = reg->arg3;
 #ifndef address_translation
-	pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
   if (socket_registered(proc, arg->fd)) {
     if (socket_network(proc, arg->fd)) {
       arg->data = malloc(arg->count);
@@ -298,9 +298,9 @@ void get_args_write(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sys
 
 
 //FIXME make this function use unified union syscall_arg_u
-void sys_build_select(process_descriptor_t *proc, syscall_arg_u * sysarg, int match)
+void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
 {
-	pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
   ptrace_restore_syscall(pid, SYS_select, match);
   reg_s r;
   ptrace_get_register(pid, &r);
@@ -318,9 +318,9 @@ void sys_build_select(process_descriptor_t *proc, syscall_arg_u * sysarg, int ma
   }
 }
 
-void sys_build_recvmsg(process_descriptor_t *proc, syscall_arg_u * sysarg)
+void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-	pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
   recvmsg_arg_t arg = &(sysarg->recvmsg);
   ptrace_restore_syscall(pid, SYS_recvmsg, arg->ret);
 
@@ -346,9 +346,9 @@ void sys_build_recvmsg(process_descriptor_t *proc, syscall_arg_u * sysarg)
 }
 
 
-void sys_build_poll(process_descriptor_t *proc, syscall_arg_u * sysarg, int match)
+void sys_build_poll(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
 {
-	pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
   ptrace_restore_syscall(pid, SYS_poll, match);
   reg_s r;
   ptrace_get_register(pid, &r);
@@ -361,7 +361,7 @@ void sys_build_poll(process_descriptor_t *proc, syscall_arg_u * sysarg, int matc
   }
 }
 
-void sys_translate_accept(process_descriptor_t *proc,  syscall_arg_u * sysarg)
+void sys_translate_accept(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
   pid_t pid = proc->pid;
@@ -384,7 +384,7 @@ void sys_translate_accept(process_descriptor_t *proc,  syscall_arg_u * sysarg)
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-void sys_translate_connect_in(process_descriptor_t *proc,  syscall_arg_u * sysarg)
+void sys_translate_connect_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
   pid_t pid = proc->pid;
@@ -398,7 +398,7 @@ void sys_translate_connect_in(process_descriptor_t *proc,  syscall_arg_u * sysar
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-void sys_translate_connect_out(process_descriptor_t *proc,  syscall_arg_u * sysarg)
+void sys_translate_connect_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
   pid_t pid = proc->pid;
@@ -414,7 +414,7 @@ void sys_translate_connect_out(process_descriptor_t *proc,  syscall_arg_u * sysa
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-void sys_translate_sendto_in(process_descriptor_t *proc,  syscall_arg_u * sysarg)
+void sys_translate_sendto_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
   pid_t pid = proc->pid;
@@ -436,7 +436,7 @@ void sys_translate_sendto_in(process_descriptor_t *proc,  syscall_arg_u * sysarg
   XBT_DEBUG("Using 127.0.0.1:%d", port);
 }
 
-void sys_translate_sendto_out(process_descriptor_t *proc,  syscall_arg_u * sysarg)
+void sys_translate_sendto_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
   pid_t pid = proc->pid;
@@ -455,7 +455,7 @@ void sys_translate_sendto_out(process_descriptor_t *proc,  syscall_arg_u * sysar
   ptrace_poke(pid, (void *) reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-void sys_translate_recvfrom_in(process_descriptor_t *proc,  syscall_arg_u * sysarg)
+void sys_translate_recvfrom_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   pid_t pid = proc->pid;
@@ -475,7 +475,7 @@ void sys_translate_recvfrom_in(process_descriptor_t *proc,  syscall_arg_u * sysa
   XBT_DEBUG("Using 127.0.0.1:%d", port);
 }
 
-void sys_translate_recvfrom_out(process_descriptor_t *proc,  syscall_arg_u * sysarg)
+void sys_translate_recvfrom_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   pid_t pid = proc->pid;

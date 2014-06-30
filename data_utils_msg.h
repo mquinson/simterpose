@@ -81,7 +81,7 @@ void add_new_translation(int real_port, int translated_port, unsigned int transl
 
 translate_desc_t *get_translation(int real_port);
 
-int get_real_port(process_descriptor_t *proc, unsigned int ip, int port);
+int get_real_port(process_descriptor_t * proc, unsigned int ip, int port);
 
 void benchmark_matrix_product(float *msec_per_flop);
 

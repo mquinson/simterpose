@@ -16,8 +16,9 @@ struct task_comm_info {
 //msg_task_t create_computation_task(process_descriptor_t * proc, double amount);
 //void execute_computation_task(process_descriptor_t * proc, msg_task_t task);
 
-msg_task_t create_send_communication_task(process_descriptor_t *proc_sender, struct infos_socket *is, double amount, msg_host_t sender, msg_host_t receiver);
+msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, struct infos_socket *is, double amount,
+                                          msg_host_t sender, msg_host_t receiver);
 void send_task(msg_host_t receiver, msg_task_t task);
-void receive_task(struct infos_socket *recv, process_descriptor_t *proc_receiver);
+void receive_task(struct infos_socket *recv, process_descriptor_t * proc_receiver);
 
 #endif

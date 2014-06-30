@@ -43,6 +43,8 @@ int main(int argc, char *argv[])
   float msec_per_flop = 0;      // variable not used
   int flop_option = 0;
   xbt_log_control_set("simterpose.:info");
+  xbt_log_control_set("SYSCALL_PROCESS_MSG.:debug");
+
   MSG_init(&argc, argv);
 
   if (argc < 3) {
@@ -88,11 +90,11 @@ int main(int argc, char *argv[])
 
   msg_error_t res = MSG_main();
   const char *interposer_name =
-  #ifdef address_translation
-        "Address translation (connect pipes instead of sockets)";
-  #else
-        "Full mediation (peek/poke every data)";
-  #endif
+#ifdef address_translation
+      "Address translation (connect pipes instead of sockets)";
+#else
+      "Full mediation (peek/poke every data)";
+#endif
   XBT_INFO("End of simulation. Simulated time: %lf. Used interposer: %s", MSG_get_clock(), interposer_name);
 
   if (res == MSG_OK)
@@ -149,23 +151,23 @@ static int simterpose_process_runner(int argc, char *argv[])
   int proc_next_state;
   while (proc_next_state != PROCESS_DEAD) {
 
-	  	XBT_DEBUG("Starting treatment");
-	  	proc_next_state = process_handle_active(proc);
+    XBT_DEBUG("Starting treatment");
+    proc_next_state = process_handle_active(proc);
 
-	  	while(proc_next_state == PROCESS_ON_MEDIATION){ // TODO simplifier la boucle
-	  		if (proc->mediate_state)
-	  			proc_next_state = process_handle_mediate(proc);
-	  		else
-	  			proc_next_state = process_handle_active(proc);
+    while (proc_next_state == PROCESS_ON_MEDIATION) {   // TODO simplifier la boucle
+      if (proc->mediate_state)
+        proc_next_state = process_handle_mediate(proc);
+      else
+        proc_next_state = process_handle_active(proc);
 
-		  	XBT_DEBUG("while status = %s", state_names[proc_next_state]);
+      XBT_DEBUG("while status = %s", state_names[proc_next_state]);
 
-	  		if (MSG_get_clock() == clock) {
-	  		  MSG_process_sleep(0.1);
-	  		  clock = MSG_get_clock();
-	  		}
-	 	}
-	  	XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
+      if (MSG_get_clock() == clock) {
+        MSG_process_sleep(0.1);
+        clock = MSG_get_clock();
+      }
+    }
+    XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
   }
   return 0;
 }

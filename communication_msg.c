@@ -132,7 +132,7 @@ void comm_set_listen(comm_t comm)
   XBT_DEBUG("Listen do %d", comm->state & COMM_LISTEN);
 }
 
-process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descriptor_t *proc, int fd, int device)
+process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descriptor_t * proc, int fd, int device)
 {
   struct infos_socket *conn = get_binding_socket_host(host, port, device);
   if (!conn)
@@ -164,7 +164,7 @@ process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descri
   return conn->fd.proc;
 }
 
-void comm_join_on_accept(struct infos_socket *is, process_descriptor_t *proc, int fd_listen)
+void comm_join_on_accept(struct infos_socket *is, process_descriptor_t * proc, int fd_listen)
 {
   struct infos_socket *sock_listen = get_infos_socket(proc, fd_listen);
   comm_t comm = sock_listen->comm;
@@ -250,11 +250,11 @@ int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t 
 
 int comm_has_connect_waiting(struct infos_socket *is)
 {
-	if(is ==  NULL)
-	  XBT_DEBUG("Comm_has_connect_waiting? is=NULL");
+  if (is == NULL)
+    XBT_DEBUG("Comm_has_connect_waiting? is=NULL");
   comm_t comm = is->comm;
-  if(comm == NULL)
-	  XBT_DEBUG("Comm_has_connect_waiting? Comm=NULL");
+  if (comm == NULL)
+    XBT_DEBUG("Comm_has_connect_waiting? Comm=NULL");
   return !xbt_dynar_is_empty(comm->conn_wait);
 }
 

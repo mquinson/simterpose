@@ -43,7 +43,7 @@ void comm_destroy(comm_t comm);
 comm_t comm_find_incomplete(unsigned int ip, int port, struct infos_socket *is);
 
 //Add a socket to a communication
-void comm_join_on_accept(struct infos_socket *socket, process_descriptor_t *proc, int fd_listen);
+void comm_join_on_accept(struct infos_socket *socket, process_descriptor_t * proc, int fd_listen);
 
 struct infos_socket *comm_get_peer(struct infos_socket *is);
 
@@ -57,7 +57,7 @@ void comm_shutdown(struct infos_socket *is);
 
 void comm_set_listen(comm_t comm);
 
-process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descriptor_t *proc, int fd, int device);
+process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descriptor_t * proc, int fd, int device);
 
 process_descriptor_t *comm_accept_connect(struct infos_socket *is, struct sockaddr_in *in);
 

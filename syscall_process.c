@@ -1219,7 +1219,7 @@ static int syscall_connect_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   *state = 0;
   //    XBT_DEBUG("[%d] connect_in", pid);
   XBT_DEBUG("connect_in");
-  get_args_bind_connect(pid, 1, reg, sysarg); // FIXME le 1/0 ne sert à rien
+  get_args_bind_connect(pid, 1, reg, sysarg);   // FIXME le 1/0 ne sert à rien
   if (process_connect_in_call(proc, sysarg))
     *state = PROCESS_ON_MEDIATION;
   if (need_computation(pid, proc))

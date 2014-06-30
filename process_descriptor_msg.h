@@ -80,15 +80,15 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid);
 
 void process_set_descriptor(process_descriptor_t * proc);
 
-void process_fork(pid_t new_pid, process_descriptor_t *forked);
+void process_fork(pid_t new_pid, process_descriptor_t * forked);
 
 int process_update_cputime(process_descriptor_t * proc, long long int cputime_elapsed);
 
-void process_clone(pid_t new_pid, process_descriptor_t *cloned, unsigned long flags);
+void process_clone(pid_t new_pid, process_descriptor_t * cloned, unsigned long flags);
 
 void process_reset_state(process_descriptor_t * proc);
 
-void process_die(process_descriptor_t *proc);
+void process_die(process_descriptor_t * proc);
 
 int process_get_free_fd(process_descriptor_t * proc);
 

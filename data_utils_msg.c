@@ -160,8 +160,7 @@ int is_port_in_use(msg_host_t host, int port)
 void register_port(msg_host_t host, int port)
 {
   //try to see if port isn't already use.
-  simterpose_host_t *host_desc =
-      (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
+  simterpose_host_t *host_desc = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
   port_desc_t *temp = NULL;
@@ -263,7 +262,7 @@ void set_real_port(msg_host_t host, int port, int real_port)
 
   if (desc == NULL)
     return;
-  XBT_DEBUG("Set correspondance %d <-> %d (real) for %s",port, real_port, MSG_host_get_name(host));
+  XBT_DEBUG("Set correspondance %d <-> %d (real) for %s", port, real_port, MSG_host_get_name(host));
   desc->real_port = real_port;
 }
 
@@ -334,7 +333,7 @@ time_t get_simulated_timestamp()
 
 void add_new_translation(int real_port, int translated_port, unsigned int translated_ip)
 {
-	XBT_DEBUG("Add new translation %d->%d", real_port, translated_port);
+  XBT_DEBUG("Add new translation %d->%d", real_port, translated_port);
   translate_desc_t *temp = malloc(sizeof(translate_desc_t));
   temp->port_num = translated_port;
   temp->ip = translated_ip;
@@ -348,20 +347,20 @@ void add_new_translation(int real_port, int translated_port, unsigned int transl
 
 translate_desc_t *get_translation(int real_port)
 {
-XBT_DEBUG("Get translation for port %d", real_port);
+  XBT_DEBUG("Get translation for port %d", real_port);
   char buff[6];
   sprintf(buff, "%d", real_port);
 
   return xbt_dict_get_or_null(global_data->list_translate, buff);
 }
 
-int get_real_port(process_descriptor_t *proc, unsigned int ip, int port)
+int get_real_port(process_descriptor_t * proc, unsigned int ip, int port)
 {
 // struct in_addr in = {ip};
 // XBT_DEBUG("Searching for real port of %s:%d", inet_ntoa(in), port);
   simterpose_host_t *temp = NULL;
   if (ip == inet_addr("127.0.0.1")) {
-XBT_DEBUG("We are on local network %d\n",port);
+    XBT_DEBUG("We are on local network %d\n", port);
     temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(proc->host));
   } else
     temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(get_host_by_ip(ip)));
@@ -372,7 +371,7 @@ XBT_DEBUG("We are on local network %d\n",port);
   if (desc == NULL)
     return -1;
 
-XBT_DEBUG("Return %d", desc->real_port);
+  XBT_DEBUG("Return %d", desc->real_port);
   return desc->real_port;
 }
 
@@ -513,4 +512,3 @@ void init_host_list()
   xbt_dynar_free(&ip_list);
   xbt_dynar_free(&no_ip_list);
 }
-

@@ -22,7 +22,7 @@ typedef struct {
 xbt_dynar_t all_sockets;
 int nb_sockets = 0;
 
-int get_addr_port_sock(process_descriptor_t *proc, int fd, int addr);
+int get_addr_port_sock(process_descriptor_t * proc, int fd, int addr);
 void print_infos_socket(struct infos_socket *is);
 
 void init_socket_gestion(void)
@@ -51,7 +51,7 @@ void recv_information_destroy(recv_information * recv)
   free(recv);
 }
 
-void register_accepting_socket(struct infos_socket *is, process_descriptor_t *proc, int sockfd)
+void register_accepting_socket(struct infos_socket *is, process_descriptor_t * proc, int sockfd)
 {
   proc->fd_list[sockfd] = (fd_descriptor_t *) is;
   is->fd.type = FD_SOCKET;
@@ -65,7 +65,7 @@ void register_accepting_socket(struct infos_socket *is, process_descriptor_t *pr
   xbt_dynar_push(all_sockets, &is);
 }
 
-static struct infos_socket *confirm_register_socket(process_descriptor_t *proc, int sockfd, int domain, int protocol)
+static struct infos_socket *confirm_register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
 {
 
   struct infos_socket *is = malloc(sizeof(struct infos_socket));
@@ -91,7 +91,7 @@ static struct infos_socket *confirm_register_socket(process_descriptor_t *proc, 
   return is;
 }
 
-int socket_get_flags(process_descriptor_t *proc, int fd)
+int socket_get_flags(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -100,7 +100,7 @@ int socket_get_flags(process_descriptor_t *proc, int fd)
   return is->flags;
 }
 
-void socket_set_flags(process_descriptor_t *proc, int fd, int flags)
+void socket_set_flags(process_descriptor_t * proc, int fd, int flags)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -109,7 +109,7 @@ void socket_set_flags(process_descriptor_t *proc, int fd, int flags)
   is->flags = flags;
 }
 
-int socket_get_option(process_descriptor_t *proc, int fd, int option)
+int socket_get_option(process_descriptor_t * proc, int fd, int option)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -118,7 +118,7 @@ int socket_get_option(process_descriptor_t *proc, int fd, int option)
   return is->option & option;
 }
 
-void socket_set_option(process_descriptor_t *proc, int fd, int option, int value)
+void socket_set_option(process_descriptor_t * proc, int fd, int option, int value)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -142,7 +142,7 @@ void delete_socket(struct infos_socket *is)
   }
 }
 
-void socket_close(process_descriptor_t *proc, int fd)
+void socket_close(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   if (is != NULL) {
@@ -155,9 +155,9 @@ void socket_close(process_descriptor_t *proc, int fd)
   }
 }
 
-struct infos_socket *register_socket(process_descriptor_t *proc, int sockfd, int domain, int protocol)
+struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
 {
-	XBT_DEBUG("Registering socket %d for processus %d", sockfd, proc->pid);
+  XBT_DEBUG("Registering socket %d for processus %d", sockfd, proc->pid);
   if (proc->fd_list[sockfd] != NULL) {
     xbt_die("Inconsistence found in model. Socket already exist");
   }
@@ -165,7 +165,7 @@ struct infos_socket *register_socket(process_descriptor_t *proc, int sockfd, int
 }
 
 
-void update_socket(process_descriptor_t *proc, int fd)
+void update_socket(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -177,7 +177,7 @@ void update_socket(process_descriptor_t *proc, int fd)
 
 
 
-void set_localaddr_port_socket(process_descriptor_t *proc, int fd, char *ip, int port)
+void set_localaddr_port_socket(process_descriptor_t * proc, int fd, char *ip, int port)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   is->ip_local = inet_addr(ip);
@@ -187,7 +187,7 @@ void set_localaddr_port_socket(process_descriptor_t *proc, int fd, char *ip, int
 
 
 
-void get_localaddr_port_socket(process_descriptor_t *proc, int fd)
+void get_localaddr_port_socket(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -254,7 +254,7 @@ static int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, 
 
 }
 
-int socket_get_remote_addr(process_descriptor_t *proc, int fd, struct sockaddr_in *addr_port)
+int socket_get_remote_addr(process_descriptor_t * proc, int fd, struct sockaddr_in *addr_port)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   pid_t pid = proc->pid;
@@ -295,7 +295,7 @@ int socket_get_remote_addr(process_descriptor_t *proc, int fd, struct sockaddr_i
 }
 
 
-int get_addr_port_sock(process_descriptor_t *proc, int fd, int addr_type)
+int get_addr_port_sock(process_descriptor_t * proc, int fd, int addr_type)
 {
 
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -344,7 +344,7 @@ int get_addr_port_sock(process_descriptor_t *proc, int fd, int addr_type)
   return res;
 }
 
-int socket_get_local_port(process_descriptor_t *proc, int fd)
+int socket_get_local_port(process_descriptor_t * proc, int fd)
 {
 
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -388,7 +388,7 @@ int socket_get_local_port(process_descriptor_t *proc, int fd)
 }
 
 
-int get_domain_socket(process_descriptor_t *proc, int fd)
+int get_domain_socket(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -397,7 +397,7 @@ int get_domain_socket(process_descriptor_t *proc, int fd)
   return -1;
 }
 
-int socket_registered(process_descriptor_t *proc, int fd)
+int socket_registered(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -407,17 +407,17 @@ int socket_registered(process_descriptor_t *proc, int fd)
 }
 
 
-struct infos_socket *get_infos_socket(process_descriptor_t *proc, int fd)
+struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd)
 {
-	XBT_DEBUG("Info socket %d %d", proc->pid, fd);
+  XBT_DEBUG("Info socket %d %d", proc->pid, fd);
   fd_descriptor_t *file_desc = proc->fd_list[fd];
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
-	return NULL;
+    return NULL;
   return (struct infos_socket *) file_desc;
 }
 
 
-int get_protocol_socket(process_descriptor_t *proc, int fd)
+int get_protocol_socket(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -426,22 +426,22 @@ int get_protocol_socket(process_descriptor_t *proc, int fd)
   return -1;
 }
 
-int socket_netlink(process_descriptor_t *proc, int fd)
+int socket_netlink(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
 
   if (is != NULL) {
-	  XBT_DEBUG("Socket %d of %d : domain %d", fd, proc->pid, is->domain);
+    XBT_DEBUG("Socket %d of %d : domain %d", fd, proc->pid, is->domain);
     return is->domain == 16;
   }
   return 0;
 }
 
-int socket_network(process_descriptor_t *proc, int fd)
+int socket_network(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   if (is != NULL) {
-	  XBT_DEBUG("Socket %d of %d : domain %d", fd, proc->pid, is->domain);
+    XBT_DEBUG("Socket %d of %d : domain %d", fd, proc->pid, is->domain);
     return is->domain != 16 && is->domain != 0 && is->domain != 1;
   }
   return 0;
@@ -463,9 +463,9 @@ struct infos_socket *getSocketInfoFromContext(unsigned int ip_local, int port_lo
 }
 
 
-int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
+int handle_new_receive(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-	XBT_DEBUG("Entering Handle_new_receive");
+  XBT_DEBUG("Entering Handle_new_receive");
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
 
@@ -536,8 +536,8 @@ int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
     }
   }
   if (result) {
-	  XBT_DEBUG("New receive data read\n");
-	  receive_task(is, proc);
+    XBT_DEBUG("New receive data read\n");
+    receive_task(is, proc);
   }
   XBT_DEBUG("New global size %d\n", global_size);
   arg->ret = global_size;
@@ -583,7 +583,7 @@ int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
 
         result = 1;
         if (receive_new_message) {
-        	XBT_DEBUG("Suppress a task_comm_info\n");
+          XBT_DEBUG("Suppress a task_comm_info\n");
           task_comm_info *tci = (task_comm_info *) xbt_fifo_shift(recv->recv_task);
           MSG_task_destroy(tci->task);
           free(tci);
@@ -594,7 +594,7 @@ int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
     }
   }
   if (result)
-	 receive_task(is, proc);
+    receive_task(is, proc);
 
   arg->ret = global_size;
 #endif
@@ -629,7 +629,7 @@ void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
 }
 
 
-int close_all_communication(process_descriptor_t *proc)
+int close_all_communication(process_descriptor_t * proc)
 {
   int i = 0;
   int result = 0;
@@ -670,7 +670,7 @@ int close_all_communication(process_descriptor_t *proc)
   return result;
 }
 
-int socket_read_event(process_descriptor_t *proc, int fd)
+int socket_read_event(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   int res = comm_get_socket_state(is);
@@ -683,13 +683,13 @@ int socket_get_state(struct infos_socket *is)
   return comm_get_socket_state(is);
 }
 
-void socket_set_bind(process_descriptor_t *proc, int fd, int val)
+void socket_set_bind(process_descriptor_t * proc, int fd, int val)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   is->binded = val;
 }
 
-int socket_is_binded(process_descriptor_t *proc, int fd)
+int socket_is_binded(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   return is->binded;

@@ -54,7 +54,7 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
 
 void process_set_descriptor(process_descriptor_t * proc)
 {
-	MSG_process_set_data(MSG_process_self(), proc);
+  MSG_process_set_data(MSG_process_self(), proc);
 }
 
 static void process_descriptor_destroy(process_descriptor_t * proc)
