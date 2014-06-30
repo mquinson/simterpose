@@ -138,7 +138,7 @@ void delete_socket(struct infos_socket *is)
     xbt_dynar_remove_at(all_sockets, i, NULL);
   }
   CATCH(e) {
-    printf("Socket not found\n");
+    XBT_ERROR("Socket not found");
   }
 }
 
@@ -157,7 +157,7 @@ void socket_close(process_descriptor_t *proc, int fd)
 
 struct infos_socket *register_socket(process_descriptor_t *proc, int sockfd, int domain, int protocol)
 {
-//   printf("Registering socket %d for processus %d\n", sockfd, pid);
+	XBT_DEBUG("Registering socket %d for processus %d", sockfd, proc->pid);
   if (proc->fd_list[sockfd] != NULL) {
     xbt_die("Inconsistence found in model. Socket already exist");
   }
@@ -193,7 +193,7 @@ void get_localaddr_port_socket(process_descriptor_t *proc, int fd)
 
   if (is->domain == 2) {        // PF_INET
     if (!get_addr_port_sock(proc, fd, 1))
-      printf("Failed reading locale addr:port after bind\n");
+      XBT_ERROR("Failed reading local addr:port after bind");
 //     print_infos_socket(is);
   }
 }
@@ -217,7 +217,7 @@ static int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, 
   FILE *file;
 
 
-  //printf("Socket number : %d\n", num_sock);
+  XBT_DEBUG("Socket number : %d", num_sock);
   if (type == TCP_PROTOCOL)     // TCP
     file = fopen("/proc/net/tcp", "r");
   else if (type == UDP_PROTOCOL)        // UDP
@@ -264,7 +264,7 @@ int socket_get_remote_addr(process_descriptor_t *proc, int fd, struct sockaddr_i
   char dest[512];
   sprintf(path, "/proc/%d/fd/%d", pid, fd);
   if (readlink(path, dest, 512) == -1) {
-    printf("Failed reading /proc/%d/fd/%d", pid, fd);
+    XBT_DEBUG("Failed reading /proc/%d/fd/%d", pid, fd);
     return -1;
   }
 
@@ -306,7 +306,7 @@ int get_addr_port_sock(process_descriptor_t *proc, int fd, int addr_type)
   char dest[512];
   sprintf(path, "/proc/%d/fd/%d", pid, fd);
   if (readlink(path, dest, 512) == -1) {
-    printf("Failed reading /proc/%d/fd/%d", pid, fd);
+    XBT_ERROR("Failed reading /proc/%d/fd/%d", pid, fd);
     return -1;
   }
 
@@ -355,7 +355,7 @@ int socket_get_local_port(process_descriptor_t *proc, int fd)
   char dest[512];
   sprintf(path, "/proc/%d/fd/%d", pid, fd);
   if (readlink(path, dest, 512) == -1) {
-    printf("Failed reading /proc/%d/fd/%d", pid, fd);
+    XBT_ERROR("Failed reading /proc/%d/fd/%d", pid, fd);
     return -1;
   }
 
@@ -409,7 +409,7 @@ int socket_registered(process_descriptor_t *proc, int fd)
 
 struct infos_socket *get_infos_socket(process_descriptor_t *proc, int fd)
 {
-	//printf("Info socket %d %d\n", proc->pid, fd);
+	XBT_DEBUG("Info socket %d %d", proc->pid, fd);
   fd_descriptor_t *file_desc = proc->fd_list[fd];
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
 	return NULL;
@@ -431,7 +431,7 @@ int socket_netlink(process_descriptor_t *proc, int fd)
   struct infos_socket *is = get_infos_socket(proc, fd);
 
   if (is != NULL) {
-//     printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
+	  XBT_DEBUG("Socket %d of %d : domain %d", fd, proc->pid, is->domain);
     return is->domain == 16;
   }
   return 0;
@@ -441,7 +441,7 @@ int socket_network(process_descriptor_t *proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   if (is != NULL) {
-//     printf("Socket %d of %d : domain %d\n", fd, pid, is->domain);
+	  XBT_DEBUG("Socket %d of %d : domain %d", fd, proc->pid, is->domain);
     return is->domain != 16 && is->domain != 0 && is->domain != 1;
   }
   return 0;
@@ -599,7 +599,7 @@ int handle_new_receive(process_descriptor_t *proc, syscall_arg_u * sysarg)
   arg->ret = global_size;
 #endif
   XBT_DEBUG("->%d ", xbt_fifo_size(recv->data_fifo));
-  XBT_DEBUG("Handle new_receive return %d\n", result);
+  XBT_DEBUG("Handle new_receive return %d", result);
   return result;
 }
 
@@ -625,7 +625,7 @@ void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
   xbt_fifo_push(recv->data_fifo, data);
 #endif
 
-//   printf("New queue size %d\n", xbt_fifo_size(recv->data_fifo));
+//   XBT_DEBUG("New queue size %d", xbt_fifo_size(recv->data_fifo));
 }
 
 

@@ -9,7 +9,7 @@
 #include "cputimer_msg.h"
 #include <xbt.h>
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CPUTIMER, simterpose, "Retrieve the CPU time of a given thread using netlink");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CPUTIMER_MSG, simterpose, "Retrieve the CPU time of a given thread using netlink");
 
 xbt_cpu_timer_t global_timer = NULL;
 

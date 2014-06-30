@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "xbt/log.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, simterpose, "task log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK_MSG, simterpose, "task log");
 /*
 static int num = 0;
 

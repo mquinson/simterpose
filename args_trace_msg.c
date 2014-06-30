@@ -6,7 +6,7 @@
 #include "xbt/log.h"
 #include "simterpose_msg.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE_MSG, simterpose, "args trace log");
 
 void get_args_bind_connect(process_descriptor_t *proc, reg_s * reg, syscall_arg_u * sysarg)
 {

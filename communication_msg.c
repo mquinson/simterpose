@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "xbt/log.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION, simterpose, "communication log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION_MSG, simterpose, "communication log");
 
 xbt_dynar_t comm_list;
 

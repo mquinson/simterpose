@@ -5,6 +5,8 @@
 #include "xbt.h"
 #include "sockets_msg.h"
 
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(DATA_UTILS_MSG, simterpose, "data_utils log");
+
 struct simterpose_globals {
   xbt_dynar_t future_events_set;
   process_descriptor_t *process_desc[MAX_PID];
@@ -254,7 +256,6 @@ struct infos_socket *get_binding_socket_host(msg_host_t host, int port, int devi
 
 void set_real_port(msg_host_t host, int port, int real_port)
 {
-
   simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
   char buff[6];
   sprintf(buff, "%d", port);
@@ -262,7 +263,7 @@ void set_real_port(msg_host_t host, int port, int real_port)
 
   if (desc == NULL)
     return;
-//   printf("Set correspondance %d <-> %d (real) for %s\n",port, real_port, MSG_host_get_name(station));
+  XBT_DEBUG("Set correspondance %d <-> %d (real) for %s",port, real_port, MSG_host_get_name(host));
   desc->real_port = real_port;
 }
 
@@ -333,7 +334,7 @@ time_t get_simulated_timestamp()
 
 void add_new_translation(int real_port, int translated_port, unsigned int translated_ip)
 {
-//   printf("Add new translation %d->%d\n", real_port, translated_port);
+	XBT_DEBUG("Add new translation %d->%d", real_port, translated_port);
   translate_desc_t *temp = malloc(sizeof(translate_desc_t));
   temp->port_num = translated_port;
   temp->ip = translated_ip;
@@ -347,7 +348,7 @@ void add_new_translation(int real_port, int translated_port, unsigned int transl
 
 translate_desc_t *get_translation(int real_port)
 {
-//   printf("Get translation for port %d\n", real_port);
+XBT_DEBUG("Get translation for port %d", real_port);
   char buff[6];
   sprintf(buff, "%d", real_port);
 
@@ -356,10 +357,11 @@ translate_desc_t *get_translation(int real_port)
 
 int get_real_port(process_descriptor_t *proc, unsigned int ip, int port)
 {
-//   printf("Searching for ral port of %s:%d\n", inet_ntoa(in), port);
+// struct in_addr in = {ip};
+// XBT_DEBUG("Searching for real port of %s:%d", inet_ntoa(in), port);
   simterpose_host_t *temp = NULL;
   if (ip == inet_addr("127.0.0.1")) {
-//     printf("We are on local network %d\n",port);
+XBT_DEBUG("We are on local network %d\n",port);
     temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(proc->host));
   } else
     temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(get_host_by_ip(ip)));
@@ -370,7 +372,7 @@ int get_real_port(process_descriptor_t *proc, unsigned int ip, int port)
   if (desc == NULL)
     return -1;
 
-//   printf("Return %d\n", desc->real_port);
+XBT_DEBUG("Return %d", desc->real_port);
   return desc->real_port;
 }
 
@@ -439,12 +441,12 @@ void benchmark_matrix_product(float *msec_per_flop)
 
   cputimer_get(pid, times, timer_benchmark);
   result = (times[1] + times[2]) - initialTime;
-  printf("Duration of benchmark : %lld", result);
+  XBT_INFO("Duration of benchmark : %lld", result);
 
   *msec_per_flop = ((float) result) / (2. * matrixSize * matrixSize * matrixSize);
   float flop_per_sec = (1000000.) / (*msec_per_flop);
 
-  printf("Your machine was benchmarked at %.0f flop/s (use -p %.0f to avoid that benchmarking)", flop_per_sec,
+  XBT_INFO("Your machine was benchmarked at %.0f flop/s (use -p %.0f to avoid that benchmarking)", flop_per_sec,
            flop_per_sec);
 
   cputimer_exit(timer_benchmark);
