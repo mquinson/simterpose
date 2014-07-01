@@ -750,7 +750,7 @@ toujours le message dedans
   sémaphores (server, client). Il est créé par le processus qui
   accepte la connexion.
 ** DONE finir de modifier les sémaphores
-** TODO ajouter les syscall manquants par rapport à la version SD
+** DONE ajouter les syscall manquants par rapport à la version SD
 ** TODO cas de full
 
 * <2014-06-26 jeu.>
@@ -808,3 +808,7 @@ toujours le message dedans
     handle_new_receive on vérifie qu'on a bien reçu qqchose avant de
     continuer. J'ai donc déplacé la réception dans le pre
   - Ca fonctionne pour le couple sendto/recvfrom
+- J'ai rajouté le traitement des sendmsg/recvmsg + test
+- ajout des syscall: getpeername, getsockopt, setsockopt, fcntl, creat
+** TODO reste à modifier la version SD de poll pour MSG
+** TODO ajout d'autres syscall? (qui n'étaient pas dans version SD)
