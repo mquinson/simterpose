@@ -236,8 +236,6 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 
         msg_task_t task;
         MSG_task_receive(&task, mailbox);
-        if (strace_option)
-          print_recvfrom_syscall(proc, &(proc->sysarg));
         return PROCESS_TASK_FOUND;
       }
     }
