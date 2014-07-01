@@ -219,6 +219,31 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   XBT_DEBUG("recvmsg_pre");
   get_args_recvmsg(proc, reg, sysarg);
 
+#ifdef address_translation
+  if (reg->ret > 0) {
+	  recvmsg_arg_t arg = &(sysarg->recvmsg);
+	  fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+	  XBT_DEBUG("syscall_recvmsg_pre fd = %d", file_desc->fd);
+	  if (socket_registered(proc, arg->sockfd) != -1) {
+	    if (!socket_netlink(proc, arg->sockfd)) {
+	    	  const char* mailbox;
+	    		  if(MSG_process_self() == file_desc->stream->client)
+	    			  mailbox = file_desc->stream->to_client;
+	    		  else if(MSG_process_self() == file_desc->stream->server)
+	    			  mailbox = file_desc->stream->to_server;
+	    		  else
+	    			  THROW_IMPOSSIBLE;
+
+	    		  msg_task_t task;
+	    		  MSG_task_receive(&task, mailbox);
+	    	      if (strace_option)
+	    	        print_recvfrom_syscall(proc, &(proc->sysarg));
+	    	      return PROCESS_TASK_FOUND;
+	    }
+	  }
+  }
+#endif
+
   if (!process_recv_in_call(proc, sysarg->recvmsg.sockfd)) {
     if (strace_option)
       print_read_syscall(proc, sysarg);
@@ -256,16 +281,7 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
     }
     if (strace_option)
       print_read_syscall(proc, sysarg);
-#else
-    int flags = socket_get_flags(proc, reg->arg1);
-    if (!(flags & O_NONBLOCK)) {
-      proc->state = PROC_RECVMSG;
-      *state = PROCESS_ON_MEDIATION;
-      proc->mediate_state = 1;
-    }
 #endif
-    if (strace_option)
-      print_read_syscall(proc, sysarg);
   }
   return *state;
 }
@@ -278,12 +294,6 @@ static int syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
   get_args_recvmsg(proc, reg, sysarg);
   if (strace_option)
     print_recvmsg_syscall(proc, sysarg);
-#ifdef address_translation
-  if (reg->ret > 0) {
-    if (process_recv_call(proc, sysarg) == PROCESS_TASK_FOUND)
-      return PROCESS_TASK_FOUND;
-  }
-#endif
   return PROCESS_CONTINUE;
 }
 
@@ -1075,7 +1085,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
     ptrace_get_register(pid, &arg);
     int state;
     int ret;
-    //XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret, proc->in_syscall);
+    XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1184,16 +1194,25 @@ int process_handle_msg(process_descriptor_t * proc, int status)
         return ret;
       break;
 
-      /*  case SYS_sendmsg:
-         get_args_sendmsg(proc, &arg, sysarg);
-         print_sendmsg_syscall(proc, sysarg);
-         break;
+    case SYS_sendmsg:
+        if (!(proc->in_syscall))
+          ret = syscall_sendmsg_pre(pid, &arg, sysarg, proc, &state);
+        else
+          ret = syscall_sendmsg_post(pid, &arg, sysarg, proc);
+        if (ret)
+          return ret;
+        break;
 
-         case SYS_recvmsg:
-         get_args_recvmsg(proc, &arg, sysarg);
-         print_recvmsg_syscall(proc, sysarg);
-         break;
-       */
+      case SYS_recvmsg:
+        if (!(proc->in_syscall))
+          ret = syscall_recvmsg_pre(pid, &arg, sysarg, proc, &state);
+        else
+          ret = syscall_recvmsg_post(pid, &arg, sysarg, proc);
+        if (ret)
+          return ret;
+        break;
+
+
     case SYS_shutdown:
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
@@ -1319,7 +1338,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
     // Step the traced process
     ptrace_resume_process(pid);
-    //XBT_DEBUG("process resumed, waitpid");
+    XBT_DEBUG("process resumed, waitpid");
     waitpid(pid, &status, 0);
   }                             // while(1)
 
@@ -1408,10 +1427,6 @@ int process_handle_mediate(process_descriptor_t * proc)
         proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro
         return process_handle_active(proc);
       }
-#else
-      proc->mediate_state = 0;
-      process_reset_state(proc);
-      return process_handle_active(proc);
 #endif
     }
   }
