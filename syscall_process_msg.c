@@ -125,9 +125,7 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 #ifndef address_translation
   process_descriptor_t remote_proc;
   if (process_send_call(proc, sysarg, &remote_proc)) {
-    XBT_DEBUG(" \n\n ----> SEMAPHORES sendto (full mediation): j'essaie de prendre sendto \n\n ");
-    MSG_sem_acquire(proc->sem_comm);
-    XBT_DEBUG(" ----> SEMAPHORES sendto(full mediation): sendto pris!");
+   //TODO
 
     XBT_DEBUG("process_handle -> PROCESS_TASK_FOUND");
     ptrace_neutralize_syscall(pid);
@@ -167,9 +165,10 @@ static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   if ((int) reg->ret > 0) {
     process_descriptor_t remote_proc;
     if (process_send_call(proc, sysarg, &remote_proc)) {
-      /* fixme    XBT_DEBUG(" ----> SEMAPHORES sendto (address translation): j'essaie de prendre sendto");
-         MSG_sem_acquire(proc->sem_comm);
-         XBT_DEBUG(" ----> SEMAPHORES sendto (address translation): sendto pris!"); */
+
+    	  // sendto_arg_t arg = &(sysarg->sendto);
+    	  // TODO fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+
       return PROCESS_TASK_FOUND;
     }
   }
@@ -337,12 +336,9 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
   // XBT_DEBUG("[%d] Seeing if %d receive something", pid, (int)reg->arg1);
   XBT_DEBUG("Seeing if %d receive something", (int) reg->arg1);
 
-/* fixme	XBT_DEBUG(" ----> SEMAPHORES recvfrom: j'essaie de prendre recvfrom");
-	MSG_sem_acquire(proc->sem_comm);
-	XBT_DEBUG(" ----> SEMAPHORES recvfrom: recvfrom pris!");
-	XBT_DEBUG(" ----> SEMAPHORES recvfrom: je libère sendto en face");
-	MSG_sem_release(proc->remote->sem_comm); // FIXME: s'il y a plusieurs connexions il y a plusieurs remote
-	XBT_DEBUG(" ----> SEMAPHORES recvfrom: sendto libéré");*/
+  //recvfrom_arg_t arg = &(sysarg->recvfrom);
+  // TODO fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+
 
   if (!process_recv_in_call(proc, sysarg->recvfrom.sockfd)) {
 #ifndef address_translation
@@ -504,7 +500,7 @@ static int syscall_write_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
   *state = 0;
 #ifndef address_translation
   // XBT_DEBUG("[%d] write_in", pid);
-  XBT_DEBUG(" write_in");
+  XBT_DEBUG(" write_pre");
   get_args_write(proc, reg, sysarg);
   if (socket_registered(proc, sysarg->write.fd) != -1) {
     process_descriptor_t remote_proc;
@@ -526,6 +522,7 @@ static int syscall_write_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
 static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
+  XBT_DEBUG("write_post");
   //    XBT_DEBUG("[%d] write_out", pid);
   get_args_write(proc, reg, sysarg);
   if (strace_option)
@@ -766,10 +763,10 @@ static void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u *
 
     set_localaddr_port_socket(proc, arg->ret, inet_ntoa(in), s->port_local);
 
-    fd_descriptor_t *file_desc_is = (fd_descriptor_t *) is;
+ /*   fd_descriptor_t *file_desc_is = (fd_descriptor_t *) is;
     fd_descriptor_t *file_desc_s = (fd_descriptor_t *) s;
     // we need to give the stream to the new socket
-    file_desc_is->stream = file_desc_s->stream;
+    file_desc_is->stream = file_desc_s->stream;*/
   }
   process_reset_state(proc);
 }
@@ -804,7 +801,6 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
       process_reset_state(conn_proc);
 #else
       ptrace_resume_process(conn_proc->pid);
-      // add_to_sched_list(conn_proc->pid);
       conn_proc->state = PROC_CONNECT_DONE;
 #endif
     }
@@ -845,7 +841,6 @@ static int syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descr
   proc->in_syscall = 1;
   *state = 0;
   get_args_accept(proc, reg, sysarg);
-
 
   process_accept_in_call(proc, sysarg);
   return *state;
@@ -984,14 +979,18 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
   XBT_DEBUG("syscall_connect_pre");
   get_args_bind_connect(proc, reg, sysarg);
   if (process_connect_in_call(proc, sysarg)) {
-    // si on n'a pas process_connect_in_call alors la connexion est refusée.
     connect_arg_t arg = &(sysarg->connect);
-    struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-    struct infos_socket *is_remote = comm_get_peer(is);
-    fd_descriptor_t *file_desc_remote = (fd_descriptor_t *) is_remote;
 
-    MSG_sem_release(file_desc_remote->stream->sem_server);
-    MSG_sem_acquire(file_desc_remote->stream->sem_client);
+    struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+    struct infos_socket *s = comm_get_peer(is);
+    fd_descriptor_t *file_desc = (fd_descriptor_t *) is;
+    fd_descriptor_t *file_desc_remote = (fd_descriptor_t *) s;
+
+    // We copy the stream to have it in both sides
+    file_desc->stream = file_desc_remote->stream;
+
+    MSG_sem_release(file_desc->stream->sem_server);
+    MSG_sem_acquire(file_desc->stream->sem_client);
 
     int status = 0;
     return process_handle_msg(proc, status);
@@ -1015,10 +1014,8 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
     print_connect_syscall(proc, sysarg);
 
   connect_arg_t arg = &(sysarg->connect);
-  struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-  struct infos_socket *is_remote = comm_get_peer(is);
-  fd_descriptor_t *file_desc_remote = (fd_descriptor_t *) is_remote;
-  MSG_sem_release(file_desc_remote->stream->sem_server);
+  fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+  MSG_sem_release(file_desc->stream->sem_server);
 }
 
 static int process_select_call(process_descriptor_t * proc)
@@ -1102,7 +1099,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
     ptrace_get_register(pid, &arg);
     int state;
     int ret;
-    // XBT_DEBUG("found syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+    //XBT_DEBUG("found syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
 
     switch (arg.reg_orig) {
     case SYS_read:
