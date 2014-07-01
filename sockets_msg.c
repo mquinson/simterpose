@@ -12,7 +12,7 @@
 #define UDP_PROTOCOL 1
 #define RAW_PROTOCOL 2
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SOCKETS, simterpose, "sockets log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SOCKETS_MSG, simterpose, "sockets log");
 
 typedef struct {
   void *data;
@@ -409,7 +409,7 @@ int socket_registered(process_descriptor_t * proc, int fd)
 
 struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd)
 {
-  XBT_DEBUG("Info socket %d %d", proc->pid, fd);
+ // XBT_DEBUG("Info socket %d %d", proc->pid, fd);
   fd_descriptor_t *file_desc = proc->fd_list[fd];
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
     return NULL;
@@ -543,6 +543,7 @@ int handle_new_receive(process_descriptor_t * proc, syscall_arg_u * sysarg)
   arg->ret = global_size;
   arg->data = data_recv;
 #else
+
   int length = arg->ret;
   int *ds = xbt_fifo_shift(recv->data_fifo);
 

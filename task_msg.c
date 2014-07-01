@@ -57,7 +57,7 @@ msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, st
 
 void send_task(msg_host_t receiver, msg_task_t task)
 {
-  XBT_DEBUG("Entering send_task %s\n", MSG_task_get_name(task));
+  XBT_DEBUG("Entering send_task %s", MSG_task_get_name(task));
   MSG_task_send(task, MSG_host_get_name(receiver));
 }
 
