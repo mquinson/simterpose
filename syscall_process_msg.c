@@ -470,10 +470,9 @@ static int syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descri
   return PROCESS_CONTINUE;
 }
 
-static int syscall_write_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
+static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
-  *state = 0;
 #ifndef address_translation
   // XBT_DEBUG("[%d] write_in", pid);
   XBT_DEBUG(" write_pre");
@@ -492,7 +491,7 @@ static int syscall_write_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pro
     }
   }
 #endif
-  return *state;
+  return PROCESS_CONTINUE;
 }
 
 static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -599,12 +598,9 @@ static void process_getpeername_call(process_descriptor_t * proc, syscall_arg_u 
   }
 }
 
-static void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
-                                   int *state)
+static void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
-  *state = 0;
-
   getpeername_arg_t arg = &(sysarg->getpeername);
   arg->ret = reg->ret;
   arg->sockfd = reg->arg1;
@@ -616,11 +612,9 @@ static void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process
 }
 
 
-static void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
-                                  int *state)
+static void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
-  *state = 0;
 #ifndef address_translation
   get_args_getsockopt(pid, reg, sysarg);
   process_getsockopt_syscall(proc, sysarg);
@@ -637,11 +631,9 @@ static void syscall_getsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process
     print_getsockopt_syscall(proc, sysarg);
 }
 
-static void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
-                                  int *state)
+static void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
-  *state = 0;
 #ifndef address_translation
   get_args_setsockopt(pid, reg, sysarg);
   process_setsockopt_syscall(proc, sysarg);
@@ -659,6 +651,48 @@ static void syscall_setsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process
     print_setsockopt_syscall(proc, sysarg);
 }
 
+static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  fcntl_arg_t arg = &(sysarg->fcntl);
+  switch (arg->cmd) {
+  case F_SETFL:
+    socket_set_flags(proc, arg->fd, arg->arg);
+    return;
+    break;
+
+  default:
+    return;
+    break;
+  }
+#ifndef address_translation
+  ptrace_neutralize_syscall(pid);
+  ptrace_restore_syscall(pid, SYS_fcntl, arg->ret);
+  proc->in_syscall = 0;
+#endif
+}
+
+
+static void syscall_fcntl_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 1;
+#ifndef address_translation
+  get_args_fcntl(pid, reg, sysarg);
+  if (strace_option)
+    print_fcntl_syscall(pid, sysarg);
+  process_fcntl_call(proc, sysarg);
+#endif
+}
+
+static void syscall_fcntl_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 0;
+  get_args_fcntl(proc, reg, sysarg);
+  if (strace_option)
+    print_fcntl_syscall(proc, sysarg);
+#ifdef address_translation
+  process_fcntl_call(proc, sysarg);
+#endif
+}
 
 static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
 {
@@ -1185,7 +1219,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
     case SYS_write:
       if (!(proc->in_syscall))
-        ret = syscall_write_pre(pid, &arg, sysarg, proc, &state);
+        ret = syscall_write_pre(&arg, sysarg, proc);
       else
         ret = syscall_write_post(pid, &arg, sysarg, proc);
       if (ret)
@@ -1321,7 +1355,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
     case SYS_getpeername:
          if (!(proc->in_syscall))
-           syscall_getpeername_pre(&arg, sysarg, proc, &state);
+           syscall_getpeername_pre(&arg, sysarg, proc);
          else
            proc->in_syscall = 0;
          break;
@@ -1330,14 +1364,14 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
     case SYS_setsockopt:
           if (!(proc->in_syscall))
-        	  syscall_setsockopt_pre(&arg, sysarg, proc, &state);
+        	  syscall_setsockopt_pre(&arg, sysarg, proc);
           else
             syscall_setsockopt_post(&arg, sysarg, proc);
           break;
 
         case SYS_getsockopt:
           if (!(proc->in_syscall))
-            syscall_getsockopt_pre(&arg, sysarg, proc, &state);
+            syscall_getsockopt_pre(&arg, sysarg, proc);
           else
             syscall_getsockopt_post(&arg, sysarg, proc);
           break;
@@ -1355,9 +1389,11 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // ignore SYS_wait4, SYS_kill, SYS_uname, SYS_semget, SYS_semop, SYS_semctl, SYS_shmdt, SYS_msgget, SYS_msgsnd, SYS_msgrcv, SYS_msgctl
 
     case SYS_fcntl:
-      get_args_fcntl(proc, &arg, sysarg);
-      print_fcntl_syscall(proc, sysarg);
-      break;
+        if (!(proc->in_syscall))
+          syscall_fcntl_pre(&arg, sysarg, proc);
+        else
+          syscall_fcntl_post(&arg, sysarg, proc);
+        break;
 
       // ignore SYS_flock, SYS_fsync, SYS_fdatasync, SYS_truncate, SYS_ftruncate, SYS_getdents
       // ignore SYS_getcwd, SYS_chdir, SYS_fchdir, SYS_rename, SYS_mkdir, SYS_rmdir
