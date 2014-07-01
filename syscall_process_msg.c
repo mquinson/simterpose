@@ -599,7 +599,7 @@ static void process_getpeername_call(process_descriptor_t * proc, syscall_arg_u 
   }
 }
 
-static void syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+static void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
                                    int *state)
 {
   proc->in_syscall = 1;
@@ -610,10 +610,55 @@ static void syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysa
   arg->sockfd = reg->arg1;
   arg->sockaddr_dest = (void *) reg->arg2;
   arg->len_dest = (void *) reg->arg3;
-  ptrace_cpy(pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
+  ptrace_cpy(proc->pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
 
   process_getpeername_call(proc, sysarg);
 }
+
+
+static void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+                                  int *state)
+{
+  proc->in_syscall = 1;
+  *state = 0;
+#ifndef address_translation
+  get_args_getsockopt(pid, reg, sysarg);
+  process_getsockopt_syscall(proc, sysarg);
+  if (strace_option)
+    print_getsockopt_syscall(pid, sysarg);
+#endif
+}
+
+static void syscall_getsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 0;
+  get_args_getsockopt(proc, reg, sysarg);
+  if (strace_option)
+    print_getsockopt_syscall(proc, sysarg);
+}
+
+static void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+                                  int *state)
+{
+  proc->in_syscall = 1;
+  *state = 0;
+#ifndef address_translation
+  get_args_setsockopt(pid, reg, sysarg);
+  process_setsockopt_syscall(proc, sysarg);
+  if (strace_option)
+    print_setsockopt_syscall(pid, sysarg);
+  free(sysarg->setsockopt.optval);
+#endif
+}
+
+static void syscall_setsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 0;
+  get_args_setsockopt(proc, reg, sysarg);
+  if (strace_option)
+    print_setsockopt_syscall(proc, sysarg);
+}
+
 
 static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
 {
@@ -1126,8 +1171,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
     ptrace_get_register(pid, &arg);
     int state;
     int ret;
-    XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret,
-              proc->in_syscall);
+    //XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret,proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1277,7 +1321,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
     case SYS_getpeername:
          if (!(proc->in_syscall))
-           syscall_getpeername_pre(pid, &arg, sysarg, proc, &state);
+           syscall_getpeername_pre(&arg, sysarg, proc, &state);
          else
            proc->in_syscall = 0;
          break;
@@ -1285,14 +1329,18 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // ignore SYS_socketpair
 
     case SYS_setsockopt:
-      get_args_setsockopt(proc, &arg, sysarg);
-      print_setsockopt_syscall(proc, sysarg);
-      break;
+          if (!(proc->in_syscall))
+        	  syscall_setsockopt_pre(&arg, sysarg, proc, &state);
+          else
+            syscall_setsockopt_post(&arg, sysarg, proc);
+          break;
 
-    case SYS_getsockopt:
-      get_args_getsockopt(proc, &arg, sysarg);
-      print_getsockopt_syscall(proc, sysarg);
-      break;
+        case SYS_getsockopt:
+          if (!(proc->in_syscall))
+            syscall_getsockopt_pre(&arg, sysarg, proc, &state);
+          else
+            syscall_getsockopt_post(&arg, sysarg, proc);
+          break;
 
       // ignore SYS_clone, SYS_fork, SYS_vfork, SYS_execve
 
@@ -1371,7 +1419,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
     default:
-      //  XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+      XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else
@@ -1381,7 +1429,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
     // Step the traced process
     ptrace_resume_process(pid);
-    XBT_DEBUG("process resumed, waitpid");
+    //XBT_DEBUG("process resumed, waitpid");
     waitpid(pid, &status, 0);
   }                             // while(1)
 
