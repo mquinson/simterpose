@@ -686,7 +686,7 @@ processus ait sa sémaphore, et ajouté des sémaphores aux endroits clé
   - remettre la 3e sémaphore dans un ifndef address parce qu'il ne passait pas au bon endroit
   - le connect_pre se faisait deux fois: j'ai laissé le in_syscall à 1 pour ne pas boucler
 Ok pour les connexions, passons aux send/recv
-** TODO finir send recv
+** DONE finir send recv
 
 * <2014-06-20 ven.>
 pour les send/recv c'est pas super clair, j'essaie de trouver où positionner les
@@ -749,7 +749,7 @@ toujours le message dedans
 - Dans le file descriptor j'ai mis un objet stream qui contient les
   sémaphores (server, client). Il est créé par le processus qui
   accepte la connexion.
-** TODO finir de modifier les sémaphores
+** DONE finir de modifier les sémaphores
 ** TODO ajouter les syscall manquants par rapport à la version SD
 ** TODO cas de full
 
@@ -783,9 +783,28 @@ toujours le message dedans
     stream (en fait il n'a pas le bon numéro de file descriptor, mais
     aucun des deux, local ou remote, n'a de stream)
  - en fait le stream est nul dès la fin du connect pre, puisque le
-    accept post est passé par là ! le sockfd entre autres a changé
-    (donc si on garde le file descriptor il est bon, mais si on
-    retourne récupérer les arguments dans sysarg, ce ne sont plus les
-    bons)
+    accept post est passé par là ! le sockfd entre autres a changé: si
+   on refait un comm_get_peer à la fin du connect pre, on n'obtient
+   plus le bon
   - j'essaie de trouver où ça pose probleme dans le accept out. on re
     register une socket ..
+* <2014-06-30 lun.>
+- dans le accept_out, register_socket crée une nouvelle socket. C'est
+  a priori celle-ci qui sera utilisée par la suite, j'ai donc recopié
+  l'ancien stream dedans: la connexion s'établit! (je travaille
+  uniquement sur la traduction d'adresse pour le moment)
+- Je passe aux send/recv: pas utiliser de sémaphores, juste les
+  MSG_send devraient suffir
+
+* <2014-07-01 mar.>
+- J'ai mis le stream des deux côtés (accept/connect), pour que les
+  deux file descriptors l'aient
+- J'ai rajouté des champs dans stream: msg_process_t server, client et
+  les mailbox to_server, to_client
+- Pour les sendto/recvfrom je n'utilise plus de sémaphores,
+  uniquement les MSG_send MSG_recv. 
+  - Le recv avec MSG était fait dans le recvfrom_post donc le
+    recvfrom_pre bouclait en attendant le send, puisque dans
+    handle_new_receive on vérifie qu'on a bien reçu qqchose avant de
+    continuer. J'ai donc déplacé la réception dans le pre
+  - Ca fonctionne pour le couple sendto/recvfrom
