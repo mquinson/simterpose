@@ -36,19 +36,6 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
       struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
 
-      fd_descriptor_t *file_desc_remote = (fd_descriptor_t *) s;
-      if (file_desc_remote->stream == NULL)
-        xbt_die("process_send_call: file_desc_remote->stream = null");
-      else {
-        XBT_DEBUG(" ! process_send_call: file_desc_remote->stream NOT null ! ");
-      }
-
-#ifdef address_translation
-      XBT_DEBUG(" ----> SEMAPHORES sendto: je libère sem_server en face");
-      MSG_sem_release(file_desc_remote->stream->sem_server);
-      XBT_DEBUG(" ----> SEMAPHORES sendto: sem_server libéré");
-#endif
-
       XBT_DEBUG("%d->%d", arg->sockfd, arg->ret);
       XBT_DEBUG("Sending data(%d) on socket %d", arg->ret, s->fd.fd);
       handle_new_send(is, sysarg);
@@ -102,12 +89,6 @@ static int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
   if (reg->ret > 0) {
     process_descriptor_t remote_proc;
     if (process_send_call(proc, sysarg, &remote_proc)) {
-      /*fixme         XBT_DEBUG(" ----> SEMAPHORES -> sendmsg: je libère recvmsg en face");
-         MSG_sem_release(remote_proc.sem_comm);
-         XBT_DEBUG(" ----> SEMAPHORES -> sendmsg: recvmsg libéré");
-         XBT_DEBUG(" ----> SEMAPHORES -> sendmsg: j'essaie de prendre sendmsg");
-         MSG_sem_acquire(proc->sem_comm);
-         XBT_DEBUG(" ----> SEMAPHORES -> sendmsg: sendmsg pris!"); */
       return PROCESS_TASK_FOUND;
     }
   }
@@ -325,20 +306,34 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
   XBT_DEBUG("RECVFROM_pre");
   get_args_recvfrom(proc, reg, sysarg);
 
-
 #ifdef address_translation
   if (socket_registered(proc, reg->arg1) != -1) {
     if (socket_network(proc, reg->arg1)) {
-      sys_translate_recvfrom_in(proc, sysarg);
+      sys_translate_recvfrom_out(proc, sysarg);
     }
+  }
+  if (reg->ret > 0) {
+	  recvfrom_arg_t arg = &(sysarg->recvfrom);
+	  fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+	  XBT_DEBUG("syscall_recvfrom_pre fd = %d", file_desc->fd);
+
+	  const char* mailbox;
+	  if(MSG_process_self() == file_desc->stream->client)
+		  mailbox = file_desc->stream->to_client;
+	  else if(MSG_process_self() == file_desc->stream->server)
+		  mailbox = file_desc->stream->to_server;
+	  else
+		  THROW_IMPOSSIBLE;
+
+	  msg_task_t task;
+	  MSG_task_receive(&task, mailbox);
+      if (strace_option)
+        print_recvfrom_syscall(proc, &(proc->sysarg));
+      return PROCESS_TASK_FOUND;
   }
 #endif
   // XBT_DEBUG("[%d] Seeing if %d receive something", pid, (int)reg->arg1);
   XBT_DEBUG("Seeing if %d receive something", (int) reg->arg1);
-
-  //recvfrom_arg_t arg = &(sysarg->recvfrom);
-  // TODO fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
-
 
   if (!process_recv_in_call(proc, sysarg->recvfrom.sockfd)) {
 #ifndef address_translation
@@ -371,14 +366,6 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
     }
     if (strace_option)
       print_recvfrom_syscall(proc, sysarg);
-#else
-    XBT_DEBUG("recvfrom_pre, address translation");
-    int flags = socket_get_flags(proc, reg->arg1);
-    if (!(flags & O_NONBLOCK)) {
-      proc->state = PROC_RECVFROM;
-      *state = PROCESS_ON_MEDIATION;
-      proc->mediate_state = 1;
-    }
 #endif
   }
   XBT_DEBUG("recvfrom_pre state = %s", state_names[*state]);
@@ -393,21 +380,6 @@ static int syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
   get_args_recvfrom(proc, reg, sysarg);
   if (strace_option)
     print_recvfrom_syscall(proc, &(proc->sysarg));
-#ifdef address_translation
-  if (socket_registered(proc, reg->arg1) != -1) {
-    if (socket_network(proc, reg->arg1)) {
-      sys_translate_recvfrom_out(proc, sysarg);
-    }
-  }
-  if (reg->ret > 0) {
-    if (process_recv_call(proc, sysarg) == PROCESS_TASK_FOUND) {
-
-      if (strace_option)
-        print_recvfrom_syscall(proc, &(proc->sysarg));
-      return PROCESS_TASK_FOUND;
-    }
-  }
-#endif
   return PROCESS_CONTINUE;
 }
 
@@ -763,10 +735,10 @@ static void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u *
 
     set_localaddr_port_socket(proc, arg->ret, inet_ntoa(in), s->port_local);
 
- /*   fd_descriptor_t *file_desc_is = (fd_descriptor_t *) is;
+    fd_descriptor_t *file_desc_is = (fd_descriptor_t *) is;
     fd_descriptor_t *file_desc_s = (fd_descriptor_t *) s;
     // we need to give the stream to the new socket
-    file_desc_is->stream = file_desc_s->stream;*/
+    file_desc_is->stream = file_desc_s->stream;
   }
   process_reset_state(proc);
 }
@@ -780,10 +752,12 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
   XBT_DEBUG("process_accept_in_call fd = %d", file_desc->fd);
 
   // We create the stream object for semaphores
-  XBT_DEBUG("stream initialization by accept syscall");
+  XBT_INFO("stream initialization by accept syscall");
   stream_t *stream = malloc(sizeof(stream_t));
   stream->sem_client = MSG_sem_init(0);
   stream->sem_server = MSG_sem_init(0);
+  stream->server = MSG_process_self();
+  stream->to_server = MSG_host_get_name(MSG_host_self());
 
   file_desc->stream = stream;
   MSG_sem_acquire(file_desc->stream->sem_server);
@@ -988,6 +962,8 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
     // We copy the stream to have it in both sides
     file_desc->stream = file_desc_remote->stream;
+    file_desc->stream->client = MSG_process_self();
+    file_desc->stream->to_client = MSG_host_get_name(MSG_host_self());
 
     MSG_sem_release(file_desc->stream->sem_server);
     MSG_sem_acquire(file_desc->stream->sem_client);
@@ -1099,7 +1075,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
     ptrace_get_register(pid, &arg);
     int state;
     int ret;
-    //XBT_DEBUG("found syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+    //XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1343,7 +1319,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
     // Step the traced process
     ptrace_resume_process(pid);
-    // XBT_DEBUG("process resumed, waitpid");
+    //XBT_DEBUG("process resumed, waitpid");
     waitpid(pid, &status, 0);
   }                             // while(1)
 
@@ -1381,10 +1357,6 @@ int process_handle_mediate(process_descriptor_t * proc)
         proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro, comment on gère le cas de la socket fermée dans active?
         return process_handle_active(proc);
       }
-#else
-      proc->mediate_state = 0;
-      process_reset_state(proc);
-      return process_handle_active(proc);
 #endif
     }
   }
@@ -1477,14 +1449,9 @@ int process_handle_active(process_descriptor_t * proc)
   else if ((proc_state & PROC_READ) && !(proc->in_syscall))
     process_read_out_call(proc);
 
-  else if ((proc_state == PROC_RECVFROM) && (proc->in_syscall)) // en full translation
 #ifndef address_translation
+  else if ((proc_state == PROC_RECVFROM) && (proc->in_syscall)) // en full translation
     THROW_IMPOSSIBLE;
-#else
-    if (process_recv_in_call(proc, proc->sysarg.recv.sockfd))
-      process_reset_state(proc);
-    else
-      return PROCESS_ON_MEDIATION;
 #endif
 
   else if ((proc_state == PROC_READ) && (proc->in_syscall))
