@@ -568,6 +568,53 @@ static int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
   return PROCESS_DEAD;
 }
 
+static void process_getpeername_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  getpeername_arg_t arg = &(sysarg->getpeername);
+  pid_t pid = proc->pid;
+
+  if (socket_registered(proc, arg->sockfd)) {
+    if (socket_network(proc, arg->sockfd)) {
+      struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+      struct sockaddr_in in;
+      socklen_t size = 0;
+      if (!comm_getpeername(is, &in, &size)) {
+        if (size < arg->len)
+          arg->len = size;
+        arg->in = in;
+        arg->ret = 0;
+      } else
+        arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
+
+      ptrace_neutralize_syscall(pid);
+      proc->in_syscall = 0;
+      ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
+      if (arg->ret == 0) {
+        ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
+        ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
+      }
+      if (strace_option)
+        print_getpeername_syscall(proc, sysarg);
+    }
+  }
+}
+
+static void syscall_getpeername_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc,
+                                   int *state)
+{
+  proc->in_syscall = 1;
+  *state = 0;
+
+  getpeername_arg_t arg = &(sysarg->getpeername);
+  arg->ret = reg->ret;
+  arg->sockfd = reg->arg1;
+  arg->sockaddr_dest = (void *) reg->arg2;
+  arg->len_dest = (void *) reg->arg3;
+  ptrace_cpy(pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
+
+  process_getpeername_call(proc, sysarg);
+}
+
 static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
 {
   socket_arg_t sock = &(arg->socket);
@@ -1146,19 +1193,16 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // SYS_dup, SYS_dup2, SYS_pause, SYS_nanosleep, SYS_getitimer, SYS_alarm, SYS_setitimer, SYS_getpid, SYS_sendfile
 
     case SYS_socket:
-      if (!(proc->in_syscall)) {
+      if (!(proc->in_syscall))
         proc->in_syscall = 1;
-      } else
+      else
         syscall_socket_post(&arg, sysarg, proc);
       break;
 
     case SYS_connect:
-      if (!(proc->in_syscall)) {
+      if (!(proc->in_syscall))
         syscall_connect_pre(&arg, sysarg, proc, &state);
-        //ret = syscall_connect_pre(&arg, sysarg, proc, &state);
-        // if (ret)
-        //   return ret;
-      } else
+      else
         syscall_connect_post(&arg, sysarg, proc);
       break;
 
@@ -1231,9 +1275,13 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
       // ignore SYS_getsockname
 
-      /*   case SYS_getpeername:
+    case SYS_getpeername:
+         if (!(proc->in_syscall))
+           syscall_getpeername_pre(pid, &arg, sysarg, proc, &state);
+         else
+           proc->in_syscall = 0;
          break;
-       */
+
       // ignore SYS_socketpair
 
     case SYS_setsockopt:
