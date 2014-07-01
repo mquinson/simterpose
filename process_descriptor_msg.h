@@ -42,6 +42,10 @@ typedef struct process_descriptor process_descriptor_t;
 typedef struct {
   msg_sem_t sem_client;
   msg_sem_t sem_server;
+  msg_process_t client;
+  msg_process_t server;
+  char *to_client; // name of the mailbox
+  char *to_server; // name of the mailbox
 } stream_t;
 
 typedef struct {
