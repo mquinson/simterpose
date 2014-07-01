@@ -514,6 +514,18 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   return PROCESS_CONTINUE;
 }
 
+static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+  proc->in_syscall = 0;
+  if ((int) reg->ret >= 0) {
+    fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+    file_desc->fd = (int) reg->ret;
+    file_desc->proc = proc;
+    file_desc->type = FD_CLASSIC;
+    proc->fd_list[(int) reg->ret] = file_desc;
+  }
+}
+
 static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1398,12 +1410,15 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // ignore SYS_flock, SYS_fsync, SYS_fdatasync, SYS_truncate, SYS_ftruncate, SYS_getdents
       // ignore SYS_getcwd, SYS_chdir, SYS_fchdir, SYS_rename, SYS_mkdir, SYS_rmdir
 
-      /*  case SYS_creat:
-         break;
-
+    case SYS_creat:
+      if (!(proc->in_syscall))
+        proc->in_syscall = 1;
+      else
+        syscall_creat_post(&arg, sysarg, proc);
+      break;
          // ignore SYS_link, SYS_unlink, SYS_symlink, SYS_readlink, SYS_chmod, SYS_fchmod, SYS_chown, SYS_fchown, SYS_lchown, SYS_umask
 
-         case SYS_gettimeofday:
+       /*  case SYS_gettimeofday:
          break; */
 
       // ignore SYS_getrlimit, SYS_getrusage, SYS_sysinfo, SYS_times, SYS_ptrace, SYS_getuid, SYS_syslog, SYS_getgid, SYS_setuid
