@@ -26,9 +26,7 @@ int main(int argc, char **argv)
   struct timespec tvcl;
   clock_gettime(NULL, &tvcl);
   fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d (time: %d; clock_gettime: %f)\n",
-		  SERV_PORT, msg_count,msg_size,
-		  time(NULL),
-		  tvcl.tv_sec + tvcl.tv_nsec/1000000000.0);
+          SERV_PORT, msg_count, msg_size, time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
   int serverSocket;
   char *buff = malloc(msg_size);
@@ -82,7 +80,7 @@ int main(int argc, char **argv)
 
   int msg_number = 0;
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
-    sprintf(expected, "This is the message #%d produced on the client.",msg_number);
+    sprintf(expected, "This is the message #%d produced on the client.", msg_number);
 
     int length = msg_size;
     while (length > 0) {
@@ -93,14 +91,13 @@ int main(int argc, char **argv)
       }
       length -= res;
     }
-    if (strcmp(buff,expected)) {
-      fprintf(stderr, "Server: received message does not match at step %d (got: %s)\n",
-              msg_number, buff);
+    if (strcmp(buff, expected)) {
+      fprintf(stderr, "Server: received message does not match at step %d (got: %s)\n", msg_number, buff);
       exit(1);
     }
     fprintf(stderr, "Server: reception of message #%d was successful\n", msg_number);
 
-    sprintf(buff, "This is the answer #%d, from the server.",msg_number);
+    sprintf(buff, "This is the answer #%d, from the server.", msg_number);
     res = send(client_socket, buff, msg_size, 0);
     if (res == -1) {
       perror("Server: error sending answer");
@@ -113,9 +110,7 @@ int main(int argc, char **argv)
   struct timespec end_tvcl;
   clock_gettime(NULL, &end_tvcl);
   fprintf(stderr, "Server exiting after %d msgs (time: %d; clock_gettime: %f)\n",
-		  msg_count,
-		  time(NULL),
-		  end_tvcl.tv_sec + end_tvcl.tv_nsec/1000000000.0);
+          msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;
 }

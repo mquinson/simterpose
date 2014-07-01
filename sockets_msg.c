@@ -409,7 +409,7 @@ int socket_registered(process_descriptor_t * proc, int fd)
 
 struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd)
 {
- // XBT_DEBUG("Info socket %d %d", proc->pid, fd);
+  // XBT_DEBUG("Info socket %d %d", proc->pid, fd);
   fd_descriptor_t *file_desc = proc->fd_list[fd];
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
     return NULL;

@@ -154,7 +154,8 @@ static int simterpose_process_runner(int argc, char *argv[])
     XBT_DEBUG("Starting treatment");
     proc_next_state = process_handle_active(proc);
 
-    while (proc_next_state == PROCESS_ON_MEDIATION) {   // TODO simplifier la boucle
+    // TODO simplifier la boucle et retirer les mediation/active
+    while (proc_next_state == PROCESS_ON_MEDIATION) {
       if (proc->mediate_state)
         proc_next_state = process_handle_mediate(proc);
       else

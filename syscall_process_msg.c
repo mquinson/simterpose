@@ -1366,27 +1366,27 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // ignore SYS_getsockname
 
     case SYS_getpeername:
-         if (!(proc->in_syscall))
-           syscall_getpeername_pre(&arg, sysarg, proc);
-         else
-           proc->in_syscall = 0;
-         break;
+      if (!(proc->in_syscall))
+        syscall_getpeername_pre(&arg, sysarg, proc);
+      else
+        proc->in_syscall = 0;
+      break;
 
       // ignore SYS_socketpair
 
     case SYS_setsockopt:
-          if (!(proc->in_syscall))
-        	  syscall_setsockopt_pre(&arg, sysarg, proc);
-          else
-            syscall_setsockopt_post(&arg, sysarg, proc);
-          break;
+      if (!(proc->in_syscall))
+        syscall_setsockopt_pre(&arg, sysarg, proc);
+      else
+        syscall_setsockopt_post(&arg, sysarg, proc);
+      break;
 
-        case SYS_getsockopt:
-          if (!(proc->in_syscall))
-            syscall_getsockopt_pre(&arg, sysarg, proc);
-          else
-            syscall_getsockopt_post(&arg, sysarg, proc);
-          break;
+    case SYS_getsockopt:
+      if (!(proc->in_syscall))
+        syscall_getsockopt_pre(&arg, sysarg, proc);
+      else
+        syscall_getsockopt_post(&arg, sysarg, proc);
+      break;
 
       // ignore SYS_clone, SYS_fork, SYS_vfork, SYS_execve
 
@@ -1401,11 +1401,11 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // ignore SYS_wait4, SYS_kill, SYS_uname, SYS_semget, SYS_semop, SYS_semctl, SYS_shmdt, SYS_msgget, SYS_msgsnd, SYS_msgrcv, SYS_msgctl
 
     case SYS_fcntl:
-        if (!(proc->in_syscall))
-          syscall_fcntl_pre(&arg, sysarg, proc);
-        else
-          syscall_fcntl_post(&arg, sysarg, proc);
-        break;
+      if (!(proc->in_syscall))
+        syscall_fcntl_pre(&arg, sysarg, proc);
+      else
+        syscall_fcntl_post(&arg, sysarg, proc);
+      break;
 
       // ignore SYS_flock, SYS_fsync, SYS_fdatasync, SYS_truncate, SYS_ftruncate, SYS_getdents
       // ignore SYS_getcwd, SYS_chdir, SYS_fchdir, SYS_rename, SYS_mkdir, SYS_rmdir
@@ -1416,9 +1416,9 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       else
         syscall_creat_post(&arg, sysarg, proc);
       break;
-         // ignore SYS_link, SYS_unlink, SYS_symlink, SYS_readlink, SYS_chmod, SYS_fchmod, SYS_chown, SYS_fchown, SYS_lchown, SYS_umask
+      // ignore SYS_link, SYS_unlink, SYS_symlink, SYS_readlink, SYS_chmod, SYS_fchmod, SYS_chown, SYS_fchown, SYS_lchown, SYS_umask
 
-       /*  case SYS_gettimeofday:
+      /*  case SYS_gettimeofday:
          break; */
 
       // ignore SYS_getrlimit, SYS_getrusage, SYS_sysinfo, SYS_times, SYS_ptrace, SYS_getuid, SYS_syslog, SYS_getgid, SYS_setuid

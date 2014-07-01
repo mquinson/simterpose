@@ -18,9 +18,9 @@
 int main(int argc, char **argv)
 {
 
- if (argc < 3) {
-	fprintf(stderr, "usage: %s amount_of_messages buffer_size \n", argv[0]);
-	return EXIT_FAILURE;
+  if (argc < 3) {
+    fprintf(stderr, "usage: %s amount_of_messages buffer_size \n", argv[0]);
+    return EXIT_FAILURE;
   }
 
   int msg_count = atoi(argv[1]);
@@ -29,8 +29,7 @@ int main(int argc, char **argv)
   struct timespec tvcl;
   clock_gettime(NULL, &tvcl);
   fprintf(stderr, "Server starting on port %d: #msg: %d;(time: %d; clock_gettime: %f)\n",
-		  SERV_PORT, msg_count, time(NULL),
-		  tvcl.tv_sec + tvcl.tv_nsec/1000000000.0);
+          SERV_PORT, msg_count, time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
 
   int serverSocket;
@@ -85,32 +84,32 @@ int main(int argc, char **argv)
   struct msghdr msg;
 
   int msg_number = 0;
-   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
+  for (msg_number = 0; msg_number < msg_count; ++msg_number) {
 
-  iov[0].iov_base = buff;
-  iov[0].iov_len = buffer_size;
+    iov[0].iov_base = buff;
+    iov[0].iov_len = buffer_size;
 
-  msg.msg_iov = iov;
-  msg.msg_iovlen = 1;
-  msg.msg_name = NULL;
-  msg.msg_namelen = 0;
+    msg.msg_iov = iov;
+    msg.msg_iovlen = 1;
+    msg.msg_name = NULL;
+    msg.msg_namelen = 0;
 
 
-  res = recvmsg(client_socket, &msg, 0);
-  if (res == -1) {
-	  fprintf(stderr, "Server: error while receiving message #%d: %s\n", msg_number, strerror(errno));
-	  exit(1);
+    res = recvmsg(client_socket, &msg, 0);
+    if (res == -1) {
+      fprintf(stderr, "Server: error while receiving message #%d: %s\n", msg_number, strerror(errno));
+      exit(1);
+    }
+    printf("Receive %d bytes : Message reçu du client %s\n", res, buff);
   }
-  printf("Receive %d bytes : Message reçu du client %s\n", res, buff);
-   }
 
-   shutdown(client_socket, 2);
-   close(client_socket);
+  shutdown(client_socket, 2);
+  close(client_socket);
 
-   struct timespec end_tvcl;
-   clock_gettime(NULL, &end_tvcl);
-   fprintf(stderr, "Server exiting after %d msgs (time: %d; clock_gettime: %f)\n",
- 		  msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec/1000000000.0);
+  struct timespec end_tvcl;
+  clock_gettime(NULL, &end_tvcl);
+  fprintf(stderr, "Server exiting after %d msgs (time: %d; clock_gettime: %f)\n",
+          msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;
 }

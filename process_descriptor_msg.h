@@ -44,8 +44,8 @@ typedef struct {
   msg_sem_t sem_server;
   msg_process_t client;
   msg_process_t server;
-  const char *to_client; // name of the mailbox
-  const char *to_server; // name of the mailbox
+  const char *to_client;        // name of the mailbox
+  const char *to_server;        // name of the mailbox
 } stream_t;
 
 typedef struct {

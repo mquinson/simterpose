@@ -28,8 +28,7 @@ int main(int argc, char **argv)
   struct timespec tvcl;
   clock_gettime(NULL, &tvcl);
   fprintf(stderr, "Client starting: #msg: %d; (time: %d; clock_gettime: %f)\n",
-		  msg_count,  time(NULL),
-		  tvcl.tv_sec + tvcl.tv_nsec/1000000000.0);
+          msg_count, time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
   int clientSocket;
   u_short port;
@@ -67,25 +66,25 @@ int main(int argc, char **argv)
 
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
 
-	  memset(&msg, 0, sizeof(struct msghdr));
-	  sprintf(buff, "This is the message #%d produced on the client.",msg_number);
+    memset(&msg, 0, sizeof(struct msghdr));
+    sprintf(buff, "This is the message #%d produced on the client.", msg_number);
 
-	  iov[0].iov_base = buff;
-	  iov[0].iov_len = strlen(buff) + 1;
+    iov[0].iov_base = buff;
+    iov[0].iov_len = strlen(buff) + 1;
 
-	  msg.msg_iov = iov;
-	  msg.msg_iovlen = 1;
-	  msg.msg_name = NULL;
-	  msg.msg_namelen = 0;
+    msg.msg_iov = iov;
+    msg.msg_iovlen = 1;
+    msg.msg_name = NULL;
+    msg.msg_namelen = 0;
 
 
-	  res = sendmsg(clientSocket, &msg, 0);
+    res = sendmsg(clientSocket, &msg, 0);
 
-	  if (res == -1) {
-		perror("erreur envoi client");
-		exit(1);
-	  }
-	  fprintf(stderr,"Client: sent message #%d\n",msg_number);
+    if (res == -1) {
+      perror("erreur envoi client");
+      exit(1);
+    }
+    fprintf(stderr, "Client: sent message #%d\n", msg_number);
 
   }
   shutdown(clientSocket, 2);
@@ -94,9 +93,7 @@ int main(int argc, char **argv)
   struct timespec end_tvcl;
   clock_gettime(NULL, &end_tvcl);
   fprintf(stderr, "Client exiting after %d msgs (time: %d; clock_gettime: %f)\n",
-		  msg_count,
-		  time(NULL),
-	  end_tvcl.tv_sec + end_tvcl.tv_nsec/1000000000.0);
+          msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;
 }

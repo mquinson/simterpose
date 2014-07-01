@@ -31,9 +31,7 @@ int main(int argc, char **argv)
   struct timespec tvcl;
   clock_gettime(NULL, &tvcl);
   fprintf(stderr, "Client starting: #msg: %d; size: %d (time: %d; clock_gettime: %f)\n",
-		  msg_count,message_size,
-		  time(NULL),
-		  tvcl.tv_sec + tvcl.tv_nsec/1000000000.0);
+          msg_count, message_size, time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
 
   int clientSocket;
@@ -59,35 +57,33 @@ int main(int argc, char **argv)
   cli_addr.sin_port = htons(port);
 
   if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
-    fprintf(stderr, "Client: Cannot connect to server: %s\n",strerror(errno));
+    fprintf(stderr, "Client: Cannot connect to server: %s\n", strerror(errno));
     exit(1);
   }
 
   int msg_number = 0;
 
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
-    sprintf(buff, "This is the message #%d produced on the client.",msg_number);
+    sprintf(buff, "This is the message #%d produced on the client.", msg_number);
     res = send(clientSocket, buff, message_size, 0);
     if (res == -1) {
       perror("Client: cannot send message");
       exit(1);
     }
-    fprintf(stderr,"Client: sent message #%d\n",msg_number);
+    fprintf(stderr, "Client: sent message #%d\n", msg_number);
 
     int length = message_size;
     while (length > 0) {
       res = recv(clientSocket, buff, length, 0);
       if (res == -1) {
-        fprintf(stderr, "Client: Error while sending message #%d: %s\n",
-                msg_number, strerror(errno));
+        fprintf(stderr, "Client: Error while sending message #%d: %s\n", msg_number, strerror(errno));
         exit(1);
       }
       length -= res;
     }
-    sprintf(expected, "This is the answer #%d, from the server.",msg_number);
-    if (strcmp(buff,expected)) {
-      fprintf(stderr, "Client: received answer does not match at step %d (got: %s)\n",
-              msg_number, buff);
+    sprintf(expected, "This is the answer #%d, from the server.", msg_number);
+    if (strcmp(buff, expected)) {
+      fprintf(stderr, "Client: received answer does not match at step %d (got: %s)\n", msg_number, buff);
       exit(1);
     }
     fprintf(stderr, "Client: reception of answer #%d was successful\n", msg_number);
@@ -98,9 +94,7 @@ int main(int argc, char **argv)
   struct timespec end_tvcl;
   clock_gettime(NULL, &end_tvcl);
   fprintf(stderr, "Client exiting after %d msgs (time: %d; clock_gettime: %f)\n",
-		  msg_count,
-		  time(NULL),
-	  end_tvcl.tv_sec + end_tvcl.tv_nsec/1000000000.0);
+          msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;
 }
