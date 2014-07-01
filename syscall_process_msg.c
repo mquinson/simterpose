@@ -106,7 +106,7 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 #ifndef address_translation
   process_descriptor_t remote_proc;
   if (process_send_call(proc, sysarg, &remote_proc)) {
-   //TODO
+    //TODO
 
     XBT_DEBUG("process_handle -> PROCESS_TASK_FOUND");
     ptrace_neutralize_syscall(pid);
@@ -147,8 +147,8 @@ static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
     process_descriptor_t remote_proc;
     if (process_send_call(proc, sysarg, &remote_proc)) {
 
-    	  // sendto_arg_t arg = &(sysarg->sendto);
-    	  // TODO fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+      // sendto_arg_t arg = &(sysarg->sendto);
+      // TODO fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
 
       return PROCESS_TASK_FOUND;
     }
@@ -221,33 +221,29 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 
 #ifdef address_translation
   if (reg->ret > 0) {
-	  recvmsg_arg_t arg = &(sysarg->recvmsg);
-	  fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
-	  XBT_DEBUG("syscall_recvmsg_pre fd = %d", file_desc->fd);
-	  if (socket_registered(proc, arg->sockfd) != -1) {
-	    if (!socket_netlink(proc, arg->sockfd)) {
-	    	  const char* mailbox;
-	    		  if(MSG_process_self() == file_desc->stream->client)
-	    			  mailbox = file_desc->stream->to_client;
-	    		  else if(MSG_process_self() == file_desc->stream->server)
-	    			  mailbox = file_desc->stream->to_server;
-	    		  else
-	    			  THROW_IMPOSSIBLE;
+    recvmsg_arg_t arg = &(sysarg->recvmsg);
+    fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+    XBT_DEBUG("syscall_recvmsg_pre fd = %d", file_desc->fd);
+    if (socket_registered(proc, arg->sockfd) != -1) {
+      if (!socket_netlink(proc, arg->sockfd)) {
+        const char *mailbox;
+        if (MSG_process_self() == file_desc->stream->client)
+          mailbox = file_desc->stream->to_client;
+        else if (MSG_process_self() == file_desc->stream->server)
+          mailbox = file_desc->stream->to_server;
+        else
+          THROW_IMPOSSIBLE;
 
-	    		  msg_task_t task;
-	    		  MSG_task_receive(&task, mailbox);
-	    	      if (strace_option)
-	    	        print_recvfrom_syscall(proc, &(proc->sysarg));
-	    	      return PROCESS_TASK_FOUND;
-	    }
-	  }
+        msg_task_t task;
+        MSG_task_receive(&task, mailbox);
+        if (strace_option)
+          print_recvfrom_syscall(proc, &(proc->sysarg));
+        return PROCESS_TASK_FOUND;
+      }
+    }
   }
-#endif
-
+#else
   if (!process_recv_in_call(proc, sysarg->recvmsg.sockfd)) {
-    if (strace_option)
-      print_read_syscall(proc, sysarg);
-#ifndef address_translation
     if (socket_registered(proc, sysarg->recvmsg.sockfd))
       if (!socket_network(proc, sysarg->recvmsg.sockfd))
         return PROCESS_CONTINUE;
@@ -281,8 +277,8 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
     }
     if (strace_option)
       print_read_syscall(proc, sysarg);
-#endif
   }
+#endif
   return *state;
 }
 
@@ -323,30 +319,30 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
     }
   }
   if (reg->ret > 0) {
-	  recvfrom_arg_t arg = &(sysarg->recvfrom);
-	  fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
-	  XBT_DEBUG("syscall_recvfrom_pre fd = %d", file_desc->fd);
+    recvfrom_arg_t arg = &(sysarg->recvfrom);
+    if (socket_registered(proc, arg->sockfd) != -1) {
+      if (!socket_netlink(proc, arg->sockfd)) {
+        fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+        XBT_DEBUG("syscall_recvfrom_pre fd = %d", file_desc->fd);
 
-	  const char* mailbox;
-	  if(MSG_process_self() == file_desc->stream->client)
-		  mailbox = file_desc->stream->to_client;
-	  else if(MSG_process_self() == file_desc->stream->server)
-		  mailbox = file_desc->stream->to_server;
-	  else
-		  THROW_IMPOSSIBLE;
+        const char *mailbox;
+        if (MSG_process_self() == file_desc->stream->client)
+          mailbox = file_desc->stream->to_client;
+        else if (MSG_process_self() == file_desc->stream->server)
+          mailbox = file_desc->stream->to_server;
+        else
+          THROW_IMPOSSIBLE;
 
-	  msg_task_t task;
-	  MSG_task_receive(&task, mailbox);
-      if (strace_option)
-        print_recvfrom_syscall(proc, &(proc->sysarg));
-      return PROCESS_TASK_FOUND;
+        msg_task_t task;
+        MSG_task_receive(&task, mailbox);
+        if (strace_option)
+          print_recvfrom_syscall(proc, &(proc->sysarg));
+        return PROCESS_TASK_FOUND;
+      }
+    }
   }
-#endif
-  // XBT_DEBUG("[%d] Seeing if %d receive something", pid, (int)reg->arg1);
-  XBT_DEBUG("Seeing if %d receive something", (int) reg->arg1);
-
+#else
   if (!process_recv_in_call(proc, sysarg->recvfrom.sockfd)) {
-#ifndef address_translation
     XBT_DEBUG("recvfrom_pre, full mediation");
     int flags = socket_get_flags(proc, reg->arg1);
     if (flags & O_NONBLOCK) {
@@ -376,8 +372,8 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
     }
     if (strace_option)
       print_recvfrom_syscall(proc, sysarg);
-#endif
   }
+#endif
   XBT_DEBUG("recvfrom_pre state = %s", state_names[*state]);
   return *state;
 }
@@ -1085,7 +1081,8 @@ int process_handle_msg(process_descriptor_t * proc, int status)
     ptrace_get_register(pid, &arg);
     int state;
     int ret;
-    XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret, proc->in_syscall);
+    XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret,
+              proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1195,22 +1192,22 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       break;
 
     case SYS_sendmsg:
-        if (!(proc->in_syscall))
-          ret = syscall_sendmsg_pre(pid, &arg, sysarg, proc, &state);
-        else
-          ret = syscall_sendmsg_post(pid, &arg, sysarg, proc);
-        if (ret)
-          return ret;
-        break;
+      if (!(proc->in_syscall))
+        ret = syscall_sendmsg_pre(pid, &arg, sysarg, proc, &state);
+      else
+        ret = syscall_sendmsg_post(pid, &arg, sysarg, proc);
+      if (ret)
+        return ret;
+      break;
 
-      case SYS_recvmsg:
-        if (!(proc->in_syscall))
-          ret = syscall_recvmsg_pre(pid, &arg, sysarg, proc, &state);
-        else
-          ret = syscall_recvmsg_post(pid, &arg, sysarg, proc);
-        if (ret)
-          return ret;
-        break;
+    case SYS_recvmsg:
+      if (!(proc->in_syscall))
+        ret = syscall_recvmsg_pre(pid, &arg, sysarg, proc, &state);
+      else
+        ret = syscall_recvmsg_post(pid, &arg, sysarg, proc);
+      if (ret)
+        return ret;
+      break;
 
 
     case SYS_shutdown:
@@ -1435,10 +1432,10 @@ int process_handle_mediate(process_descriptor_t * proc)
 
 int process_handle_active(process_descriptor_t * proc)
 {
-  XBT_DEBUG("PROCESS HANDLE ACTIVE");
   int status;
   pid_t pid = proc->pid;
   int proc_state = proc->state;
+  XBT_DEBUG("PROCESS HANDLE ACTIVE, state = %d ", proc->state);
   xbt_assert(!(proc->mediate_state));   // TODO: vérifier. c'est vrai sauf si on vient de handle_mediate et que la socket a été fermée
 
 //TODO
@@ -1480,19 +1477,21 @@ int process_handle_active(process_descriptor_t * proc)
 #endif
 
 
-  else if ((proc_state == PROC_RECVMSG) && (proc->in_syscall))
+  else if ((proc_state == PROC_RECVMSG) && (proc->in_syscall)) {
 #ifndef address_translation
     THROW_IMPOSSIBLE;
 #else
+    xbt_die("delete");
     if (process_recv_in_call(proc, proc->sysarg.recv.sockfd))
       process_reset_state(proc);
     else
       return PROCESS_ON_MEDIATION;
 #endif
 
-  else if ((proc_state & PROC_RECVMSG) && !(proc->in_syscall))
+  } else if ((proc_state & PROC_RECVMSG) && !(proc->in_syscall)) {
+    xbt_die("delete");
     process_recvmsg_out_call(proc);
-
+  }
   ptrace_resume_process(pid);
   if (waitpid(pid, &status, 0) < 0)
     xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
