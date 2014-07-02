@@ -406,6 +406,7 @@ static int syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
 {
   proc->in_syscall = 1;
   *state = 0;
+  XBT_DEBUG(" read_pre");
   get_args_read(proc, reg, sysarg);
   if (socket_registered(proc, reg->arg1) != -1) {
     if (!process_recv_in_call(proc, reg->arg1)) {
@@ -444,11 +445,10 @@ static int syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
 #else
       int flags = socket_get_flags(proc, reg->arg1);
       if (!(flags & O_NONBLOCK)) {
-    	  xbt_die("unimplemented ");
-    	  // TODO: retirer la mediation
         proc->state = PROC_READ;
         *state = PROCESS_ON_MEDIATION;
         proc->mediate_state = 1;
+  	  THROW_UNIMPLEMENTED;
       }
 #endif
     }
@@ -459,6 +459,7 @@ static int syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
 static int syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
+  XBT_DEBUG("read_post");
   get_args_read(proc, reg, sysarg);
   if (strace_option)
     print_read_syscall(proc, sysarg);
@@ -1675,9 +1676,9 @@ int process_handle_active(process_descriptor_t * proc)
     // en full quand la socket est fermée
     process_recvfrom_out_call(proc);
 
-  else if ((proc_state & PROC_READ) && !(proc->in_syscall))
+  else if ((proc_state & PROC_READ) && !(proc->in_syscall)){
     process_read_out_call(proc);
-
+  }
 #ifndef address_translation
   else if ((proc_state == PROC_RECVFROM) && (proc->in_syscall)) // en full translation
     THROW_IMPOSSIBLE;
@@ -1712,6 +1713,5 @@ int process_handle_active(process_descriptor_t * proc)
   ptrace_resume_process(pid);
   if (waitpid(pid, &status, 0) < 0)
     xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-
   return process_handle_msg(proc, status);
 }

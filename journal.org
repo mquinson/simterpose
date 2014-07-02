@@ -810,5 +810,10 @@ toujours le message dedans
   - Ca fonctionne pour le couple sendto/recvfrom
 - J'ai rajouté le traitement des sendmsg/recvmsg + test
 - ajout des syscall: getpeername, getsockopt, setsockopt, fcntl, creat
-** TODO reste à modifier la version SD de poll pour MSG
 ** TODO ajout d'autres syscall? (qui n'étaient pas dans version SD)
+* <2014-07-02 mer.>
+** TODO ajouter poll et select:
+   modifier la version SD avec le FES et les timeout, pour l'adapter
+   pour MSG: faire des irecv, on récupère des msg_comm_t, on les met
+   tous dans un tableau, et on fait un waitany dessus
+** TODO tests
