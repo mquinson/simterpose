@@ -18,12 +18,7 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
   result->state = 0;
   result->in_syscall = 0;
 
-  result->in_sched_list = 0;    // in sched_list
-  result->in_mediate_list = 0;  // in mediate_list
-
   result->mediate_state = 0;
-  result->in_timeout = PROC_NO_TIMEOUT;
-  result->on_simulation = 0;
 
   int i;
   for (i = 0; i < MAX_FD; ++i)

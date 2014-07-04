@@ -44,7 +44,6 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
       XBT_DEBUG("hosts: %s send to %s", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host));
       send_task(s->fd.proc->host, task);
 
-      is->fd.proc->on_simulation = 1;
       return 1;
     }
     return 0;
@@ -632,7 +631,7 @@ static int process_select_call(process_descriptor_t * proc)
     return match;
   }
 
-  if (proc->in_timeout == PROC_TIMEOUT_EXPIRE) {
+/*  if (proc->in_timeout == PROC_TIMEOUT_EXPIRE) {
     XBT_DEBUG("Timeout for select");
 
     FD_ZERO(&fd_rd);
@@ -647,7 +646,7 @@ static int process_select_call(process_descriptor_t * proc)
       print_select_syscall(proc, &(proc->sysarg));
     proc->in_timeout = PROC_NO_TIMEOUT;
     return 1;
-  }
+  }*/
   return 0;
 }
 
@@ -665,6 +664,7 @@ static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
   proc->in_syscall = 0;
   proc->state = PROC_SELECT;
 }
+
 
 static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {

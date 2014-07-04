@@ -69,7 +69,6 @@ void receive_task(struct infos_socket *is, process_descriptor_t * proc_receiver)
 
   MSG_task_set_data(tci->task, &(proc_receiver->pid));
   MSG_task_receive(&(tci->task), proc_receiver->name);
-  proc_receiver->on_simulation = 1;
   free(tci);
 
   XBT_DEBUG("Leaving task_schedule_receive");

@@ -69,12 +69,7 @@ struct process_descriptor {
   int state;
   int in_syscall;
 
-  unsigned int in_sched_list:1;
-  unsigned int in_mediate_list:1;
-
-  int mediate_state;
-  unsigned int in_timeout:2;
-  unsigned int on_simulation:1;
+  int mediate_state; // Todo remove
 
   syscall_arg_u sysarg;
 };
