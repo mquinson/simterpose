@@ -444,12 +444,8 @@ static int syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
       }
 #else
       int flags = socket_get_flags(proc, reg->arg1);
-      if (!(flags & O_NONBLOCK)) {
-        proc->state = PROC_READ;
-        *state = PROCESS_ON_MEDIATION;
-        proc->mediate_state = 1;
-  	  THROW_UNIMPLEMENTED;
-      }
+      if (!(flags & O_NONBLOCK))
+        THROW_UNIMPLEMENTED;
 #endif
     }
   }
@@ -519,13 +515,14 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 }
 
 
-static int process_poll_call(process_descriptor_t * proc)
+static void process_poll_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering poll %lf \n", SD_get_clock());
   poll_arg_t arg = (poll_arg_t) & (proc->sysarg.poll);
 
-  int match = 0;
   int i;
+  xbt_dynar_t comms = xbt_dynar_new(sizeof(msg_comm_t), NULL);
+  xbt_dynar_t backup = xbt_dynar_new(sizeof(int), NULL);
 
   for (i = 0; i < arg->nbfd; ++i) {
     struct pollfd *temp = &(arg->fd_list[i]);
@@ -537,42 +534,36 @@ static int process_poll_call(process_descriptor_t * proc)
       int sock_status = socket_get_state(is);
       XBT_DEBUG("%d-> %d\n", temp->fd, sock_status);
       if (temp->events & POLLIN) {
-        if (sock_status & SOCKET_READ_OK || sock_status & SOCKET_CLOSED) {
-          temp->revents = temp->revents | POLLIN;
-          ++match;
-        } else {
-          temp->revents = temp->revents & ~POLLIN;
-        }
-      } else if (temp->events & POLLOUT) {
-        XBT_DEBUG("POLLOUT\n");
-        if (sock_status & SOCKET_WR_NBLK) {
-          temp->revents = temp->revents | POLLOUT;
-          ++match;
-        } else {
-          temp->revents = temp->revents & ~POLLOUT;
-        }
+        msg_task_t task;
+        msg_comm_t comm = MSG_task_irecv(&task, MSG_host_get_name(is->host));
+        xbt_dynar_push(comms, comm);
+        xbt_dynar_push(backup, &i);
       } else
-        XBT_WARN("Mediation different than POLLIN are not handle for poll\n");
+        XBT_WARN("Poll only handles POLLIN for now\n");
     }
   }
-  if (match > 0) {
+  int nb = MSG_comm_waitany(comms);
+  msg_comm_t comm = xbt_dynar_get_ptr(comms, nb);
+  int j = xbt_dynar_get_as(comms, nb, int);
+  if (MSG_comm_get_status(comm) == MSG_OK) {
+    struct pollfd *temp = &(arg->fd_list[j]);
+    temp->revents = temp->revents | POLLIN;
+
     XBT_DEBUG("Result for poll\n");
-    sys_build_poll(proc, &(proc->sysarg), match);
+    sys_build_poll(proc, &(proc->sysarg), 1);
     if (strace_option)
       print_poll_syscall(proc, &(proc->sysarg));
     free(proc->sysarg.poll.fd_list);
-    return match;
   }
-  if (proc->in_timeout == PROC_TIMEOUT_EXPIRE) {
+  // fixme ajouter le timeout
+/*  if (proc->in_timeout == PROC_TIMEOUT_EXPIRE) {
     XBT_DEBUG("Time out on poll\n");
     sys_build_poll(proc, &(proc->sysarg), 0);
     if (strace_option)
       print_poll_syscall(proc, &(proc->sysarg));
     free(proc->sysarg.poll.fd_list);
     proc->in_timeout = PROC_NO_TIMEOUT;
-    return 1;
-  }
-  return match;
+  }*/
 }
 
 static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -581,14 +572,12 @@ static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   get_args_poll(proc, reg, sysarg);
   if (strace_option)
     print_poll_syscall(proc, sysarg);
-  if (sysarg->poll.timeout >= 0){
-	  THROW_UNIMPLEMENTED;
-	  process_poll_call(proc); // si >0 alors débloquer
-  }
-  else
-	 proc->in_timeout = 1;
+
+  XBT_WARN("Poll: Timeout not handled\n");
+  process_poll_call(proc);
   ptrace_neutralize_syscall(proc->pid);
   proc->in_syscall = 0;
+  proc->state = PROC_POLL;
 }
 
 static int process_select_call(process_descriptor_t * proc)
@@ -628,7 +617,7 @@ static int process_select_call(process_descriptor_t * proc)
         FD_CLR(i, &(fd_wr));
     }
     if (FD_ISSET(i, &(fd_ex))) {
-      XBT_WARN("Mediation for exception states on socket are not support yet");
+      XBT_WARN("Select does not handle exception states for now");
     }
   }
   if (match > 0) {
@@ -668,14 +657,13 @@ static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
   get_args_select(proc, reg, sysarg);
   if (strace_option)
     print_select_syscall(proc, sysarg);
-  if (sysarg->select.timeout >= 0){
-	  THROW_UNIMPLEMENTED;
-	  process_select_call(proc);
-   // FES_push_timeout(pid, sysarg->select.timeout + SD_get_clock());
-  }else
-    proc->in_timeout = 1;
+
+  XBT_WARN("Select: Timeout not handled\n");
+  process_select_call(proc);
+
   ptrace_neutralize_syscall(proc->pid);
   proc->in_syscall = 0;
+  proc->state = PROC_SELECT;
 }
 
 static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1349,19 +1337,19 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
       // ignore SYS_stat, SYS_fstat, SYS_lstat
 
-      case SYS_poll:
-         if (!(proc->in_syscall))
-         syscall_poll_pre(&arg, sysarg, proc);
-        else {
-         proc->in_syscall = 0;
-         THROW_IMPOSSIBLE;
-         }
-         break;
+    case SYS_poll:
+      if (!(proc->in_syscall))
+        syscall_poll_pre(&arg, sysarg, proc);
+      else {
+        proc->in_syscall = 0;
+        THROW_IMPOSSIBLE;
+      }
+      break;
 
       // ignore SYS_lseek, SYS_mmap, SYS_mprotect, SYS_munmap, SYS_rt_sigaction, SYS_rt_sigprocmask, SYS_rt_sigreturn,
       // SYS_ioctl, SYS_pread64, SYS_pwrite64 , SYS_readv, SYS_writev, SYS_access, SYS_pipe
 
-      case SYS_select:
+    case SYS_select:
       if (!(proc->in_syscall))
         syscall_select_pre(&arg, sysarg, proc);
       else {
@@ -1672,11 +1660,11 @@ int process_handle_active(process_descriptor_t * proc)
   xbt_assert(!(proc->mediate_state));   // TODO: vérifier. c'est vrai sauf si on vient de handle_mediate et que la socket a été fermée
 
 
-   if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall))
+  if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall))
     // en full quand la socket est fermée
     process_recvfrom_out_call(proc);
 
-  else if ((proc_state & PROC_READ) && !(proc->in_syscall)){
+  else if ((proc_state & PROC_READ) && !(proc->in_syscall)) {
     process_read_out_call(proc);
   }
 #ifndef address_translation
@@ -1684,18 +1672,18 @@ int process_handle_active(process_descriptor_t * proc)
     THROW_IMPOSSIBLE;
 #endif
 
-  else if ((proc_state == PROC_READ) && (proc->in_syscall)){
+  else if ((proc_state == PROC_READ) && (proc->in_syscall)) {
 #ifndef address_translation
     THROW_IMPOSSIBLE;
 #else
-   xbt_die("delete");
+    xbt_die("delete");
     if (process_recv_in_call(proc, proc->sysarg.recv.sockfd))
       process_reset_state(proc);
     else
       return PROCESS_ON_MEDIATION;
 #endif
 
-  }else if ((proc_state == PROC_RECVMSG) && (proc->in_syscall)) {
+  } else if ((proc_state == PROC_RECVMSG) && (proc->in_syscall)) {
 #ifndef address_translation
     THROW_IMPOSSIBLE;
 #else
