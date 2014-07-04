@@ -479,10 +479,10 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   if (socket_registered(proc, sysarg->write.fd) != -1) {
     process_descriptor_t remote_proc;
     if (process_send_call(proc, sysarg, &remote_proc)) {
-      ptrace_neutralize_syscall(pid);
+      ptrace_neutralize_syscall(proc->pid);
 
       sendto_arg_t arg = &(sysarg->sendto);
-      ptrace_restore_syscall(pid, SYS_sendto, arg->ret);
+      ptrace_restore_syscall(proc->pid, SYS_sendto, arg->ret);
       if (strace_option)
         print_write_syscall(proc, sysarg);
       proc->in_syscall = 0;
@@ -777,14 +777,42 @@ static void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process
 }
 
 
+static void process_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  getsockopt_arg_t arg = &(sysarg->getsockopt);
+  pid_t pid = proc->pid;
+
+  arg->ret = 0;
+  if (arg->optname == SO_REUSEADDR) {
+    arg->optlen = sizeof(int);
+    arg->optval = malloc(arg->optlen);
+    *((int *) arg->optval) = socket_get_option(proc, arg->sockfd, SOCK_OPT_REUSEADDR);
+  } else {
+    XBT_WARN("Option non supported by Simterpose.");
+    arg->optlen = 0;
+    arg->optval = NULL;
+  }
+
+  ptrace_neutralize_syscall(pid);
+  ptrace_restore_syscall(pid, SYS_getsockopt, arg->ret);
+
+  if (arg->optname == SO_REUSEADDR) {
+    ptrace_poke(pid, (void *) arg->dest, &(arg->optval), sizeof(arg->optlen));
+    ptrace_poke(pid, (void *) arg->dest_optlen, &(arg->optlen), sizeof(socklen_t));
+  }
+
+  free(arg->optval);
+  proc->in_syscall = 0;
+}
+
 static void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
 #ifndef address_translation
-  get_args_getsockopt(pid, reg, sysarg);
+  get_args_getsockopt(proc, reg, sysarg);
   process_getsockopt_syscall(proc, sysarg);
   if (strace_option)
-    print_getsockopt_syscall(pid, sysarg);
+    print_getsockopt_syscall(proc, sysarg);
 #endif
 }
 
@@ -796,14 +824,33 @@ static void syscall_getsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process
     print_getsockopt_syscall(proc, sysarg);
 }
 
+static void process_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  setsockopt_arg_t arg = &(sysarg->setsockopt);
+  pid_t pid = proc->pid;
+  //TODO really handle setsockopt that currently raise a warning
+  arg->ret = 0;
+
+  if (arg->optname == SO_REUSEADDR)
+    socket_set_option(proc, arg->sockfd, SOCK_OPT_REUSEADDR, *((int *) arg->optval));
+  else
+    XBT_WARN("Option non supported by Simterpose.");
+
+  ptrace_neutralize_syscall(pid);
+  ptrace_restore_syscall(pid, SYS_setsockopt, arg->ret);
+
+  proc->in_syscall = 0;
+}
+
+
 static void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
 #ifndef address_translation
-  get_args_setsockopt(pid, reg, sysarg);
+  get_args_setsockopt(proc, reg, sysarg);
   process_setsockopt_syscall(proc, sysarg);
   if (strace_option)
-    print_setsockopt_syscall(pid, sysarg);
+    print_setsockopt_syscall(proc, sysarg);
   free(sysarg->setsockopt.optval);
 #endif
 }
@@ -830,8 +877,8 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
     break;
   }
 #ifndef address_translation
-  ptrace_neutralize_syscall(pid);
-  ptrace_restore_syscall(pid, SYS_fcntl, arg->ret);
+  ptrace_neutralize_syscall(proc->pid);
+  ptrace_restore_syscall(proc->pid, SYS_fcntl, arg->ret);
   proc->in_syscall = 0;
 #endif
 }
@@ -840,9 +887,9 @@ static void syscall_fcntl_pre(reg_s * reg, syscall_arg_u * sysarg, process_descr
 {
   proc->in_syscall = 1;
 #ifndef address_translation
-  get_args_fcntl(pid, reg, sysarg);
+  get_args_fcntl(proc, reg, sysarg);
   if (strace_option)
-    print_fcntl_syscall(pid, sysarg);
+    print_fcntl_syscall(proc, sysarg);
   process_fcntl_call(proc, sysarg);
 #endif
 }
@@ -1092,7 +1139,7 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
       print_accept_syscall(proc, sysarg);
 
 // TODO     XBT_DEBUG(" ----> S -> accept_in (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
-    MSG_sem_acquire(proc->sem_conn);
+ //   MSG_sem_acquire(proc->sem_conn);
 //      XBT_DEBUG(" ----> S -> accept_in: accept pris! (2e episode)");
 #endif
 
