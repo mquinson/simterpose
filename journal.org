@@ -812,8 +812,30 @@ toujours le message dedans
 - ajout des syscall: getpeername, getsockopt, setsockopt, fcntl, creat
 ** TODO ajout d'autres syscall? (qui n'étaient pas dans version SD)
 * <2014-07-02 mer.>
-** TODO ajouter poll et select:
+- ajouter poll et select:
    modifier la version SD avec le FES et les timeout, pour l'adapter
    pour MSG: faire des irecv, on récupère des msg_comm_t, on les met
    tous dans un tableau, et on fait un waitany dessus
 ** TODO tests
+* <2014-07-04 ven.>
+- Gestion de poll et select:
+  - waitany attend la fin de la tâche (et pas le début) donc ce sera
+    pas tout à fait correct 
+  - on peut pas mettre de timeout (possible sur wait mais pas
+    waitany..) donc c'est pas géré pour l'instant  
+  - puisqu'on veut savoir si on PEUT lire ou écrire, on doit pas le
+    faire? donc est-ce que c'est correct de faire un irecv?
+** TODO modifierer poll et select
+- Je commence à réparer la full_mediation:
+  - Remise au propre: 
+    - ajout des fonctions manquantes pour getsockopt
+    et setsockopt
+    - passer le proc en argument et pas le pid
+  - Sémaphores pour l'établissement de connexion
+  - Envois et réceptions
+    - 'Transport endpoint not connected' (comme avant, avec SD..) On a
+      ça dès la première tentative d'envoi. Donc soit la connexion
+      n'est pas bien établie, soit les envois se font mal. La tâche
+      d'envoi MSG a bien lieu, et la réception aussi
+** TODO sur les envois/réception gérer les erreurs:
+socket closed, fd null etc, comme dans process_recv_in_call ..
