@@ -49,6 +49,7 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
     return 0;
   } else
     THROW_IMPOSSIBLE;
+  return 0;
 }
 
 static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc, int *state)
@@ -105,7 +106,6 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 #ifndef address_translation
   process_descriptor_t remote_proc;
   if (process_send_call(proc, sysarg, &remote_proc)) {
-    //TODO
 
     XBT_DEBUG("process_handle -> PROCESS_TASK_FOUND");
     ptrace_neutralize_syscall(pid);
@@ -246,15 +246,12 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
         return PROCESS_CONTINUE;
 
     int flags = socket_get_flags(proc, reg->arg1);
-    if (flags & O_NONBLOCK) {
-      sysarg->recvmsg.ret = -EAGAIN;    /* EAGAIN 11 Try again */
-      ptrace_neutralize_syscall(pid);
-      proc->in_syscall = 0;
-      process_recvmsg_out_call(proc);
-    } else {
+    if (flags & O_NONBLOCK)
+    	THROW_UNIMPLEMENTED;
+    else {
       proc->state = PROC_RECVMSG;
       proc->mediate_state = 1;
-      *state = PROCESS_ON_MEDIATION;
+      *state = PROCESS_ON_MEDIATION; //TODO retirer
     }
     if (strace_option)
       print_read_syscall(proc, sysarg);
@@ -315,6 +312,7 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
       sys_translate_recvfrom_out(proc, sysarg);
     }
   }
+#endif
   if (reg->ret > 0) {
     recvfrom_arg_t arg = &(sysarg->recvfrom);
     if (socket_registered(proc, arg->sockfd) != -1) {
@@ -331,46 +329,22 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
           THROW_IMPOSSIBLE;
 
         msg_task_t task;
-        MSG_task_receive(&task, mailbox);
+        msg_error_t err = MSG_task_receive(&task, mailbox);
+        if(err != MSG_OK){
+			struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+		   int sock_status = socket_get_state(is);
+		   if (sock_status & SOCKET_CLOSED){
+			   process_recvfrom_out_call(proc);
+			 return RECV_CLOSE;
+		   }
+        }
         if (strace_option)
           print_recvfrom_syscall(proc, &(proc->sysarg));
         return PROCESS_TASK_FOUND;
       }
     }
   }
-#else
-  if (!process_recv_in_call(proc, sysarg->recvfrom.sockfd)) {
-    XBT_DEBUG("recvfrom_pre, full mediation");
-    int flags = socket_get_flags(proc, reg->arg1);
-    if (flags & O_NONBLOCK) {
-      sysarg->recvfrom.ret = -EAGAIN;   /* EAGAIN 11 Try again */
-      ptrace_neutralize_syscall(pid);
-      proc->in_syscall = 0;
-      process_recvmsg_out_call(proc);
-    } else {
-      proc->state = PROC_RECVFROM;
-      proc->mediate_state = 1;
-      *state = PROCESS_ON_MEDIATION;
-    }
-  } else                        // comment on a ça?
-  {
-    int res = process_recv_call(proc, sysarg);
-    if (res == PROCESS_TASK_FOUND) {
-      ptrace_neutralize_syscall(pid);
-      proc->in_syscall = 0;
-      proc->state = PROC_RECVFROM;
-      return PROCESS_TASK_FOUND;
-    } else {
-      if (res == RECV_CLOSE)
-        sysarg->recvfrom.ret = 0;
-      ptrace_neutralize_syscall(pid);
-      proc->in_syscall = 0;
-      process_recvfrom_out_call(proc);
-    }
-    if (strace_option)
-      print_recvfrom_syscall(proc, sysarg);
-  }
-#endif
+
   XBT_DEBUG("recvfrom_pre state = %s", state_names[*state]);
   return *state;
 }
@@ -1101,8 +1075,11 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
   stream->to_server = MSG_host_get_name(MSG_host_self());
 
   file_desc->stream = stream;
+  XBT_DEBUG(" ----> S -> accept_in j'essaie de prendre server");
   MSG_sem_acquire(file_desc->stream->sem_server);
+  XBT_DEBUG(" ----> S -> accept_in j'ai pris serveur je relâche client");
   MSG_sem_release(file_desc->stream->sem_client);
+  XBT_DEBUG(" ----> S -> accept_in j'ai relâché client");
 
   //We try to find here if there's a connection to accept
   if (comm_has_connect_waiting(get_infos_socket(proc, arg->sockfd))) {
@@ -1138,9 +1115,10 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
     if (strace_option)
       print_accept_syscall(proc, sysarg);
 
-// TODO     XBT_DEBUG(" ----> S -> accept_in (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre accept (2e episode)");
- //   MSG_sem_acquire(proc->sem_conn);
-//      XBT_DEBUG(" ----> S -> accept_in: accept pris! (2e episode)");
+// TODO
+    XBT_DEBUG(" ----> S -> accept_in (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre SERVER (2e episode)");
+    MSG_sem_acquire(file_desc->stream->sem_server);
+    XBT_DEBUG(" ----> S -> accept_in: SERVER pris! (2e episode)");
 #endif
 
     return conn_proc->pid;
@@ -1177,6 +1155,8 @@ static void syscall_accept_post(reg_s * reg, syscall_arg_u * sysarg, process_des
   accept_arg_t arg = &(sysarg->accept);
   fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
 
+
+  XBT_DEBUG(" ----> S -> accept_post (2e etape address translation?) je prends serveur");
   MSG_sem_acquire(file_desc->stream->sem_server);
 }
 
@@ -1306,8 +1286,11 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
     file_desc->stream->client = MSG_process_self();
     file_desc->stream->to_client = MSG_host_get_name(MSG_host_self());
 
+    XBT_DEBUG(" ----> S -> connect_pre je relâche serveur");
     MSG_sem_release(file_desc->stream->sem_server);
+    XBT_DEBUG(" ----> S -> connect_pre j'ai relâché serveur je prends client");
     MSG_sem_acquire(file_desc->stream->sem_client);
+    XBT_DEBUG(" ----> S -> connect_pre j'ai pris client");
 
     int status = 0;
     return process_handle_msg(proc, status);
@@ -1332,7 +1315,10 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
 
   connect_arg_t arg = &(sysarg->connect);
   fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+
+  XBT_DEBUG(" ----> S -> connect_post je relâche serveur (2e?)");
   MSG_sem_release(file_desc->stream->sem_server);
+  XBT_DEBUG(" ----> S -> connect_post j'ai relâché serveur");
 }
 
 int process_handle_msg(process_descriptor_t * proc, int status)
@@ -1345,7 +1331,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
     ptrace_get_register(pid, &arg);
     int state;
     int ret;
-    //XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret,proc->in_syscall);
+    XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret,proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1596,7 +1582,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
     default:
-      XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+     // XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else
@@ -1623,30 +1609,7 @@ int process_handle_mediate(process_descriptor_t * proc)
   xbt_assert(proc->in_syscall);
   xbt_assert(proc->mediate_state);
 
-  if (state & PROC_RECVFROM) {
-    if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
-#ifndef address_translation
-      pid_t pid = proc->pid;
-      int res = process_recv_call(proc, &(proc->sysarg));
-      if (res == PROCESS_TASK_FOUND) {
-        if (strace_option)
-          print_recvfrom_syscall(proc, &(proc->sysarg));
-        ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;
-        proc->mediate_state = 0;
-        return PROCESS_TASK_FOUND;
-      } else if (res == RECV_CLOSE) {
-        if (strace_option)
-          print_recvfrom_syscall(proc, &(proc->sysarg));
-        ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro, comment on gère le cas de la socket fermée dans active?
-        return process_handle_active(proc);
-      }
-#endif
-    }
-  }
-
-  else if (state & PROC_READ) {
+ if (state & PROC_READ) {
     if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
 #ifndef address_translation
       pid_t pid = proc->pid;
@@ -1706,18 +1669,9 @@ int process_handle_active(process_descriptor_t * proc)
   XBT_DEBUG("PROCESS HANDLE ACTIVE, state = %d ", proc->state);
   xbt_assert(!(proc->mediate_state));   // TODO: vérifier. c'est vrai sauf si on vient de handle_mediate et que la socket a été fermée
 
-
-  if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall))
-    // en full quand la socket est fermée
-    process_recvfrom_out_call(proc);
-
-  else if ((proc_state & PROC_READ) && !(proc->in_syscall)) {
+  if ((proc_state & PROC_READ) && !(proc->in_syscall)) {
     process_read_out_call(proc);
   }
-#ifndef address_translation
-  else if ((proc_state == PROC_RECVFROM) && (proc->in_syscall)) // en full translation
-    THROW_IMPOSSIBLE;
-#endif
 
   else if ((proc_state == PROC_READ) && (proc->in_syscall)) {
 #ifndef address_translation
