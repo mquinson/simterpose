@@ -42,8 +42,6 @@ int main(int argc, char *argv[])
 {
   float msec_per_flop = 0;      // variable not used
   int flop_option = 0;
-  xbt_log_control_set("simterpose.:info");
-  xbt_log_control_set("SYSCALL_PROCESS_MSG.:debug");
 
   MSG_init(&argc, argv);
 
