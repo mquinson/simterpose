@@ -751,7 +751,7 @@ toujours le message dedans
   accepte la connexion.
 ** DONE finir de modifier les sémaphores
 ** DONE ajouter les syscall manquants par rapport à la version SD
-** TODO cas de full
+** DONE cas de full
 
 * <2014-06-26 jeu.>
 - le processus qui veut se connecter doit trouver qui est à l'autre
@@ -839,3 +839,32 @@ toujours le message dedans
       d'envoi MSG a bien lieu, et la réception aussi
 ** TODO sur les envois/réception gérer les erreurs:
 socket closed, fd null etc, comme dans process_recv_in_call ..
+* <2014-07-07 lun.>
+- Un peu de nettoyage:
+  - suppression de warnings, todo, fixme
+  - modification du type de logs directement dans le .sh
+- Full mediation:
+  - Attention au if (socket_registered(proc, sysarg->recvmsg.sockfd))
+    qui vaut forcément true (1 ou -1)
+  - Je comprends pas: normalement on peek/poke, donc on n'est pas
+    sensés avoir un 'not connected' ..
+  - Le print_sendto_syscall utilisait une structure de recvfrom ..
+  - Le problème venait du fait que les syscall sont neutralisés
+    différemment, et on n'a plus la valeur de retour originelle. A
+    l'envoi je conserve le message et sa taille dans l'objet
+    msg_task_t. Ca permet à la réception de le récupérer (sinon le
+    syscall a tout cassé)
+    - Pour ça j'ai dû utiliser une structure de sendto, parce que
+      send n'a pas de champ data. A voir si ça peut poser problème.
+  - Fonctionne à peu près pour sendto/recvfrom: envoie les messages et
+    termine, nécessite un bon nettoyage
+    - j'ai commencé à retirer le handle mediate: il n'est plus appelé
+      depuis le handler principal, et la fonction existe encore
+      uniquement pour sendmsg/recvmsg. Bientôt supprimé
+** TODO Il y a un 6e sendto pourri qui se print en full mediation
+** TODO shutdown est mal traité en full mediation (renvoie -107)
+** TODO Vérifier la cohérence des méthodes
+En fait il y a sans doute un problème dans la méthode puisque les deux
+donnent exactement le même temps.. Ou alors c'est parce que c'est le
+temps simulé?
+** TODO sendmsg/recvmsg
