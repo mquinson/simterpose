@@ -119,9 +119,8 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   }
 #else
   if (socket_registered(proc, reg->arg1) != -1) {
-    if (socket_network(proc, reg->arg1)) {
+    if (socket_network(proc, reg->arg1))
       sys_translate_sendto_in(proc, sysarg);
-    }
   }
 #endif
   return *state;
@@ -144,13 +143,8 @@ static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   }
   if ((int) reg->ret > 0) {
     process_descriptor_t remote_proc;
-    if (process_send_call(proc, sysarg, &remote_proc)) {
-
-      // sendto_arg_t arg = &(sysarg->sendto);
-      // TODO fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
-
+    if (process_send_call(proc, sysarg, &remote_proc))
       return PROCESS_TASK_FOUND;
-    }
   }
 #endif
   return PROCESS_CONTINUE;
@@ -1114,7 +1108,6 @@ static int process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * s
     if (strace_option)
       print_accept_syscall(proc, sysarg);
 
-// TODO
     XBT_DEBUG(" ----> S -> accept_in (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre SERVER (2e episode)");
     MSG_sem_acquire(file_desc->stream->sem_server);
     XBT_DEBUG(" ----> S -> accept_in: SERVER pris! (2e episode)");
