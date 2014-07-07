@@ -116,6 +116,7 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
     sendto_arg_t arg = &(sysarg->sendto);
     proc->in_syscall = 0;
     ptrace_restore_syscall(pid, SYS_sendto, arg->ret);
+
     if (strace_option)
       print_sendto_syscall(proc, sysarg);
     return PROCESS_TASK_FOUND;
@@ -705,6 +706,11 @@ static int syscall_shutdown_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
   if (strace_option)
     print_shutdown_syscall(proc, sysarg);
   process_shutdown_call(proc, sysarg);
+
+#ifndef address_translation
+// TODO
+#endif
+
   return PROCESS_CONTINUE;
 }
 
@@ -1611,37 +1617,11 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 // TODO: supprimer quand le full sera traité
 int process_handle_mediate(process_descriptor_t * proc)
 {
- // xbt_die("PROCESS HANDLE MEDIATE");
+  xbt_die("PROCESS HANDLE MEDIATE");
   int state = proc->state;
 
   xbt_assert(proc->in_syscall);
   xbt_assert(proc->mediate_state);
-
-#ifndef address_translation
-  if (state & PROC_RECVFROM) {
-      XBT_DEBUG("mediate recvfrom_in");
-      if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
-
-        pid_t pid = proc->pid;
-        int res = process_recv_call(proc, &(proc->sysarg));
-        if (res == PROCESS_TASK_FOUND) {
-          if (strace_option)
-            print_recvfrom_syscall(proc, &(proc->sysarg));
-          ptrace_neutralize_syscall(pid);
-          proc->in_syscall = 0;
-          proc->mediate_state = 0;
-          return PROCESS_TASK_FOUND;
-        } else if (res == RECV_CLOSE) {
-          if (strace_option)
-            print_recvfrom_syscall(proc, &(proc->sysarg));
-          ptrace_neutralize_syscall(pid);
-          proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro, comment on gère le cas de la socket fermée dans active?
-          return process_handle_active(proc);
-        }
-      }
-  }
-#endif
-
 
  if (state & PROC_READ) {
     if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
@@ -1703,28 +1683,7 @@ int process_handle_active(process_descriptor_t * proc)
   XBT_DEBUG("PROCESS HANDLE ACTIVE, state = %d ", proc->state);
   xbt_assert(!(proc->mediate_state));   // TODO: vérifier. c'est vrai sauf si on vient de handle_mediate et que la socket a été fermée
 
-#ifndef address_translation
-  if ((proc_state & PROC_RECVFROM) && !(proc->in_syscall))
-      process_recvfrom_out_call(proc);
-#endif
-
-
-  if ((proc_state & PROC_READ) && !(proc->in_syscall)) {
-    process_read_out_call(proc);
-  }
-
-  else if ((proc_state == PROC_READ) && (proc->in_syscall)) {
-#ifndef address_translation
-    THROW_IMPOSSIBLE;
-#else
-    xbt_die("delete");
-    if (process_recv_in_call(proc, proc->sysarg.recv.sockfd))
-      process_reset_state(proc);
-    else
-      return PROCESS_ON_MEDIATION;
-#endif
-
-  } else if ((proc_state == PROC_RECVMSG) && (proc->in_syscall)) {
+  if ((proc_state == PROC_RECVMSG) && (proc->in_syscall)) {
 #ifndef address_translation
     THROW_IMPOSSIBLE;
 #else
