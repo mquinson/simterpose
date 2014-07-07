@@ -233,7 +233,7 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
         else
           THROW_IMPOSSIBLE;
 
-        msg_task_t task;
+        msg_task_t task = NULL;
         MSG_task_receive(&task, mailbox);
         return PROCESS_TASK_FOUND;
       }
@@ -328,8 +328,9 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
         else
           THROW_IMPOSSIBLE;
 
-        msg_task_t task;
+        msg_task_t task = NULL;
         msg_error_t err = MSG_task_receive(&task, mailbox);
+
         if(err != MSG_OK){
 			struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
 		   int sock_status = socket_get_state(is);
@@ -338,8 +339,6 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
 			 return RECV_CLOSE;
 		   }
         }
-        if (strace_option)
-          print_recvfrom_syscall(proc, &(proc->sysarg));
         return PROCESS_TASK_FOUND;
       }
     }
