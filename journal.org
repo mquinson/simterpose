@@ -864,7 +864,9 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
 ** TODO Il y a un 6e sendto pourri qui se print en full mediation
 ** TODO shutdown est mal traité en full mediation (renvoie -107)
 ** TODO Vérifier la cohérence des méthodes
-En fait il y a sans doute un problème dans la méthode puisque les deux
-donnent exactement le même temps.. Ou alors c'est parce que c'est le
-temps simulé?
+- En fait il y a sans doute un problème dans la méthode puisque les deux donnent
+  exactement le même temps.. Ou alors c'est parce que c'est le temps simulé?
+- [Mt] Je sais pas comment tu as fait tes chronométrages, mais à priori, oui,
+  c'est ça. Quelle que soit la façon de contrôler l'application, les actions
+  qu'elle fait prennent exactement le même temps dans le simulo. 
 ** TODO sendmsg/recvmsg
