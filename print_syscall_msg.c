@@ -549,7 +549,7 @@ void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
 void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  sendto_arg_t arg = &(sysarg->sendto);
+  recvfrom_arg_t arg = &(sysarg->recvfrom);
   int domain = get_domain_socket(proc, arg->sockfd);
 
   // fprintf(stderr,"[%d] recvfrom(", pid);
