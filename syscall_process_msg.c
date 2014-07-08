@@ -17,10 +17,8 @@
 
 #define SYSCALL_ARG1 rdi
 extern int strace_option;
-const char *state_names[7] =
-    { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND", "PROCESS_NO_TASK_FOUND",
-  "PROCESS_ON_MEDIATION", "PROCESS_ON_COMPUTATION"
-};
+const char *state_names[4] =
+    { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND" };
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS_MSG, simterpose, "Syscall process log");
 
@@ -151,52 +149,6 @@ static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   }
 #endif
   return PROCESS_CONTINUE;
-}
-
-static int process_recv_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  recv_arg_t arg = &(sysarg->recv);
-  XBT_DEBUG("Entering process_RECV_call, ret %d", arg->ret);
-  if (socket_registered(proc, arg->sockfd) != -1) {
-    if (!socket_netlink(proc, arg->sockfd)) {
-
-      //if handle_new_receive return 1, there is a task found
-      if (handle_new_receive(proc, sysarg))
-        return PROCESS_TASK_FOUND;
-      else {
-        struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-        int sock_status = socket_get_state(is);
-        if (sock_status & SOCKET_CLOSED)
-          return RECV_CLOSE;
-
-        return PROCESS_NO_TASK_FOUND;
-      }
-    }
-  } else
-    THROW_IMPOSSIBLE;
-
-  return 0;
-}
-
-static int process_recv_in_call(process_descriptor_t * proc, int fd)
-{
-  XBT_DEBUG("Entering process_recv_in_call");
-  XBT_DEBUG("Trying to see if socket %d recv something", fd);
-  if (proc->fd_list[fd] == NULL)
-    return 0;
-
-  if (!socket_network(proc, fd))
-#ifndef address_translation
-    return 0;
-#else
-    return 1;
-#endif
-
-  int status = comm_get_socket_state(get_infos_socket(proc, fd));
-  XBT_DEBUG("socket status %d %d", status, status & SOCKET_READ_OK || status & SOCKET_CLOSED);
-
-  XBT_DEBUG("Leaving process_recv_in_call");
-  return (status & SOCKET_READ_OK || status & SOCKET_CLOSED || status & SOCKET_SHUT);
 }
 
 static void process_recvmsg_out_call(process_descriptor_t * proc)
@@ -407,17 +359,17 @@ static int syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
 	 		   int sock_status = socket_get_state(is);
 #ifdef address_translation
 	 		   if (sock_status & SOCKET_CLOSED)
-	 			 process_recvmsg_out_call(proc);
+	 			 process_read_out_call(proc);
 #else
 	 		   if (sock_status & SOCKET_CLOSED)
-	 			  sysarg->recvmsg.ret = 0;
+	 			  sysarg->read.ret = 0;
 	 			ptrace_neutralize_syscall(proc->pid);
 	 			proc->in_syscall = 0;
-	 			process_recvmsg_out_call(proc);
+	 			process_read_out_call(proc);
 	 		}else{
 	 			ptrace_neutralize_syscall(proc->pid);
 	 			proc->in_syscall = 0;
-	 			process_recvmsg_out_call(proc);
+	 			process_read_out_call(proc);
 #endif
 	 		}
   }

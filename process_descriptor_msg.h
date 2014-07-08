@@ -62,14 +62,11 @@ struct process_descriptor {
   long long int cpu_time;
   char *name;
   FILE *trace;
-  double next_event;
   msg_host_t host;
   fd_descriptor_t **fd_list;
 
   int state;
   int in_syscall;
-
-  int mediate_state; // Todo remove
 
   syscall_arg_u sysarg;
 };
