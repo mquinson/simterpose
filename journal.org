@@ -576,7 +576,7 @@ pour les appeler plus facilement
 
 * <2014-06-05 jeu.>
 - lors d'un Ctrl-C on détache les processus et on libère tout
-** TODO Il faudrait mettre le même genre de handler sur SIGSEGV
+** DONE Il faudrait mettre le même genre de handler sur SIGSEGV
 - Cela permettrait d'avoir simterpose qui nettoie tout derrière lui même quand
   il segfault comme une bouse :)
 * <2014-06-10 mar.>
@@ -862,11 +862,28 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
       depuis le handler principal, et la fonction existe encore
       uniquement pour sendmsg/recvmsg. Bientôt supprimé
 ** TODO Il y a un 6e sendto pourri qui se print en full mediation
-** TODO shutdown est mal traité en full mediation (renvoie -107)
+** DONE shutdown est mal traité en full mediation (renvoie -107)
 ** TODO Vérifier la cohérence des méthodes
 - En fait il y a sans doute un problème dans la méthode puisque les deux donnent
   exactement le même temps.. Ou alors c'est parce que c'est le temps simulé?
 - [Mt] Je sais pas comment tu as fait tes chronométrages, mais à priori, oui,
   c'est ça. Quelle que soit la façon de contrôler l'application, les actions
   qu'elle fait prennent exactement le même temps dans le simulo. 
-** TODO sendmsg/recvmsg
+** DONE sendmsg/recvmsg
+* <2014-07-08 mar.>
+- test des deux méthodes en envoyant 50 puis 500 messages: fonctionne
+  toujours!
+- sendmsg/recvmsg en full: ok
+- nettoyage du runner: plus besoin de faire appel à handle_mediate ni
+  handle_active, qu'on supprime
+- gestion du read. J'avais pas vu qu'il était mal géré, parce que dans
+  les tests actuels on l'utilise pas et donc il est appelé sur des fd,
+  pas sur des sockets (à tester donc)
+- nettoyage des fonctions et variables non utilisées
+- je libère les tâches, les comms et les process après utilisation
+- ajout d'un handler pour SINGINT et SIGSEGV (j'ai ajouté 2 handlers
+  parce que j'ai pas réussi à utiliser sigprocmask)
+- shutdown: ok
+- suppression de la version SimDag
+- en fait les traces des syscall sont pas bonnes: pour full c'est ok,
+  mais en address on a pas le message qui s'affiche dans les send/recv
