@@ -159,7 +159,6 @@ static int process_recv_call(process_descriptor_t * proc, syscall_arg_u * sysarg
   XBT_DEBUG("Entering process_RECV_call, ret %d", arg->ret);
   if (socket_registered(proc, arg->sockfd) != -1) {
     if (!socket_netlink(proc, arg->sockfd)) {
-      //  compute_computation_time(proc);
 
       //if handle_new_receive return 1, there is a task found
       if (handle_new_receive(proc, sysarg))
@@ -382,46 +381,46 @@ static int syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
   *state = 0;
   XBT_DEBUG(" read_pre");
   get_args_read(proc, reg, sysarg);
+
+  if ((int) reg->ret > 0) {
   if (socket_registered(proc, reg->arg1) != -1) {
-    if (!process_recv_in_call(proc, reg->arg1)) {
-#ifndef address_translation
-      int flags = socket_get_flags(proc, reg->arg1);
-      if (flags & O_NONBLOCK) {
-        sysarg->read.ret = -EAGAIN;     /* EAGAIN 11 Try again */
-        if (strace_option)
-          print_read_syscall(proc, sysarg);
-        ptrace_neutralize_syscall(proc->pid);
-        proc->in_syscall = 0;
-        process_read_out_call(proc);
-      } else {
-        proc->state = PROC_READ;
-        proc->mediate_state = 1;
-        *state = PROCESS_ON_MEDIATION;
-      }
-    } else {                    // on a reçu qqchose
-      int res = process_recv_call(proc, sysarg);
-      if (res == PROCESS_TASK_FOUND) {
-        if (strace_option)
-          print_read_syscall(proc, sysarg);
-        ptrace_neutralize_syscall(proc->pid);
-        proc->in_syscall = 0;
-        proc->state = PROC_READ;
-        return PROCESS_TASK_FOUND;
-      } else {
-        if (res == RECV_CLOSE)
-          sysarg->read.ret = 0;
-        if (strace_option)
-          print_read_syscall(proc, sysarg);
-        ptrace_neutralize_syscall(proc->pid);
-        proc->in_syscall = 0;
-        process_read_out_call(proc);
-      }
+	  read_arg_t arg = &(sysarg->read);
+	  fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+
+	 XBT_DEBUG(" read socket_registered");
+	 const char *mailbox;
+	         if (MSG_process_self() == file_desc->stream->client)
+	           mailbox = file_desc->stream->to_client;
+	         else if (MSG_process_self() == file_desc->stream->server)
+	           mailbox = file_desc->stream->to_server;
+	         else
+	           THROW_IMPOSSIBLE;
+
+	         msg_task_t task = NULL;
+	         msg_error_t err = MSG_task_receive(&task, mailbox);
+
+	         arg->ret =  (int)MSG_task_get_data_size(task);
+	 		arg->data = MSG_task_get_data(task);
+
+	 		if(err != MSG_OK){
+	 			struct infos_socket *is = get_infos_socket(proc, arg->fd);
+	 		   int sock_status = socket_get_state(is);
+#ifdef address_translation
+	 		   if (sock_status & SOCKET_CLOSED)
+	 			 process_recvmsg_out_call(proc);
 #else
-      int flags = socket_get_flags(proc, reg->arg1);
-      if (!(flags & O_NONBLOCK))
-        THROW_UNIMPLEMENTED;
+	 		   if (sock_status & SOCKET_CLOSED)
+	 			  sysarg->recvmsg.ret = 0;
+	 			ptrace_neutralize_syscall(proc->pid);
+	 			proc->in_syscall = 0;
+	 			process_recvmsg_out_call(proc);
+	 		}else{
+	 			ptrace_neutralize_syscall(proc->pid);
+	 			proc->in_syscall = 0;
+	 			process_recvmsg_out_call(proc);
 #endif
-    }
+	 		}
+  }
   }
   return *state;
 }
@@ -433,14 +432,6 @@ static int syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descri
   get_args_read(proc, reg, sysarg);
   if (strace_option)
     print_read_syscall(proc, sysarg);
-#ifdef address_translation
-  if ((int) reg->ret > 0) {
-    if (socket_registered(proc, sysarg->read.fd) != -1) {
-      if (process_recv_call(proc, sysarg) == PROCESS_TASK_FOUND)
-        return PROCESS_TASK_FOUND;
-    }
-  }
-#endif
   return PROCESS_CONTINUE;
 }
 
@@ -1587,7 +1578,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
     default:
-     // XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+    XBT_INFO("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else
