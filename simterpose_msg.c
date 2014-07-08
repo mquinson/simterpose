@@ -38,12 +38,70 @@ static inline float str_to_double(const char *string)
   return value;
 }
 
+/* A little handler for the Ctrl-C */
+static void sigint_handler(int sig)
+{
+  XBT_ERROR("Interruption request by user. Current time of simulation %lf", MSG_get_clock());
+  XBT_ERROR("Killing processes...");
+
+  MSG_process_killall(0);
+  comm_exit();
+  socket_exit();
+  cputimer_exit(global_timer);
+  simterpose_globals_exit();
+
+  xbt_die("Done");
+}
+
+/* A little handler for segfaults */
+static void sigsegv_handler(int sig)
+{
+  XBT_ERROR("Segfault. Current time of simulation %lf", MSG_get_clock());
+  XBT_ERROR("Killing processes...");
+
+  MSG_process_killall(0);
+  comm_exit();
+  socket_exit();
+  cputimer_exit(global_timer);
+  simterpose_globals_exit();
+
+  xbt_die("Done");
+}
+
 int main(int argc, char *argv[])
 {
   float msec_per_flop = 0;      // variable not used
   int flop_option = 0;
 
   MSG_init(&argc, argv);
+
+  /**   Install our handler
+  sigset_t mask;
+  sigset_t old_mask;
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGINT);
+  sigaddset(&mask, SIGSEGV);
+
+  struct sigaction nvt, old;
+  memset(&nvt, 0, sizeof(nvt));
+  nvt.sa_handler = sig_handler;
+  sigprocmask(SIG_SETMASK, &mask, &old_mask);
+  nvt.sa_mask = mask;
+  sigaction(SIGINT, &nvt, &old);
+ */
+
+  // Install our SIGSEGV handler
+  struct sigaction nvt_sg, old_sg;
+  memset(&nvt_sg, 0, sizeof(nvt_sg));
+  nvt_sg.sa_handler = &sigsegv_handler;
+  sigaction(SIGSEGV, &nvt_sg, &old_sg);
+
+  // Install our SIGINT handler
+  struct sigaction nvt, old;
+  memset(&nvt, 0, sizeof(nvt));
+  nvt.sa_handler = &sigint_handler;
+  sigaction(SIGINT, &nvt, &old);
+
 
   if (argc < 3) {
     usage(argv[0], 1);
@@ -95,6 +153,12 @@ int main(int argc, char *argv[])
 #endif
   XBT_INFO("End of simulation. Simulated time: %lf. Used interposer: %s", MSG_get_clock(), interposer_name);
 
+  comm_exit();
+  socket_exit();
+  cputimer_exit(global_timer);
+  simterpose_globals_exit();
+  MSG_process_killall(0);
+
   if (res == MSG_OK)
     return 0;
   else
@@ -144,7 +208,7 @@ static int simterpose_process_runner(int argc, char *argv[])
   // Main loop where we track our external process and do the simcall that represent its syscalls
   int proc_next_state;
   while (proc_next_state != PROCESS_DEAD) {
-    XBT_DEBUG("Starting treatment\n ");
+    XBT_DEBUG("Starting treatment");
 
     int status;
     pid_t pid = proc->pid;
@@ -153,7 +217,8 @@ static int simterpose_process_runner(int argc, char *argv[])
     	xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
     proc_next_state = process_handle_msg(proc, status);
 
-    XBT_DEBUG("End of treatment, status = %s \n", state_names[proc_next_state]);
+    XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
   }
+  process_die(proc);
   return 0;
 }
