@@ -186,6 +186,7 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 
         arg->ret =  (int)MSG_task_get_data_size(task);
 		arg->data = MSG_task_get_data(task);
+		MSG_task_destroy(task);
 
 		if(err != MSG_OK){
 			struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
@@ -274,6 +275,7 @@ static int syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
 
         arg->ret =  (int)MSG_task_get_data_size(task);
         arg->data = MSG_task_get_data(task);
+		MSG_task_destroy(task);
 
         if(err != MSG_OK){
 			struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
@@ -353,6 +355,7 @@ static int syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
 
 	         arg->ret =  (int)MSG_task_get_data_size(task);
 	 		arg->data = MSG_task_get_data(task);
+			MSG_task_destroy(task);
 
 	 		if(err != MSG_OK){
 	 			struct infos_socket *is = get_infos_socket(proc, arg->fd);
@@ -431,7 +434,6 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   return PROCESS_CONTINUE;
 }
 
-
 static void process_poll_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering poll %lf \n", SD_get_clock());
@@ -472,7 +474,7 @@ static void process_poll_call(process_descriptor_t * proc)
       print_poll_syscall(proc, &(proc->sysarg));
     free(proc->sysarg.poll.fd_list);
   }
-  // fixme ajouter le timeout
+  // fixme ajouter le timeout et faire un free sur les tableaux
 /*  if (proc->in_timeout == PROC_TIMEOUT_EXPIRE) {
     XBT_DEBUG("Time out on poll\n");
     sys_build_poll(proc, &(proc->sysarg), 0);
@@ -642,7 +644,7 @@ static int syscall_shutdown_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
   process_shutdown_call(proc, sysarg);
 
 #ifndef address_translation
-// TODO
+// TODO shutdown en full
 #endif
 
   return PROCESS_CONTINUE;

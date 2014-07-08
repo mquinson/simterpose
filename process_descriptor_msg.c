@@ -1,4 +1,5 @@
 #include "process_descriptor_msg.h"
+#include "sockets_msg.h"
 #include "msg/msg.h"
 
 #include <stdlib.h>
@@ -120,13 +121,12 @@ void process_clone(pid_t new_pid, process_descriptor_t *cloned, unsigned long fl
 
   process_set_descriptor(new_pid, result);
 }
-
+*/
 void process_die(process_descriptor_t *proc)
 {
- //TODO close_all_communication(pid);
-  process_descriptor_destroy(proc);
-  process_set_descriptor(pid, NULL);
-}*/
+	close_all_communication(proc);
+	process_descriptor_destroy(proc);
+}
 
 int process_get_free_fd(process_descriptor_t * proc)
 {
