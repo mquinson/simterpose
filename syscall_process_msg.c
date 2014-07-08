@@ -1331,7 +1331,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
   reg_s arg;
   syscall_arg_u *sysarg = &(proc->sysarg);
   pid_t pid = proc->pid;
-  XBT_DEBUG("PROCESS HANDLE");
+  XBT_DEBUG("PROCESS HANDLE MSG");
   while (1) {
     ptrace_get_register(pid, &arg);
     int state;
@@ -1603,94 +1603,4 @@ int process_handle_msg(process_descriptor_t * proc, int status)
 
   THROW_IMPOSSIBLE;             //There's no way to quit the loop
   return 0;
-}
-
-// TODO: supprimer quand le full sera traité
-int process_handle_mediate(process_descriptor_t * proc)
-{
-  xbt_die("PROCESS HANDLE MEDIATE");
-  int state = proc->state;
-
-  xbt_assert(proc->in_syscall);
-  xbt_assert(proc->mediate_state);
-
- if (state & PROC_READ) {
-    if (process_recv_in_call(proc, proc->sysarg.recvfrom.sockfd)) {
-#ifndef address_translation
-      pid_t pid = proc->pid;
-      int res = process_recv_call(proc, &(proc->sysarg));
-      if (res == PROCESS_TASK_FOUND) {
-        if (strace_option)
-          print_recvfrom_syscall(proc, &(proc->sysarg));
-        ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;
-        proc->mediate_state = 0;
-        return PROCESS_TASK_FOUND;
-      } else if (res == RECV_CLOSE) {
-        if (strace_option)
-          print_recvfrom_syscall(proc, &(proc->sysarg));
-        ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro
-        return process_handle_active(proc);
-      }
-#else
-      proc->mediate_state = 0;
-      process_reset_state(proc);
-      return process_handle_active(proc);
-#endif
-    }
-  }
-
-  else if (state & PROC_RECVMSG) {
-    if (process_recv_in_call(proc, proc->sysarg.recvmsg.sockfd)) {
-#ifndef address_translation
-      pid_t pid = proc->pid;
-      int res = process_recv_call(proc, &(proc->sysarg));
-      if (res == PROCESS_TASK_FOUND) {
-        if (strace_option)
-          print_recvfrom_syscall(proc, &(proc->sysarg));
-        ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;
-        proc->mediate_state = 0;
-        return PROCESS_TASK_FOUND;
-      } else if (res == RECV_CLOSE) {
-        if (strace_option)
-          print_recvfrom_syscall(proc, &(proc->sysarg));
-        ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;   // TODO vérifier pourquoi on passe pas mediate_state à zéro
-        return process_handle_active(proc);
-      }
-#endif
-    }
-  }
-  return PROCESS_ON_MEDIATION;
-}
-
-int process_handle_active(process_descriptor_t * proc)
-{
-  int status;
-  pid_t pid = proc->pid;
-  int proc_state = proc->state;
-  XBT_DEBUG("PROCESS HANDLE ACTIVE, state = %d ", proc->state);
-  xbt_assert(!(proc->mediate_state));   // TODO: vérifier. c'est vrai sauf si on vient de handle_mediate et que la socket a été fermée
-
-  if ((proc_state == PROC_RECVMSG) && (proc->in_syscall)) {
-#ifndef address_translation
-    THROW_IMPOSSIBLE;
-#else
-    xbt_die("delete");
-    if (process_recv_in_call(proc, proc->sysarg.recv.sockfd))
-      process_reset_state(proc);
-    else
-      return PROCESS_ON_MEDIATION;
-#endif
-
-  } else if ((proc_state & PROC_RECVMSG) && !(proc->in_syscall)) {
-    xbt_die("delete");
-    process_recvmsg_out_call(proc);
-  }
-  ptrace_resume_process(pid);
-  if (waitpid(pid, &status, 0) < 0)
-    xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-  return process_handle_msg(proc, status);
 }

@@ -13,8 +13,5 @@ extern const char *state_names[7];
 #define RECV_CLOSE              10
 
 int process_handle_msg(process_descriptor_t * proc, int status);
-int process_handle_mediate(process_descriptor_t * proc);
-int process_handle_active(process_descriptor_t * proc);
-
 
 #endif

@@ -8,7 +8,7 @@
 #ifndef SIMTERPOSE_H
 #define SIMTERPOSE_H
 
-#define address_translation
+//#define address_translation
 
 #include <sys/types.h>
 #include <xbt.h>
@@ -26,12 +26,6 @@ typedef struct translate_desc translate_desc_t;
 
 //For num syscall see 
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
-
-/* This datastructure seems mainly used to add a process to the FES */
-typedef struct time_desc {
-  pid_t pid;
-  double start_time;
-} time_desc_t;
 
 struct port_desc {
   int port_num;

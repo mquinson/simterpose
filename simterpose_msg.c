@@ -139,29 +139,21 @@ static int simterpose_process_runner(int argc, char *argv[])
     exit(1);
   }
 
-  double clock = MSG_get_clock();
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
 
   // Main loop where we track our external process and do the simcall that represent its syscalls
   int proc_next_state;
   while (proc_next_state != PROCESS_DEAD) {
+    XBT_DEBUG("Starting treatment\n ");
 
-    XBT_DEBUG("Starting treatment");
-    proc_next_state = process_handle_active(proc);
+    int status;
+    pid_t pid = proc->pid;
+    ptrace_resume_process(pid);
+    if (waitpid(pid, &status, 0) < 0)
+    	xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
+    proc_next_state = process_handle_msg(proc, status);
 
-    // TODO simplifier la boucle
-    while (proc_next_state == PROCESS_ON_MEDIATION) {
-      int status = NULL;
-      proc_next_state = process_handle_msg(proc, status);
-
-      XBT_DEBUG("while status = %s", state_names[proc_next_state]);
-
-      if (MSG_get_clock() == clock) {
-        MSG_process_sleep(0.1);
-        clock = MSG_get_clock();
-      }
-    }
-    XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
+    XBT_DEBUG("End of treatment, status = %s \n", state_names[proc_next_state]);
   }
   return 0;
 }
