@@ -67,7 +67,6 @@ static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   if (process_send_call(proc, sysarg, &remote_proc)) {
     ptrace_neutralize_syscall(pid);
 
-    syscall_arg_u *sysarg = &(proc->sysarg);
     sendmsg_arg_t arg = &(sysarg->sendmsg);
     ptrace_restore_syscall(pid, SYS_sendmsg, arg->ret);
 
@@ -216,11 +215,11 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   XBT_DEBUG("recvmsg_pre");
   get_args_recvmsg(proc, reg, sysarg);
 
-#ifdef address_translation
   if (reg->ret > 0) {
     recvmsg_arg_t arg = &(sysarg->recvmsg);
     fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
     XBT_DEBUG("syscall_recvmsg_pre fd = %d", file_desc->fd);
+
     if (socket_registered(proc, arg->sockfd) != -1) {
       if (!socket_netlink(proc, arg->sockfd)) {
         const char *mailbox;
@@ -232,41 +231,33 @@ static int syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
           THROW_IMPOSSIBLE;
 
         msg_task_t task = NULL;
-        MSG_task_receive(&task, mailbox);
-        return PROCESS_TASK_FOUND;
+        msg_error_t err = MSG_task_receive(&task, mailbox);
+
+        arg->ret =  (int)MSG_task_get_data_size(task);
+		arg->data = MSG_task_get_data(task);
+
+		if(err != MSG_OK){
+			struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+		   int sock_status = socket_get_state(is);
+#ifdef address_translation
+		   if (sock_status & SOCKET_CLOSED)
+			 process_recvmsg_out_call(proc);
+#else
+		   if (sock_status & SOCKET_CLOSED)
+			  sysarg->recvmsg.ret = 0;
+			ptrace_neutralize_syscall(pid);
+			proc->in_syscall = 0;
+			process_recvmsg_out_call(proc);
+		}else{
+			ptrace_neutralize_syscall(pid);
+			proc->in_syscall = 0;
+			process_recvmsg_out_call(proc);
+#endif
+		}
       }
     }
   }
-#else
-    if (socket_registered(proc, sysarg->recvmsg.sockfd) != -1)
-      if (!socket_network(proc, sysarg->recvmsg.sockfd))
-        return PROCESS_CONTINUE;
-
-    int flags = socket_get_flags(proc, reg->arg1);
-    if (flags & O_NONBLOCK)
-    	THROW_UNIMPLEMENTED;
-    int res = process_recv_call(proc, sysarg);
-    if (res == PROCESS_TASK_FOUND) {
-      ptrace_neutralize_syscall(pid);
-
-      // TODO active proc_recvmsg, ou plutot comme read?
-      if (strace_option)
-        print_recvmsg_syscall(proc, sysarg);
-
-      return PROCESS_TASK_FOUND;
-    } else {
-      if (res == RECV_CLOSE){
-       // sysarg->recvfrom.ret = 0;
-        if (strace_option)
-          print_recvmsg_syscall(proc, sysarg);
-	  ptrace_neutralize_syscall(pid);
-	  proc->in_syscall = 0;
-	  process_recvmsg_out_call(proc);
-      }
-    }
-    if (strace_option)
-      print_recvmsg_syscall(proc, sysarg);
-#endif
+  XBT_DEBUG("recvmsg_pre state = %s", state_names[*state]);
   return *state;
 }
 
