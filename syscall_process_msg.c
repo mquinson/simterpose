@@ -626,26 +626,45 @@ static void process_shutdown_call(process_descriptor_t * proc, syscall_arg_u * s
 {
   shutdown_arg_t arg = &(sysarg->shutdown);
   struct infos_socket *is = get_infos_socket(proc, arg->fd);
-  if (is == NULL)
+  if (is == NULL){
+	arg->ret = -EBADF;
     return;
+  }
   comm_shutdown(is);
 }
 
-static int syscall_shutdown_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
+	proc->in_syscall = 1;
+#ifndef address_translation
+	XBT_DEBUG(" shutdown_pre");
+	shutdown_arg_t arg = &(sysarg->shutdown);
+	arg->fd = reg->arg1;
+	arg->how = reg->arg2;
+	arg->ret = reg->ret;
+
+  ptrace_neutralize_syscall(proc->pid);
+  arg->ret = 0;
+  ptrace_restore_syscall(proc->pid, SYS_shutdown, arg->ret);
+  proc->in_syscall = 0;
+  if (strace_option)
+    print_shutdown_syscall(proc, sysarg);
+#endif
+}
+
+static int syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	  XBT_DEBUG(" shutdown_post");
   proc->in_syscall = 0;
   shutdown_arg_t arg = &(sysarg->shutdown);
   arg->fd = reg->arg1;
   arg->how = reg->arg2;
   arg->ret = reg->ret;
 
-  if (strace_option)
-    print_shutdown_syscall(proc, sysarg);
   process_shutdown_call(proc, sysarg);
 
-#ifndef address_translation
-// TODO shutdown en full
-#endif
+  if (strace_option)
+    print_shutdown_syscall(proc, sysarg);
 
   return PROCESS_CONTINUE;
 }
@@ -1403,12 +1422,11 @@ int process_handle_msg(process_descriptor_t * proc, int status)
         return ret;
       break;
 
-
     case SYS_shutdown:
       if (!(proc->in_syscall))
-        proc->in_syscall = 1;
+        syscall_shutdown_pre(&arg, sysarg, proc);
       else
-        syscall_shutdown_post(pid, &arg, sysarg, proc);
+        syscall_shutdown_post(&arg, sysarg, proc);
       break;
 
     case SYS_bind:
