@@ -54,8 +54,6 @@ void delete_socket(struct infos_socket *is);
 
 void recv_information_destroy(recv_information * recv);
 
-int handle_new_receive(process_descriptor_t * proc, syscall_arg_u * sysarg);
-
 void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg);
 
 int close_all_communication(process_descriptor_t * proc);

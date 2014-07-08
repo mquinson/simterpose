@@ -11,7 +11,6 @@
 typedef struct comm_s comm_s;
 typedef comm_s *comm_t;
 
-#include "sockets_msg.h"
 #include "xbt.h"
 #include "task_msg.h"
 #include "process_descriptor_msg.h"

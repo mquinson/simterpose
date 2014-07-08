@@ -8,7 +8,6 @@
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(DATA_UTILS_MSG, simterpose, "data_utils log");
 
 struct simterpose_globals {
-  xbt_dynar_t future_events_set;
   process_descriptor_t *process_desc[MAX_PID];
   xbt_dict_t list_host;
   xbt_dict_t list_ip;
@@ -135,7 +134,6 @@ void increment_nb_geteventmsg()
 
 void simterpose_globals_exit()
 {
-  xbt_dynar_free(&(global_data->future_events_set));
   xbt_dict_free(&(global_data->list_host));
   xbt_dict_free(&(global_data->list_ip));
   xbt_dict_free(&(global_data->list_translate));
