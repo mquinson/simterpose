@@ -65,7 +65,6 @@ struct process_descriptor {
   msg_host_t host;
   fd_descriptor_t **fd_list;
 
-  int state;
   int in_syscall;
 
   syscall_arg_u sysarg;
@@ -81,8 +80,6 @@ void process_fork(pid_t new_pid, process_descriptor_t * forked);
 int process_update_cputime(process_descriptor_t * proc, long long int cputime_elapsed);
 
 void process_clone(pid_t new_pid, process_descriptor_t * cloned, unsigned long flags);
-
-void process_reset_state(process_descriptor_t * proc);
 
 void process_die(process_descriptor_t * proc);
 

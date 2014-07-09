@@ -15,7 +15,6 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
   result->tgid = pid;           //By default, we consider that process is the first of this pgid
   result->cpu_time = 0;
 
-  result->state = 0;
   result->in_syscall = 0;
 
   int i;
@@ -68,11 +67,6 @@ int process_update_cputime(process_descriptor_t * proc, long long int new_cputim
   int result = new_cputime - proc->cpu_time;
   proc->cpu_time = new_cputime;
   return result;
-}
-
-void process_reset_state(process_descriptor_t * proc)
-{
-  proc->state = proc->state & (~STATE_MASK);
 }
 
 /*

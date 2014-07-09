@@ -195,7 +195,7 @@ static void process_recvmsg_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_recvmsg_out_call");
   sys_build_recvmsg(proc, &(proc->sysarg));
-  process_reset_state(proc);
+ // process_reset_state(proc);
 }
 
 static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -265,7 +265,7 @@ static void process_recvfrom_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_RECVFROM_out_call");
   pid_t pid = proc->pid;
-  process_reset_state(proc);
+ // process_reset_state(proc);
   syscall_arg_u *sysarg = &(proc->sysarg);
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   if (strace_option)
@@ -350,7 +350,7 @@ static void syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg
 static void process_read_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_read_out_call");
-  process_reset_state(proc);
+//  process_reset_state(proc);
 
   syscall_arg_u *sysarg = &(proc->sysarg);
   read_arg_t arg = &(sysarg->read);
@@ -484,7 +484,6 @@ static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   process_poll_call(proc);
   ptrace_neutralize_syscall(proc->pid);
   proc->in_syscall = 0;
-  proc->state = PROC_POLL;
 }
 
 static int process_select_call(process_descriptor_t * proc)
@@ -556,7 +555,6 @@ static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
   ptrace_neutralize_syscall(proc->pid);
   proc->in_syscall = 0;
-  proc->state = PROC_SELECT;
 }
 
 
@@ -995,7 +993,6 @@ static void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u *
     // we need to give the stream to the new socket
     file_desc_is->stream = file_desc_s->stream;
   }
-  process_reset_state(proc);
 }
 
 static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
@@ -1023,18 +1020,17 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
   //We try to find here if there's a connection to accept
   if (comm_has_connect_waiting(get_infos_socket(proc, arg->sockfd))) {
     struct sockaddr_in in;
-    process_descriptor_t *conn_proc = comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
 
-    arg->sai = in;
-    int conn_state = conn_proc->state;
-    if (conn_state & PROC_CONNECT) {
-#ifndef address_translation
-      process_reset_state(conn_proc);
-#else
+
+#ifdef address_translation
+    process_descriptor_t *conn_proc = comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
+      arg->sai = in;
       ptrace_resume_process(conn_proc->pid);
-      conn_proc->state = PROC_CONNECT_DONE;
+#else
+      comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
+      arg->sai = in;
 #endif
-    }
+
 #ifndef address_translation
     pid_t pid = proc->pid;
     //Now we rebuild the syscall.
@@ -1058,8 +1054,8 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
     MSG_sem_acquire(file_desc->stream->sem_server);
     XBT_DEBUG(" ----> S -> accept_in: SERVER pris! (2e episode)");
 #endif
-  } else
-    proc->state = PROC_ACCEPT;
+  }// else
+  //  proc->state = PROC_ACCEPT;
 }
 
 static void syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1163,7 +1159,6 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     if (flags & O_NONBLOCK)
       return 0;
 
-    proc->state = PROC_CONNECT;
     return 1;
 #else
     XBT_DEBUG("connect_in address translation");
@@ -1172,8 +1167,6 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     if (flags & O_NONBLOCK)
       return 0;
 
-    //now mark the process as waiting for conn
-    proc->state = PROC_CONNECT;
     return 1;
 #endif
   } else
@@ -1196,7 +1189,6 @@ static void process_connect_out_call(process_descriptor_t * proc, syscall_arg_u 
     add_new_translation(ntohs(port), is->port_local, get_ip_of_host(proc->host));
   }
 #endif
-  process_reset_state(proc);
 }
 
 static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1239,7 +1231,6 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
 
 #ifdef address_translation
   process_connect_out_call(proc, sysarg);
-  process_reset_state(proc);
 #endif
   if (strace_option)
     print_connect_syscall(proc, sysarg);
