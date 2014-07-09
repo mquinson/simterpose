@@ -49,7 +49,7 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
     }
     return 0;
   } else
-    THROW_IMPOSSIBLE;
+	  xbt_die("The socket is not registered");
   return 0;
 }
 
@@ -57,7 +57,7 @@ static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 {
   proc->in_syscall = 1;
 #ifndef address_translation
-  //  XBT_DEBUG("[%d] sendmsg_in", pid);
+  //  XBT_DEBUG("[%d] sendmsg_pre", pid);
   XBT_DEBUG("sendmsg_pre");
   get_args_sendmsg(proc, reg, sysarg);
   process_descriptor_t remote_proc;
@@ -98,10 +98,10 @@ static int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
 static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
-  //  XBT_DEBUG("[%d] sendto_in", pid);
+#ifndef address_translation
+  //  XBT_DEBUG("[%d] sendto_pre", pid);
   XBT_DEBUG("sendto_pre");
   get_args_sendto(proc, reg, sysarg);
-#ifndef address_translation
   process_descriptor_t remote_proc;
   if (process_send_call(proc, sysarg, &remote_proc)) {
     ptrace_neutralize_syscall(pid);
@@ -198,6 +198,7 @@ static void process_recvmsg_out_call(process_descriptor_t * proc)
  // process_reset_state(proc);
 }
 
+// TODO: le pattern est le même pour recvmsg_pre, recvfrom_pre, read_pre, faire une fonction
 static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;

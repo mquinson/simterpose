@@ -886,7 +886,9 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
 - shutdown: ok
 - suppression de la version SimDag
 - en fait les traces des syscall sont pas bonnes: pour full c'est ok,
-  mais en address on a pas le message qui s'affiche dans les send/recv
+  mais en address on a pas le message qui s'affiche dans les
+  send/recv -> Non c'est un comportement normal, le send en address
+  translation n'a jamais affiché le message
 ** Biblio [Mt]
 - http://scholar.google.fr/scholar?cites=3988720610537406662&as_sdt=2005&sciodt=0,5&hl=fr
   Le papier microgrid, avec les papiers qui le citent.
@@ -922,3 +924,32 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
 - http://www.deter-lab.org/sites/default/files/files/mirkovic_benzel_faber_braden_wroclawski_schwab_the%20deter%20project%20advancing%20the%20science%20of%20cyber%20security%20experimentation%20and%20test_ieee_hst%20%2710_boston%20massachusetts_november%202010.pdf
   C'est une solution d'émulation pour l'étude des pbs de sécurité, mais j'ai
   plus la force de lire.
+* <2014-07-09 mer.>
+- ajout de tests
+  - on ne print plus le benchmark, les pid, l'heure dans le
+    serveur/client, ni les syscall non traités
+  - le test est opérationnel en address translation (= reproductible)
+  - en full mediation, le sendto bizarre, en plus d'afficher un
+    message avec des caractères spéciaux, n'est pas reproductible,
+    donc il y a deux lignes qui foirent
+- sendto bizarre en full: 
+  - il y a le tout premier et le tout dernier qui ne s'impriment pas
+    correctement. Si je ne destroy plus les tâches, le premier
+    redevient correct. Quant au dernier c'est peut-être parce que le
+    processus en face est mort à ce moment là
+  - En fait les sendto ont tous été décalés, puisqu'il manque un
+    message #0 et il n'est pas sensé y en avoir un après le #4. Donc
+    effectivement le fait de détruire les tâches ou les processus
+    pose problème puisqu'on print un envoi alors que le récepteur est
+    mort/a détruit la tâche
+  - Du coup on dirait que le sendto est libéré trop tard, après le
+    recvfrom .. 
+- suppression de variables inutiles:
+  - les state dans le traitement des syscall ne servent à rien
+    puisqu'on ne renvoie presque jamais rien
+  - le state dans le process descriptor est obsolète également, on
+    n'a plus à signifier au processus en face notre état puisque
+    MSG/la sémaphore se chargent de débloquer
+- Vérification des appels existant:
+  - write utilisait les arguments de sendto
+  - codes de retour, erreurs
