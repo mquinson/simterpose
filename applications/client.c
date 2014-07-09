@@ -30,8 +30,8 @@ int main(int argc, char **argv)
 
   struct timespec tvcl;
   clock_gettime(NULL, &tvcl);
-  fprintf(stderr, "Client starting: #msg: %d; size: %d (time: %d; clock_gettime: %f)\n",
-          msg_count, message_size, time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
+  fprintf(stderr, "Client starting: #msg: %d; size: %d \n", msg_count, message_size);
+  //fprintf(stderr, "(Client, time: %d; clock_gettime: %f)\n", time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
 
   int clientSocket;
@@ -93,8 +93,9 @@ int main(int argc, char **argv)
 
   struct timespec end_tvcl;
   clock_gettime(NULL, &end_tvcl);
-  fprintf(stderr, "Client exiting after %d msgs (time: %d; clock_gettime: %f)\n",
-          msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
+  fprintf(stderr, "Client exiting after %d msgs \n",msg_count);
+  //fprintf(stderr, "(Client, time: %d; clock_gettime: %f)\n", time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
+  //fprintf(stderr, "(Client, Elapsed clock_gettime: %f)\n", (end_tvcl.tv_sec - tvcl.tv_sec) + (end_tvcl.tv_nsec - tvcl.tv_nsec)/ 1000000000.0);
 
   return 0;
 }

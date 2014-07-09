@@ -488,6 +488,8 @@ static void process_poll_call(process_descriptor_t * proc)
 static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
+  THROW_UNIMPLEMENTED;
+
   get_args_poll(proc, reg, sysarg);
   if (strace_option)
     print_poll_syscall(proc, sysarg);
@@ -551,28 +553,14 @@ static int process_select_call(process_descriptor_t * proc)
     return match;
   }
 
-/*  if (proc->in_timeout == PROC_TIMEOUT_EXPIRE) {
-    XBT_DEBUG("Timeout for select");
-
-    FD_ZERO(&fd_rd);
-    FD_ZERO(&fd_wr);
-    FD_ZERO(&fd_ex);
-    arg->ret = 0;
-    arg->fd_read = fd_rd;
-    arg->fd_write = fd_wr;
-    arg->fd_except = fd_ex;
-    sys_build_select(proc, &(proc->sysarg), 0);
-    if (strace_option)
-      print_select_syscall(proc, &(proc->sysarg));
-    proc->in_timeout = PROC_NO_TIMEOUT;
-    return 1;
-  }*/
   return 0;
 }
 
 static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
+  THROW_UNIMPLEMENTED;
+
   get_args_select(proc, reg, sysarg);
   if (strace_option)
     print_select_syscall(proc, sysarg);
@@ -1550,7 +1538,7 @@ int process_handle_msg(process_descriptor_t * proc, int status)
       // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
     default:
-    XBT_INFO("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+    XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else

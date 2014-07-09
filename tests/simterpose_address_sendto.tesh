@@ -1,0 +1,82 @@
+#! ./tesh
+! timeout 30
+$ cd /home/algorille/Documents/simterpose/
+$ ./run_msg.sh
+> [Tremblay:applications/server:(1) 0.000000] [simterpose/INFO] Process is starting child: applications/server 5 128 2227
+> read(4, "...", 832) = 832
+> Server starting on port 2227: #msg: 5; size: 128 
+> write(2, "...", 50) = 50
+> socket(PF_INET, SOCK_STREAM, IPPROTO_IP) = 4
+> setsockopt(4, SOL_SOCKET, SO_REUSEADDR, 4 ) = 0
+> getsockopt(4, SOL_SOCKET, SO_REUSEADDR, 1 ) = 118
+> bind(4, {sa_family=AF_INET, sin_port=htons(2227), sin_addr=inet_addr("0.0.0.0")}, 16) = 0
+> listen(4, 128 ) = 0
+> Server: Waiting for incoming requests
+> write(2, "...", 38) = 38
+> [Tremblay:applications/server:(1) 0.000000] [SYSCALL_PROCESS_MSG/INFO] stream initialization by accept syscall
+> [Jupiter:applications/client:(2) 3.000000] [simterpose/INFO] Process is starting child: applications/client 5 128
+> read(4, "...", 832) = 832
+> Client starting: #msg: 5; size: 128 
+> write(2, "...", 37) = 37
+> socket(PF_INET, SOCK_STREAM, IPPROTO_IP) = 4
+> read(5, "...", 4096) = 188
+> read(5, "...", 4096) = 0
+> accept(4, {sa_family=AF_INET, sin_port=htons(65535), sin_addr=inet_addr("162.32.43.4")}, 16) = 5
+> connect(4, {sa_family=AF_INET, sin_port=htons(2227), sin_addr=inet_addr("162.32.43.1")}, 16) = 0
+> sendto(4, "..." , 128, 0, NULL, 0) = 128
+> recvfrom(5, "..." , 128, NULL, 0) = 128
+> Server: reception of message #0 was successful
+> write(2, "...", 47) = 47
+> sendto(5, "..." , 128, 0, NULL, 0) = 128
+> Client: sent message #0
+> write(2, "...", 24) = 24
+> recvfrom(4, "..." , 128, NULL, 0) = 128
+> Client: reception of answer #0 was successful
+> write(2, "...", 46) = 46
+> sendto(4, "..." , 128, 0, NULL, 0) = 128
+> recvfrom(5, "..." , 128, NULL, 0) = 128
+> Server: reception of message #1 was successful
+> write(2, "...", 47) = 47
+> sendto(5, "..." , 128, 0, NULL, 0) = 128
+> Client: sent message #1
+> write(2, "...", 24) = 24
+> recvfrom(4, "..." , 128, NULL, 0) = 128
+> Client: reception of answer #1 was successful
+> write(2, "...", 46) = 46
+> sendto(4, "..." , 128, 0, NULL, 0) = 128
+> recvfrom(5, "..." , 128, NULL, 0) = 128
+> Server: reception of message #2 was successful
+> write(2, "...", 47) = 47
+> sendto(5, "..." , 128, 0, NULL, 0) = 128
+> Client: sent message #2
+> write(2, "...", 24) = 24
+> recvfrom(4, "..." , 128, NULL, 0) = 128
+> Client: reception of answer #2 was successful
+> write(2, "...", 46) = 46
+> sendto(4, "..." , 128, 0, NULL, 0) = 128
+> recvfrom(5, "..." , 128, NULL, 0) = 128
+> Server: reception of message #3 was successful
+> write(2, "...", 47) = 47
+> sendto(5, "..." , 128, 0, NULL, 0) = 128
+> Client: sent message #3
+> write(2, "...", 24) = 24
+> recvfrom(4, "..." , 128, NULL, 0) = 128
+> Client: reception of answer #3 was successful
+> write(2, "...", 46) = 46
+> sendto(4, "..." , 128, 0, NULL, 0) = 128
+> recvfrom(5, "..." , 128, NULL, 0) = 128
+> Server: reception of message #4 was successful
+> write(2, "...", 47) = 47
+> sendto(5, "..." , 128, 0, NULL, 0) = 128
+> Client: sent message #4
+> write(2, "...", 24) = 24
+> recvfrom(4, "..." , 128, NULL, 0) = 128
+> Client: reception of answer #4 was successful
+> write(2, "...", 46) = 46
+> shutdown (4, SHUT_RDWR) = 0
+> Client exiting after 5 msgs 
+> write(2, "...", 29) = 29
+> shutdown (5, SHUT_RDWR) = 0
+> Server exiting after 5 msgs
+> write(2, "...", 28) = 28
+> [3.065051] [simterpose/INFO] End of simulation. Simulated time: 3.065051. Used interposer: Address translation (connect pipes instead of sockets)
