@@ -888,14 +888,37 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
 - en fait les traces des syscall sont pas bonnes: pour full c'est ok,
   mais en address on a pas le message qui s'affiche dans les send/recv
 ** Biblio [Mt]
+- http://scholar.google.fr/scholar?cites=3988720610537406662&as_sdt=2005&sciodt=0,5&hl=fr
+  Le papier microgrid, avec les papiers qui le citent.
 - http://prod.sandia.gov/techlib/access-control.cgi/2009/096068.pdf
   Un article très court de 2009 qui annonce avoir démarré 1M de machines
   virtuelles (pour étudier les botnets). Ils ont utilisé 4480 machines pour
   parvenir à ce résultat. Nous on peut probablement pas exécuter des botnets
   dans nos trucs (ca serait pas super safe d'essayer), mais on aurait pas besoin
   d'autant d'ordi.
+- http://eurosys2010-dev.sigops-france.fr/workshops/HPCVirt2010/hpcvirt2010_4.pdf
+  Un retour d'expérience sur le lancement d'un million de VM sur une machine
+  donnée. Punaise, c'est dur. Ils citent le HPC et les botnets en cas
+  d'usage. Je crois que c'est les mêmes que le précédent?
 - http://www.dtic.mil/cgi-bin/GetTRDoc?AD=ADA594524
   Un document de l'armée australienne où ils étudient différents terrains
   d'entraînement pour la cyberguerre. Ca ressemble à ce qu'on fait, d'un peu
   loin. On ne fera jamais ce genre de choses sur simterpose, je crois, mais
   c'est le champ d'étude d'à coté, c'est instructif à parcourir.
+- http://www.chrislee.dhs.org/projects/rubot/rubot-thesis.pdf
+  - Un outil servant à étudier les botnets. La partie sur WineBot (page 31) est
+    super intéressante.
+  - Ils utilisent WINE (WINE Is Not an Emulator), qui est une réimplémentation
+    des DLL de base windows de façon à ce que ça marche sous linux. Ils s'en
+    servent pour faire de l'émulation légère, après avoir profondément modifié
+    WINE pour avoir plusieurs WINE avec chacun son IP sur la même machine. On
+    fait la même chose, un peu. Juste en "un peu" moins mature :)
+  - Le cas d'usage et l'explication de comment ils ont utilisé ce truc pour
+    faire du mass-join sur un réseau qui était pénible à combattre car on avait
+    pas assez d'info quand un ou deux ordis s'y connectaient. C'est super
+    marrant à lire :)
+- http://hal.inria.fr/docs/00/94/97/62/PDF/RR-8482.pdf
+  Un papier sur distem. Un must read :)
+- http://www.deter-lab.org/sites/default/files/files/mirkovic_benzel_faber_braden_wroclawski_schwab_the%20deter%20project%20advancing%20the%20science%20of%20cyber%20security%20experimentation%20and%20test_ieee_hst%20%2710_boston%20massachusetts_november%202010.pdf
+  C'est une solution d'émulation pour l'étude des pbs de sécurité, mais j'ai
+  plus la force de lire.
