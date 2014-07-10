@@ -1,0 +1,13 @@
+<?xml version='1.0'?>
+<!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid.dtd">
+<platform version ="3">
+  <process host="Tremblay" function="/usr/bin/allpairs_master" start_time="0.00">
+    <argument value="applications/allpairs/set.list"/>
+    <argument value="applications/allpairs/set.list"/>
+    <argument value="applications/allpairs/compare"/>
+  </process>
+  <process host="Jupiter" function="/usr/bin/work_queue_worker" start_time="2.0">
+    <argument value="localhost"/>
+    <argument value="9123"/>
+  </process>
+</platform>
