@@ -953,3 +953,49 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
 - Vérification des appels existant:
   - write utilisait les arguments de sendto
   - codes de retour, erreurs
+* <2014-07-10 jeu.>
+** Remarques/questions suite à la présentation  
+- Au lieu de faire des peek et des poke (Gabriel) :
+  - Aller directement écrire dans la mémoire dans /proc/<pid>/mem
+  - Ou bien utiliser process_vm_writev / readv : permet de transférer
+    des données d'un processus à un autre sans passer par l'espace
+    noyau
+- Utiliser LD_PRELOAD directement sur write et pas sur fprintf
+  etc. Puisque fprintf et compagnie appellent write qui appelle
+  SYS_write. (Gabriel) 
+- Tests sur la durée d'exécution: variable? et sur une machine
+  différente? (Paul)
+- Relation avec Distem? Concurrent? (Thomas)
+- Est-ce qu'on peut l'exécuter sur plusieurs machines? (Paul)
+- On peut utiliser des threads, mais c'est un peu le chantier
+  pthread/ptrace (Lucas)
+*** DONE Modifier le schéma inkscape :
+  - connect (A,80) pas B
+  - sur la machine B le port n'est pas 80 mais ?? (port service)
+  - aligner les processus sur les 2 schema
+*** TODO Ajouter un schema sur la full mediation
+** Tests:
+- http://ccl.cse.nd.edu/software/
+- Allpairs:
+  - Il faut traiter le clone:
+    - Si je fais le MSG_process_create d'abord, alors simix lance
+      direct le clone et ne s'occupe plus du parent. Donc on n'a pas
+      relâché l'appel système, et le vrai appel clone n'est pas fait,
+      donc on n'a pas de processus réel qui correspond au clone
+    - J'ai créé un handler séparé pour les processus clonés, qui ne
+      contient que la boucle principale
+    - Vérifier les pid: quand je fais un getpid() j'ai un décalage
+      de 1. Dès le début quand on crée le process dans
+      simterpose_process_runner
+    - Dans le clone_pre je ne sais pas quoi restaurer comme valeur de
+      retour. La valeur du pid actuel permet de cloner (sans qu'on me
+      dise que le processus à tracer n'existe pas) mais la valeur+1
+      aussi. Reregarder le strace (visiblement c'est soit le pid, soit pid+1)
+    - C'est pas très clair mais: Admettons que je continue avec ce
+      clone: le premier appel qu'il trouve c'est un clone. Et il y a
+      qu'un seul appel (pas de in et out) ce qui décale à nouveau tous
+      les syscall. Du coup ça dépend si on donne la valeur in_syscall
+      = 1 ou 0 au ps cloné .. 
+** TODO regarder la section PTRACE_O_TRACECLONE dans le man de ptrace
+ 
+** TODO renommer sans "_msg"
