@@ -200,6 +200,16 @@ typedef struct clockgettime_arg_s {
 } clockgettime_arg_s;
 typedef clockgettime_arg_s *clockgettime_arg_t;
 
+
+typedef struct clone_arg_s {
+  int ret;
+  unsigned long clone_flags;
+  unsigned long newsp;
+  void *parent_tid;
+  void *child_tid;
+} clone_arg_s;
+typedef clone_arg_s *clone_arg_t;
+
 typedef union {
   connect_arg_s connect;
   bind_arg_s bind;
@@ -224,6 +234,7 @@ typedef union {
   time_arg_s time;
   gettimeofday_arg_s gettimeofday;
   clockgettime_arg_s clockgettime;
+  clone_arg_s clone;
 } syscall_arg_u;
 
 

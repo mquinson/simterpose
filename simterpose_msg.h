@@ -8,10 +8,12 @@
 #ifndef SIMTERPOSE_H
 #define SIMTERPOSE_H
 
-//#define address_translation
+#define address_translation
 
 #include <sys/types.h>
 #include <xbt.h>
+
+#include "process_descriptor_msg.h"
 
 #define MAX_FD 1024
 #define MAX_PID 32768
@@ -45,6 +47,7 @@ struct simterpose_host {
   xbt_dict_t port;
 };
 
-static int simterpose_process_runner(int argc, char *argv[]);
+int simterpose_process_runner(int argc, char *argv[]);
+int main_loop(int argc, char *argv[]);
 
 #endif

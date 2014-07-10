@@ -3,7 +3,6 @@
 #include "msg/msg.h"
 
 #include <stdlib.h>
-#include </usr/include/linux/sched.h>   /* For clone flags */
 
 
 process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
@@ -85,37 +84,8 @@ void process_fork(pid_t new_pid, process_descriptor_t *forked)
     result->fd_list[i] = forked->fd_list[i];
 
   process_set_descriptor(new_pid, result);
-}
+}*/
 
-//For detail on clone flags report to man clone
-void process_clone(pid_t new_pid, process_descriptor_t *cloned, unsigned long flags)
-{
-  process_descriptor_t *result = malloc(sizeof(process_descriptor_t));
-
-  result->pid = new_pid;
-  result->cpu_time = 0;
-
-  //Now we handle flags option to do the right cloning
-
-  if (flags & CLONE_VFORK)
-    THROW_UNIMPLEMENTED;
-
-  if (flags & CLONE_THREAD)
-    result->tgid = cloned->tgid;
-
-  //if clone files flags is set, we have to share the fd_list
-  if (flags & CLONE_FILES)
-    result->fd_list = cloned->fd_list;
-  else {
-    result->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
-    int i;
-    for (i = 0; i < MAX_FD; ++i)
-      result->fd_list[i] = NULL;
-  }
-
-  process_set_descriptor(new_pid, result);
-}
-*/
 void process_die(process_descriptor_t *proc)
 {
 	close_all_communication(proc);
