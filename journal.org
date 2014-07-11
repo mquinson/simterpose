@@ -997,5 +997,11 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
       les syscall. Du coup ça dépend si on donne la valeur in_syscall
       = 1 ou 0 au ps cloné .. 
 ** TODO regarder la section PTRACE_O_TRACECLONE dans le man de ptrace
- 
-** TODO renommer sans "_msg"
+** DONE renommer sans "_msg"
+* <2014-07-11 ven.>
+- j'ai renommé tous les fichiers sans le _msg
+- appel clone: 
+  - On obtient le pid du fils en faisant un PTRACE_GETEVENTMSG
+  - Donner un nom, un hôte etc. au clone
+  - Pour la liste de file descriptors, mettre stdin stdout stderr? 
+
