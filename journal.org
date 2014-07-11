@@ -955,14 +955,18 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
   - codes de retour, erreurs
 * <2014-07-10 jeu.>
 ** Remarques/questions suite à la présentation  
-- Au lieu de faire des peek et des poke (Gabriel) :
-  - Aller directement écrire dans la mémoire dans /proc/<pid>/mem
+- Autre méthode pour implémenter full mediation (Gabriel) :
+  - Aller directement écrire dans la mémoire dans /proc/<pid>/mem au lieu de se
+    misérer avec des peek et des poke
   - Ou bien utiliser process_vm_writev / readv : permet de transférer
     des données d'un processus à un autre sans passer par l'espace
     noyau
 - Utiliser LD_PRELOAD directement sur write et pas sur fprintf
   etc. Puisque fprintf et compagnie appellent write qui appelle
-  SYS_write. (Gabriel) 
+  SYS_write. (Gabriel)
+- Implémenter la même technique que VDSO en LD_PRELOADant les appels au temps
+  pour qu'ils aillent lire une page partagée où simgrid écrit l'heure simulée
+  dans l'espace d'adressage des enfants (Gabriel). 
 - Tests sur la durée d'exécution: variable? et sur une machine
   différente? (Paul)
 - Relation avec Distem? Concurrent? (Thomas)
