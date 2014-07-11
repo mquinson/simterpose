@@ -22,6 +22,7 @@ const char *state_names[4] = { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROU
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, simterpose, "Syscall process log");
 
+int clone_number = 0;
 
 static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc)
 {
@@ -564,9 +565,9 @@ static void syscall_clone_pre(reg_s * reg, syscall_arg_u * sysarg, process_descr
   XBT_DEBUG("clone_pre");
   proc->in_syscall = 1;
 
-  clone_arg_t arg = &(sysarg->clone);
-  arg->ret = reg->ret;
-  arg->clone_flags = reg->arg1;
+  fprintf(stderr, "[%d] clone (arg1/rdi = %ld, arg2/rsi = %ld, arg3/rdx = %ld, arg4/r10/rcx = %ld, arg8 = %ld, arg9 = %ld) = %ld \n"
+		  , proc->pid, reg->arg1, reg->arg2, reg->arg3, reg->arg4, reg->arg5, reg->arg6, reg->ret);
+
 }
 
 static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -574,19 +575,16 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   XBT_DEBUG("clone_post");
   proc->in_syscall = 0;
 
-  process_descriptor_t *clone = malloc(sizeof(process_descriptor_t));
-  clone->pid = ptrace_get_pid_fork(proc->pid);
-  clone->cpu_time = 0;
-  clone->in_syscall = 0;
-  clone->name = proc->name;
+  get_args_clone(proc, reg, sysarg);
+  clone_arg_t arg = &(sysarg->clone);
 
-  XBT_DEBUG("clone pid = %d (ptrace_get_pid_fork(proc->pid))  ", clone->pid);
 
-   clone_arg_t arg = &(sysarg->clone);
-   arg->ret = clone->pid;
-   ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
+  fprintf(stderr, "[%d] clone (arg1/rdi = %ld, arg2/rsi = %ld, arg3/rdx = %ld, arg4/r10/rcx = %ld, arg8 = %ld, arg9 = %ld) = %ld \n"
+		  , proc->pid, reg->arg1, reg->arg2, reg->arg3, reg->arg4, reg->arg5, reg->arg6, reg->ret);
 
-  unsigned long flags = reg->arg1; // TODO: vérifier
+  process_descriptor_t *clone = process_descriptor_new(proc->name, ptrace_get_pid_fork(proc->pid));
+
+  unsigned long flags = arg->clone_flags; // TODO: vérifier
 
   if (flags & CLONE_VFORK)
     THROW_UNIMPLEMENTED;
@@ -601,13 +599,17 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
     clone->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
     int i;
     for (i = 0; i < MAX_FD; ++i)
-      clone->fd_list[i] = NULL;
+      clone->fd_list[i] = NULL; // TODO et stdout stderr?
   }
 
-  const char *name = "clone";
+   arg->ret = clone->pid;
+   ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
+
+  char name[256];
+  sprintf(name, "clone n°%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
+  XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
   MSG_process_create(name, main_loop, clone, MSG_host_self());
 }
-
 
 static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
@@ -1478,7 +1480,14 @@ int process_handle(process_descriptor_t * proc, int status)
         syscall_clone_post(&arg, sysarg, proc);
       break;
 
-      // ignore SYS_fork, SYS_vfork, SYS_execve
+ /*   case SYS_fork:
+	  if (!(proc->in_syscall))
+		syscall_fork_pre(&arg, sysarg, proc);
+	  else
+		syscall_fork_post(&arg, sysarg, proc);
+	  break;
+*/
+      // ignore SYS_vfork, SYS_execve
 
     case SYS_exit:
       if (!(proc->in_syscall)) {
