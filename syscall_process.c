@@ -565,11 +565,8 @@ static void syscall_clone_pre(reg_s * reg, syscall_arg_u * sysarg, process_descr
   proc->in_syscall = 1;
 
   clone_arg_t arg = &(sysarg->clone);
-  arg->ret = proc->pid;
-
-  XBT_DEBUG("arg->ret %d ", arg->ret);
-  //ptrace_neutralize_syscall(proc->pid);
-  ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
+  arg->ret = reg->ret;
+  arg->clone_flags = reg->arg1;
 }
 
 static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -578,13 +575,18 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   proc->in_syscall = 0;
 
   process_descriptor_t *clone = malloc(sizeof(process_descriptor_t));
-  clone->pid = reg->ret;
+  clone->pid = ptrace_get_pid_fork(proc->pid);
   clone->cpu_time = 0;
-  clone->in_syscall = 1;
+  clone->in_syscall = 0;
+  clone->name = proc->name;
 
-  XBT_DEBUG("clone pid %d ", clone->pid);
+  XBT_DEBUG("clone pid = %d (ptrace_get_pid_fork(proc->pid))  ", clone->pid);
 
-  unsigned long flags = reg->arg1;
+   clone_arg_t arg = &(sysarg->clone);
+   arg->ret = clone->pid;
+   ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
+
+  unsigned long flags = reg->arg1; // TODO: vérifier
 
   if (flags & CLONE_VFORK)
     THROW_UNIMPLEMENTED;
@@ -602,12 +604,8 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
       clone->fd_list[i] = NULL;
   }
 
-#ifdef address_translation
   const char *name = "clone";
   MSG_process_create(name, main_loop, clone, MSG_host_self());
-#else
-  THROW_UNIMPLEMENTED;
-#endif
 }
 
 
