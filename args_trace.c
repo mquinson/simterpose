@@ -296,6 +296,16 @@ void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 #endif
 }
 
+void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
+{
+	clone_arg_t arg = &(sysarg->clone);
+	arg->ret = reg->ret;
+  arg->clone_flags = reg->arg1;
+  arg->newsp = reg->arg2;
+  arg->parent_tid = (void *) reg->arg3;
+  arg->child_tid = (void *) reg->arg4;
+}
+
 
 //FIXME make this function use unified union syscall_arg_u
 void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
