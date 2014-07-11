@@ -1,5 +1,5 @@
-#ifndef SYSCALL_DATA_MSG_H
-#define SYSCALL_DATA_MSG_H
+#ifndef SYSCALL_DATA_H
+#define SYSCALL_DATA_H
 
 #include "sysdep.h"
 

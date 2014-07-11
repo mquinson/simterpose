@@ -1,4 +1,4 @@
-/* simterpose_msg - simterpose intercepter based on MSG                     */
+/* simterpose - simterpose intercepter based on MSG                     */
 
 /* Copyright (c) 2014. The SimGrid Team. All right reserved.                */
 
@@ -12,14 +12,14 @@
 
 #include <msg/msg.h>
 #include <xbt.h>
-#include "simterpose_msg.h"
-#include "sockets_msg.h"
-#include "cputimer_msg.h"
-#include "communication_msg.h"
-#include "data_utils_msg.h"
-#include "ptrace_utils_msg.h"
-#include "syscall_process_msg.h"
-#include "process_descriptor_msg.h"
+#include "simterpose.h"
+#include "sockets.h"
+#include "cputimer.h"
+#include "communication.h"
+#include "data_utils.h"
+#include "ptrace_utils.h"
+#include "syscall_process.h"
+#include "process_descriptor.h"
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "High-level simterpose category");
 int strace_option = 0;
@@ -216,7 +216,7 @@ int simterpose_process_runner(int argc, char *argv[])
 	ptrace_resume_process(pid);
 	if (waitpid(pid, &status, 0) < 0)
 		xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-	proc_next_state = process_handle_msg(proc, status);
+	proc_next_state = process_handle(proc, status);
 
 	XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
   }
@@ -237,7 +237,7 @@ int main_loop(int argc, char *argv[]){
 	    ptrace_resume_process(pid);
 	    if (waitpid(pid, &status, 0) < 0)
 	    	xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-	    proc_next_state = process_handle_msg(proc, status);
+	    proc_next_state = process_handle(proc, status);
 
 	    XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
 	  }

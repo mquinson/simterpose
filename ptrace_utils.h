@@ -1,4 +1,4 @@
-/* ptrace_msg -- helper functions to not call ptrace manually            */
+/* ptrace -- helper functions to not call ptrace manually            */
 
 /* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
 
@@ -6,8 +6,8 @@
  * under the terms of the license (GNU GPL) which comes with this package. */
 
 
-#ifndef PTRACE_UTILS_MSG_H
-#define PTRACE_UTILS_MSG_H
+#ifndef PTRACE_UTILS_H
+#define PTRACE_UTILS_H
 
 #include <sys/types.h>
 
@@ -49,4 +49,4 @@ int ptrace_record_socket(pid_t pid);
 
 int ptrace_find_free_binding_port(const pid_t pid);
 
-#endif                          /* PTRACE_MSG_H */
+#endif                          /* PTRACE_H */

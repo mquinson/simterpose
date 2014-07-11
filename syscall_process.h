@@ -1,0 +1,14 @@
+#ifndef SYSCALL_PROCESS_H
+#define SYSCALL_PROCESS_H
+
+#include "process_descriptor.h"
+#include "ptrace_utils.h"
+
+enum { PROCESS_CONTINUE = 0, PROCESS_DEAD, PROCESS_GROUP_DEAD, PROCESS_TASK_FOUND };
+extern const char *state_names[4];
+
+#define RECV_CLOSE              10
+
+int process_handle(process_descriptor_t * proc, int status);
+
+#endif

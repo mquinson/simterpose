@@ -1,6 +1,6 @@
-#include "print_syscall_msg.h"
-#include "sockets_msg.h"
-#include "simterpose_msg.h"
+#include "print_syscall.h"
+#include "sockets.h"
+#include "simterpose.h"
 #include "sysdep.h"
 #include <xbt.h>
 

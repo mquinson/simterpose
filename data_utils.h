@@ -1,9 +1,9 @@
-#ifndef DATA_UTILS_MSG_H
-#define DATA_UTILS_MSG_H
+#ifndef DATA_UTILS_H
+#define DATA_UTILS_H
 
 #include <sys/types.h>
-#include "simterpose_msg.h"
-#include "sockets_msg.h"
+#include "simterpose.h"
+#include "sockets.h"
 
 #define MAX_PID 32768
 
@@ -87,4 +87,4 @@ void benchmark_matrix_product(float *msec_per_flop);
 
 void init_host_list(void);
 
-#endif                          /* DATA_UTILS_MSG_H */
+#endif                          /* DATA_UTILS_H */

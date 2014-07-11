@@ -1,5 +1,5 @@
-#ifndef __PROCESS_DESCRIPTOR_MSG_H
-#define __PROCESS_DESCRIPTOR_MSG_H
+#ifndef __PROCESS_DESCRIPTOR_H
+#define __PROCESS_DESCRIPTOR_H
 
 #define PROC_RECVMSG            0x000200
 #define PROC_READ               0x000400
@@ -35,7 +35,7 @@
 #include <sys/types.h>
 #include <msg/msg.h>
 
-#include "syscall_data_msg.h"
+#include "syscall_data.h"
 
 typedef struct process_descriptor process_descriptor_t;
 

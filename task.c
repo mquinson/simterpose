@@ -1,8 +1,8 @@
-#include "task_msg.h"
-#include "simterpose_msg.h"
-#include "data_utils_msg.h"
-#include "sockets_msg.h"
-#include "communication_msg.h"
+#include "task.h"
+#include "simterpose.h"
+#include "data_utils.h"
+#include "sockets.h"
+#include "communication.h"
 
 #include "xbt/fifo.h"
 #include "xbt.h"
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "xbt/log.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK_MSG, simterpose, "task log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(TASK, simterpose, "task log");
 /*
 static int num = 0;
 

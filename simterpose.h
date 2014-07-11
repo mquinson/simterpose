@@ -13,7 +13,7 @@
 #include <sys/types.h>
 #include <xbt.h>
 
-#include "process_descriptor_msg.h"
+#include "process_descriptor.h"
 
 #define MAX_FD 1024
 #define MAX_PID 32768

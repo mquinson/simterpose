@@ -1,5 +1,5 @@
-#ifndef __SOCKETS_MSG_H
-#define __SOCKETS_MSG_H
+#ifndef __SOCKETS_H
+#define __SOCKETS_H
 
 /*Declaration of state for socket*/
 #define SOCKET_READ_OK  0x0001
@@ -18,9 +18,9 @@ struct infos_socket;
 #include "sysdep.h"
 #include "xbt.h"
 #include "xbt/fifo.h"
-#include "syscall_data_msg.h"
-#include "communication_msg.h"
-#include "process_descriptor_msg.h"
+#include "syscall_data.h"
+#include "communication.h"
+#include "process_descriptor.h"
 
 
 struct recv_information {

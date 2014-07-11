@@ -1,5 +1,5 @@
-#include "process_descriptor_msg.h"
-#include "sockets_msg.h"
+#include "process_descriptor.h"
+#include "sockets.h"
 #include "msg/msg.h"
 
 #include <stdlib.h>

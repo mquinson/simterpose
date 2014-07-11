@@ -1,12 +1,12 @@
-#ifndef TASK_MSG_H
-#define TASK_MSG_H
+#ifndef TASK_H
+#define TASK_H
 
 #include <stdlib.h>
 
 typedef struct task_comm_info task_comm_info;
 
-#include "sockets_msg.h"
-#include "process_descriptor_msg.h"
+#include "sockets.h"
+#include "process_descriptor.h"
 
 struct task_comm_info {
   msg_task_t task;

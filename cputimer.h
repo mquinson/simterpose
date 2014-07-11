@@ -5,8 +5,8 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPL) which comes with this package. */
 
-#ifndef CPUTIMER_MSG_H
-#define CPUTIMER_MSG_H
+#ifndef CPUTIMER_H
+#define CPUTIMER_H
 
 #include "sysdep.h"
 

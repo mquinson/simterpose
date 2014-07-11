@@ -1,10 +1,10 @@
 #ifndef __ARGS_TRACE_MSG_H
-#define __ARGS_TRACE_MSG_H
+#define __ARGS_TRACE_H
 
 
-#include "syscall_data_msg.h"
-#include "ptrace_utils_msg.h"
-#include "process_descriptor_msg.h"
+#include "syscall_data.h"
+#include "ptrace_utils.h"
+#include "process_descriptor.h"
 
 extern int nb_procs;
 

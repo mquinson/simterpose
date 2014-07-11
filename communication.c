@@ -1,14 +1,14 @@
-#include "sockets_msg.h"
-#include "communication_msg.h"
+#include "sockets.h"
+#include "communication.h"
 #include "xbt.h"
-#include "data_utils_msg.h"
+#include "data_utils.h"
 #include "sysdep.h"
 
 #include <sys/types.h>
 #include <stdlib.h>
 #include "xbt/log.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION_MSG, simterpose, "communication log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION, simterpose, "communication log");
 
 xbt_dynar_t comm_list;
 

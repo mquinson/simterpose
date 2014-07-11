@@ -1,8 +1,8 @@
-#ifndef PRINT_SYSCALL_MSG_H
-#define PRINT_SYSCALL_MSG_H
+#ifndef PRINT_SYSCALL_H
+#define PRINT_SYSCALL_H
 
-#include "syscall_data_msg.h"
-#include "process_descriptor_msg.h"
+#include "syscall_data.h"
+#include "process_descriptor.h"
 
 #include <sys/types.h>
 

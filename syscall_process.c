@@ -1,13 +1,13 @@
-#include "simterpose_msg.h"
-#include "syscall_process_msg.h"
-#include "syscall_data_msg.h"
+#include "simterpose.h"
+#include "syscall_process.h"
+#include "syscall_data.h"
 #include "sysdep.h"
-#include "args_trace_msg.h"
-#include "data_utils_msg.h"
-#include "ptrace_utils_msg.h"
-#include "print_syscall_msg.h"
-#include "process_descriptor_msg.h"
-#include "sockets_msg.h"
+#include "args_trace.h"
+#include "data_utils.h"
+#include "ptrace_utils.h"
+#include "print_syscall.h"
+#include "process_descriptor.h"
+#include "sockets.h"
 
 #include "xbt.h"
 #include "xbt/log.h"
@@ -21,7 +21,7 @@ extern int strace_option;
 const char *state_names[4] =
     { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND" };
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS_MSG, simterpose, "Syscall process log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, simterpose, "Syscall process log");
 
 
 static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc)
@@ -1275,7 +1275,7 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
     XBT_DEBUG(" ----> S -> connect_pre j'ai pris client");
 
     int status = 0;
-    return process_handle_msg(proc, status);
+    return process_handle(proc, status);
   } else {
     XBT_DEBUG("process_connect_in_call == 0  <--------- ");
   }
@@ -1302,7 +1302,7 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
   XBT_DEBUG(" ----> S -> connect_post j'ai relâché serveur");
 }
 
-int process_handle_msg(process_descriptor_t * proc, int status)
+int process_handle(process_descriptor_t * proc, int status)
 {
   reg_s arg;
   syscall_arg_u *sysarg = &(proc->sysarg);

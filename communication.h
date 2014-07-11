@@ -1,5 +1,5 @@
-#ifndef COMMUNICATION_MSG_H
-#define COMMUNICATION_MSG_H
+#ifndef COMMUNICATION_H
+#define COMMUNICATION_H
 
 #define UNDECLARED_PGID -1
 
@@ -12,8 +12,8 @@ typedef struct comm_s comm_s;
 typedef comm_s *comm_t;
 
 #include "xbt.h"
-#include "task_msg.h"
-#include "process_descriptor_msg.h"
+#include "task.h"
+#include "process_descriptor.h"
 #include <sys/types.h>
 
 typedef struct {

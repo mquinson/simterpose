@@ -1,4 +1,4 @@
-/* ptrace_msg -- helper functions to not call ptrace manually            */
+/* ptrace -- helper functions to not call ptrace manually            */
 
 /* most of the provided functions are documented. The remaining ones should be documented or removed/placed elsewhere */
 
@@ -8,11 +8,11 @@
  * under the terms of the license (GNU GPL) which comes with this package. */
 
 
-#include "ptrace_utils_msg.h"
+#include "ptrace_utils.h"
 #include "sysdep.h"
 #include <xbt.h>
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE_MSG, simterpose, "ptrace msg log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE, simterpose, "ptrace msg log");
 
 const char *syscall_list[] = {
   "read", "write", "open", "close", "stat", "fstat", "lstat", "poll", "lseek", "mmap", "mprotect", "munmap", "brk",

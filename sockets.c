@@ -1,9 +1,9 @@
-#include "sockets_msg.h"
+#include "sockets.h"
 #include "sysdep.h"
 #include "xbt.h"
-#include "syscall_data_msg.h"
-#include "process_descriptor_msg.h"
-#include "simterpose_msg.h"
+#include "syscall_data.h"
+#include "process_descriptor.h"
+#include "simterpose.h"
 
 #define LOCAL 1
 #define REMOTE 2
@@ -12,7 +12,7 @@
 #define UDP_PROTOCOL 1
 #define RAW_PROTOCOL 2
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SOCKETS_MSG, simterpose, "sockets log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SOCKETS, simterpose, "sockets log");
 
 typedef struct {
   void *data;

@@ -1,11 +1,11 @@
-#include "simterpose_msg.h"
-#include "data_utils_msg.h"
-#include "process_descriptor_msg.h"
-#include "cputimer_msg.h"
+#include "simterpose.h"
+#include "data_utils.h"
+#include "process_descriptor.h"
+#include "cputimer.h"
 #include "xbt.h"
-#include "sockets_msg.h"
+#include "sockets.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(DATA_UTILS_MSG, simterpose, "data_utils log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(DATA_UTILS, simterpose, "data_utils log");
 
 struct simterpose_globals {
   process_descriptor_t *process_desc[MAX_PID];
