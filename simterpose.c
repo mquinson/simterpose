@@ -171,6 +171,7 @@ int simterpose_process_runner(int argc, char *argv[])
   int tracked_pid = fork();
   if (tracked_pid == 0) {
     // in child
+
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
       perror("ptrace traceme");
       exit(1);
@@ -197,6 +198,7 @@ int simterpose_process_runner(int argc, char *argv[])
   process_set_descriptor(process_descriptor_new(MSG_host_get_name(MSG_host_self()), tracked_pid));
 
   // Trace the child and all upcoming granchilds
+  increment_nb_setoptions();
   if (ptrace(PTRACE_SETOPTIONS, tracked_pid, NULL,
              PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE)
       == -1) {
