@@ -994,18 +994,39 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
     - Dans le clone_pre je ne sais pas quoi restaurer comme valeur de
       retour. La valeur du pid actuel permet de cloner (sans qu'on me
       dise que le processus à tracer n'existe pas) mais la valeur+1
-      aussi. Reregarder le strace (visiblement c'est soit le pid, soit pid+1)
+      aussi. Reregarder le strace (visiblement c'est soit le pid, soit
+      pid+1)
     - C'est pas très clair mais: Admettons que je continue avec ce
       clone: le premier appel qu'il trouve c'est un clone. Et il y a
       qu'un seul appel (pas de in et out) ce qui décale à nouveau tous
       les syscall. Du coup ça dépend si on donne la valeur in_syscall
       = 1 ou 0 au ps cloné .. 
-** TODO regarder la section PTRACE_O_TRACECLONE dans le man de ptrace
+** DONE regarder la section PTRACE_O_TRACECLONE dans le man de ptrace
 ** DONE renommer sans "_msg"
 * <2014-07-11 ven.>
 - j'ai renommé tous les fichiers sans le _msg
 - appel clone: 
-  - On obtient le pid du fils en faisant un PTRACE_GETEVENTMSG
-  - Donner un nom, un hôte etc. au clone
-  - Pour la liste de file descriptors, mettre stdin stdout stderr? 
-
+  - On obtient le pid du fils en faisant un PTRACE_GETEVENTMSG (en
+    fait on obtient un message sur le dernier ptrace event, donc si
+    c'est pas un clone on obtient un truc qui n'a rien à voir)
+  - J'ai rajouté le nom, l'hôte etc. au clone
+  - Le premier clone fonctionne: master crée un premier clone, et
+    quand celui-ci meurt il en crée un deuxième, et là ça ne
+    fonctionne pas parce qu'il lui donne le même pid qu'au 1er clone,
+    or celui-ci vient d'être détruit. (donc il n'existe pas et on ne
+    peut pas faire de resume process)
+  - En fait sur un essai ça a eu le temps de créer 4 clones avant de
+    crasher . Les pid étaient différents jusqu'au dernier qui a
+    essayé de redonner le même pid et là ça crashe. 
+    - TODO essayer de garder les clones en vie jusqu'à la fin pour
+      être surs que le nouveau pid sera distinct .. 
+  - Normalement dans le clone_post, on distingue le pere et le fils
+    selon si le retour vaut 0 ou non. or le retour vaut -38 lors du
+    premier clone (en in ET en out), puis le pid lors du 2e clone (en
+    in ET en out -_-)
+** TODO trouver un moyen de distinguer le pere du fils
+  - J'arrive pas à comprendre à quoi correspondent les différents
+    registres. Je trouve tout et son contraire, et ça ne correspond
+    jamais .. 
+** TODO regarder fork, puisque clone est un cas particulier de fork
+http://stackoverflow.com/questions/13532137/tracing-syscalls-of-a-process-and-all-forked-processes
