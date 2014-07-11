@@ -182,7 +182,7 @@ int simterpose_process_runner(int argc, char *argv[])
     char *cmdline_str = xbt_str_join(cmdline_dynar, " ");
     char **cmdline_array = (char **) xbt_dynar_to_array(cmdline_dynar);
 
-   // XBT_INFO("Process %d is starting child: %s", getpid(), cmdline_str);
+    // XBT_INFO("Process %d is starting child: %s", getpid(), cmdline_str);
     XBT_INFO("Process is starting child: %s", cmdline_str);
 
     execv(cmdline_array[0], cmdline_array);     // If successful, the execution flow does not go any further here
@@ -209,38 +209,39 @@ int simterpose_process_runner(int argc, char *argv[])
   // Main loop where we track our external process and do the simcall that represent its syscalls
   int proc_next_state;
   while (proc_next_state != PROCESS_DEAD) {
-	XBT_DEBUG("Starting treatment");
+    XBT_DEBUG("Starting treatment");
 
-	int status;
-	pid_t pid = proc->pid;
-	ptrace_resume_process(pid);
-	if (waitpid(pid, &status, 0) < 0)
-		xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-	proc_next_state = process_handle(proc, status);
+    int status;
+    pid_t pid = proc->pid;
+    ptrace_resume_process(pid);
+    if (waitpid(pid, &status, 0) < 0)
+      xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
+    proc_next_state = process_handle(proc, status);
 
-	XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
+    XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
   }
   process_die(proc);
   return 0;
 }
 
-int main_loop(int argc, char *argv[]){
+int main_loop(int argc, char *argv[])
+{
 
-	  process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
+  process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
 
-	  int proc_next_state;
-	  while (proc_next_state != PROCESS_DEAD) {
-	    XBT_DEBUG("Starting treatment (pid = %d)", proc->pid);
+  int proc_next_state;
+  while (proc_next_state != PROCESS_DEAD) {
+    XBT_DEBUG("Starting treatment (pid = %d)", proc->pid);
 
-	    int status;
-	    pid_t pid = proc->pid;
-	    ptrace_resume_process(pid);
-	    if (waitpid(pid, &status, 0) < 0)
-	    	xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-	    proc_next_state = process_handle(proc, status);
+    int status;
+    pid_t pid = proc->pid;
+    ptrace_resume_process(pid);
+    if (waitpid(pid, &status, 0) < 0)
+      xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
+    proc_next_state = process_handle(proc, status);
 
-	    XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
-	  }
-	  process_die(proc);
-	  return 0;
+    XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
+  }
+  process_die(proc);
+  return 0;
 }

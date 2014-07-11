@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 
   struct timespec tvcl;
   clock_gettime(NULL, &tvcl);
-  fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n",SERV_PORT, msg_count, msg_size);
+  fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", SERV_PORT, msg_count, msg_size);
   //fprintf(stderr,"(Server, time: %d; clock_gettime: %f)\n", time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
   int serverSocket;

@@ -34,7 +34,7 @@ void execute_computation_task(process_descriptor_t * proc, msg_task_t task)
 }*/
 
 
-msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, struct infos_socket *is, double amount,
+msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, struct infos_socket * is, double amount,
                                           msg_host_t sender, msg_host_t receiver)
 {
   char buff[256];

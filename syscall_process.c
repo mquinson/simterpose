@@ -18,8 +18,7 @@
 
 #define SYSCALL_ARG1 rdi
 extern int strace_option;
-const char *state_names[4] =
-    { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND" };
+const char *state_names[4] = { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND" };
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, simterpose, "Syscall process log");
 
@@ -40,7 +39,8 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
       handle_new_send(is, sysarg);
 
       msg_task_t task = create_send_communication_task(proc, is, arg->ret, proc->host, s->fd.proc->host);
-      XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host), arg->ret);
+      XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
+                arg->ret);
       MSG_task_set_data_size(task, arg->ret);
       MSG_task_set_data(task, arg->data);
 
@@ -50,7 +50,7 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
     }
     return 0;
   } else
-	  xbt_die("The socket is not registered");
+    xbt_die("The socket is not registered");
   return 0;
 }
 
@@ -196,7 +196,7 @@ static void process_recvmsg_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_recvmsg_out_call");
   sys_build_recvmsg(proc, &(proc->sysarg));
- // process_reset_state(proc);
+  // process_reset_state(proc);
 }
 
 // TODO: le pattern est le même pour recvmsg_pre, recvfrom_pre, read_pre, faire une fonction
@@ -225,28 +225,28 @@ static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
         msg_task_t task = NULL;
         msg_error_t err = MSG_task_receive(&task, mailbox);
 
-        arg->ret =  (int)MSG_task_get_data_size(task);
-		arg->data = MSG_task_get_data(task);
+        arg->ret = (int) MSG_task_get_data_size(task);
+        arg->data = MSG_task_get_data(task);
 
-		if(err != MSG_OK){
-			struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-		   int sock_status = socket_get_state(is);
+        if (err != MSG_OK) {
+          struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+          int sock_status = socket_get_state(is);
 #ifdef address_translation
-		   if (sock_status & SOCKET_CLOSED)
-			 process_recvmsg_out_call(proc);
+          if (sock_status & SOCKET_CLOSED)
+            process_recvmsg_out_call(proc);
 #else
-		   if (sock_status & SOCKET_CLOSED)
-			  sysarg->recvmsg.ret = 0;
-			ptrace_neutralize_syscall(pid);
-			proc->in_syscall = 0;
-			process_recvmsg_out_call(proc);
-		}else{
-			ptrace_neutralize_syscall(pid);
-			proc->in_syscall = 0;
-			process_recvmsg_out_call(proc);
+          if (sock_status & SOCKET_CLOSED)
+            sysarg->recvmsg.ret = 0;
+          ptrace_neutralize_syscall(pid);
+          proc->in_syscall = 0;
+          process_recvmsg_out_call(proc);
+        } else {
+          ptrace_neutralize_syscall(pid);
+          proc->in_syscall = 0;
+          process_recvmsg_out_call(proc);
 #endif
-		}
-		MSG_task_destroy(task);
+        }
+        MSG_task_destroy(task);
       }
     }
   }
@@ -267,11 +267,11 @@ static void process_recvfrom_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_RECVFROM_out_call");
   pid_t pid = proc->pid;
- // process_reset_state(proc);
+  // process_reset_state(proc);
   syscall_arg_u *sysarg = &(proc->sysarg);
   recvfrom_arg_t arg = &(sysarg->recvfrom);
   if (strace_option)
-	print_recvfrom_syscall(proc, &(proc->sysarg));
+    print_recvfrom_syscall(proc, &(proc->sysarg));
   ptrace_restore_syscall(pid, SYS_recvfrom, arg->ret);
   ptrace_poke(pid, (void *) arg->dest, arg->data, arg->ret);
   free(arg->data);
@@ -311,25 +311,25 @@ static void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
         msg_task_t task = NULL;
         msg_error_t err = MSG_task_receive(&task, mailbox);
 
-        arg->ret =  (int)MSG_task_get_data_size(task);
+        arg->ret = (int) MSG_task_get_data_size(task);
         arg->data = MSG_task_get_data(task);
 
-        if(err != MSG_OK){
-			struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-		   int sock_status = socket_get_state(is);
+        if (err != MSG_OK) {
+          struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+          int sock_status = socket_get_state(is);
 #ifdef address_translation
-		   if (sock_status & SOCKET_CLOSED)
-			 process_recvfrom_out_call(proc);
+          if (sock_status & SOCKET_CLOSED)
+            process_recvfrom_out_call(proc);
 #else
-		   if (sock_status & SOCKET_CLOSED)
-	          sysarg->recvfrom.ret = 0;
-		    ptrace_neutralize_syscall(pid);
-	        proc->in_syscall = 0;
-	        process_recvfrom_out_call(proc);
-        }else{
-            ptrace_neutralize_syscall(pid);
-            proc->in_syscall = 0;
-	        process_recvfrom_out_call(proc);
+          if (sock_status & SOCKET_CLOSED)
+            sysarg->recvfrom.ret = 0;
+          ptrace_neutralize_syscall(pid);
+          proc->in_syscall = 0;
+          process_recvfrom_out_call(proc);
+        } else {
+          ptrace_neutralize_syscall(pid);
+          proc->in_syscall = 0;
+          process_recvfrom_out_call(proc);
 #endif
         }
         MSG_task_destroy(task);
@@ -370,45 +370,45 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   get_args_read(proc, reg, sysarg);
 
   if ((int) reg->ret > 0) {
-  if (socket_registered(proc, reg->arg1) != -1) {
-	  read_arg_t arg = &(sysarg->read);
-	  fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+    if (socket_registered(proc, reg->arg1) != -1) {
+      read_arg_t arg = &(sysarg->read);
+      fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
 
-	 XBT_DEBUG(" read socket_registered");
-	 const char *mailbox;
-	         if (MSG_process_self() == file_desc->stream->client)
-	           mailbox = file_desc->stream->to_client;
-	         else if (MSG_process_self() == file_desc->stream->server)
-	           mailbox = file_desc->stream->to_server;
-	         else
-	           THROW_IMPOSSIBLE;
+      XBT_DEBUG(" read socket_registered");
+      const char *mailbox;
+      if (MSG_process_self() == file_desc->stream->client)
+        mailbox = file_desc->stream->to_client;
+      else if (MSG_process_self() == file_desc->stream->server)
+        mailbox = file_desc->stream->to_server;
+      else
+        THROW_IMPOSSIBLE;
 
-	         msg_task_t task = NULL;
-	         msg_error_t err = MSG_task_receive(&task, mailbox);
+      msg_task_t task = NULL;
+      msg_error_t err = MSG_task_receive(&task, mailbox);
 
-	         arg->ret =  (int)MSG_task_get_data_size(task);
-	 		arg->data = MSG_task_get_data(task);
+      arg->ret = (int) MSG_task_get_data_size(task);
+      arg->data = MSG_task_get_data(task);
 
-	 		if(err != MSG_OK){
-	 			struct infos_socket *is = get_infos_socket(proc, arg->fd);
-	 		   int sock_status = socket_get_state(is);
+      if (err != MSG_OK) {
+        struct infos_socket *is = get_infos_socket(proc, arg->fd);
+        int sock_status = socket_get_state(is);
 #ifdef address_translation
-	 		   if (sock_status & SOCKET_CLOSED)
-	 			 process_read_out_call(proc);
+        if (sock_status & SOCKET_CLOSED)
+          process_read_out_call(proc);
 #else
-	 		   if (sock_status & SOCKET_CLOSED)
-	 			  sysarg->read.ret = 0;
-	 			ptrace_neutralize_syscall(proc->pid);
-	 			proc->in_syscall = 0;
-	 			process_read_out_call(proc);
-	 		}else{
-	 			ptrace_neutralize_syscall(proc->pid);
-	 			proc->in_syscall = 0;
-	 			process_read_out_call(proc);
+        if (sock_status & SOCKET_CLOSED)
+          sysarg->read.ret = 0;
+        ptrace_neutralize_syscall(proc->pid);
+        proc->in_syscall = 0;
+        process_read_out_call(proc);
+      } else {
+        ptrace_neutralize_syscall(proc->pid);
+        proc->in_syscall = 0;
+        process_read_out_call(proc);
 #endif
-	 		}
-			MSG_task_destroy(task);
-  }
+      }
+      MSG_task_destroy(task);
+    }
   }
 }
 
@@ -561,52 +561,52 @@ static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 static void syscall_clone_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	XBT_DEBUG("clone_pre");
-	proc->in_syscall = 1;
+  XBT_DEBUG("clone_pre");
+  proc->in_syscall = 1;
 
-	clone_arg_t arg = &(sysarg->clone);
-	arg->ret = proc->pid;
+  clone_arg_t arg = &(sysarg->clone);
+  arg->ret = proc->pid;
 
-	XBT_DEBUG("arg->ret %d ", arg->ret);
-	//ptrace_neutralize_syscall(proc->pid);
-	ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
+  XBT_DEBUG("arg->ret %d ", arg->ret);
+  //ptrace_neutralize_syscall(proc->pid);
+  ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
 }
 
 static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	XBT_DEBUG("clone_post");
-	proc->in_syscall = 0;
+  XBT_DEBUG("clone_post");
+  proc->in_syscall = 0;
 
-	process_descriptor_t *clone = malloc(sizeof(process_descriptor_t));
-	clone->pid = reg->ret;
-	clone->cpu_time = 0;
-	clone->in_syscall = 1;
+  process_descriptor_t *clone = malloc(sizeof(process_descriptor_t));
+  clone->pid = reg->ret;
+  clone->cpu_time = 0;
+  clone->in_syscall = 1;
 
-	XBT_DEBUG("clone pid %d ", clone->pid);
+  XBT_DEBUG("clone pid %d ", clone->pid);
 
-	unsigned long flags = reg->arg1;
+  unsigned long flags = reg->arg1;
 
-	if (flags & CLONE_VFORK)
-	THROW_UNIMPLEMENTED;
+  if (flags & CLONE_VFORK)
+    THROW_UNIMPLEMENTED;
 
-	if (flags & CLONE_THREAD)
-	clone->tgid = proc->tgid;
+  if (flags & CLONE_THREAD)
+    clone->tgid = proc->tgid;
 
-	//if clone files flags is set, we have to share the fd_list
-	if (flags & CLONE_FILES)
-		clone->fd_list = proc->fd_list;
-	else {
-		clone->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
-		int i;
-		for (i = 0; i < MAX_FD; ++i)
-			clone->fd_list[i] = NULL;
-	}
+  //if clone files flags is set, we have to share the fd_list
+  if (flags & CLONE_FILES)
+    clone->fd_list = proc->fd_list;
+  else {
+    clone->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
+    int i;
+    for (i = 0; i < MAX_FD; ++i)
+      clone->fd_list[i] = NULL;
+  }
 
 #ifdef address_translation
-	const char *name = "clone";
-	MSG_process_create(name, main_loop, clone, MSG_host_self());
+  const char *name = "clone";
+  MSG_process_create(name, main_loop, clone, MSG_host_self());
 #else
-		 THROW_UNIMPLEMENTED;
+  THROW_UNIMPLEMENTED;
 #endif
 }
 
@@ -637,25 +637,25 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 
 static void process_close_call(process_descriptor_t * proc, int fd)
 {
-	XBT_DEBUG("entering process_close_call");
+  XBT_DEBUG("entering process_close_call");
 
-	fd_descriptor_t *file_desc = proc->fd_list[fd];
-	if (file_desc != NULL) {
-		if (file_desc->type == FD_SOCKET)
-			socket_close(proc, fd);
-		else {
-			free(file_desc);
-			proc->fd_list[fd] = NULL;
-		}
-	}
+  fd_descriptor_t *file_desc = proc->fd_list[fd];
+  if (file_desc != NULL) {
+    if (file_desc->type == FD_SOCKET)
+      socket_close(proc, fd);
+    else {
+      free(file_desc);
+      proc->fd_list[fd] = NULL;
+    }
+  }
 }
 
 static void process_shutdown_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   shutdown_arg_t arg = &(sysarg->shutdown);
   struct infos_socket *is = get_infos_socket(proc, arg->fd);
-  if (is == NULL){
-	arg->ret = -EBADF;
+  if (is == NULL) {
+    arg->ret = -EBADF;
     return;
   }
   comm_shutdown(is);
@@ -663,13 +663,13 @@ static void process_shutdown_call(process_descriptor_t * proc, syscall_arg_u * s
 
 static void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	proc->in_syscall = 1;
+  proc->in_syscall = 1;
 #ifndef address_translation
-	XBT_DEBUG(" shutdown_pre");
-	shutdown_arg_t arg = &(sysarg->shutdown);
-	arg->fd = reg->arg1;
-	arg->how = reg->arg2;
-	arg->ret = reg->ret;
+  XBT_DEBUG(" shutdown_pre");
+  shutdown_arg_t arg = &(sysarg->shutdown);
+  arg->fd = reg->arg1;
+  arg->how = reg->arg2;
+  arg->ret = reg->ret;
 
   ptrace_neutralize_syscall(proc->pid);
   arg->ret = 0;
@@ -682,7 +682,7 @@ static void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_de
 
 static void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	XBT_DEBUG(" shutdown_post");
+  XBT_DEBUG(" shutdown_post");
   proc->in_syscall = 0;
   shutdown_arg_t arg = &(sysarg->shutdown);
   arg->fd = reg->arg1;
@@ -1085,8 +1085,8 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
     arg->sai = in;
     ptrace_resume_process(conn_proc->pid);
 #else
-      comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
-      arg->sai = in;
+    comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
+    arg->sai = in;
 #endif
 
 #ifndef address_translation
@@ -1108,11 +1108,12 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
     if (strace_option)
       print_accept_syscall(proc, sysarg);
 
-    XBT_DEBUG(" ----> S -> accept_in (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre SERVER (2e episode)");
+    XBT_DEBUG
+        (" ----> S -> accept_in (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre SERVER (2e episode)");
     MSG_sem_acquire(file_desc->stream->sem_server);
     XBT_DEBUG(" ----> S -> accept_in: SERVER pris! (2e episode)");
 #endif
-  }// else
+  }                             // else
   //  proc->state = PROC_ACCEPT;
 }
 
@@ -1311,7 +1312,8 @@ int process_handle(process_descriptor_t * proc, int status)
   while (1) {
     ptrace_get_register(pid, &arg);
     int ret;
-    XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret,proc->in_syscall);
+    XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret,
+              proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1472,11 +1474,11 @@ int process_handle(process_descriptor_t * proc, int status)
       break;
 
     case SYS_clone:
-	  if (!(proc->in_syscall))
-		  syscall_clone_pre(&arg, sysarg, proc);
-	  else
-		  syscall_clone_post(&arg, sysarg, proc);
-	  break;
+      if (!(proc->in_syscall))
+        syscall_clone_pre(&arg, sysarg, proc);
+      else
+        syscall_clone_post(&arg, sysarg, proc);
+      break;
 
       // ignore SYS_fork, SYS_vfork, SYS_execve
 
@@ -1560,7 +1562,7 @@ int process_handle(process_descriptor_t * proc, int status)
       // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
     default:
-    //XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+      //XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else

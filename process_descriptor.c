@@ -86,10 +86,10 @@ void process_fork(pid_t new_pid, process_descriptor_t *forked)
   process_set_descriptor(new_pid, result);
 }*/
 
-void process_die(process_descriptor_t *proc)
+void process_die(process_descriptor_t * proc)
 {
-	close_all_communication(proc);
-	process_descriptor_destroy(proc);
+  close_all_communication(proc);
+  process_descriptor_destroy(proc);
 }
 
 int process_get_free_fd(process_descriptor_t * proc)
