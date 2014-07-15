@@ -562,53 +562,60 @@ static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 static void syscall_clone_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-  XBT_DEBUG("clone_pre");
-  proc->in_syscall = 1;
-
-  fprintf(stderr, "[%d] clone (arg1/rdi = %ld, arg2/rsi = %ld, arg3/rdx = %ld, arg4/r10/rcx = %ld, arg8 = %ld, arg9 = %ld) = %ld \n"
-		  , proc->pid, reg->arg1, reg->arg2, reg->arg3, reg->arg4, reg->arg5, reg->arg6, reg->ret);
-
+	if(strace_option)
+		print_clone_syscall(proc, sysarg);
+  //proc->in_syscall = 1;
 }
 
 static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-  XBT_DEBUG("clone_post");
-  proc->in_syscall = 0;
+  int ret = reg->ret;
+  int pid_fork = ptrace_get_pid_fork(proc->pid);
 
-  get_args_clone(proc, reg, sysarg);
-  clone_arg_t arg = &(sysarg->clone);
+  XBT_DEBUG("clone_post, ret = %d , pid_fork = %d \n", ret, pid_fork);
+
+  print_clone_syscall(proc, sysarg);
+  if(ret == pid_fork){
+
+	  XBT_DEBUG("Dans le père, pid du fils = ret = %ld \n", reg->ret);
+	  proc->in_syscall = 0;
+  }else {
+
+	  XBT_DEBUG("Dans le clone, ret = %ld \n", reg->ret);
+	 proc->in_syscall = 0;
+
+	  get_args_clone(proc, reg, sysarg);
+	  clone_arg_t arg = &(sysarg->clone);
 
 
-  fprintf(stderr, "[%d] clone (arg1/rdi = %ld, arg2/rsi = %ld, arg3/rdx = %ld, arg4/r10/rcx = %ld, arg8 = %ld, arg9 = %ld) = %ld \n"
-		  , proc->pid, reg->arg1, reg->arg2, reg->arg3, reg->arg4, reg->arg5, reg->arg6, reg->ret);
+	  fprintf(stderr, "[%d] clone (arg1/rdi = %ld, arg2/rsi = %ld, arg3/rdx = %ld, arg4/r10/rcx = %ld, arg8 = %ld, arg9 = %ld) = %ld \n"
+			  , proc->pid, reg->arg1, reg->arg2, reg->arg3, reg->arg4, reg->arg5, reg->arg6, reg->ret);
 
-  process_descriptor_t *clone = process_descriptor_new(proc->name, ptrace_get_pid_fork(proc->pid));
+	  process_descriptor_t *clone = process_descriptor_new(proc->name, pid_fork);
 
-  unsigned long flags = arg->clone_flags; // TODO: vérifier
+	  unsigned long flags = arg->clone_flags; // TODO: vérifier
 
-  if (flags & CLONE_VFORK)
-    THROW_UNIMPLEMENTED;
+	  if (flags & CLONE_VFORK)
+		THROW_UNIMPLEMENTED;
 
-  if (flags & CLONE_THREAD)
-    clone->tgid = proc->tgid;
+	  if (flags & CLONE_THREAD)
+		clone->tgid = proc->tgid;
 
-  //if clone files flags is set, we have to share the fd_list
-  if (flags & CLONE_FILES)
-    clone->fd_list = proc->fd_list;
-  else {
-    clone->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
-    int i;
-    for (i = 0; i < MAX_FD; ++i)
-      clone->fd_list[i] = NULL; // TODO et stdout stderr?
+	  //if clone files flags is set, we have to share the fd_list
+	  if (flags & CLONE_FILES)
+		clone->fd_list = proc->fd_list;
+	  else {
+		clone->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
+		int i;
+		for (i = 0; i < MAX_FD; ++i)
+		  clone->fd_list[i] = NULL; // TODO et stdout stderr?
+	  }
+
+	   arg->ret = clone->pid;
+	   ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
   }
-
-   arg->ret = clone->pid;
-   ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
-
-  char name[256];
-  sprintf(name, "clone n°%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
-  XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
-  MSG_process_create(name, main_loop, clone, MSG_host_self());
+	if(strace_option)
+		print_clone_syscall(proc, sysarg);
 }
 
 static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1113,8 +1120,7 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
     MSG_sem_acquire(file_desc->stream->sem_server);
     XBT_DEBUG(" ----> S -> accept_in: SERVER pris! (2e episode)");
 #endif
-  }                             // else
-  //  proc->state = PROC_ACCEPT;
+  }
 }
 
 static void syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1312,7 +1318,7 @@ int process_handle(process_descriptor_t * proc, int status)
   while (1) {
     ptrace_get_register(pid, &arg);
     int ret;
-    XBT_DEBUG("found syscall: [%d] %s = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.ret,
+    XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret,
               proc->in_syscall);
 
     switch (arg.reg_orig) {
@@ -1581,6 +1587,16 @@ int process_handle(process_descriptor_t * proc, int status)
     ptrace_resume_process(pid);
     //XBT_DEBUG("process resumed, waitpid");
     waitpid(pid, &status, 0);
+    if (status >> 16 == PTRACE_EVENT_FORK){
+    	  int pid_fork = ptrace_get_pid_fork(proc->pid);
+    	printf(" \n \nFORK !! pid_fork =  %d \n \n", pid_fork);
+    	 process_descriptor_t *clone = process_descriptor_new(proc->name, pid_fork);
+
+    	  char name[256];
+    	sprintf(name, "clone n°%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
+    	 XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
+   	  MSG_process_create(name, main_loop, clone, MSG_host_self());
+    }
   }                             // while(1)
 
   THROW_IMPOSSIBLE;             //There's no way to quit the loop

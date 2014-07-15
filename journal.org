@@ -1018,15 +1018,49 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
   - En fait sur un essai ça a eu le temps de créer 4 clones avant de
     crasher . Les pid étaient différents jusqu'au dernier qui a
     essayé de redonner le même pid et là ça crashe. 
-    - TODO essayer de garder les clones en vie jusqu'à la fin pour
-      être surs que le nouveau pid sera distinct .. 
+    - essayer de garder les clones en vie jusqu'à la fin pour
+      être surs que le nouveau pid sera distinct .. <- non, c'était
+      pas ça la solution!
   - Normalement dans le clone_post, on distingue le pere et le fils
     selon si le retour vaut 0 ou non. or le retour vaut -38 lors du
     premier clone (en in ET en out), puis le pid lors du 2e clone (en
     in ET en out -_-)
-** TODO trouver un moyen de distinguer le pere du fils
+** DONE trouver un moyen de distinguer le pere du fils
   - J'arrive pas à comprendre à quoi correspondent les différents
     registres. Je trouve tout et son contraire, et ça ne correspond
     jamais .. 
-** TODO regarder fork, puisque clone est un cas particulier de fork
+** DONE regarder fork, puisque clone est un cas particulier de fork
 http://stackoverflow.com/questions/13532137/tracing-syscalls-of-a-process-and-all-forked-processes
+* <2014-07-15 mar.>
+- Victoire sur les clones!!! 
+  - Je génère les 9 clones et ça bloque plus tard (sur le poll non
+    implémenté)
+  - Dans simterpose.c::main_loop - le handler pour les clones - j'ai
+    ajouté un waitpid. S'il n'est pas là, au moment où on essaie de
+    faire un ptrace_resume_process, on se prend une erreur parce
+    que le clone n'existe pas encore.
+  - Dans le handler, quand je fais un waitpid je regarde si on a un
+    PTRACE_EVENT_FORK. Ca fonctionne bien et ça permet alors de
+    récupérer le pid du fils et de créer le processus MSG
+    correspondant.
+  - En revanche sur les entrées/sorties d'appel système clone c'est
+    toujours aussi flou. 
+    - Pour le moment je ne fais rien dans le clone pre, à part
+      printer, et je n'appelle pas dutout le post. (tous les clones
+      sont tagés in_syscall=0 pour l'instant)
+    - Puisque je fais la création du processus dans le corps du
+      handler ça ne pose aucun problème
+    - Il faut juste gérer le post pour les flags et imprimer un joli
+      syscall, mais:
+      - à chaque clone d'un processus il y a en tout 4 appels au
+        handler, c'est à dire deux syscall (sans doute un pour le fils
+        un pour le pere, en in et out?) ce qui me paraît bizarre
+      - le premier appel est fait, puis on crée le clone, qui est donc
+        traité, et une fois qu'il est mort on se retrouve avec 3 appels.
+  - je print le clone. Je suis pas sûre des registres, mais c'est
+    cohérent avec le strace que j'ai fait dans le cas de l'appli
+    allpairs. 
+** TODO distinguer le clone pre/post
+** TODO gérer les flags de clone
+** TODO différencier exit de exit_group. 
+Pour ça il faut distinguer les différents tid.

@@ -5,6 +5,7 @@
 #include <xbt.h>
 
 #include <stdio.h>
+#include </usr/include/linux/sched.h>   /* For clone flags */
 
 
 void print_accept_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
@@ -878,4 +879,54 @@ void print_gettimeofday_syscall(process_descriptor_t * proc, syscall_arg_u * sys
   //  fprintf(stderr,"[%d] gettimeofday, tv = %ld\n", pid, arg->tv);
   //fprintf(stderr, "gettimeofday, tv = %ld\n", arg->tv);
   THROW_UNIMPLEMENTED;
+}
+
+
+static void print_flags_clone(int flags)
+{
+  if (flags & CSIGNAL)
+    fprintf(stderr, " CSIGNAL |");
+  if (flags & CLONE_VM)
+    fprintf(stderr, " CLONE_VM |");
+  if (flags & CLONE_FS)
+    fprintf(stderr, " CLONE_FS |");
+  if (flags & CLONE_FILES)
+    fprintf(stderr, " CLONE_FILES |");
+  if (flags & CLONE_SIGHAND)
+    fprintf(stderr, " CLONE_SIGHAND |");
+  if (flags & CLONE_PTRACE)
+    fprintf(stderr, " CLONE_PTRACE |");
+  if (flags & CLONE_VFORK)
+    fprintf(stderr, " CLONE_VFORK |");
+  if (flags & CLONE_PARENT)
+    fprintf(stderr, " CLONE_PARENT |");
+  if (flags & CLONE_THREAD)
+    fprintf(stderr, " CLONE_THREAD |");
+  if (flags & CLONE_NEWNS)
+    fprintf(stderr, " CLONE_NEWNS |");
+  if (flags & CLONE_SYSVSEM)
+    fprintf(stderr, " CLONE_SYSVSEM |");
+  if (flags & CLONE_SETTLS)
+    fprintf(stderr, " CLONE_SETTLS |");
+  if (flags & CLONE_PARENT_SETTID)
+    fprintf(stderr, " CLONE_PARENT_SETTID |");
+  if (flags & CLONE_CHILD_CLEARTID)
+    fprintf(stderr, " CLONE_CHILD_CLEARTID |");
+  if (flags & CLONE_DETACHED)
+    fprintf(stderr, " DETACHED |");
+  if (flags & CLONE_UNTRACED)
+    fprintf(stderr, " CLONE_UNTRACED |");
+  if (flags & CLONE_CHILD_SETTID)
+    fprintf(stderr, " CHILD_SETTID |");
+  fprintf(stderr, ", ");
+}
+
+
+void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
+
+	 clone_arg_t arg = &(sysarg->clone);
+	 fprintf(stderr, "[%d] clone(child_stack=%ld, flags=", proc->pid, arg->newsp);
+
+	  print_flags_clone((long int)arg->clone_flags);
+	  fprintf(stderr, "child_tidptr=0x%lx) = %d \n", (long int)arg->child_tid, arg->ret);
 }

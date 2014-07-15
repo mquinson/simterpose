@@ -228,7 +228,6 @@ int simterpose_process_runner(int argc, char *argv[])
 
 int main_loop(int argc, char *argv[])
 {
-
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
 
   int proc_next_state;
@@ -237,6 +236,10 @@ int main_loop(int argc, char *argv[])
 
     int status;
     pid_t pid = proc->pid;
+
+    // wait for the process to be created before trying to resume it
+    waitpid(-1, &status, __WALL);
+
     ptrace_resume_process(pid);
     if (waitpid(pid, &status, 0) < 0)
       xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
