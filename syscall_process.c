@@ -652,16 +652,27 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 }
 
-static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
-	proc->in_syscall = 1;
-	get_args_execve(proc, reg, sysarg);
-	print_execve_syscall(proc, sysarg);
-}
-
-static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	 int ret = reg->ret;
 	 proc->in_syscall = 0;
-	get_args_execve(proc, reg, sysarg);
-	print_execve_syscall(proc, sysarg);
+
+	 	if(ret>0){
+	 		int pid_execve = ptrace_get_pid_clone(proc->pid);
+	 		XBT_DEBUG("execve_post dans le père, ret = %d, pid_execve = %d", ret, pid_execve);
+	 	}else{
+
+	 		int pid_execve = ptrace_get_pid_clone(proc->pid);
+	 		XBT_DEBUG("execve_post dans le fils, ret = %d, pid_execve = %d", ret, pid_execve);
+
+	 		get_args_execve(proc, reg, sysarg);
+	 		//execve_arg_t arg = &(sysarg->execve);
+
+	 	//	process_descriptor_t *execve = process_descriptor_new(proc->name, pid_execve);
+
+	 		if(strace_option)
+	 			print_execve_syscall(proc, sysarg);
+	 	}
 }
 
 static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1535,7 +1546,7 @@ int process_handle(process_descriptor_t * proc, int status)
 
     case SYS_execve:
       if (!(proc->in_syscall))
-    	  syscall_execve_pre(&arg, sysarg, proc);
+          proc->in_syscall = 1;
       else
     	  syscall_execve_post(&arg, sysarg, proc);
       break;
@@ -1633,8 +1644,6 @@ int process_handle(process_descriptor_t * proc, int status)
     ptrace_resume_process(pid);
     //XBT_DEBUG("process resumed, waitpid");
     waitpid(pid, &status, 0);
-    if (status >> 16 == PTRACE_EVENT_EXEC)
-    	fprintf(stderr,"\nexec!\n");
   }                             // while(1)
 
   THROW_IMPOSSIBLE;             //There's no way to quit the loop

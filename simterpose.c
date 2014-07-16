@@ -200,7 +200,7 @@ int simterpose_process_runner(int argc, char *argv[])
   // Trace the child and all upcoming granchilds
   increment_nb_setoptions();
   if (ptrace(PTRACE_SETOPTIONS, tracked_pid, NULL,
-             PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE)
+             PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE | PTRACE_O_TRACEEXEC)
       == -1) {
     perror("Error setoptions");
     exit(1);
