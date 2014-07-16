@@ -1060,7 +1060,30 @@ http://stackoverflow.com/questions/13532137/tracing-syscalls-of-a-process-and-al
   - je print le clone. Je suis pas sûre des registres, mais c'est
     cohérent avec le strace que j'ai fait dans le cas de l'appli
     allpairs. 
-** TODO distinguer le clone pre/post
-** TODO gérer les flags de clone
+** DONE distinguer le clone pre/post
+** TODO gérer les flags de clone (notamment TID)
 ** TODO différencier exit de exit_group. 
 Pour ça il faut distinguer les différents tid.
+* <2014-07-16 mer.>
+- d'après le strace du programme et des clones générés, on n'a
+  vraiment qu'un appel systeme à clone à chaque fois. Donc le fait
+  que jen ai 2 est bizarre? Bon en tout cas je print qu'une fois
+  l'appel et ça donne le même résultat. Et j'ai le bon nombre de
+  clones réels.
+- J'ai déplacé la création du processus MSG cloné dans le post du
+  fils.
+- j'ai rajouté des flags pour clone, il faudrait traiter ceux qui
+  mettent le tid dans le père
+- le syscall fork n'a pas besoin d'être traité, c'est
+  systématiquement clone qui est appelé à la place.
+- J'essaie de traiter execve
+  - le syscall renvoyait une erreur parce que le chemin était
+    mauvais. Même en mettant un chemin dans le deploy, le programme
+    l'oublie et essaie de l'exécuter dans le répertoire courant. Ca
+    vient de allpairs, parce que sans simterpose j'ai le même
+    problème. Du coup pour les tests je me mets dans le répertoire
+    applications/allpairs 
+  - l'interception via PTRACE_EVENT_EXEC marche pas. est-ce que c'est
+    parce qu'il est dans le clone et que du coup c'est un grandchild ?
+** TODO lire 'execve(2) under ptrace' dans man ptrace
+
