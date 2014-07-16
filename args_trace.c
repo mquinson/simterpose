@@ -306,6 +306,14 @@ void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
   arg->child_tid = (void *) reg->arg4;
 }
 
+void get_args_execve(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
+{
+	execve_arg_t arg = &(sysarg->execve);
+	arg->ret = reg->ret;
+	arg->ptr_filename = reg->arg1;
+	arg->ptr_argv = reg->arg2;
+}
+
 
 //FIXME make this function use unified union syscall_arg_u
 void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)

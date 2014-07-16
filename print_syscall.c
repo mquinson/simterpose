@@ -941,3 +941,52 @@ void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
 	  print_flags_clone((long int)arg->clone_flags);
 	  fprintf(stderr, "child_tidptr=0x%lx) = %d \n", (long int)arg->child_tid, arg->ret);
 }
+
+static int get_string(int pid, long ptr, char *buf, int size)
+{
+    long data;
+    char *p = (char *) &data;
+    int j = 0;
+
+    while ((data = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr, 0)) && j < size) {
+        int i;
+        for (i = 0; i < sizeof(data) && j < size; i++, j++) {
+            if (!(buf[j] = p[i]))
+                goto done;
+        }
+        ptr += sizeof(data);
+    }
+    done:
+    buf[j] = '\0';
+    return j;
+}
+
+void print_execve_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
+
+	execve_arg_t arg = &(sysarg->execve);
+	 pid_t pid = proc->pid;
+	 char bufstr[4096];
+	 long ptr_filename, ptr_argv;
+
+	 ptr_filename = arg->ptr_filename;
+	 fprintf(stderr, "exec(");
+	 if (ptr_filename) {
+		 get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
+		 fprintf(stderr, "%s", bufstr);
+	 }
+	 ptr_argv = arg->ptr_argv;
+	 for (; ptr_argv; ptr_argv += sizeof(unsigned long)) {
+		 ptr_filename = ptr_argv;
+		 /* Indirect through ptr since we have char *argv[] */
+		 ptr_filename = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr_filename, 0);
+
+		 if (!ptr_filename)
+			 break;
+
+		 get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
+		 fprintf(stderr, ", %s", bufstr);
+	 }
+	 fprintf(stderr, ") = %d\n",arg->ret);
+}
+
+

@@ -652,6 +652,18 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 }
 
+static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+	proc->in_syscall = 1;
+	get_args_execve(proc, reg, sysarg);
+	print_execve_syscall(proc, sysarg);
+}
+
+static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+	 proc->in_syscall = 0;
+	get_args_execve(proc, reg, sysarg);
+	print_execve_syscall(proc, sysarg);
+}
+
 static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1352,8 +1364,7 @@ int process_handle(process_descriptor_t * proc, int status)
   while (1) {
     ptrace_get_register(pid, &arg);
     int ret;
-    XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret,
-              proc->in_syscall);
+    XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1390,14 +1401,14 @@ int process_handle(process_descriptor_t * proc, int status)
 
       // ignore SYS_stat, SYS_fstat, SYS_lstat
 
-    case SYS_poll:
+   /* case SYS_poll:
       if (!(proc->in_syscall))
         syscall_poll_pre(&arg, sysarg, proc);
       else {
         proc->in_syscall = 0;
         THROW_IMPOSSIBLE;
       }
-      break;
+      break;*/
 
       // ignore SYS_lseek, SYS_mmap, SYS_mprotect, SYS_munmap, SYS_rt_sigaction, SYS_rt_sigprocmask, SYS_rt_sigreturn,
       // SYS_ioctl, SYS_pread64, SYS_pwrite64 , SYS_readv, SYS_writev, SYS_access, SYS_pipe
@@ -1522,6 +1533,14 @@ int process_handle(process_descriptor_t * proc, int status)
 
       // ignore SYS_fork, SYS_vfork, SYS_execve
 
+    case SYS_execve:
+      if (!(proc->in_syscall))
+    	  syscall_execve_pre(&arg, sysarg, proc);
+      else
+    	  syscall_execve_post(&arg, sysarg, proc);
+      break;
+
+
     case SYS_exit:
       if (!(proc->in_syscall)) {
         XBT_DEBUG("exit(%ld) called", arg.arg1);
@@ -1602,7 +1621,7 @@ int process_handle(process_descriptor_t * proc, int status)
       // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
     default:
-      //XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+      XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else
@@ -1614,6 +1633,8 @@ int process_handle(process_descriptor_t * proc, int status)
     ptrace_resume_process(pid);
     //XBT_DEBUG("process resumed, waitpid");
     waitpid(pid, &status, 0);
+    if (status >> 16 == PTRACE_EVENT_EXEC)
+    	fprintf(stderr,"\nexec!\n");
   }                             // while(1)
 
   THROW_IMPOSSIBLE;             //There's no way to quit the loop

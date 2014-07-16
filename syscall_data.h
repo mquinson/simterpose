@@ -210,6 +210,13 @@ typedef struct clone_arg_s {
 } clone_arg_s;
 typedef clone_arg_s *clone_arg_t;
 
+typedef struct execve_arg_s {
+  int ret;
+  long ptr_filename;
+  int ptr_argv;
+} execve_arg_s;
+typedef execve_arg_s *execve_arg_t;
+
 typedef union {
   connect_arg_s connect;
   bind_arg_s bind;
@@ -235,6 +242,7 @@ typedef union {
   gettimeofday_arg_s gettimeofday;
   clockgettime_arg_s clockgettime;
   clone_arg_s clone;
+  execve_arg_s execve;
 } syscall_arg_u;
 
 

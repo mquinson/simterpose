@@ -52,4 +52,6 @@ void print_gettimeofday_syscall(process_descriptor_t * proc, syscall_arg_u * sys
 
 void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
+void print_execve_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+
 #endif
