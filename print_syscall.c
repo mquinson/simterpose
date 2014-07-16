@@ -913,19 +913,18 @@ static void print_flags_clone(int flags)
   if (flags & CLONE_CHILD_CLEARTID)
     fprintf(stderr, " CLONE_CHILD_CLEARTID |");
   if (flags & CLONE_DETACHED)
-    fprintf(stderr, " DETACHED |");
+    fprintf(stderr, " CLONE_DETACHED |");
   if (flags & CLONE_UNTRACED)
     fprintf(stderr, " CLONE_UNTRACED |");
   if (flags & CLONE_CHILD_SETTID)
-    fprintf(stderr, " CHILD_SETTID |");
+    fprintf(stderr, " CLONE_CHILD_SETTID |");
   fprintf(stderr, ", ");
 }
-
 
 void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
 
 	 clone_arg_t arg = &(sysarg->clone);
-	 fprintf(stderr, "[%d] clone(child_stack=%ld, flags=", proc->pid, arg->newsp);
+	 fprintf(stderr, "clone(child_stack=%ld, flags=", arg->newsp);
 
 	  print_flags_clone((long int)arg->clone_flags);
 	  fprintf(stderr, "child_tidptr=0x%lx) = %d \n", (long int)arg->child_tid, arg->ret);
