@@ -567,18 +567,18 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 	proc->in_syscall = 0;
 
 	if(ret>0){
-		int pid_fork = ptrace_get_pid_fork(proc->pid);
-		XBT_DEBUG("clone_post dans le père, ret = %d, pid_fork = %d", ret, pid_fork);
+		int pid_clone = ptrace_get_pid_clone(proc->pid);
+		XBT_DEBUG("clone_post dans le père, ret = %d, pid_clone = %d", ret, pid_clone);
 	}else{
 
-		int pid_fork = ptrace_get_pid_fork(proc->pid);
-		XBT_DEBUG("clone_post dans le fils, ret = %d, pid_fork = %d", ret, pid_fork);
+		int pid_clone = ptrace_get_pid_clone(proc->pid);
+		XBT_DEBUG("clone_post dans le fils, ret = %d, pid_clone = %d", ret, pid_clone);
 		proc->in_syscall = 0;
 
 		get_args_clone(proc, reg, sysarg);
 		clone_arg_t arg = &(sysarg->clone);
 
-		process_descriptor_t *clone = process_descriptor_new(proc->name, pid_fork);
+		process_descriptor_t *clone = process_descriptor_new(proc->name, pid_clone);
 
 		unsigned long flags = arg->clone_flags; // TODO: vérifier
 
@@ -645,7 +645,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 			print_clone_syscall(proc, sysarg);
 
 		char name[256];
-		sprintf(name, "clone/fork n°%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
+		sprintf(name, "clone n°%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
 		XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
 		MSG_process_create(name, main_loop, clone, MSG_host_self());
 	}
@@ -1520,14 +1520,7 @@ int process_handle(process_descriptor_t * proc, int status)
         syscall_clone_post(&arg, sysarg, proc);
       break;
 
- /*   case SYS_fork:
-	  if (!(proc->in_syscall))
-		syscall_fork_pre(&arg, sysarg, proc);
-	  else
-		syscall_fork_post(&arg, sysarg, proc);
-	  break;
-*/
-      // ignore SYS_vfork, SYS_execve
+      // ignore SYS_fork, SYS_vfork, SYS_execve
 
     case SYS_exit:
       if (!(proc->in_syscall)) {

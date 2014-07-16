@@ -34,7 +34,7 @@ void ptrace_detach_process(const pid_t pid);
 
 void ptrace_get_register(const pid_t pid, reg_s * arg);
 
-unsigned long ptrace_get_pid_fork(const pid_t pid);
+unsigned long ptrace_get_pid_clone(const pid_t pid);
 
 void ptrace_rewind_syscalls(const pid_t pid);
 
