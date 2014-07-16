@@ -912,12 +912,24 @@ static void print_flags_clone(int flags)
     fprintf(stderr, " CLONE_PARENT_SETTID |");
   if (flags & CLONE_CHILD_CLEARTID)
     fprintf(stderr, " CLONE_CHILD_CLEARTID |");
-  if (flags & CLONE_DETACHED)
+  if (flags & CLONE_DETACHED) // unused
     fprintf(stderr, " CLONE_DETACHED |");
   if (flags & CLONE_UNTRACED)
     fprintf(stderr, " CLONE_UNTRACED |");
   if (flags & CLONE_CHILD_SETTID)
     fprintf(stderr, " CLONE_CHILD_SETTID |");
+  if (flags & CLONE_NEWUTS)
+    fprintf(stderr, " CLONE_NEWUTS |");
+  if (flags & CLONE_NEWIPC)
+    fprintf(stderr, " CLONE_NEWIPC |");
+  if (flags & CLONE_NEWUSER)
+    fprintf(stderr, " CLONE_NEWUSER |");
+  if (flags & CLONE_NEWPID)
+    fprintf(stderr, " CLONE_NEWPID |");
+  if (flags & CLONE_NEWNET)
+    fprintf(stderr, " CLONE_NEWNET |");
+  if (flags & CLONE_IO)
+    fprintf(stderr, " CLONE_IO |");
   fprintf(stderr, ", ");
 }
 

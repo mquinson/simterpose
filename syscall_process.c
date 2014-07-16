@@ -582,11 +582,10 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 		unsigned long flags = arg->clone_flags; // TODO: vérifier
 
-		if (flags & CLONE_VFORK)
-			THROW_UNIMPLEMENTED;
-
-		if (flags & CLONE_THREAD)
-			clone->tgid = proc->tgid;
+		if (flags & CLONE_VM)
+			XBT_WARN("CLONE_VM unhandled");
+		if (flags & CLONE_FS)
+			XBT_WARN("CLONE_FS unhandled");
 
 		//if clone files flags is set, we have to share the fd_list
 		if (flags & CLONE_FILES)
@@ -597,6 +596,47 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 			for (i = 0; i < MAX_FD; ++i)
 			  clone->fd_list[i] = NULL; // TODO et stdout stderr?
 		}
+
+		if (flags & CLONE_SIGHAND)
+			XBT_WARN("CLONE_SIGHAND unhandled");
+		if (flags & CLONE_PTRACE)
+			XBT_WARN("CLONE_PTRACE ignored");
+		if (flags & CLONE_VFORK)
+			XBT_WARN("CLONE_VFORK unhandled");
+		if (flags & CLONE_PARENT)
+			XBT_WARN("CLONE_PARENT unhandled");
+		if (flags & CLONE_THREAD)
+			XBT_WARN("CLONE_THREAD unhandled");
+		if (flags & CLONE_NEWNS)
+			XBT_WARN("CLONE_NEWNS unhandled");
+		if (flags & CLONE_SYSVSEM)
+			XBT_WARN("CLONE_SYSVSEM unhandled");
+		if (flags & CLONE_SETTLS)
+			XBT_WARN("CLONE_SETTLS unhandled");
+		if (flags & CLONE_UNTRACED)
+			XBT_WARN("CLONE_UNTRACED unhandled");
+		if (flags & CLONE_NEWUTS)
+			XBT_WARN("CLONE_NEWUTS unhandled");
+		if (flags & CLONE_NEWIPC)
+			XBT_WARN("CLONE_NEWIPC unhandled");
+		if (flags & CLONE_NEWUSER)
+			XBT_WARN("CLONE_NEWUSER unhandled");
+		if (flags & CLONE_NEWPID)
+			XBT_WARN("CLONE_NEWPID unhandled");
+		if (flags & CLONE_NEWNET)
+			XBT_WARN("CLONE_NEWNET unhandled");
+		if (flags & CLONE_IO)
+			XBT_WARN("CLONE_IO unhandled");
+
+
+		// TODO gérer ces flags
+		if (flags & CLONE_PARENT_SETTID)
+			XBT_WARN("CLONE_PARENT_SETTID unhandled");
+		if (flags & CLONE_CHILD_CLEARTID)
+			XBT_WARN("CLONE_CHILD_CLEARTID unhandled");
+		  if (flags & CLONE_CHILD_SETTID)
+			XBT_WARN("CLONE_CHILD_SETTID unhandled");
+
 
 		arg->ret = clone->pid;
 		ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
