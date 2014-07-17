@@ -1061,7 +1061,7 @@ http://stackoverflow.com/questions/13532137/tracing-syscalls-of-a-process-and-al
     cohérent avec le strace que j'ai fait dans le cas de l'appli
     allpairs. 
 ** DONE distinguer le clone pre/post
-** TODO gérer les flags de clone (notamment TID)
+** TODO gérer les flags de clone (notamment SETTID, CLEARTID)
 ** TODO différencier exit de exit_group. 
 Pour ça il faut distinguer les différents tid.
 * <2014-07-16 mer.>
@@ -1074,8 +1074,8 @@ Pour ça il faut distinguer les différents tid.
   fils.
 - j'ai rajouté des flags pour clone, il faudrait traiter ceux qui
   mettent le tid dans le père
-- le syscall fork n'a pas besoin d'être traité, c'est
-  systématiquement clone qui est appelé à la place.
+- le syscall fork n'a pas besoin d'être traité, c'est systématiquement
+  clone qui est appelé à la place.
 - J'essaie de traiter execve
   - le syscall renvoyait une erreur parce que le chemin était
     mauvais. Même en mettant un chemin dans le deploy, le programme
@@ -1085,5 +1085,40 @@ Pour ça il faut distinguer les différents tid.
     applications/allpairs 
   - l'interception via PTRACE_EVENT_EXEC marche pas. est-ce que c'est
     parce qu'il est dans le clone et que du coup c'est un grandchild ?
-** TODO lire 'execve(2) under ptrace' dans man ptrace
-
+** DONE lire 'execve(2) under ptrace' dans man ptrace
+* <2014-07-17 jeu.>
+- Problème: à la fin du premier clone, quand on veut retourner au
+  processus père, celui-ci n'existe pas. Et je pense que c'est à cause
+  du execve, puisque quand l'exécutable n'est pas là j'ai une erreur
+  de retour mais le reste du programme est bien simulé.
+- execve:
+  - execve ne retourne pas, ça ne crée pas de nouveau processus mais
+    ça continue sur l'ancien, avec le même pid et les mêmes fd
+  - execve remplace la mémoire par celle du pgm exécuté. D'où l'absence
+    de registres dans le execve_post
+  - 'execve(2) under ptrace' dit qu'en cas d'execve, le noyau détruit
+    les autres threads dans le processus, et reset les tid.
+  - concernant les signaux (man execve): Les signaux en attente
+    destinés au processus parent sont effacés. Les signaux prêts à
+    être intercepté par le processus parent reprennent leur
+    comportement par défaut.
+- Problème résolu, en fait:
+  - on est réveillés 3 fois par execve: entrée, sortie, et la
+    notification puisque le man d'execve dit que SIGTRAP est envoyé
+    après la réussite d'execve
+  - (man ptrace) Si on ne met pas l'option PTRACE_O_TRACEEXEC, quand le
+    processus appelle execve il reçoit un SIGTRAP, ce qui permet au
+    père de reprendre le contrôle avant que le nouveau programme
+    continue son exécution.
+    - normalement l'activation de PTRACE_O_TRACEEXEC supprime le
+      SIGTRAP supplémentaire
+    - en réalité je vois aucun changement avec ou sans l'option
+    - J'ai juste géré le fait qu'on ait 3 interruptions de execve,
+      c'est ça qui décalait tout et faisait nimporte quoi.
+- poll: 
+  - je fais donc un irecv et un waitany sur tous les files
+    descriptors.
+  - sur le waitany j'ai un segfault ..
+- si je démarre les workers en même temps c'est sur le connect qu'il
+  y a un souci, à voir (est-ce que c'est parce que les clones sont
+  pas encore tous créés)
