@@ -582,10 +582,10 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 		unsigned long flags = arg->clone_flags; // TODO: vérifier
 
-		if (flags & CLONE_VM)
+	/*	if (flags & CLONE_VM)
 			XBT_WARN("CLONE_VM unhandled");
 		if (flags & CLONE_FS)
-			XBT_WARN("CLONE_FS unhandled");
+			XBT_WARN("CLONE_FS unhandled");*/
 
 		//if clone files flags is set, we have to share the fd_list
 		if (flags & CLONE_FILES)
@@ -597,7 +597,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 			  clone->fd_list[i] = NULL; // TODO et stdout stderr?
 		}
 
-		if (flags & CLONE_SIGHAND)
+	/*	if (flags & CLONE_SIGHAND)
 			XBT_WARN("CLONE_SIGHAND unhandled");
 		if (flags & CLONE_PTRACE)
 			XBT_WARN("CLONE_PTRACE ignored");
@@ -635,7 +635,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		if (flags & CLONE_CHILD_CLEARTID)
 			XBT_WARN("CLONE_CHILD_CLEARTID unhandled");
 		  if (flags & CLONE_CHILD_SETTID)
-			XBT_WARN("CLONE_CHILD_SETTID unhandled");
+			XBT_WARN("CLONE_CHILD_SETTID unhandled");*/
 
 
 		arg->ret = clone->pid;
@@ -652,27 +652,32 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 }
 
+
+static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	 proc->in_syscall = 1;
+
+	get_args_execve(proc, reg, sysarg);
+	XBT_DEBUG("execve_pre");
+	if(strace_option)
+		print_execve_syscall(proc, sysarg);
+}
+
 static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	 int ret = reg->ret;
-	 proc->in_syscall = 0;
 
-	 	if(ret>0){
-	 		int pid_execve = ptrace_get_pid_clone(proc->pid);
-	 		XBT_DEBUG("execve_post dans le père, ret = %d, pid_execve = %d", ret, pid_execve);
-	 	}else{
+	XBT_DEBUG("execve_post");
+	get_args_execve(proc, reg, sysarg);
+	if(strace_option)
+		print_execve_syscall(proc, sysarg);
 
-	 		int pid_execve = ptrace_get_pid_clone(proc->pid);
-	 		XBT_DEBUG("execve_post dans le fils, ret = %d, pid_execve = %d", ret, pid_execve);
-
-	 		get_args_execve(proc, reg, sysarg);
-	 		//execve_arg_t arg = &(sysarg->execve);
-
-	 	//	process_descriptor_t *execve = process_descriptor_new(proc->name, pid_execve);
-
-	 		if(strace_option)
-	 			print_execve_syscall(proc, sysarg);
-	 	}
+	if(proc->in_syscall ==1){
+		 proc->in_syscall = 2;
+		XBT_DEBUG("post n°1. registres vides. ");
+	}else{
+		 proc->in_syscall = 0;
+		XBT_DEBUG("post n°2");
+	}
 }
 
 static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1375,7 +1380,7 @@ int process_handle(process_descriptor_t * proc, int status)
   while (1) {
     ptrace_get_register(pid, &arg);
     int ret;
-    XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
+   // XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1542,11 +1547,11 @@ int process_handle(process_descriptor_t * proc, int status)
         syscall_clone_post(&arg, sysarg, proc);
       break;
 
-      // ignore SYS_fork, SYS_vfork, SYS_execve
+      // ignore SYS_fork, SYS_vfork
 
     case SYS_execve:
       if (!(proc->in_syscall))
-          proc->in_syscall = 1;
+    	  syscall_execve_pre(&arg, sysarg, proc);
       else
     	  syscall_execve_post(&arg, sysarg, proc);
       break;
