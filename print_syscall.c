@@ -969,22 +969,30 @@ void print_execve_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
 	 long ptr_filename, ptr_argv;
 
 	 ptr_filename = arg->ptr_filename;
-	 fprintf(stderr, "exec(");
+	 fprintf(stderr, "execve(");
 	 if (ptr_filename) {
 		 get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
-		 fprintf(stderr, "%s", bufstr);
+		 fprintf(stderr, "\"%s\", [", bufstr);
 	 }
 	 ptr_argv = arg->ptr_argv;
+	 int first = 1;
 	 for (; ptr_argv; ptr_argv += sizeof(unsigned long)) {
 		 ptr_filename = ptr_argv;
 		 /* Indirect through ptr since we have char *argv[] */
 		 ptr_filename = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr_filename, 0);
 
-		 if (!ptr_filename)
+		 if (!ptr_filename){
+			 fprintf(stderr, "]");
 			 break;
+		 }
 
 		 get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
-		 fprintf(stderr, ", %s", bufstr);
+		 if(first){
+			 fprintf(stderr, "\"%s\"", bufstr);
+			 first = 0;
+		 }else{
+			 fprintf(stderr, ", \"%s\"", bufstr);
+		 }
 	 }
 	 fprintf(stderr, ") = %d\n",arg->ret);
 }
