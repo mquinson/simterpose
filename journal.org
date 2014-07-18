@@ -36,10 +36,48 @@ un descriptif du travail au jour le jour.
 - http://hal.inria.fr/docs/00/94/97/62/PDF/RR-8482.pdf
   Un papier sur distem. Un must read :)
 - http://www.deter-lab.org/sites/default/files/files/mirkovic_benzel_faber_braden_wroclawski_schwab_the%20deter%20project%20advancing%20the%20science%20of%20cyber%20security%20experimentation%20and%20test_ieee_hst%20%2710_boston%20massachusetts_november%202010.pdf
-  C'est une solution d'émulation pour l'étude des pbs de sécurité, mais j'ai
-  plus la force de lire.
-** TODO lire et résumer un peu ce papier
-** TODO retrouver l'article de Cappello sur le lancement de VMs
+  - Solution pour l'étude des pbs de sécurité, de l'armée américaine. Ils ont
+    400 ordinateurs, et s'intéressent à plusieurs aspects tels que l'éducation,
+    le test, l'émulation, etc.
+  - Ils expliquent le fonctionnement d'une XP d'une façon qu'on pourrait reprendre.
+    Design <-> Instantiation <-> Execution <-> Analysis
+- http://link.springer.com/article/10.1007/s10723-006-9052-6
+  (dispo dans biblio/virtu-cappello.pdf)
+  Etude de la scalabilité de différentes solutions de virtualisation utilisables
+  pour tester des applications distribuées. Il serait intéressant de refaire ces
+  expériences en y ajoutant simterpose, mais ça serait probablement un peu dur à
+  faire. En plus, on est pas exactement concurrents puisque nous on peut pas
+  démarrer une VM vide, par exemple.
+* Tests possibles
+- On cherche des applications distribuées classiques. Il faut qu'elles soient
+  assez complexes pour être représentatives d'une large gamme d'applis, sans
+  être trop compliquées pour que ca marche en pratique.
+- Une première idée est de se limiter aux applications présentes dans
+  Debian. Liste préliminaire, triée avec les plus intéressants à court terme
+  devant.
+** Parallel Python (paquet python-pp)
+- http://www.parallelpython.com/
+- Permet de répartir rapidement du code python sur une paire de serveurs.
+- Cela semble assez simple à mettre en place et à intercepter, une bonne cible.
+- Problème: les exemples fournis sont un peu simplistes ?
+** CCL Software (paquet coop-computing-tools, src:cctools)
+- boite à outil pour traitement distribué, par U. Notre Dame. Certains outils
+  semblent mieux adaptés, tels que all-pairs et wavefronts. Cf:
+  http://ccl.cse.nd.edu/research/papers/abstr-jcc.pdf
+- Utilise Sun Grid Engine, Condor ou Work Queue, qui est une implem maison de
+  batch scheduler en python.
+- N'est plus dans testing à cause de deux FTBFS (portage kfreebsd et build-dep
+  manquante) depuis septembre 2013. Il y a une version 4.2 upstream depuis le 11
+  juillet. J'ai ouvert un bug debian pour demander son empaquetage pour voir si
+  ca aide.
+** MPI
+- Il serait amusant de vérifier si on sait intercepter des runtime MPI tels que
+  MPICH ou OpenMPI. Je n'ai pas de certitude sur la complexité de la chose, mais
+  j'ai dans l'idée que c'est loin d'être trivial.
+** Condor
+- Le roi des batch schedulers. Je pense que ce soft est plein de ruse de sioux
+  niveau système qui le rend difficile à intercepter, mais si on y arrive, c'est
+  la Très Grande Classe.
 * Idées suite à la présentation d'équipe
 - Autre méthode pour implémenter full mediation (Gabriel) :
   - Aller directement écrire dans la mémoire dans /proc/<pid>/mem au lieu de se
