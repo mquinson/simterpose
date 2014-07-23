@@ -927,7 +927,7 @@ toujours le message dedans
     waitany..) donc c'est pas géré pour l'instant  
   - puisqu'on veut savoir si on PEUT lire ou écrire, on doit pas le
     faire? donc est-ce que c'est correct de faire un irecv?
-** TODO modifierer poll et select
+** TODO modifier poll et select
 - Je commence à réparer la full_mediation:
   - Remise au propre: 
     - ajout des fonctions manquantes pour getsockopt
@@ -1172,4 +1172,29 @@ Pour ça il faut distinguer les différents tid.
 - si je démarre les workers en même temps c'est sur le connect qu'il
   y a un souci, à voir (est-ce que c'est parce que les clones sont
   pas encore tous créés)
-  
+* <2014-07-23 mer.>
+- poll
+  - avec un waitany simterpose s'arrête, sans message d'erreur
+  - j'ai essayé avec un wait et là ça attend correctement, et l'autre
+    processus se lance bien (work_queue_worker). 
+    - le problème du wait c'est que je n'attends que sur un seul fd
+    - ensuite ça continue mais il y a un probleme sur un connect (no
+      such file, mais c'est normal on a pareil dans le strace de
+      l'appli) 
+    - tester le poll à part, parce que là avec tous les master et
+      workers on s'y retrouve plus. 
+- au lieu de tester allpairs, essayer python-pp 
+  - j'ai installé le paquet
+  - pour lancer les serveurs il faut un code secret, cf
+    http://www.parallelpython.com/content/view/15/30/#SECURITY donc
+    il faut remplacer job_server = pp.Server(ncpus,
+    ppservers=ppservers) par job_server = pp.Server(ncpus,
+    ppservers=ppservers, secret="password") dans les exemples
+  - j'utilise sum_primes.py pour commencer 
+  - correction de execve qui imprimait nimporte quoi à la place de
+    argv 
+  - j'ai un read sur stdin qui attend indéfiniment. 
+    - d'après strace de l'application, à chaque fois ce sont les
+      clones qui attendent que le maître leur écrive, mais ça ne doit
+      pas arriver sur le bon fd. Le maître écrit sur le fd dédié, càd
+      un numéro quelconque, et le clone lit toujours sur 0. 
