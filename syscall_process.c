@@ -369,6 +369,7 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   proc->in_syscall = 1;
   XBT_DEBUG(" read_pre");
   get_args_read(proc, reg, sysarg);
+  print_read_syscall(proc, sysarg);
 
   if ((int) reg->ret > 0) {
     if (socket_registered(proc, reg->arg1) != -1) {
@@ -675,13 +676,18 @@ static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	get_args_execve(proc, reg, sysarg);
 	if(proc->in_syscall ==1){
-		proc->in_syscall = 2;
+		get_args_execve(proc, reg, sysarg);
+		if(reg->ret == 0)
+			proc->in_syscall = 2;
+		else
+			proc->in_syscall = 0;
 		if(strace_option)
 			print_execve_syscall_post(proc, sysarg);
+		XBT_DEBUG("execve_post");
 	}else{
 		proc->in_syscall = 0;
+		XBT_DEBUG("execve retour");
 	}
 }
 
@@ -1386,7 +1392,7 @@ int process_handle(process_descriptor_t * proc, int status)
   while (1) {
     ptrace_get_register(pid, &arg);
     int ret;
-   // XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
+    XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
