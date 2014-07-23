@@ -428,33 +428,42 @@ static void process_poll_call(process_descriptor_t * proc)
   XBT_DEBUG("Entering poll %lf \n", SD_get_clock());
   poll_arg_t arg = (poll_arg_t) & (proc->sysarg.poll);
 
-  int i;
+//  XBT_WARN("Poll: Timeout not handled\n");
+
+/*  int i;
   xbt_dynar_t comms = xbt_dynar_new(sizeof(msg_comm_t), NULL);
-  xbt_dynar_t backup = xbt_dynar_new(sizeof(int), NULL);
+  xbt_dynar_t backup = xbt_dynar_new(sizeof(int), NULL);*/
 
-  for (i = 0; i < arg->nbfd; ++i) {
-    struct pollfd *temp = &(arg->fd_list[i]);
+ // for (i = 0; i < arg->nbfd; ++i) {
+  if(arg->nbfd > 1)
+	  XBT_WARN("Poll only handles one fd\n");
 
+    struct pollfd *temp = &(arg->fd_list[0]);
+    msg_comm_t comm ;
     struct infos_socket *is = get_infos_socket(proc, temp->fd);
-    if (is == NULL)
-      continue;
-    else {
+
+    if (is != NULL){
+   //   continue;
+  //  else {
       int sock_status = socket_get_state(is);
       XBT_DEBUG("%d-> %d\n", temp->fd, sock_status);
       if (temp->events & POLLIN) {
-        msg_task_t task;
-        msg_comm_t comm = MSG_task_irecv(&task, MSG_host_get_name(is->host));
-        xbt_dynar_push(comms, comm);
-        xbt_dynar_push(backup, &i);
+        msg_task_t task = NULL;
+        XBT_DEBUG("irecv");
+        comm = MSG_task_irecv(&task, MSG_host_get_name(is->host));
+     //   xbt_dynar_push(comms, comm);
+     //   xbt_dynar_push(backup, &i);
       } else
         XBT_WARN("Poll only handles POLLIN for now\n");
     }
-  }
-  int nb = MSG_comm_waitany(comms);
-  msg_comm_t comm = xbt_dynar_get_ptr(comms, nb);
-  int j = xbt_dynar_get_as(comms, nb, int);
-  if (MSG_comm_get_status(comm) == MSG_OK) {
-    struct pollfd *temp = &(arg->fd_list[j]);
+//  }
+  XBT_DEBUG("wait");
+//  int nb = MSG_comm_waitany(comms);
+//  msg_comm_t comm = xbt_dynar_get_ptr(comms, nb);
+//  int j = xbt_dynar_get_as(comms, nb, int);
+  msg_error_t err = MSG_comm_wait(comm, arg->timeout);
+  if (err == MSG_OK) {
+  //  struct pollfd *temp = &(arg->fd_list[j]);
     temp->revents = temp->revents | POLLIN;
 
     XBT_DEBUG("Result for poll\n");
@@ -463,30 +472,34 @@ static void process_poll_call(process_descriptor_t * proc)
       print_poll_syscall(proc, &(proc->sysarg));
     free(proc->sysarg.poll.fd_list);
   }
-  // fixme ajouter le timeout et faire un free sur les tableaux
-/*  if (proc->in_timeout == PROC_TIMEOUT_EXPIRE) {
+  else if (err == MSG_TIMEOUT) {
     XBT_DEBUG("Time out on poll\n");
     sys_build_poll(proc, &(proc->sysarg), 0);
     if (strace_option)
       print_poll_syscall(proc, &(proc->sysarg));
     free(proc->sysarg.poll.fd_list);
-    proc->in_timeout = PROC_NO_TIMEOUT;
-  }*/
+  }
 }
 
 static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
-  THROW_UNIMPLEMENTED;
 
   get_args_poll(proc, reg, sysarg);
+
   if (strace_option)
     print_poll_syscall(proc, sysarg);
 
-  XBT_WARN("Poll: Timeout not handled\n");
   process_poll_call(proc);
-  ptrace_neutralize_syscall(proc->pid);
+//  ptrace_neutralize_syscall(proc->pid);
+}
+
+static void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
   proc->in_syscall = 0;
+  get_args_poll(proc, reg, sysarg);
+  if (strace_option)
+    print_poll_syscall(proc, sysarg);
 }
 
 static int process_select_call(process_descriptor_t * proc)
@@ -555,9 +568,6 @@ static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
   XBT_WARN("Select: Timeout not handled\n");
   process_select_call(proc);
-
-  ptrace_neutralize_syscall(proc->pid);
-  proc->in_syscall = 0;
 }
 
 
@@ -660,23 +670,18 @@ static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 	get_args_execve(proc, reg, sysarg);
 	XBT_DEBUG("execve_pre");
 	if(strace_option)
-		print_execve_syscall(proc, sysarg);
+		print_execve_syscall_pre(proc, sysarg);
 }
 
 static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-
-	XBT_DEBUG("execve_post");
 	get_args_execve(proc, reg, sysarg);
-	if(strace_option)
-		print_execve_syscall(proc, sysarg);
-
 	if(proc->in_syscall ==1){
-		 proc->in_syscall = 2;
-		XBT_DEBUG("post n°1. registres vides. ");
+		proc->in_syscall = 2;
+		if(strace_option)
+			print_execve_syscall_post(proc, sysarg);
 	}else{
-		 proc->in_syscall = 0;
-		XBT_DEBUG("post n°2");
+		proc->in_syscall = 0;
 	}
 }
 
@@ -1346,7 +1351,8 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
     int status = 0;
     return process_handle(proc, status);
   } else {
-    XBT_DEBUG("process_connect_in_call == 0  <--------- ");
+    XBT_WARN("process_connect_in_call == 0  <--------- ");
+    proc->in_syscall = 0;
   }
   return PROCESS_CONTINUE;
 }
@@ -1417,14 +1423,12 @@ int process_handle(process_descriptor_t * proc, int status)
 
       // ignore SYS_stat, SYS_fstat, SYS_lstat
 
-   /* case SYS_poll:
+    case SYS_poll:
       if (!(proc->in_syscall))
         syscall_poll_pre(&arg, sysarg, proc);
-      else {
-        proc->in_syscall = 0;
-        THROW_IMPOSSIBLE;
-      }
-      break;*/
+      else
+        syscall_poll_post(&arg, sysarg, proc);
+      break;
 
       // ignore SYS_lseek, SYS_mmap, SYS_mprotect, SYS_munmap, SYS_rt_sigaction, SYS_rt_sigprocmask, SYS_rt_sigreturn,
       // SYS_ioctl, SYS_pread64, SYS_pwrite64 , SYS_readv, SYS_writev, SYS_access, SYS_pipe
@@ -1434,7 +1438,7 @@ int process_handle(process_descriptor_t * proc, int status)
         syscall_select_pre(&arg, sysarg, proc);
       else {
         proc->in_syscall = 0;
-        THROW_IMPOSSIBLE;
+       // THROW_IMPOSSIBLE;
       }
       break;
 
