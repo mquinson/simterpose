@@ -961,7 +961,7 @@ static int get_string(int pid, long ptr, char *buf, int size)
     return j;
 }
 
-void print_execve_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
+void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysarg){
 
 	execve_arg_t arg = &(sysarg->execve);
 	 pid_t pid = proc->pid;
@@ -994,7 +994,13 @@ void print_execve_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
 			 fprintf(stderr, ", \"%s\"", bufstr);
 		 }
 	 }
-	 fprintf(stderr, ") = %d\n",arg->ret);
+	 fprintf(stderr, ") = ");
+}
+
+
+void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysarg){
+	execve_arg_t arg = &(sysarg->execve);
+	fprintf(stderr, "%d\n",arg->ret);
 }
 
 
