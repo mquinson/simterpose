@@ -1198,3 +1198,21 @@ Pour ça il faut distinguer les différents tid.
       clones qui attendent que le maître leur écrive, mais ça ne doit
       pas arriver sur le bon fd. Le maître écrit sur le fd dédié, càd
       un numéro quelconque, et le clone lit toujours sur 0. 
+* <2014-07-24 jeu.>
+- Je pensais que le souci venait du dup2 qu'on ne traitait pas. Ca ne
+  résout pas le problème.
+- Il y avait un problème dans le clone: 
+  - le clone doit hériter d'une copie de tous les descripteurs de
+    fichiers de son parent, dans tous les cas
+  - Le flag CLONE_FILES permet quant à lui de partager la même table
+    de fd, càd que les modifications sont communes et se répercutent
+    du parent au clone et vice versa. 
+- Il manquait également le pipe, sinon simterpose ne sait pas qu'il existe
+  de nouveaux descripteurs de fichiers. 
+- Il y a donc des dup2 et des pipe qui sont faits, mais visiblement le
+  master en face n'envoie pas le write, ou en tout cas pas sur le bon
+  fd.. 
+** TODO Dans read faire la médiation quand c'est un pipe 
+pour que le ps en face écrive au bon endroit
+- ajout du type de fd FD_PIPE
+  - le type renvoyé n'est pas celui attendu
