@@ -502,6 +502,36 @@ static void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     print_poll_syscall(proc, sysarg);
 }
 
+static void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	proc->in_syscall = 0;
+	get_args_pipe(proc, reg, sysarg);
+	pipe_arg_t arg = &(sysarg->pipe);
+
+	if(arg->ret==0){
+		int p0 = *arg->filedes;
+		int p1 = *(arg->filedes+1);
+
+		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+	    file_desc->fd = p0;
+	    file_desc->proc = proc;
+	    file_desc->type = FD_CLASSIC;
+	    proc->fd_list[p0] = file_desc;
+
+		file_desc = malloc(sizeof(fd_descriptor_t));
+	    file_desc->fd = p1;
+	    file_desc->proc = proc;
+	    file_desc->type = FD_CLASSIC;
+	    proc->fd_list[p1] = file_desc;
+
+		 if (strace_option)
+		    fprintf(stderr, "[%d] pipe([%d,%d]) = %d \n", proc->pid, p0, p1, arg->ret);
+	}else{
+		 if (strace_option)
+		    fprintf(stderr, "[%d] pipe = %d \n", proc->pid, arg->ret);
+	}
+}
+
 static int process_select_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_select_call");
@@ -592,7 +622,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 		// the clone inherits the fd_list but subsequent on fd do NOT
 		// affect the parent unless CLONE_FILES is set
-		*(clone->fd_list) = *(proc->fd_list);
+		clone->fd_list = proc->fd_list;
 
 	//	unsigned long flags = arg->clone_flags;
 
@@ -654,7 +684,6 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
 		MSG_process_create(name, main_loop, clone, MSG_host_self());
 	}
-
 }
 
 
@@ -956,17 +985,19 @@ static void syscall_fcntl_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
+
 	proc->in_syscall = 0;
 	unsigned int oldfd = (int) reg->arg1;
 	unsigned int newfd = (int) reg->arg2;
 
 	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
 
-
 	proc->fd_list[newfd] = file_desc;
 
   if (strace_option)
     fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
+
+  sleep(5);
 }
 
 static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
@@ -1448,7 +1479,14 @@ int process_handle(process_descriptor_t * proc, int status)
       break;
 
       // ignore SYS_lseek, SYS_mmap, SYS_mprotect, SYS_munmap, SYS_rt_sigaction, SYS_rt_sigprocmask, SYS_rt_sigreturn,
-      // SYS_ioctl, SYS_pread64, SYS_pwrite64 , SYS_readv, SYS_writev, SYS_access, SYS_pipe
+      // SYS_ioctl, SYS_pread64, SYS_pwrite64 , SYS_readv, SYS_writev, SYS_access
+
+    case SYS_pipe:
+      if (!(proc->in_syscall))
+        proc->in_syscall = 1;
+      else
+        syscall_pipe_post(&arg, sysarg, proc);
+      break;
 
     case SYS_select:
       if (!(proc->in_syscall))

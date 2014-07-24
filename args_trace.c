@@ -257,6 +257,14 @@ void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
     arg->fd_list = NULL;
 }
 
+void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
+{
+  pipe_arg_t arg = &(sysarg->pipe);
+  arg->ret = reg->ret;
+  arg->filedes = malloc(2 * sizeof(int));
+  ptrace_cpy(proc->pid, arg->filedes, (void*) reg->arg1, 2 * sizeof(int), "pipe");
+}
+
 void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
