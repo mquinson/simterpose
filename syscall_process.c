@@ -369,7 +369,6 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   proc->in_syscall = 1;
   XBT_DEBUG(" read_pre");
   get_args_read(proc, reg, sysarg);
-  print_read_syscall(proc, sysarg);
 
   if ((int) reg->ret > 0) {
     if (socket_registered(proc, reg->arg1) != -1) {
@@ -591,24 +590,19 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 		process_descriptor_t *clone = process_descriptor_new(proc->name, pid_clone);
 
-		unsigned long flags = arg->clone_flags; // TODO: vérifier
+		// the clone inherits the fd_list but subsequent on fd do NOT
+		// affect the parent unless CLONE_FILES is set
+		*(clone->fd_list) = *(proc->fd_list);
+
+	//	unsigned long flags = arg->clone_flags;
 
 	/*	if (flags & CLONE_VM)
 			XBT_WARN("CLONE_VM unhandled");
 		if (flags & CLONE_FS)
-			XBT_WARN("CLONE_FS unhandled");*/
-
-		//if clone files flags is set, we have to share the fd_list
+			XBT_WARN("CLONE_FS unhandled");
 		if (flags & CLONE_FILES)
-			clone->fd_list = proc->fd_list;
-		else {
-			clone->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
-			int i;
-			for (i = 0; i < MAX_FD; ++i)
-			  clone->fd_list[i] = NULL; // TODO et stdout stderr?
-		}
-
-	/*	if (flags & CLONE_SIGHAND)
+			XBT_WARN("CLONE_FILES unhandled");
+		if (flags & CLONE_SIGHAND)
 			XBT_WARN("CLONE_SIGHAND unhandled");
 		if (flags & CLONE_PTRACE)
 			XBT_WARN("CLONE_PTRACE ignored");
@@ -713,11 +707,15 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     file_desc->type = FD_CLASSIC;
     proc->fd_list[(int) reg->ret] = file_desc;
   }
+  //TODO print trace
+  fprintf(stderr,"open(...) = %ld\n",reg->ret);
 }
 
-static void process_close_call(process_descriptor_t * proc, int fd)
+static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   XBT_DEBUG("entering process_close_call");
+  proc->in_syscall = 0;
+  int fd = reg->arg1;
 
   fd_descriptor_t *file_desc = proc->fd_list[fd];
   if (file_desc != NULL) {
@@ -728,6 +726,7 @@ static void process_close_call(process_descriptor_t * proc, int fd)
       proc->fd_list[fd] = NULL;
     }
   }
+  fprintf(stderr,"close(%d) = %ld\n",fd,reg->ret);
 }
 
 static void process_shutdown_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
@@ -955,6 +954,20 @@ static void syscall_fcntl_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 #endif
 }
 
+static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	proc->in_syscall = 0;
+	unsigned int oldfd = (int) reg->arg1;
+	unsigned int newfd = (int) reg->arg2;
+
+	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
+
+
+	proc->fd_list[newfd] = file_desc;
+
+  if (strace_option)
+    fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
+}
 
 static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
 {
@@ -1392,7 +1405,7 @@ int process_handle(process_descriptor_t * proc, int status)
   while (1) {
     ptrace_get_register(pid, &arg);
     int ret;
-    XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
+    XBT_WARN("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
@@ -1421,10 +1434,8 @@ int process_handle(process_descriptor_t * proc, int status)
     case SYS_close:
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
-      else {
-        proc->in_syscall = 0;
-        process_close_call(proc, (int) arg.arg1);
-      }
+      else
+        syscall_close_post(&arg, sysarg, proc);
       break;
 
       // ignore SYS_stat, SYS_fstat, SYS_lstat
@@ -1448,8 +1459,16 @@ int process_handle(process_descriptor_t * proc, int status)
       }
       break;
 
-      // ignore SYS_sched_yield, SYS_mremap, SYS_msync, SYS_mincore, SYS_madvise, SYS_shmget, SYS_shmat, SYS_shmctl
-      // SYS_dup, SYS_dup2, SYS_pause, SYS_nanosleep, SYS_getitimer, SYS_alarm, SYS_setitimer, SYS_getpid, SYS_sendfile
+      // ignore SYS_sched_yield, SYS_mremap, SYS_msync, SYS_mincore, SYS_madvise, SYS_shmget, SYS_shmat, SYS_shmctl, SYS_dup
+
+    case SYS_dup2:
+      if (!(proc->in_syscall))
+        proc->in_syscall = 1;
+      else
+        syscall_dup2_post(&arg, sysarg, proc);
+      break;
+
+      // ignore SYS_pause, SYS_nanosleep, SYS_getitimer, SYS_alarm, SYS_setitimer, SYS_getpid, SYS_sendfile
 
     case SYS_socket:
       if (!(proc->in_syscall))
@@ -1647,7 +1666,7 @@ int process_handle(process_descriptor_t * proc, int status)
       // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
     default:
-      XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+      //XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else
@@ -1657,7 +1676,7 @@ int process_handle(process_descriptor_t * proc, int status)
 
     // Step the traced process
     ptrace_resume_process(pid);
-    //XBT_DEBUG("process resumed, waitpid");
+    XBT_DEBUG("process resumed, waitpid");
     waitpid(pid, &status, 0);
   }                             // while(1)
 
