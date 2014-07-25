@@ -50,10 +50,21 @@ typedef struct {
 } stream_t;
 
 typedef struct {
+	process_descriptor_t *proc_father;
+	int fd_in_father;
+	int fd_out_father;
+	process_descriptor_t *proc_clone;
+	int fd_in_clone;
+	int fd_out_clone;
+} pipe_t;
+
+
+typedef struct {
   int type;
   process_descriptor_t *proc;
   int fd;
   stream_t *stream;
+  pipe_t *pipe;
 } fd_descriptor_t;
 
 struct process_descriptor {

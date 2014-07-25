@@ -151,10 +151,11 @@ static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
-#ifndef address_translation
-  // XBT_DEBUG("[%d] write_in", pid);
   XBT_DEBUG(" write_pre");
   get_args_write(proc, reg, sysarg);
+
+#ifndef address_translation
+  // XBT_DEBUG("[%d] write_in", pid);
   if (socket_registered(proc, sysarg->write.fd) != -1) {
     process_descriptor_t remote_proc;
     if (process_send_call(proc, sysarg, &remote_proc)) {
@@ -169,6 +170,42 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
     }
   }
 #endif
+  write_arg_t arg = &(sysarg->write);
+  fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+  if (file_desc != NULL && file_desc->type == FD_PIPE){
+          if (strace_option)
+          	print_write_syscall(proc, sysarg);
+          fprintf(stderr,"pipe \n");
+          pipe_t *pipe = file_desc->pipe;
+          if(pipe == NULL)
+          	THROW_IMPOSSIBLE;
+          fprintf(stderr,"pipe %d [%d,%d] et %d [%d, %d] \n", pipe->proc_father->pid, pipe->fd_in_father, pipe->fd_out_father,  pipe->proc_clone->pid , pipe->fd_in_clone, pipe->fd_out_clone);
+
+    	msg_host_t *work_list = malloc(sizeof(msg_host_t) * 2);
+    	char buff[256];
+
+  		if (arg->fd == pipe->fd_out_clone){
+  			sprintf(buff, "%s writes in pipe", pipe->proc_clone->name);
+  	    	work_list[0] = pipe->proc_clone->host;
+  	    	work_list[1] = pipe->proc_father->host;
+  		} else if(arg->fd == pipe->fd_out_father){
+  			sprintf(buff, "%s writes in pipe", pipe->proc_father->name);
+  	    	work_list[0] = pipe->proc_father->host;
+  	    	work_list[1] = pipe->proc_clone->host;
+  		} else
+  		  THROW_IMPOSSIBLE;
+
+  	double amount = arg->ret;
+  	 msg_task_t task = MSG_parallel_task_create(buff, 2, work_list, 0, &amount, &(proc->pid));
+  	 XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(work_list[1]),
+  	                arg->ret);
+	  MSG_task_set_data_size(task, arg->ret);
+	  MSG_task_set_data(task, arg->data);
+
+	  send_task(work_list[1], task);
+
+      }
+
   return PROCESS_CONTINUE;
 }
 
@@ -407,8 +444,43 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 #endif
       }
       MSG_task_destroy(task);
-    }
+    }else if (file_desc != NULL && file_desc->type == FD_PIPE){
+        if (strace_option)
+        	print_read_syscall(proc, sysarg);
+        fprintf(stderr,"pipe \n");
+        pipe_t *pipe = file_desc->pipe;
+        if(pipe == NULL)
+        	THROW_IMPOSSIBLE;
+        fprintf(stderr,"pipe %d [%d,%d] et %d [%d, %d] \n", pipe->proc_father->pid, pipe->fd_in_father, pipe->fd_out_father,  pipe->proc_clone->pid , pipe->fd_in_clone, pipe->fd_out_clone);
 
+	   //DEBUG
+		if(reg->arg1 == 0){
+			  XBT_WARN("etat des fd:");
+			  int i;
+			  fd_descriptor_t *file_desc;
+			  for(i=0; i<13; i++){
+				  file_desc = proc->fd_list[i];
+				  if(file_desc == NULL)
+					  XBT_WARN("fd[%d] =  %s ", i, (char*)file_desc);
+				  else
+					  XBT_WARN("fd[%d] = %d, %s, type = %d", i, *(int*)file_desc, (char*)file_desc, file_desc->type);
+
+			  }
+		}
+		//DEBUG
+
+		const char *mailbox;
+		if (arg->fd == pipe->fd_in_clone || arg->fd == pipe->fd_in_father)
+			mailbox = proc->name;
+		else
+		  THROW_IMPOSSIBLE;
+
+		msg_task_t task = NULL;
+		MSG_task_receive(&task, mailbox);
+		arg->ret = (int) MSG_task_get_data_size(task);
+		arg->data = MSG_task_get_data(task);
+		MSG_task_destroy(task);
+    }
 }
 
 static void syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -510,16 +582,23 @@ static void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 		int p0 = *arg->filedes;
 		int p1 = *(arg->filedes+1);
 
+	    pipe_t *pipe = malloc(sizeof(pipe_t));
+	    pipe->fd_in_father = p0;
+	    pipe->fd_out_father = p1;
+	    pipe->proc_father = proc;
+
 		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
 	    file_desc->fd = p0;
 	    file_desc->proc = proc;
 	    file_desc->type = FD_PIPE;
+	    file_desc->pipe = pipe;
 	    proc->fd_list[p0] = file_desc;
 
 		file_desc = malloc(sizeof(fd_descriptor_t));
 	    file_desc->fd = p1;
 	    file_desc->proc = proc;
 	    file_desc->type = FD_PIPE;
+	    file_desc->pipe = pipe;
 	    proc->fd_list[p1] = file_desc;
 
 		 if (strace_option)
@@ -623,8 +702,14 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		int i;
 		for (i = 0; i < MAX_FD; ++i){
 			clone->fd_list[i] = proc->fd_list[i];
-			if(clone->fd_list[i] != NULL)
+			if(clone->fd_list[i] != NULL){
 				clone->fd_list[i]->proc = clone;
+				if(clone->fd_list[i]->type == FD_PIPE){
+					clone->fd_list[i]->pipe->proc_clone = clone;
+					clone->fd_list[i]->pipe->fd_in_clone = clone->fd_list[i]->pipe->fd_in_father;
+					clone->fd_list[i]->pipe->fd_out_clone = clone->fd_list[i]->pipe->fd_out_father;
+				}
+			}
 		}
 
 	//	unsigned long flags = arg->clone_flags;
@@ -738,10 +823,10 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     file_desc->proc = proc;
     file_desc->type = FD_CLASSIC;
     proc->fd_list[(int) reg->ret] = file_desc;
+    // TODO print trace
+    if(strace_option)
+    	fprintf(stderr,"open(...) = %ld\n",reg->ret);
   }
-  //TODO print trace
-  if(strace_option)
-	fprintf(stderr,"open(...) = %ld\n",reg->ret);
 }
 
 static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -993,6 +1078,26 @@ static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 
 	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
 	proc->fd_list[newfd] = file_desc;
+	if(file_desc->type == FD_PIPE){
+		pipe_t *pipe = file_desc->pipe;
+		if(pipe->proc_father == proc){
+			if(pipe->fd_in_father == oldfd)
+				pipe->fd_in_father = newfd;
+			else if(pipe->fd_out_father == oldfd)
+				pipe->fd_out_father = newfd;
+			else
+				THROW_IMPOSSIBLE;
+		} else if(pipe->proc_clone == proc){
+			if(pipe->fd_in_clone == oldfd)
+				pipe->fd_in_clone = newfd;
+			else if(pipe->fd_out_clone == oldfd)
+				pipe->fd_out_clone = newfd;
+			else
+				THROW_IMPOSSIBLE;
+		} else
+			THROW_IMPOSSIBLE;
+	}
+
 
   if (strace_option)
     fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
@@ -1434,7 +1539,7 @@ int process_handle(process_descriptor_t * proc, int status)
   while (1) {
     ptrace_get_register(pid, &arg);
     int ret;
-    XBT_WARN("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
+    XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig, arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_read:
