@@ -73,7 +73,6 @@ static struct infos_socket *confirm_register_socket(process_descriptor_t * proc,
   is->fd.type = FD_SOCKET;
   is->fd.fd = sockfd;
   is->fd.proc = proc;
-  is->fd.pid = proc->pid;
 
   is->host = proc->host;
   is->comm = NULL;

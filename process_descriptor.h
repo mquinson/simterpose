@@ -53,7 +53,6 @@ typedef struct {
   int type;
   process_descriptor_t *proc;
   int fd;
-  int pid;
   stream_t *stream;
 } fd_descriptor_t;
 

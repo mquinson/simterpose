@@ -369,12 +369,10 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   proc->in_syscall = 1;
   XBT_DEBUG(" read_pre");
   get_args_read(proc, reg, sysarg);
+  read_arg_t arg = &(sysarg->read);
+  fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
 
-  if ((int) reg->ret > 0) {
     if (socket_registered(proc, reg->arg1) != -1) {
-      read_arg_t arg = &(sysarg->read);
-      fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
-
       XBT_DEBUG(" read socket_registered");
       const char *mailbox;
       if (MSG_process_self() == file_desc->stream->client)
@@ -410,7 +408,7 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
       }
       MSG_task_destroy(task);
     }
-  }
+
 }
 
 static void syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -622,7 +620,12 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 		// the clone inherits the fd_list but subsequent on fd do NOT
 		// affect the parent unless CLONE_FILES is set
-		clone->fd_list = proc->fd_list;
+		int i;
+		for (i = 0; i < MAX_FD; ++i){
+			clone->fd_list[i] = proc->fd_list[i];
+			if(clone->fd_list[i] != NULL)
+				clone->fd_list[i]->proc = clone;
+		}
 
 	//	unsigned long flags = arg->clone_flags;
 
