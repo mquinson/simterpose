@@ -28,6 +28,7 @@
 #define FD_STDERR               0x02
 #define FD_CLASSIC              0x04
 #define FD_SOCKET               0x08
+#define FD_PIPE                 0x10
 
 #define MAX_FD 1024
 

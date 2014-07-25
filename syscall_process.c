@@ -515,13 +515,13 @@ static void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
 	    file_desc->fd = p0;
 	    file_desc->proc = proc;
-	    file_desc->type = FD_CLASSIC;
+	    file_desc->type = FD_PIPE;
 	    proc->fd_list[p0] = file_desc;
 
 		file_desc = malloc(sizeof(fd_descriptor_t));
 	    file_desc->fd = p1;
 	    file_desc->proc = proc;
-	    file_desc->type = FD_CLASSIC;
+	    file_desc->type = FD_PIPE;
 	    proc->fd_list[p1] = file_desc;
 
 		 if (strace_option)
@@ -737,12 +737,13 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     proc->fd_list[(int) reg->ret] = file_desc;
   }
   //TODO print trace
-  fprintf(stderr,"open(...) = %ld\n",reg->ret);
+  if(strace_option)
+	fprintf(stderr,"open(...) = %ld\n",reg->ret);
 }
 
 static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-  XBT_DEBUG("entering process_close_call");
+  XBT_DEBUG("close post");
   proc->in_syscall = 0;
   int fd = reg->arg1;
 
@@ -750,10 +751,8 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   if (file_desc != NULL) {
     if (file_desc->type == FD_SOCKET)
       socket_close(proc, fd);
-    else {
-      free(file_desc);
+    else
       proc->fd_list[fd] = NULL;
-    }
   }
   fprintf(stderr,"close(%d) = %ld\n",fd,reg->ret);
 }
@@ -985,19 +984,15 @@ static void syscall_fcntl_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-
 	proc->in_syscall = 0;
 	unsigned int oldfd = (int) reg->arg1;
 	unsigned int newfd = (int) reg->arg2;
 
 	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
-
 	proc->fd_list[newfd] = file_desc;
 
   if (strace_option)
     fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
-
-  sleep(5);
 }
 
 static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
