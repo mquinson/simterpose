@@ -1216,3 +1216,15 @@ Pour ça il faut distinguer les différents tid.
 pour que le ps en face écrive au bon endroit
 - ajout du type de fd FD_PIPE
   - le type renvoyé n'est pas celui attendu
+* <2014-07-25 ven.>
+- quand on fait un close il ne faut pas libérer le file descriptor
+  car il peut avoir été dupliqué. 
+- pipe:
+  - créer un objet pipe, qu'on met dans le fd. 
+  - doit savoir qui écrit et qui lit dessus. Le problème c'est que le
+    père et/ou le fils peuvent faire des dup après.
+  - j'utilise MSG_send et recv pour envoyer des messages sur le pipe
+    entre le maître et le clone.
+- Le maître et le clone n'arrivent toujours pas à communiquer. (le
+  clone fait un read qui bloque) Problème (?) : ces deux processus
+  sont sur le même hôte. 
