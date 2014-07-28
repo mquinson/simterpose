@@ -1228,3 +1228,29 @@ pour que le ps en face écrive au bon endroit
 - Le maître et le clone n'arrivent toujours pas à communiquer. (le
   clone fait un read qui bloque) Problème (?) : ces deux processus
   sont sur le même hôte. 
+* <2014-07-28 lun.> 
+- j'envoyais sur la mauvaise mailbox: il faut mettre le numéro du fd
+  et pas uniquement le nom de l'hôte.
+- fcntl: ajout du flag FD_CLOEXEC pour fermer les fd nécessaires lors
+  d'un exec
+- Problème maintenant: tous les fd sont fermés lors de l'exec, donc il
+  n'y a plus de pipe.. je comprends pas comment ça fonctionne dans
+  l'appli réelle.
+- J'ai rééssayé de tester allpairs: il y a un souci dans la manière
+  dont je traite les dup/pipes. Actuellement je conservais que les 2
+  extrémités du pipe, or il faut stocker tous les fd dupliqués. 
+  - Dans le pipe on met un champ entrée et un champ sortie, qui
+    contiennent la liste de tous les couples processus/fd (y compris
+    tous les dupliqués)
+** Resumé de l'état des tests:
+- python pp: 
+   - Je n'arrive pas à faire communiquer le processus avec le clone
+     qu'il crée. Il y a des pipes et des dup2 d'impliqués, je les ai
+     implémentés: j'ai des objets pipe pour me rappeler qui est le
+     processus en face et sur quelle mailbox communiquer. Mais j'ai
+     toujours des deadlocks, 
+   - Il manquait la prise en compte du flag
+     FD_CLOEXEC, pour fermer les descripteurs lors d'un exec. or
+     maintenant tous les descripteurs sont fermés et donc je ne peux
+     plus communiquer ..  
+- allpairs: c'est le poll qui pose problème.
