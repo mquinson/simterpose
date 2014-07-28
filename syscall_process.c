@@ -175,34 +175,34 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   if (file_desc != NULL && file_desc->type == FD_PIPE){
           if (strace_option)
           	print_write_syscall(proc, sysarg);
-          fprintf(stderr,"pipe \n");
+          fprintf(stderr,"[%d] write pre, pipe \n", proc->pid);
           pipe_t *pipe = file_desc->pipe;
           if(pipe == NULL)
           	THROW_IMPOSSIBLE;
           fprintf(stderr,"pipe %d [%d,%d] et %d [%d, %d] \n", pipe->proc_father->pid, pipe->fd_in_father, pipe->fd_out_father,  pipe->proc_clone->pid , pipe->fd_in_clone, pipe->fd_out_clone);
 
-    	msg_host_t *work_list = malloc(sizeof(msg_host_t) * 2);
     	char buff[256];
+    	msg_host_t receiver;
+    	int pipe_recv;
 
   		if (arg->fd == pipe->fd_out_clone){
-  			sprintf(buff, "%s writes in pipe", pipe->proc_clone->name);
-  	    	work_list[0] = pipe->proc_clone->host;
-  	    	work_list[1] = pipe->proc_father->host;
+  			sprintf(buff, "%s writes in pipe %d", pipe->proc_clone->name, pipe->fd_in_father);
+  			receiver = pipe->proc_father->host;
+  			pipe_recv = pipe->fd_in_father;
   		} else if(arg->fd == pipe->fd_out_father){
-  			sprintf(buff, "%s writes in pipe", pipe->proc_father->name);
-  	    	work_list[0] = pipe->proc_father->host;
-  	    	work_list[1] = pipe->proc_clone->host;
+  			sprintf(buff, "%s writes in pipe %d", pipe->proc_father->name, pipe->fd_in_clone);
+  			receiver = pipe->proc_clone->host;
+  			pipe_recv = pipe->fd_in_clone;
   		} else
   		  THROW_IMPOSSIBLE;
 
   	double amount = arg->ret;
-  	 msg_task_t task = MSG_parallel_task_create(buff, 2, work_list, 0, &amount, &(proc->pid));
-  	 XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(work_list[1]),
-  	                arg->ret);
-	  MSG_task_set_data_size(task, arg->ret);
-	  MSG_task_set_data(task, arg->data);
+  	 msg_task_t task = MSG_task_create(buff, 0, amount, arg->data);
+  	 XBT_WARN("hosts: %s send to %s in pipe %d (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
+  			pipe_recv, arg->ret);
 
-	  send_task(work_list[1], task);
+  	 sprintf(buff, "%d", pipe_recv);
+	  MSG_task_send(task, buff);
 
       }
 
@@ -447,7 +447,7 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
     }else if (file_desc != NULL && file_desc->type == FD_PIPE){
         if (strace_option)
         	print_read_syscall(proc, sysarg);
-        fprintf(stderr,"pipe \n");
+        fprintf(stderr,"[%d] read pre, pipe \n", proc->pid);
         pipe_t *pipe = file_desc->pipe;
         if(pipe == NULL)
         	THROW_IMPOSSIBLE;
@@ -469,16 +469,19 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 		}
 		//DEBUG
 
-		const char *mailbox;
+		XBT_WARN("host %s trying to receive from pipe %d", MSG_host_get_name(proc->host), arg->fd);
+		char buff[256];
 		if (arg->fd == pipe->fd_in_clone || arg->fd == pipe->fd_in_father)
-			mailbox = proc->name;
+			sprintf(buff, "%d", arg->fd);
 		else
 		  THROW_IMPOSSIBLE;
 
 		msg_task_t task = NULL;
-		MSG_task_receive(&task, mailbox);
+		MSG_task_receive(&task, buff);
 		arg->ret = (int) MSG_task_get_data_size(task);
 		arg->data = MSG_task_get_data(task);
+		XBT_WARN("hosts: %s received from pipe %d (size: %d)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
+
 		MSG_task_destroy(task);
     }
 }
@@ -823,10 +826,10 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     file_desc->proc = proc;
     file_desc->type = FD_CLASSIC;
     proc->fd_list[(int) reg->ret] = file_desc;
-    // TODO print trace
-    if(strace_option)
-    	fprintf(stderr,"open(...) = %ld\n",reg->ret);
   }
+  // TODO print trace
+  if(strace_option)
+  	fprintf(stderr,"[%d] open(...) = %ld\n", proc->pid, reg->ret);
 }
 
 static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -842,7 +845,7 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
     else
       proc->fd_list[fd] = NULL;
   }
-  fprintf(stderr,"close(%d) = %ld\n",fd,reg->ret);
+  fprintf(stderr,"[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
 }
 
 static void process_shutdown_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
