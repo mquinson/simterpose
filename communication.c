@@ -99,17 +99,17 @@ void comm_close(struct infos_socket *is)
 
   if (comm->state == COMM_LISTEN) {
     struct infos_socket *is = comm->info[0].socket;
-    unset_socket(is->fd.pid, is);
+    unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
     free(is);
     comm_destroy(comm);
   } else if (comm->state == COMM_CLOSED) {
     struct infos_socket *is = comm->info[0].socket;
-    unset_socket(is->fd.pid, is);
+    unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
     free(is);
     is = comm->info[1].socket;
-    unset_socket(is->fd.pid, is);
+    unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
     free(is);
     comm_destroy(comm);
