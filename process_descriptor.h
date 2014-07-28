@@ -65,6 +65,7 @@ typedef struct {
   int fd;
   stream_t *stream;
   pipe_t *pipe;
+  int flags;
 } fd_descriptor_t;
 
 struct process_descriptor {

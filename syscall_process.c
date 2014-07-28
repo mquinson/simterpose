@@ -781,11 +781,18 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	 proc->in_syscall = 1;
-
 	get_args_execve(proc, reg, sysarg);
 	XBT_DEBUG("execve_pre");
+
+	int i;
+	for (i = 0; i < MAX_FD; ++i){
+		if(proc->fd_list[i]!= NULL && proc->fd_list[i]->flags == FD_CLOEXEC)
+			proc->fd_list[i] = NULL;
+	}
+
 	if(strace_option)
 		print_execve_syscall_pre(proc, sysarg);
+
 }
 
 static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -826,10 +833,10 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     file_desc->proc = proc;
     file_desc->type = FD_CLASSIC;
     proc->fd_list[(int) reg->ret] = file_desc;
+    // TODO print trace
+    if(strace_option)
+    	fprintf(stderr,"[%d] open(...) = %ld\n", proc->pid, reg->ret);
   }
-  // TODO print trace
-  if(strace_option)
-  	fprintf(stderr,"[%d] open(...) = %ld\n", proc->pid, reg->ret);
 }
 
 static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1035,12 +1042,57 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
   switch (arg->cmd) {
-  case F_SETFL:
-    socket_set_flags(proc, arg->fd, arg->arg);
+
+  case F_DUPFD:
+	XBT_WARN("F_DUPFD unhandled");
+    break;
+
+  case F_DUPFD_CLOEXEC:
+	XBT_WARN("F_DUPFD_CLOEXEC unhandled");
+    break;
+
+  case F_GETFD:
+#ifndef address_translation
+	  arg->ret = proc->fd_list[arg->fd]->flags;
+#endif
+    break;
+
+  case F_SETFD:
+	  switch(arg->arg){
+	   	   case FD_CLOEXEC:
+	   		   	proc->fd_list[arg->fd]->flags = FD_CLOEXEC;
+				return;
+				break;
+	   	   default:
+				return;
+				break;
+	  }
     return;
     break;
 
+  case F_GETFL:
+	  XBT_WARN("F_GETFL unhandled");
+    break;
+
+  case F_SETFL:
+     socket_set_flags(proc, arg->fd, arg->arg);
+     return;
+     break;
+
+  case F_SETLK:
+	  XBT_WARN("F_SETLK unhandled");
+    break;
+
+  case F_SETLKW:
+	  XBT_WARN("F_SETLKW unhandled");
+    break;
+
+  case F_GETLK:
+	  XBT_WARN("F_GETLK unhandled");
+    break;
+
   default:
+	XBT_WARN("Unknown fcntl flag");
     return;
     break;
   }

@@ -772,7 +772,7 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
   //  fprintf(stderr,"[%d] fcntl( %d, ", pid, arg->fd);
-  fprintf(stderr, "fcntl( %d, ", arg->fd);
+  fprintf(stderr, "fcntl(%d, ", arg->fd);
   switch (arg->cmd) {
   case F_DUPFD:
     fprintf(stderr, "F_DUPFD");
@@ -788,6 +788,11 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   case F_SETFD:
     fprintf(stderr, "F_SETFD");
+	  switch(arg->arg){
+	   	   case FD_CLOEXEC:
+	   		   fprintf(stderr, ", FD_CLOEXEC");
+	   		   break;
+	  }
     break;
 
   case F_GETFL:
@@ -814,21 +819,21 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     fprintf(stderr, "Unknown command");
     break;
   }
-  fprintf(stderr, " , %d) = %d\n", arg->arg, arg->ret);
+  fprintf(stderr, ") = %d\n", arg->ret);
 }
 
 void print_read_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
-  //  fprintf(stderr,"[%d] read(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
-  fprintf(stderr, "read(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
+  fprintf(stderr,"[%d] read(%d, \"...\", %d) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
+  //fprintf(stderr, "read(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
 void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   write_arg_t arg = &(sysarg->read);
-  //  fprintf(stderr,"[%d] write(%d, \"...\", %d) = %d\n", pid, arg->fd, arg->count, arg->ret);
-  fprintf(stderr, "write(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
+  fprintf(stderr,"[%d] write(%d, \"...\", %d) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
+  //fprintf(stderr, "write(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
 static void print_shutdown_option(int how)
