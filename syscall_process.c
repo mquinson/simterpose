@@ -173,35 +173,46 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   write_arg_t arg = &(sysarg->write);
   fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
   if (file_desc != NULL && file_desc->type == FD_PIPE){
-          if (strace_option)
+	  if (strace_option)
           	print_write_syscall(proc, sysarg);
           fprintf(stderr,"[%d] write pre, pipe \n", proc->pid);
           pipe_t *pipe = file_desc->pipe;
           if(pipe == NULL)
           	THROW_IMPOSSIBLE;
-          fprintf(stderr,"pipe %d [%d,%d] et %d [%d, %d] \n", pipe->proc_father->pid, pipe->fd_in_father, pipe->fd_out_father,  pipe->proc_clone->pid , pipe->fd_in_clone, pipe->fd_out_clone);
 
-    	char buff[256];
-    	msg_host_t receiver;
-    	int pipe_recv;
 
-  		if (arg->fd == pipe->fd_out_clone){
-  			sprintf(buff, "%s writes in pipe %d", pipe->proc_clone->name, pipe->fd_in_father);
-  			receiver = pipe->proc_father->host;
-  			pipe_recv = pipe->fd_in_father;
-  		} else if(arg->fd == pipe->fd_out_father){
-  			sprintf(buff, "%s writes in pipe %d", pipe->proc_father->name, pipe->fd_in_clone);
-  			receiver = pipe->proc_clone->host;
-  			pipe_recv = pipe->fd_in_clone;
-  		} else
-  		  THROW_IMPOSSIBLE;
+        // print pipes
+		unsigned int cpt_in;
+		pipe_end_s end_in;
+        xbt_dynar_t read_end = pipe->read_end;
+		XBT_WARN("  Print read end of pipe: ");
+		xbt_dynar_foreach (read_end, cpt_in, end_in) {
+			 XBT_WARN("fd: %d, proc name: %s", end_in.fd, end_in.proc->name);
+		}
+
+		unsigned int cpt_out;
+		pipe_end_s end_out;
+		xbt_dynar_t write_end = pipe->write_end;
+		XBT_WARN("  Print write end of pipe: ");
+		xbt_dynar_foreach (write_end, cpt_out, end_out) {
+			 XBT_WARN("fd: %d, proc name: %s", end_out.fd, end_out.proc->name);
+		}
+
+
+
+      	char buff[256];
+		sprintf(buff, "%d", end_in.fd);
+      	msg_host_t receiver = end_in.proc->host;
+      	// ICI  !
+
+     	 XBT_WARN("host %s trying to send to %s in pipe %d (size: %d). Buff = %s", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
+     			end_in.fd, arg->ret, buff);
 
   	double amount = arg->ret;
   	 msg_task_t task = MSG_task_create(buff, 0, amount, arg->data);
   	 XBT_WARN("hosts: %s send to %s in pipe %d (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
-  			pipe_recv, arg->ret);
+  			end_in.fd, arg->ret);
 
-  	 sprintf(buff, "%d", pipe_recv);
 	  MSG_task_send(task, buff);
 
       }
@@ -445,13 +456,30 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
       }
       MSG_task_destroy(task);
     }else if (file_desc != NULL && file_desc->type == FD_PIPE){
-        if (strace_option)
+    	if (strace_option)
         	print_read_syscall(proc, sysarg);
         fprintf(stderr,"[%d] read pre, pipe \n", proc->pid);
         pipe_t *pipe = file_desc->pipe;
         if(pipe == NULL)
         	THROW_IMPOSSIBLE;
-        fprintf(stderr,"pipe %d [%d,%d] et %d [%d, %d] \n", pipe->proc_father->pid, pipe->fd_in_father, pipe->fd_out_father,  pipe->proc_clone->pid , pipe->fd_in_clone, pipe->fd_out_clone);
+
+        // print pipes
+		unsigned int cpt_in;
+		pipe_end_s end_in;
+        xbt_dynar_t read_end = pipe->read_end;
+		XBT_WARN("  Print read end of pipe: ");
+		xbt_dynar_foreach (read_end, cpt_in, end_in) {
+			 XBT_WARN("fd: %d, proc name: %s", end_in.fd, end_in.proc->name);
+		}
+
+		unsigned int cpt_out;
+		pipe_end_s end_out;
+		xbt_dynar_t write_end = pipe->write_end;
+		XBT_WARN("  Print write end of pipe: ");
+		xbt_dynar_foreach (write_end, cpt_out, end_out) {
+			 XBT_WARN("fd: %d, proc name: %s", end_out.fd, end_out.proc->name);
+		}
+
 
 	   //DEBUG
 		if(reg->arg1 == 0){
@@ -471,10 +499,7 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 
 		XBT_WARN("host %s trying to receive from pipe %d", MSG_host_get_name(proc->host), arg->fd);
 		char buff[256];
-		if (arg->fd == pipe->fd_in_clone || arg->fd == pipe->fd_in_father)
-			sprintf(buff, "%d", arg->fd);
-		else
-		  THROW_IMPOSSIBLE;
+		sprintf(buff, "%d", arg->fd);
 
 		msg_task_t task = NULL;
 		MSG_task_receive(&task, buff);
@@ -582,14 +607,29 @@ static void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 	pipe_arg_t arg = &(sysarg->pipe);
 
 	if(arg->ret==0){
+		// we create the pipe
 		int p0 = *arg->filedes;
 		int p1 = *(arg->filedes+1);
 
-	    pipe_t *pipe = malloc(sizeof(pipe_t));
-	    pipe->fd_in_father = p0;
-	    pipe->fd_out_father = p1;
-	    pipe->proc_father = proc;
+		pipe_end_t in = malloc(sizeof(pipe_end_s));
+		in->fd = p0;
+		in->proc = proc;
 
+		pipe_end_t out = malloc(sizeof(pipe_end_s));
+		out->fd = p1;
+		out->proc = proc;
+
+		xbt_dynar_t end_in = xbt_dynar_new(sizeof(pipe_end_t), NULL);
+		xbt_dynar_t end_out = xbt_dynar_new(sizeof(pipe_end_t), NULL);
+
+		xbt_dynar_push(end_in, &in);
+		xbt_dynar_push(end_out, &out);
+
+		pipe_t *pipe = malloc(sizeof(pipe_t));
+		pipe->read_end = end_in;
+		pipe->write_end = end_out;
+
+		// we create the fd
 		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
 	    file_desc->fd = p0;
 	    file_desc->proc = proc;
@@ -700,20 +740,53 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 		process_descriptor_t *clone = process_descriptor_new(proc->name, pid_clone);
 
-		// the clone inherits the fd_list but subsequent on fd do NOT
-		// affect the parent unless CLONE_FILES is set
+		// the clone inherits the fd_list but subsequent actions on fd
+		// do NOT affect the parent unless CLONE_FILES is set
 		int i;
 		for (i = 0; i < MAX_FD; ++i){
 			clone->fd_list[i] = proc->fd_list[i];
 			if(clone->fd_list[i] != NULL){
 				clone->fd_list[i]->proc = clone;
+
+				// deal with pipes
 				if(clone->fd_list[i]->type == FD_PIPE){
-					clone->fd_list[i]->pipe->proc_clone = clone;
-					clone->fd_list[i]->pipe->fd_in_clone = clone->fd_list[i]->pipe->fd_in_father;
-					clone->fd_list[i]->pipe->fd_out_clone = clone->fd_list[i]->pipe->fd_out_father;
+					pipe_t *pipe = clone->fd_list[i]->pipe;
+					xbt_assert(pipe!=NULL);
+
+					// copy all the fds in the read end of the pipe
+					unsigned int cpt_in;
+					pipe_end_t end_in;
+					xbt_dynar_t read_end = pipe->read_end;
+					xbt_dynar_foreach (read_end, cpt_in, end_in) {
+						// we have to make sure we don't add endlessly the fd from the clone
+						//FIXME on ajoute encore une fois en trop
+						if(end_in->proc != clone && end_in->proc->pid != clone->pid){
+							xbt_assert(end_in != NULL);
+							pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
+							clone_end->fd = end_in->fd;
+							clone_end->proc = clone;
+							xbt_dynar_push(read_end, &clone_end);
+						}
+					}
+
+					// copy all the fds in the write end of the pipe
+					xbt_dynar_t write_end = pipe->write_end;
+					unsigned int cpt_out;
+					pipe_end_t end_out;
+					xbt_dynar_foreach (write_end, cpt_out, end_out) {
+						// we have to make sure we don't add endlessly the fd from the clone
+						if(end_out->proc != clone && end_out->proc->pid != clone->pid){
+							xbt_assert(end_out != NULL);
+							pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
+							clone_end->fd = end_out->fd;
+							clone_end->proc = clone;
+							xbt_dynar_push(write_end, &clone_end);
+						}
+					}
 				}
 			}
 		}
+
 
 	//	unsigned long flags = arg->clone_flags;
 
@@ -763,7 +836,6 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		  if (flags & CLONE_CHILD_SETTID)
 			XBT_WARN("CLONE_CHILD_SETTID unhandled");*/
 
-
 		arg->ret = clone->pid;
 		ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
 
@@ -783,11 +855,13 @@ static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 	 proc->in_syscall = 1;
 	get_args_execve(proc, reg, sysarg);
 	XBT_DEBUG("execve_pre");
-
 	int i;
 	for (i = 0; i < MAX_FD; ++i){
-		if(proc->fd_list[i]!= NULL && proc->fd_list[i]->flags == FD_CLOEXEC)
-			proc->fd_list[i] = NULL;
+		if(proc->fd_list[i]!= NULL){
+			XBT_WARN("\n fd n° %d; proc->fd_list[i]->flags = %d ", i, proc->fd_list[i]->flags);
+			if(proc->fd_list[i]->flags == FD_CLOEXEC)
+				proc->fd_list[i] = NULL;
+		}
 	}
 
 	if(strace_option)
@@ -806,6 +880,8 @@ static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_des
 		if(strace_option)
 			print_execve_syscall_post(proc, sysarg);
 		XBT_DEBUG("execve_post");
+		/*if((int)(reg->ret) >= 0)
+			sleep(5);*/
 	}else{
 		proc->in_syscall = 0;
 		XBT_DEBUG("execve retour");
@@ -849,8 +925,29 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   if (file_desc != NULL) {
     if (file_desc->type == FD_SOCKET)
       socket_close(proc, fd);
-    else
+    else{
+		if (file_desc->type == FD_PIPE){
+			pipe_t *pipe = file_desc->pipe;
+			xbt_assert(pipe!=NULL);
+
+			unsigned int cpt_in;
+			pipe_end_t end_in;
+			xbt_dynar_t read_end = pipe->read_end;
+			xbt_dynar_foreach (read_end, cpt_in, end_in) {
+				if(end_in->fd == fd && end_in->proc == proc)
+					xbt_dynar_remove_at(read_end, cpt_in, NULL);
+			}
+
+			unsigned int cpt_out;
+			pipe_end_t end_out;
+			xbt_dynar_t write_end = pipe->write_end;
+			xbt_dynar_foreach (write_end, cpt_out, end_out) {
+				if(end_out->fd == fd && end_in->proc == proc)
+					xbt_dynar_remove_at(write_end, cpt_out, NULL);
+			}
+		}
       proc->fd_list[fd] = NULL;
+    }
   }
   fprintf(stderr,"[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
 }
@@ -1058,15 +1155,7 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
     break;
 
   case F_SETFD:
-	  switch(arg->arg){
-	   	   case FD_CLOEXEC:
-	   		   	proc->fd_list[arg->fd]->flags = FD_CLOEXEC;
-				return;
-				break;
-	   	   default:
-				return;
-				break;
-	  }
+	proc->fd_list[arg->fd]->flags = arg->arg;
     return;
     break;
 
@@ -1133,29 +1222,39 @@ static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 
 	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
 	proc->fd_list[newfd] = file_desc;
+
+	if (strace_option)
+		fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
+
 	if(file_desc->type == FD_PIPE){
 		pipe_t *pipe = file_desc->pipe;
-		if(pipe->proc_father == proc){
-			if(pipe->fd_in_father == oldfd)
-				pipe->fd_in_father = newfd;
-			else if(pipe->fd_out_father == oldfd)
-				pipe->fd_out_father = newfd;
-			else
-				THROW_IMPOSSIBLE;
-		} else if(pipe->proc_clone == proc){
-			if(pipe->fd_in_clone == oldfd)
-				pipe->fd_in_clone = newfd;
-			else if(pipe->fd_out_clone == oldfd)
-				pipe->fd_out_clone = newfd;
-			else
-				THROW_IMPOSSIBLE;
-		} else
-			THROW_IMPOSSIBLE;
+
+		// look for the fd in the read end of the pipe
+		xbt_dynar_t read_end = pipe->read_end;
+		unsigned int cpt_in;
+		pipe_end_t end_in;
+		xbt_dynar_foreach (read_end, cpt_in, end_in) {
+			if(end_in->fd == oldfd && end_in->proc == proc){
+				pipe_end_t dup_end = malloc(sizeof(pipe_end_s));
+				dup_end->fd = newfd;
+				dup_end->proc = end_in->proc;
+				xbt_dynar_push(read_end, &dup_end);
+			}
+		}
+
+		// look for the fd in the write end of the pipe
+		xbt_dynar_t write_end = pipe->write_end;
+		unsigned int cpt_out;
+		pipe_end_t end_out;
+		xbt_dynar_foreach (write_end, cpt_out, end_out) {
+			if(end_out->fd == oldfd && end_out->proc == proc){
+				pipe_end_t dup_end = malloc(sizeof(pipe_end_s));
+				dup_end->fd = newfd;
+				dup_end->proc = end_out->proc;
+				xbt_dynar_push(write_end, &dup_end);
+			}
+		}
 	}
-
-
-  if (strace_option)
-    fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
 }
 
 static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
@@ -1872,7 +1971,7 @@ int process_handle(process_descriptor_t * proc, int status)
 
     // Step the traced process
     ptrace_resume_process(pid);
-    XBT_DEBUG("process resumed, waitpid");
+   // XBT_DEBUG("process resumed, waitpid");
     waitpid(pid, &status, 0);
   }                             // while(1)
 

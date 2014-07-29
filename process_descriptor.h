@@ -49,15 +49,18 @@ typedef struct {
   const char *to_server;        // name of the mailbox
 } stream_t;
 
-typedef struct {
-	process_descriptor_t *proc_father;
-	int fd_in_father;
-	int fd_out_father;
-	process_descriptor_t *proc_clone;
-	int fd_in_clone;
-	int fd_out_clone;
-} pipe_t;
+typedef struct pipe_end_s pipe_end_s;
+typedef pipe_end_s *pipe_end_t;
 
+struct pipe_end_s {
+  int fd;
+  process_descriptor_t *proc;
+};
+
+typedef struct {
+	xbt_dynar_t read_end;
+	xbt_dynar_t write_end;
+}pipe_t;
 
 typedef struct {
   int type;
