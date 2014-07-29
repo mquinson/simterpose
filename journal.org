@@ -1254,3 +1254,20 @@ pour que le ps en face écrive au bon endroit
      maintenant tous les descripteurs sont fermés et donc je ne peux
      plus communiquer ..  
 - allpairs: c'est le poll qui pose problème.
+* <2014-07-29 mar.>
+- J'ai modifié la structure du pipe pour prendre en compte les dup:
+  - on a un xbt array pour l'entrée du pipe, et un pour la
+    sortie. Chaque liste contient tous les descripteurs de fichiers,
+    associés avec le processus correspondant
+  - quand on fait un clone on ajoute le fd/processus au pipe.
+    - j'ai des pipe_end_t qui s'ajoutent en trop à chaque fois
+** TODO vérifier s'ils sont déjà présents avant de les ajouter
+  - quand on fait un dup on rajoute la nouvelle extrémité du pipe
+    dans le bon tableau
+  - dans le close on va éventuellement retirer le fd du pipe.
+  - quand on fait un write on va chercher le fd associé pour écrire
+    sur la bonne mailbox. Normalement il n'y a qu'un seul processus
+    en face: comme dans la réalité on ne garantit rien si
+    l'utilisateur n'a pas fermé les bons fd.
+- J'ai toujours cette histoire de CLOEXEC qui me pourrit mes pipes
+** TODO poll &comms
