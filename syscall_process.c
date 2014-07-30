@@ -170,51 +170,6 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
     }
   }
 #endif
-  write_arg_t arg = &(sysarg->write);
-  fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
-  if (file_desc != NULL && file_desc->type == FD_PIPE){
-	  if (strace_option)
-          	print_write_syscall(proc, sysarg);
-          fprintf(stderr,"[%d] write pre, pipe \n", proc->pid);
-          pipe_t *pipe = file_desc->pipe;
-          if(pipe == NULL)
-          	THROW_IMPOSSIBLE;
-
-
-        // print pipes
-		unsigned int cpt_in;
-		pipe_end_t end_in;
-        xbt_dynar_t read_end = pipe->read_end;
-		XBT_WARN("  Print read end of pipe: ");
-		xbt_dynar_foreach (read_end, cpt_in, end_in) {
-			 XBT_WARN("fd: %d, proc name: %s, pid = %d", end_in->fd, end_in->proc->name, end_in->proc->pid);
-		}
-
-		unsigned int cpt_out;
-		pipe_end_t end_out;
-		xbt_dynar_t write_end = pipe->write_end;
-		XBT_WARN("  Print write end of pipe: ");
-		xbt_dynar_foreach (write_end, cpt_out, end_out) {
-			 XBT_WARN("fd: %d, proc name: %s, pid = %d", end_out->fd, end_out->proc->name, end_out->proc->pid);
-		}
-
-      	char buff[256];
-		sprintf(buff, "%d", end_in->fd);
-      	msg_host_t receiver = end_in->proc->host;
-      	// ICI  !
-
-     	 XBT_WARN("host %s trying to send to %s in pipe %d (size: %d). Buff = %s", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
-     			end_in->fd, arg->ret, buff);
-
-  	double amount = arg->ret;
-  	 msg_task_t task = MSG_task_create(buff, 0, amount, arg->data);
-  	 XBT_WARN("hosts: %s send to %s in pipe %d (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
-  			end_in->fd, arg->ret);
-
-	  MSG_task_send(task, buff);
-
-      }
-
   return PROCESS_CONTINUE;
 }
 
@@ -224,6 +179,33 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   XBT_DEBUG("write_post");
   //    XBT_DEBUG("[%d] write_out", pid);
   get_args_write(proc, reg, sysarg);
+
+  write_arg_t arg = &(sysarg->write);
+  fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+  if (file_desc != NULL && file_desc->type == FD_PIPE){
+	  if (strace_option)
+          print_write_syscall(proc, sysarg);
+          pipe_t *pipe = file_desc->pipe;
+          if(pipe == NULL)
+          	THROW_IMPOSSIBLE;
+
+		pipe_end_t end_in = NULL;
+		xbt_dynar_get_cpy(pipe->read_end, 0, &end_in);
+
+      	char buff[256];
+		sprintf(buff, "%d", end_in->fd);
+      	msg_host_t receiver = end_in->proc->host;
+
+     	 XBT_WARN("host %s trying to send to %s in pipe %d (size: %d). Buff = %s", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
+     			end_in->fd, arg->ret, buff);
+
+  	double amount = arg->ret;
+  	 msg_task_t task = MSG_task_create(buff, 0, amount, arg->data);
+  	 XBT_WARN("hosts: %s send to %s in pipe %d (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
+  			end_in->fd, arg->ret);
+	  MSG_task_send(task, buff);
+      }
+  else
   if (strace_option)
     print_write_syscall(proc, sysarg);
 #ifdef address_translation
@@ -841,6 +823,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		sprintf(name, "clone n°%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
 		XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
 		MSG_process_create(name, main_loop, clone, MSG_host_self());
+		proc->in_syscall = 1;
 	}
 }
 
