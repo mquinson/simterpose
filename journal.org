@@ -1270,4 +1270,20 @@ pour que le ps en face écrive au bon endroit
     en face: comme dans la réalité on ne garantit rien si
     l'utilisateur n'a pas fermé les bons fd.
 - J'ai toujours cette histoire de CLOEXEC qui me pourrit mes pipes
-** TODO poll &comms
+* <2014-07-30 mer.>
+- correction dans le write de la manipulation de la structure de
+  pipe. idem dans le read 
+- dans le close après un xbt_dynar_remove_at, on diminue le compteur
+  d'un sinon on loupe un élément
+- retour sur allpairs:
+  - il y avait encore un problème au niveau du clone, qui causait un
+    décalage syscall in/out quand le clone rendait la main sans
+    mourir. 
+  - ne pas tuer le clone dans le handler, sinon on le libère deux
+    fois.
+  - j'ai déplacé le write pipe dans le post, sinon la taille n'est pas
+    encore connue.
+  - les clones et pipes ont l'air de tourner correctement, maintenant
+    c'est au niveau de la connexion du worker que ça attend
+    indéfiniment. 
+** TODO pp python essayer sans le cloexec et comparer les fd avec strace
