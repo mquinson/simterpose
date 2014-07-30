@@ -183,35 +183,33 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 
         // print pipes
 		unsigned int cpt_in;
-		pipe_end_s end_in;
+		pipe_end_t end_in;
         xbt_dynar_t read_end = pipe->read_end;
 		XBT_WARN("  Print read end of pipe: ");
 		xbt_dynar_foreach (read_end, cpt_in, end_in) {
-			 XBT_WARN("fd: %d, proc name: %s", end_in.fd, end_in.proc->name);
+			 XBT_WARN("fd: %d, proc name: %s, pid = %d", end_in->fd, end_in->proc->name, end_in->proc->pid);
 		}
 
 		unsigned int cpt_out;
-		pipe_end_s end_out;
+		pipe_end_t end_out;
 		xbt_dynar_t write_end = pipe->write_end;
 		XBT_WARN("  Print write end of pipe: ");
 		xbt_dynar_foreach (write_end, cpt_out, end_out) {
-			 XBT_WARN("fd: %d, proc name: %s", end_out.fd, end_out.proc->name);
+			 XBT_WARN("fd: %d, proc name: %s, pid = %d", end_out->fd, end_out->proc->name, end_out->proc->pid);
 		}
 
-
-
       	char buff[256];
-		sprintf(buff, "%d", end_in.fd);
-      	msg_host_t receiver = end_in.proc->host;
+		sprintf(buff, "%d", end_in->fd);
+      	msg_host_t receiver = end_in->proc->host;
       	// ICI  !
 
      	 XBT_WARN("host %s trying to send to %s in pipe %d (size: %d). Buff = %s", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
-     			end_in.fd, arg->ret, buff);
+     			end_in->fd, arg->ret, buff);
 
   	double amount = arg->ret;
   	 msg_task_t task = MSG_task_create(buff, 0, amount, arg->data);
   	 XBT_WARN("hosts: %s send to %s in pipe %d (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
-  			end_in.fd, arg->ret);
+  			end_in->fd, arg->ret);
 
 	  MSG_task_send(task, buff);
 
@@ -465,21 +463,18 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 
         // print pipes
 		unsigned int cpt_in;
-		pipe_end_s end_in;
+		pipe_end_t end_in;
         xbt_dynar_t read_end = pipe->read_end;
 		XBT_WARN("  Print read end of pipe: ");
-		xbt_dynar_foreach (read_end, cpt_in, end_in) {
-			 XBT_WARN("fd: %d, proc name: %s", end_in.fd, end_in.proc->name);
-		}
+		xbt_dynar_foreach (read_end, cpt_in, end_in)
+			XBT_WARN("fd: %d, proc name: %s, pid = %d", end_in->fd, end_in->proc->name, end_in->proc->pid);
 
 		unsigned int cpt_out;
-		pipe_end_s end_out;
+		pipe_end_t end_out;
 		xbt_dynar_t write_end = pipe->write_end;
 		XBT_WARN("  Print write end of pipe: ");
-		xbt_dynar_foreach (write_end, cpt_out, end_out) {
-			 XBT_WARN("fd: %d, proc name: %s", end_out.fd, end_out.proc->name);
-		}
-
+		xbt_dynar_foreach (write_end, cpt_out, end_out)
+			 XBT_WARN("fd: %d, proc name: %s, pid = %d", end_out->fd, end_out->proc->name, end_out->proc->pid);
 
 	   //DEBUG
 		if(reg->arg1 == 0){
@@ -934,16 +929,20 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 			pipe_end_t end_in;
 			xbt_dynar_t read_end = pipe->read_end;
 			xbt_dynar_foreach (read_end, cpt_in, end_in) {
-				if(end_in->fd == fd && end_in->proc == proc)
+				if(end_in->fd == fd && end_in->proc->pid == proc->pid){
 					xbt_dynar_remove_at(read_end, cpt_in, NULL);
+					cpt_in--;
+				}
 			}
 
 			unsigned int cpt_out;
 			pipe_end_t end_out;
 			xbt_dynar_t write_end = pipe->write_end;
 			xbt_dynar_foreach (write_end, cpt_out, end_out) {
-				if(end_out->fd == fd && end_in->proc == proc)
+				if(end_out->fd == fd && end_out->proc->pid == proc->pid){
 					xbt_dynar_remove_at(write_end, cpt_out, NULL);
+					cpt_out--;
+				}
 			}
 		}
       proc->fd_list[fd] = NULL;
