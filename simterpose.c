@@ -247,6 +247,5 @@ int main_loop(int argc, char *argv[])
 
     XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
   }
-  process_die(proc);
   return 0;
 }
