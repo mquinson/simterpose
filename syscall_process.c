@@ -834,14 +834,6 @@ static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 	 proc->in_syscall = 1;
 	get_args_execve(proc, reg, sysarg);
 	XBT_DEBUG("execve_pre");
-	int i;
-	for (i = 0; i < MAX_FD; ++i){
-		if(proc->fd_list[i]!= NULL){
-			XBT_WARN("\n fd n° %d; proc->fd_list[i]->flags = %d ", i, proc->fd_list[i]->flags);
-			if(proc->fd_list[i]->flags == FD_CLOEXEC)
-				process_close_call(proc, i);
-		}
-	}
 
 	if(strace_option)
 		print_execve_syscall_pre(proc, sysarg);
@@ -863,6 +855,15 @@ static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_des
 			sleep(5);*/
 	}else{
 		proc->in_syscall = 0;
+		int i;
+			for (i = 0; i < MAX_FD; ++i){
+				if(proc->fd_list[i]!= NULL){
+					XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
+					if(proc->fd_list[i]->flags == FD_CLOEXEC)
+						XBT_WARN("FD_CLOEXEC not handled");
+						//process_close_call(proc, i);
+				}
+			}
 		XBT_DEBUG("execve retour");
 	}
 }
@@ -1948,11 +1949,12 @@ int process_handle(process_descriptor_t * proc, int status)
       // SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
 
     default:
-      //XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
-      else
+      else{
+        XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
         proc->in_syscall = 0;
+      }
       break;
     }
 
