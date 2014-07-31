@@ -827,6 +827,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 	}
 }
 
+static void process_close_call(process_descriptor_t * proc, int fd);
 
 static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
@@ -838,7 +839,7 @@ static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		if(proc->fd_list[i]!= NULL){
 			XBT_WARN("\n fd n° %d; proc->fd_list[i]->flags = %d ", i, proc->fd_list[i]->flags);
 			if(proc->fd_list[i]->flags == FD_CLOEXEC)
-				proc->fd_list[i] = NULL;
+				process_close_call(proc, i);
 		}
 	}
 
@@ -893,44 +894,48 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
   }
 }
 
+static void process_close_call(process_descriptor_t * proc, int fd){
+
+	 fd_descriptor_t *file_desc = proc->fd_list[fd];
+	 if (file_desc != NULL) {
+	    if (file_desc->type == FD_SOCKET)
+	      socket_close(proc, fd);
+	    else{
+			if (file_desc->type == FD_PIPE){
+				pipe_t *pipe = file_desc->pipe;
+				xbt_assert(pipe!=NULL);
+
+				unsigned int cpt_in;
+				pipe_end_t end_in;
+				xbt_dynar_t read_end = pipe->read_end;
+				xbt_dynar_foreach (read_end, cpt_in, end_in) {
+					if(end_in->fd == fd && end_in->proc->pid == proc->pid){
+						xbt_dynar_remove_at(read_end, cpt_in, NULL);
+						cpt_in--;
+					}
+				}
+
+				unsigned int cpt_out;
+				pipe_end_t end_out;
+				xbt_dynar_t write_end = pipe->write_end;
+				xbt_dynar_foreach (write_end, cpt_out, end_out) {
+					if(end_out->fd == fd && end_out->proc->pid == proc->pid){
+						xbt_dynar_remove_at(write_end, cpt_out, NULL);
+						cpt_out--;
+					}
+				}
+			}
+	      proc->fd_list[fd] = NULL;
+	    }
+	  }
+}
+
 static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   XBT_DEBUG("close post");
   proc->in_syscall = 0;
   int fd = reg->arg1;
-
-  fd_descriptor_t *file_desc = proc->fd_list[fd];
-  if (file_desc != NULL) {
-    if (file_desc->type == FD_SOCKET)
-      socket_close(proc, fd);
-    else{
-		if (file_desc->type == FD_PIPE){
-			pipe_t *pipe = file_desc->pipe;
-			xbt_assert(pipe!=NULL);
-
-			unsigned int cpt_in;
-			pipe_end_t end_in;
-			xbt_dynar_t read_end = pipe->read_end;
-			xbt_dynar_foreach (read_end, cpt_in, end_in) {
-				if(end_in->fd == fd && end_in->proc->pid == proc->pid){
-					xbt_dynar_remove_at(read_end, cpt_in, NULL);
-					cpt_in--;
-				}
-			}
-
-			unsigned int cpt_out;
-			pipe_end_t end_out;
-			xbt_dynar_t write_end = pipe->write_end;
-			xbt_dynar_foreach (write_end, cpt_out, end_out) {
-				if(end_out->fd == fd && end_out->proc->pid == proc->pid){
-					xbt_dynar_remove_at(write_end, cpt_out, NULL);
-					cpt_out--;
-				}
-			}
-		}
-      proc->fd_list[fd] = NULL;
-    }
-  }
+  process_close_call(proc, fd);
   fprintf(stderr,"[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
 }
 
