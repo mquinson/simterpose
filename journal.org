@@ -1212,7 +1212,7 @@ Pour ça il faut distinguer les différents tid.
 - Il y a donc des dup2 et des pipe qui sont faits, mais visiblement le
   master en face n'envoie pas le write, ou en tout cas pas sur le bon
   fd.. 
-** TODO Dans read faire la médiation quand c'est un pipe 
+** DONE Dans read faire la médiation quand c'est un pipe 
 pour que le ps en face écrive au bon endroit
 - ajout du type de fd FD_PIPE
   - le type renvoyé n'est pas celui attendu
@@ -1242,18 +1242,6 @@ pour que le ps en face écrive au bon endroit
   - Dans le pipe on met un champ entrée et un champ sortie, qui
     contiennent la liste de tous les couples processus/fd (y compris
     tous les dupliqués)
-** Resumé de l'état des tests:
-- python pp: 
-   - Je n'arrive pas à faire communiquer le processus avec le clone
-     qu'il crée. Il y a des pipes et des dup2 d'impliqués, je les ai
-     implémentés: j'ai des objets pipe pour me rappeler qui est le
-     processus en face et sur quelle mailbox communiquer. Mais j'ai
-     toujours des deadlocks, 
-   - Il manquait la prise en compte du flag
-     FD_CLOEXEC, pour fermer les descripteurs lors d'un exec. or
-     maintenant tous les descripteurs sont fermés et donc je ne peux
-     plus communiquer ..  
-- allpairs: c'est le poll qui pose problème.
 * <2014-07-29 mar.>
 - J'ai modifié la structure du pipe pour prendre en compte les dup:
   - on a un xbt array pour l'entrée du pipe, et un pour la
@@ -1308,3 +1296,44 @@ pour que le ps en face écrive au bon endroit
     - Pour la lecture du maître je comprends pas dans la réalité
       comment elle est débloquée: avec strace je vois que le read(9
       bloque jusqu'à ce que le clone fasse un execve.
+* <2014-08-01 ven.>
+- python pp: 
+   - sans CLOEXEC: Deadlock quand le maître et le clone essaient de communiquer: 
+     - le maître essaie de lire sur 9, et le clone d'écrire sur 1. 
+     - je comprends pas par quoi la lecture du maître est sensée être
+       débloquée dans la réalité. Voici le strace de l'application
+       réelle, un peu après la création du clone (12039 = maître,
+       12040 = clone, utiliser l'option -f pour voir les clones)
+#+verbatim    
+[pid 12039] read(9,  <unfinished ...>
+[pid 12040] <... close resumed> )       = 0
+[pid 12040] close(9)                    = 0
+[pid 12040] dup2(3, 0)                  = 0
+[pid 12040] dup2(6, 1)                  = 1
+[pid 12040] dup2(8, 2)                  = 2
+[pid 12040] close(3)                    = 0
+[pid 12040] close(6)                    = 0
+[pid 12040] close(8)                    = 0
+[pid 12040] execve("/usr/bin/python", ["/usr/bin/python", "-u", "-m", "ppworker", "2>/dev/null"], [/* 52 vars */] <unfinished ...>
+[pid 12039] <... read resumed> "", 1048576) = 0
+#+endverbatim
+   - avec CLOEXEC: ça ne pose plus de problème sur le read du maître,
+     mais ça bloque sur le write1 du clone. Tous les descripteurs sont
+     fermés et donc je ne peux plus communiquer: je n'ai personne en
+     face à qui envoyer mon message. Or si je n'envoie pas un send, la
+     main n'est jamais rendue au maître, donc le clone attend
+     indéfiniment. 
+- Je comprends pas bien à quoi sert mmap. Est-ce que ça permettrait
+  d'accéder aux fichiers du maître meme si on n'a plus accès aux
+  fd..? 
+- J'ai commencé à ajouter des refcounts, mais je suis pas sure de
+  faire ce qu'il faut: 
+  - quand j'appelle close, est-ce que je dois attendre avant de
+    fermer?
+  - probleme des infos_sockets, qui sont infos_sockets et
+    file_descriptor 
+** TODO ajouter des refcounts
+- dans dup2(oldfd, newfd) je ferme newfd avant si necessaire
+** TODO des tests qui ressemblent autant que possible à des ptits bouts des applis
+qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
+** TODO allpairs: connexion
