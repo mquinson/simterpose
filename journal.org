@@ -1287,3 +1287,24 @@ pour que le ps en face écrive au bon endroit
     c'est au niveau de la connexion du worker que ça attend
     indéfiniment. 
 ** TODO pp python essayer sans le cloexec et comparer les fd avec strace
+* <2014-07-31 jeu.>
+- pp python:
+  - les appels systèmes ne sont pas toujours interceptés au même
+    moment avec simterpose ou avec strace: 
+    - le write(1, "Usage: python sum_primes.py.. est intercepté à la
+      toute fin par strace, et avant le lancement du clone par
+      simterpose
+    - plusieurs autres syscall sont rajoutés parfois
+  - dans sys_execve pour le flag CLOEXEC
+    - je supprimais le fd de la liste mais pas du pipe
+    - il faut supprimer uniquement au retour de l'exec, si celui ci a
+      réussi 
+  - le read sur lequel on bloque à la fin de python pp (write1 puis
+    read0) renvoie des fd tous nulls puisque lors de l'exec on a
+    supprimé tous les fd 
+  - si je ne traite pas le flag CLOEXEC, alors j'ai un deadlock
+    puisque le maître essaie de lire sur 9, et le clone d'écrire
+    sur 1. 
+    - Pour la lecture du maître je comprends pas dans la réalité
+      comment elle est débloquée: avec strace je vois que le read(9
+      bloque jusqu'à ce que le clone fasse un execve.
