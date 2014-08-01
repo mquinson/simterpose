@@ -48,8 +48,6 @@ void socket_exit(void);
 
 recv_information *recv_information_new(void);
 
-void register_accepting_socket(struct infos_socket *is, process_descriptor_t * proc, int sockfd);
-
 void delete_socket(struct infos_socket *is);
 
 void recv_information_destroy(recv_information * recv);
@@ -60,13 +58,9 @@ int close_all_communication(process_descriptor_t * proc);
 
 struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol);
 
-void update_socket(process_descriptor_t * proc, int fd);
-
 int socket_registered(process_descriptor_t * proc, int fd);
 
 struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd);
-
-void get_localaddr_port_socket(process_descriptor_t * proc, int fd);
 
 void set_localaddr_port_socket(process_descriptor_t * proc, int fd, char *ip, int port);
 
@@ -74,17 +68,9 @@ int get_protocol_socket(process_descriptor_t * proc, int fd);
 
 int get_domain_socket(process_descriptor_t * proc, int fd);
 
-int socket_incomplete(process_descriptor_t * proc, int fd);
-
 int socket_netlink(process_descriptor_t * proc, int fd);
 
-int socket_get_remote_addr(process_descriptor_t * proc, int fd, struct sockaddr_in *addr_port);
-
-struct infos_socket *getSocketInfoFromContext(unsigned int locale_ip, int locale_port);
-
 int socket_get_state(struct infos_socket *is);
-
-int socket_read_event(process_descriptor_t * proc, int fd);
 
 void socket_close(process_descriptor_t * proc, int fd);
 
@@ -97,10 +83,6 @@ int socket_get_flags(process_descriptor_t * proc, int fd);
 void socket_set_option(process_descriptor_t * proc, int fd, int option, int value);
 
 int socket_get_option(process_descriptor_t * proc, int fd, int option);
-
-void socket_set_bind(process_descriptor_t * proc, int fd, int val);
-
-int socket_is_binded(process_descriptor_t * proc, int fd);
 
 int socket_get_local_port(process_descriptor_t * proc, int fd);
 

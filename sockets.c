@@ -51,20 +51,6 @@ void recv_information_destroy(recv_information * recv)
   free(recv);
 }
 
-void register_accepting_socket(struct infos_socket *is, process_descriptor_t * proc, int sockfd)
-{
-  proc->fd_list[sockfd] = (fd_descriptor_t *) is;
-  is->fd.type = FD_SOCKET;
-  is->fd.fd = sockfd;
-  is->fd.proc = proc;
-
-  is->option = 0;
-  is->binded = 0;
-  is->flags = O_RDWR;
-
-  xbt_dynar_push(all_sockets, &is);
-}
-
 static struct infos_socket *confirm_register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
 {
 
@@ -163,19 +149,6 @@ struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, in
   return confirm_register_socket(proc, sockfd, domain, protocol);
 }
 
-
-void update_socket(process_descriptor_t * proc, int fd)
-{
-  struct infos_socket *is = get_infos_socket(proc, fd);
-
-  if (is->domain == 2) {        // PF_INET
-    get_addr_port_sock(proc, fd, LOCAL);
-    print_infos_socket(is);
-  }
-}
-
-
-
 void set_localaddr_port_socket(process_descriptor_t * proc, int fd, char *ip, int port)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -183,20 +156,6 @@ void set_localaddr_port_socket(process_descriptor_t * proc, int fd, char *ip, in
   is->port_local = port;
 //   print_infos_socket(is);
 }
-
-
-
-void get_localaddr_port_socket(process_descriptor_t * proc, int fd)
-{
-  struct infos_socket *is = get_infos_socket(proc, fd);
-
-  if (is->domain == 2) {        // PF_INET
-    if (!get_addr_port_sock(proc, fd, 1))
-      XBT_ERROR("Failed reading local addr:port after bind");
-//     print_infos_socket(is);
-  }
-}
-
 
 void print_infos_socket(struct infos_socket *is)
 {
@@ -251,46 +210,6 @@ static int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, 
   fclose(file);
   return -1;
 
-}
-
-int socket_get_remote_addr(process_descriptor_t * proc, int fd, struct sockaddr_in *addr_port)
-{
-  struct infos_socket *is = get_infos_socket(proc, fd);
-  pid_t pid = proc->pid;
-  int protocol = is->protocol;
-
-  char path[512];
-  char dest[512];
-  sprintf(path, "/proc/%d/fd/%d", pid, fd);
-  if (readlink(path, dest, 512) == -1) {
-    XBT_DEBUG("Failed reading /proc/%d/fd/%d", pid, fd);
-    return -1;
-  }
-
-  char *token;
-  token = strtok(dest, "[");    // left part before socket id
-  token = strtok(NULL, "]");    // socket id 
-  int num_socket = atoi(token);
-
-  int res = 0;
-
-  if (protocol == 1) {          // case IPPROTO_ICMP -> protocol unknown -> test TCP
-    res = get_addr_port(TCP_PROTOCOL, num_socket, addr_port, REMOTE);
-    if (res == -1) {            // not tcp -> test UDP
-      res = get_addr_port(UDP_PROTOCOL, num_socket, addr_port, REMOTE);
-      if (res == -1)            // not udp -> test RAW
-        res = get_addr_port(RAW_PROTOCOL, num_socket, addr_port, REMOTE);
-    }
-  }
-
-  if (protocol == 6 || protocol == 0)   // case IPPROTO_TCP ou IPPROTO_IP
-    res = get_addr_port(TCP_PROTOCOL, num_socket, addr_port, REMOTE);
-  if (protocol == 17)           // case IPPROTO_UDP 
-    res = get_addr_port(UDP_PROTOCOL, num_socket, addr_port, REMOTE);
-  if (protocol == 255)          // case IPPROTO_RAW 
-    res = get_addr_port(RAW_PROTOCOL, num_socket, addr_port, REMOTE);
-
-  return res;
 }
 
 
@@ -447,22 +366,6 @@ int socket_network(process_descriptor_t * proc, int fd)
   return 0;
 }
 
-
-struct infos_socket *getSocketInfoFromContext(unsigned int ip_local, int port_local)
-{
-  struct infos_socket *temp_is;
-  unsigned int cpt = 0;
-
-  xbt_dynar_foreach(all_sockets, cpt, temp_is) {
-//     print_infos_socket(temp_is);
-    if ((temp_is->ip_local == ip_local) && (temp_is->port_local == port_local)) {
-      return temp_is;
-    }
-  }
-  return NULL;
-}
-
-
 void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
@@ -531,27 +434,7 @@ int close_all_communication(process_descriptor_t * proc)
   return result;
 }
 
-int socket_read_event(process_descriptor_t * proc, int fd)
-{
-  struct infos_socket *is = get_infos_socket(proc, fd);
-  int res = comm_get_socket_state(is);
-
-  return res;
-}
-
 int socket_get_state(struct infos_socket *is)
 {
   return comm_get_socket_state(is);
-}
-
-void socket_set_bind(process_descriptor_t * proc, int fd, int val)
-{
-  struct infos_socket *is = get_infos_socket(proc, fd);
-  is->binded = val;
-}
-
-int socket_is_binded(process_descriptor_t * proc, int fd)
-{
-  struct infos_socket *is = get_infos_socket(proc, fd);
-  return is->binded;
 }
