@@ -182,6 +182,7 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 
   write_arg_t arg = &(sysarg->write);
   fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+  file_desc->ref_nb++;
   if (file_desc != NULL && file_desc->type == FD_PIPE){
 	  if (strace_option)
           print_write_syscall(proc, sysarg);
@@ -208,6 +209,10 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   else
   if (strace_option)
     print_write_syscall(proc, sysarg);
+
+  file_desc->ref_nb--;
+  file_desc = NULL;
+
 #ifdef address_translation
   if ((int) reg->ret > 0) {
     if (socket_registered(proc, sysarg->write.fd) != -1) {
@@ -239,6 +244,7 @@ static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
   if (reg->ret > 0) {
     recvmsg_arg_t arg = &(sysarg->recvmsg);
     fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+    file_desc->ref_nb++;
     XBT_DEBUG("syscall_recvmsg_pre fd = %d", file_desc->fd);
 
     if (socket_registered(proc, arg->sockfd) != -1) {
@@ -278,6 +284,8 @@ static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
         MSG_task_destroy(task);
       }
     }
+    file_desc->ref_nb--;
+    file_desc = NULL;
   }
   XBT_DEBUG("recvmsg_pre");
 }
@@ -327,6 +335,7 @@ static void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
     if (socket_registered(proc, arg->sockfd) != -1) {
       if (!socket_netlink(proc, arg->sockfd)) {
         fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+        file_desc->ref_nb++;
         XBT_DEBUG("syscall_recvfrom_pre fd = %d", file_desc->fd);
 
         const char *mailbox;
@@ -362,6 +371,8 @@ static void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
 #endif
         }
         MSG_task_destroy(task);
+        file_desc->ref_nb--;
+        file_desc = NULL;
       }
     }
   }
@@ -399,6 +410,7 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   get_args_read(proc, reg, sysarg);
   read_arg_t arg = &(sysarg->read);
   fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+  file_desc->ref_nb++;
 
     if (socket_registered(proc, reg->arg1) != -1) {
       XBT_DEBUG(" read socket_registered");
@@ -471,6 +483,7 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 					  XBT_WARN("fd[%d] = %d, %s, type = %d", i, *(int*)file_desc, (char*)file_desc, file_desc->type);
 
 			  }
+			  file_desc = NULL;
 		}
 		//DEBUG
 
@@ -486,6 +499,8 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 
 		MSG_task_destroy(task);
     }
+    file_desc->ref_nb--;
+    file_desc = NULL;
 }
 
 static void syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -608,18 +623,22 @@ static void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 
 		// we create the fd
 		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+		file_desc->ref_nb = 0;
 	    file_desc->fd = p0;
 	    file_desc->proc = proc;
 	    file_desc->type = FD_PIPE;
 	    file_desc->pipe = pipe;
 	    proc->fd_list[p0] = file_desc;
+	    file_desc->ref_nb++;
 
 		file_desc = malloc(sizeof(fd_descriptor_t));
+		file_desc->ref_nb = 0;
 	    file_desc->fd = p1;
 	    file_desc->proc = proc;
 	    file_desc->type = FD_PIPE;
 	    file_desc->pipe = pipe;
 	    proc->fd_list[p1] = file_desc;
+	    file_desc->ref_nb++;
 
 		 if (strace_option)
 		    fprintf(stderr, "[%d] pipe([%d,%d]) = %d \n", proc->pid, p0, p1, arg->ret);
@@ -765,14 +784,14 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		}
 
 
-	//	unsigned long flags = arg->clone_flags;
+		unsigned long flags = arg->clone_flags;
 
-	/*	if (flags & CLONE_VM)
+		if (flags & CLONE_VM)
 			XBT_WARN("CLONE_VM unhandled");
 		if (flags & CLONE_FS)
 			XBT_WARN("CLONE_FS unhandled");
 		if (flags & CLONE_FILES)
-			XBT_WARN("CLONE_FILES unhandled");
+			xbt_die("CLONE_FILES unhandled");
 		if (flags & CLONE_SIGHAND)
 			XBT_WARN("CLONE_SIGHAND unhandled");
 		if (flags & CLONE_PTRACE)
@@ -811,7 +830,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		if (flags & CLONE_CHILD_CLEARTID)
 			XBT_WARN("CLONE_CHILD_CLEARTID unhandled");
 		  if (flags & CLONE_CHILD_SETTID)
-			XBT_WARN("CLONE_CHILD_SETTID unhandled");*/
+			XBT_WARN("CLONE_CHILD_SETTID unhandled");
 
 		arg->ret = clone->pid;
 		ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
@@ -873,10 +892,12 @@ static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   proc->in_syscall = 0;
   if ((int) reg->ret >= 0) {
     fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+    file_desc->ref_nb = 0;
     file_desc->fd = (int) reg->ret;
     file_desc->proc = proc;
     file_desc->type = FD_CLASSIC;
     proc->fd_list[(int) reg->ret] = file_desc;
+    file_desc->ref_nb++;
   }
 }
 
@@ -885,10 +906,12 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
   proc->in_syscall = 0;
   if ((int) reg->ret >= 0) {
     fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+    file_desc->ref_nb = 0;
     file_desc->fd = (int) reg->ret;
     file_desc->proc = proc;
     file_desc->type = FD_CLASSIC;
     proc->fd_list[(int) reg->ret] = file_desc;
+    file_desc->ref_nb++;
     // TODO print trace
     if(strace_option)
     	fprintf(stderr,"[%d] open(...) = %ld\n", proc->pid, reg->ret);
@@ -899,6 +922,7 @@ static void process_close_call(process_descriptor_t * proc, int fd){
 
 	 fd_descriptor_t *file_desc = proc->fd_list[fd];
 	 if (file_desc != NULL) {
+		 file_desc->ref_nb++;
 	    if (file_desc->type == FD_SOCKET)
 	      socket_close(proc, fd);
 	    else{
@@ -926,8 +950,9 @@ static void process_close_call(process_descriptor_t * proc, int fd){
 					}
 				}
 			}
-	      proc->fd_list[fd] = NULL;
 	    }
+		file_desc->ref_nb--;
+	   proc->fd_list[fd] = NULL;
 	  }
 }
 
@@ -1209,7 +1234,11 @@ static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 	unsigned int newfd = (int) reg->arg2;
 
 	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
+	file_desc->ref_nb++;
+	proc->fd_list[newfd]->ref_nb--;
+	process_close_call(proc, newfd);
 	proc->fd_list[newfd] = file_desc;
+	file_desc->ref_nb++;
 
 	if (strace_option)
 		fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
@@ -1428,6 +1457,7 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
   XBT_DEBUG(" CONNEXION: process_accept_in_call");
   accept_arg_t arg = &(sysarg->accept);
   fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+  file_desc->ref_nb++;
   XBT_DEBUG("process_accept_in_call fd = %d", file_desc->fd);
 
   // We create the stream object for semaphores
@@ -1483,6 +1513,8 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
     XBT_DEBUG(" ----> S -> accept_in: SERVER pris! (2e episode)");
 #endif
   }
+  file_desc->ref_nb--;
+  file_desc = NULL;
 }
 
 static void syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1509,10 +1541,14 @@ static void syscall_accept_post(reg_s * reg, syscall_arg_u * sysarg, process_des
   get_args_accept(proc, reg, sysarg);
   accept_arg_t arg = &(sysarg->accept);
   fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+  file_desc->ref_nb++;
 
 
   XBT_DEBUG(" ----> S -> accept_post (2e etape address translation?) je prends serveur");
   MSG_sem_acquire(file_desc->stream->sem_server);
+
+  file_desc->ref_nb--;
+  file_desc = NULL;
 }
 
 
@@ -1666,10 +1702,14 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
 
   connect_arg_t arg = &(sysarg->connect);
   fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+  file_desc->ref_nb++;
 
   XBT_DEBUG(" ----> S -> connect_post je relâche serveur (2e?)");
   MSG_sem_release(file_desc->stream->sem_server);
   XBT_DEBUG(" ----> S -> connect_post j'ai relâché serveur");
+
+  file_desc->ref_nb--;
+  file_desc = NULL;
 }
 
 int process_handle(process_descriptor_t * proc, int status)

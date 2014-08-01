@@ -410,6 +410,7 @@ struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd)
 {
   // XBT_DEBUG("Info socket %d %d", proc->pid, fd);
   fd_descriptor_t *file_desc = proc->fd_list[fd];
+  file_desc->ref_nb++;
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
     return NULL;
   return (struct infos_socket *) file_desc;
@@ -493,6 +494,7 @@ int close_all_communication(process_descriptor_t * proc)
   int result = 0;
   for (i = 0; i < MAX_FD; ++i) {
     fd_descriptor_t *file_desc = proc->fd_list[i];
+    file_desc->ref_nb++;
     if (file_desc != NULL && file_desc->type == FD_SOCKET) {
       recv_information *recv = comm_get_own_recv((struct infos_socket *) file_desc);
 
@@ -522,6 +524,7 @@ int close_all_communication(process_descriptor_t * proc)
       }
 
       socket_close(proc, i);
+      file_desc->ref_nb--;
       proc->fd_list[i] = NULL;
     }
   }
