@@ -1,4 +1,4 @@
-/* args_trace -- functions to retrieve syscall arguments from registers, and to build new ones   */
+/* args_trace -- functions to retrieve the syscall arguments from registers, and to build new ones   */
 
 /* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
 
@@ -475,8 +475,6 @@ void sys_translate_sendto_out(process_descriptor_t * proc, syscall_arg_u * sysar
     return;
 
   translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));
-  //struct in_addr in = {td->ip};
-  //XBT_DEBUG("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
   arg->sai.sin_port = htons(td->port_num);
   arg->sai.sin_addr.s_addr = td->ip;
   ptrace_poke(pid, (void *) reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));
@@ -514,8 +512,6 @@ void sys_translate_recvfrom_out(process_descriptor_t * proc, syscall_arg_u * sys
     return;
 
   translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));
-  //struct in_addr in = {td->ip};
-  //XBT_DEBUG("Retranslate address 127.0.0.1:%d  -> %s:%d\n", ntohs(temp.sin_port), inet_ntoa(in), td->port_num);
   arg->sai.sin_port = htons(td->port_num);
   arg->sai.sin_addr.s_addr = td->ip;
   ptrace_poke(pid, (void *) reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));

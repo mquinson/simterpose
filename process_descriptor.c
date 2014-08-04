@@ -18,9 +18,6 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
   result->name = strdup(name);
   result->fd_list = malloc(sizeof(fd_descriptor_t *) * MAX_FD);
   result->pid = pid;
-  result->tgid = pid;           //By default, we consider that process is the first of this pgid
-  result->cpu_time = 0;
-
   result->in_syscall = 0;
 
   int i;

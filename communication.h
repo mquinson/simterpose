@@ -20,6 +20,7 @@ typedef comm_s *comm_t;
 
 #include "xbt.h"
 #include "process_descriptor.h"
+#include "sockets.h"
 #include <sys/types.h>
 
 typedef struct {
@@ -37,9 +38,6 @@ struct comm_s {
 };
 
 typedef struct task_comm_info task_comm_info;
-
-#include "sockets.h"
-#include "process_descriptor.h"
 
 struct task_comm_info {
   msg_task_t task;

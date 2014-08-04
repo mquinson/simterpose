@@ -15,13 +15,9 @@
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(DATA_UTILS, simterpose, "data_utils log");
 
 struct simterpose_globals {
-  process_descriptor_t *process_desc[MAX_PID];
   xbt_dict_t list_host;
   xbt_dict_t list_ip;
   xbt_dict_t list_translate;
-  time_t init_time;
-  int child_amount;
-  float msec_per_flop;
   int nb_peek;
   int nb_poke;
   int nb_getregs;
@@ -37,18 +33,11 @@ simterpose_data_t *global_data;
 void simterpose_globals_init(float msec_per_flop)
 {
   global_data = malloc(sizeof(simterpose_data_t));
-  global_data->msec_per_flop = msec_per_flop;
 
-  global_data->child_amount = 0;
   global_data->list_host = xbt_dict_new_homogeneous(&destroy_simterpose_host);
   global_data->list_ip = xbt_dict_new_homogeneous(&free);
   global_data->list_translate = xbt_dict_new_homogeneous(&free);
-  global_data->init_time = time(NULL);
 
-  int i;
-  for (i = 0; i < MAX_PID; ++i) {
-    global_data->process_desc[i] = NULL;
-  }
   global_data->nb_peek = 0;
   global_data->nb_poke = 0;
   global_data->nb_getregs = 0;

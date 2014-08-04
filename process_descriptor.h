@@ -81,10 +81,7 @@ typedef struct {
 
 struct process_descriptor {
   pid_t pid;
-  pid_t tgid;
-  long long int cpu_time;
   char *name;
-  FILE *trace;
   msg_host_t host;
   fd_descriptor_t **fd_list;
 
