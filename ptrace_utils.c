@@ -129,7 +129,7 @@ void ptrace_poke(pid_t pid, void *dst, void *src, size_t len)
 /** @brief restart the tracked process until its next syscall */
 void ptrace_resume_process(const pid_t pid)
 {
-	increment_nb_syscall();
+  increment_nb_syscall();
   if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL) == -1)
     SYSERROR("[%d] Error while resuming until next syscall: %s\n", pid, strerror(errno));
 }
@@ -137,7 +137,7 @@ void ptrace_resume_process(const pid_t pid)
 /** @brief the tracked process is dead, don't follow it anymore */
 void ptrace_detach_process(const pid_t pid)
 {
-	increment_nb_detach();
+  increment_nb_detach();
   if (ptrace(PTRACE_DETACH, pid, NULL, NULL) == -1)
     SYSERROR("[%d] Error while detaching process: %s\n", pid, strerror(errno));
 }

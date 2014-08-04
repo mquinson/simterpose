@@ -65,9 +65,9 @@ struct pipe_end_s {
 };
 
 typedef struct {
-	xbt_dynar_t read_end;
-	xbt_dynar_t write_end;
-}pipe_t;
+  xbt_dynar_t read_end;
+  xbt_dynar_t write_end;
+} pipe_t;
 
 typedef struct {
   int type;
@@ -76,7 +76,7 @@ typedef struct {
   stream_t *stream;
   pipe_t *pipe;
   int flags;
-  int ref_nb; // reference counting
+  int ref_nb;                   // reference counting
 } fd_descriptor_t;
 
 struct process_descriptor {

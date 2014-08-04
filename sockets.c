@@ -406,7 +406,7 @@ int close_all_communication(process_descriptor_t * proc)
   for (i = 0; i < MAX_FD; ++i) {
     fd_descriptor_t *file_desc = proc->fd_list[i];
     if (file_desc != NULL && file_desc->type == FD_SOCKET) {
-        file_desc->ref_nb++;
+      file_desc->ref_nb++;
       recv_information *recv = comm_get_own_recv((struct infos_socket *) file_desc);
 
       if (!recv)

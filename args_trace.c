@@ -263,7 +263,7 @@ void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
   pipe_arg_t arg = &(sysarg->pipe);
   arg->ret = reg->ret;
   arg->filedes = malloc(2 * sizeof(int));
-  ptrace_cpy(proc->pid, arg->filedes, (void*) reg->arg1, 2 * sizeof(int), "pipe");
+  ptrace_cpy(proc->pid, arg->filedes, (void *) reg->arg1, 2 * sizeof(int), "pipe");
 }
 
 void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
@@ -307,8 +307,8 @@ void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 
 void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
-	clone_arg_t arg = &(sysarg->clone);
-	arg->ret = reg->ret;
+  clone_arg_t arg = &(sysarg->clone);
+  arg->ret = reg->ret;
   arg->clone_flags = reg->arg1;
   arg->newsp = reg->arg2;
   arg->parent_tid = (void *) reg->arg3;
@@ -317,10 +317,10 @@ void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 
 void get_args_execve(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
-	execve_arg_t arg = &(sysarg->execve);
-	arg->ret = reg->ret;
-	arg->ptr_filename = reg->arg1;
-	arg->ptr_argv = reg->arg2;
+  execve_arg_t arg = &(sysarg->execve);
+  arg->ret = reg->ret;
+  arg->ptr_filename = reg->arg1;
+  arg->ptr_argv = reg->arg2;
 }
 
 

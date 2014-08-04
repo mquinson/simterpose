@@ -790,10 +790,10 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   case F_SETFD:
     fprintf(stderr, "F_SETFD");
-	  if(arg->arg)
-		  fprintf(stderr, ", FD_CLOEXEC");
-	  else
-  		   fprintf(stderr, ", %d", arg->arg);
+    if (arg->arg)
+      fprintf(stderr, ", FD_CLOEXEC");
+    else
+      fprintf(stderr, ", %d", arg->arg);
     break;
 
   case F_GETFL:
@@ -826,14 +826,14 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 void print_read_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
-  fprintf(stderr,"[%d] read(%d, \"...\", %d) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
+  fprintf(stderr, "[%d] read(%d, \"...\", %d) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
   //fprintf(stderr, "read(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
 void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   write_arg_t arg = &(sysarg->read);
-  fprintf(stderr,"[%d] write(%d, \"...\", %d) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
+  fprintf(stderr, "[%d] write(%d, \"...\", %d) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
   //fprintf(stderr, "write(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
@@ -919,7 +919,7 @@ static void print_flags_clone(int flags)
     fprintf(stderr, " CLONE_PARENT_SETTID |");
   if (flags & CLONE_CHILD_CLEARTID)
     fprintf(stderr, " CLONE_CHILD_CLEARTID |");
-  if (flags & CLONE_DETACHED) // unused
+  if (flags & CLONE_DETACHED)   // unused
     fprintf(stderr, " CLONE_DETACHED |");
   if (flags & CLONE_UNTRACED)
     fprintf(stderr, " CLONE_UNTRACED |");
@@ -940,74 +940,75 @@ static void print_flags_clone(int flags)
   fprintf(stderr, ", ");
 }
 
-void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
+void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
 
-	 clone_arg_t arg = &(sysarg->clone);
-	 fprintf(stderr, "clone(child_stack=%ld, flags=", arg->newsp);
+  clone_arg_t arg = &(sysarg->clone);
+  fprintf(stderr, "clone(child_stack=%ld, flags=", arg->newsp);
 
-	  print_flags_clone((long int)arg->clone_flags);
-	  fprintf(stderr, "child_tidptr=0x%lx) = %d \n", (long int)arg->child_tid, arg->ret);
+  print_flags_clone((long int) arg->clone_flags);
+  fprintf(stderr, "child_tidptr=0x%lx) = %d \n", (long int) arg->child_tid, arg->ret);
 }
 
 
 static int get_string(int pid, long ptr, char *buf, int size)
 {
-    long data;
-    char *p = (char *) &data;
-    int j = 0;
+  long data;
+  char *p = (char *) &data;
+  int j = 0;
 
-    while ((data = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr, 0)) && j < size) {
-        int i;
-        for (i = 0; i < sizeof(data) && j < size; i++, j++) {
-            if (!(buf[j] = p[i]))
-                goto done;
-        }
-        ptr += sizeof(data);
+  while ((data = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr, 0)) && j < size) {
+    int i;
+    for (i = 0; i < sizeof(data) && j < size; i++, j++) {
+      if (!(buf[j] = p[i]))
+        goto done;
     }
-    done:
-    buf[j] = '\0';
-    return j;
+    ptr += sizeof(data);
+  }
+done:
+  buf[j] = '\0';
+  return j;
 }
 
-void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysarg){
+void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
 
-	execve_arg_t arg = &(sysarg->execve);
-	 pid_t pid = proc->pid;
-	 char bufstr[4096];
-	 long ptr_filename, ptr_argv;
+  execve_arg_t arg = &(sysarg->execve);
+  pid_t pid = proc->pid;
+  char bufstr[4096];
+  long ptr_filename, ptr_argv;
 
-	 ptr_filename = arg->ptr_filename;
-	 fprintf(stderr, "execve(");
-	 if (ptr_filename) {
-		 get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
-		 fprintf(stderr, "\"%s\", [", bufstr);
-	 }
-	 ptr_argv = arg->ptr_argv;
-	 int first = 1;
-	 for (; ptr_argv; ptr_argv += sizeof(unsigned long)) {
-		 ptr_filename = ptr_argv;
-		 /* Indirect through ptr since we have char *argv[] */
-		 ptr_filename = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr_filename, 0);
+  ptr_filename = arg->ptr_filename;
+  fprintf(stderr, "execve(");
+  if (ptr_filename) {
+    get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
+    fprintf(stderr, "\"%s\", [", bufstr);
+  }
+  ptr_argv = arg->ptr_argv;
+  int first = 1;
+  for (; ptr_argv; ptr_argv += sizeof(unsigned long)) {
+    ptr_filename = ptr_argv;
+    /* Indirect through ptr since we have char *argv[] */
+    ptr_filename = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr_filename, 0);
 
-		 if (!ptr_filename){
-			 fprintf(stderr, "]");
-			 break;
-		 }
+    if (!ptr_filename) {
+      fprintf(stderr, "]");
+      break;
+    }
 
-		 get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
-		 if(first){
-			 fprintf(stderr, "\"%s\"", bufstr);
-			 first = 0;
-		 }else{
-			 fprintf(stderr, ", \"%s\"", bufstr);
-		 }
-	 }
-	 fprintf(stderr, ") = ");
+    get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
+    if (first) {
+      fprintf(stderr, "\"%s\"", bufstr);
+      first = 0;
+    } else {
+      fprintf(stderr, ", \"%s\"", bufstr);
+    }
+  }
+  fprintf(stderr, ") = ");
 }
 
-void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysarg){
-	execve_arg_t arg = &(sysarg->execve);
-	fprintf(stderr, "%d\n",arg->ret);
+void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  execve_arg_t arg = &(sysarg->execve);
+  fprintf(stderr, "%d\n", arg->ret);
 }
-
-
