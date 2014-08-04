@@ -15,6 +15,7 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 
+/** @brief retrieve the arguments of bind and connect syscalls */
 void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
@@ -36,6 +37,7 @@ void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg
     ptrace_cpy(child, &arg->sau, (void *) reg->arg2, sizeof(struct sockaddr_in), sysname);
 }
 
+/** @brief retrieve the arguments of accept syscall */
 void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
@@ -58,6 +60,7 @@ void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   arg->len_dest = (void *) reg->arg3;
 }
 
+/** @brief retrieve the arguments of listen syscall */
 void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
@@ -67,6 +70,7 @@ void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   arg->ret = (int) reg->ret;
 }
 
+/** @brief retrieve the arguments of select syscall */
 void get_args_select(process_descriptor_t * proc, reg_s * r, syscall_arg_u * sysarg)
 {
   select_arg_t arg = &(sysarg->select);
@@ -103,6 +107,7 @@ void get_args_select(process_descriptor_t * proc, reg_s * r, syscall_arg_u * sys
   arg->ret = (int) r->ret;
 }
 
+/** @brief retrieve the arguments of setsockopt syscall */
 void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
@@ -119,6 +124,7 @@ void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
 #endif
 }
 
+/** @brief retrieve the arguments of getsockopt syscall */
 void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
@@ -132,6 +138,7 @@ void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
   ptrace_cpy(proc->pid, &arg->optlen, (void *) reg->arg5, sizeof(socklen_t), "getsockopt");
 }
 
+/** @brief retrieve the arguments of sendto syscall */
 void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
@@ -166,6 +173,7 @@ void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
     arg->addrlen = 0;
 }
 
+/** @brief retrieve the arguments of recvfrom syscall */
 void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
@@ -197,6 +205,7 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
   arg->addrlen = len;
 }
 
+/** @brief retrieve the arguments of recvmsg syscall */
 void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->recvmsg);
@@ -215,6 +224,7 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   }
 }
 
+/** @brief retrieve the arguments of sendmsg syscall */
 void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   sendmsg_arg_t arg = &(sysarg->sendmsg);
@@ -239,6 +249,7 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 #endif
 }
 
+/** @brief retrieve the arguments of poll syscall */
 void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   poll_arg_t arg = &(sysarg->poll);
@@ -258,6 +269,7 @@ void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
     arg->fd_list = NULL;
 }
 
+/** @brief retrieve the arguments of pipe syscall */
 void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   pipe_arg_t arg = &(sysarg->pipe);
@@ -266,6 +278,7 @@ void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
   ptrace_cpy(proc->pid, arg->filedes, (void *) reg->arg1, 2 * sizeof(int), "pipe");
 }
 
+/** @brief retrieve the arguments of fcntl syscall */
 void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
@@ -276,6 +289,7 @@ void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
   arg->ret = (int) reg->ret;
 }
 
+/** @brief retrieve the arguments of read syscall */
 void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
@@ -287,6 +301,7 @@ void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
   arg->count = reg->arg3;
 }
 
+/** @brief retrieve the arguments of write syscall */
 void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
@@ -305,6 +320,7 @@ void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 #endif
 }
 
+/** @brief retrieve the arguments of clone syscall */
 void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   clone_arg_t arg = &(sysarg->clone);
@@ -315,6 +331,7 @@ void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
   arg->child_tid = (void *) reg->arg4;
 }
 
+/** @brief retrieve the arguments of execve syscall */
 void get_args_execve(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   execve_arg_t arg = &(sysarg->execve);
@@ -324,9 +341,10 @@ void get_args_execve(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
 }
 
 
-//TODO make this function use unified union syscall_arg_u
+/** @brief put the arguments we want in the registers of select syscall */
 void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
 {
+	//TODO use unified union syscall_arg_u
   pid_t pid = proc->pid;
   ptrace_restore_syscall(pid, SYS_select, match);
   reg_s r;
@@ -345,6 +363,7 @@ void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int m
   }
 }
 
+/** @brief put the message received in the registers of recvmsg syscall */
 void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   pid_t pid = proc->pid;
@@ -372,6 +391,7 @@ void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
   free(arg->data);
 }
 
+/** @brief put the arguments we want in the registers of poll syscall */
 void sys_build_poll(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
 {
   pid_t pid = proc->pid;
@@ -388,6 +408,12 @@ void sys_build_poll(process_descriptor_t * proc, syscall_arg_u * sysarg, int mat
 }
 
 
+/** @brief translate the port and address of the accept syscall
+ *
+ * We take the arguments in the registers, which correspond to global
+ * simulated address and port. We translate them to real local ones,
+ * and put the result back in the registers
+ */
 void sys_translate_accept(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
@@ -411,6 +437,13 @@ void sys_translate_accept(process_descriptor_t * proc, syscall_arg_u * sysarg)
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
+/** @brief translate the port and address of the connect syscall
+ *
+ * We take the arguments in the registers, which correspond to global
+ * simulated address and port. We translate them to real local ones,
+ * and put the result back in the registers to actually perform the
+ * connect syscall.
+ */
 void sys_translate_connect_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
@@ -425,6 +458,13 @@ void sys_translate_connect_in(process_descriptor_t * proc, syscall_arg_u * sysar
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
+/** @brief translate the port and address of the connect syscall
+ *
+ * We take the arguments in the registers, which correspond to global
+ * simulated address and port. We translate them to real local ones,
+ * and put the result back in the registers to actually perform the
+ * connect syscall.
+ */
 void sys_translate_connect_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);

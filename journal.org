@@ -362,7 +362,7 @@ révisions sur la forme du code
 * <2014-05-22 jeu.>
 C/système
 * <2014-05-23 ven.>
-** cwrap
+** cwrap http://lwn.net/Articles/594863/
 *** sockets
 utilise dlopen, dlsym avec des handle
 ne touche pas à gettimeofday
@@ -1337,3 +1337,13 @@ pour que le ps en face écrive au bon endroit
 ** TODO des tests qui ressemblent autant que possible à des ptits bouts des applis
 qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
 ** TODO allpairs: connexion
+* <2014-08-04 lun.>
+- correction d'un segfault: je décrémentais le refcount après
+  destruction de l'objet
+- nettoyage de fonctions inutilisées dans le code
+- ajout du copyright en entête des fichiers
+- j'ai transféré les 2 seules fonctions qui restaient dans task.c dans
+  communication.c , et supprimé task
+- suppression de variables inutilisées
+** TODO nettoyer journal
+** TODO continuer à commenter le code
