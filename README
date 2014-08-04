@@ -9,7 +9,8 @@ To compile SimTerpose:
 	make
 
 To run SimTerpose:
-	./run.sh (client/server example)
+	./run.sh (client/server example with sendto/recvfrom syscalls)
+	./run_sendmsg.sh (example with sendmsg/recvmsg syscalls)
  /!\ TASKSTATS_CMD_GET in cputimer.c::cputimer_get() seems to require to be 
  root /!\ 	
 	

@@ -19,7 +19,6 @@ typedef struct comm_s comm_s;
 typedef comm_s *comm_t;
 
 #include "xbt.h"
-#include "task.h"
 #include "process_descriptor.h"
 #include <sys/types.h>
 
@@ -36,6 +35,17 @@ struct comm_s {
   int state;
   xbt_dynar_t conn_wait;
 };
+
+typedef struct task_comm_info task_comm_info;
+
+#include "sockets.h"
+#include "process_descriptor.h"
+
+struct task_comm_info {
+  msg_task_t task;
+  msg_host_t sender_host;
+};
+
 
 void comm_init(void);
 
@@ -79,5 +89,11 @@ task_comm_info *comm_get_send(struct infos_socket *is);
 int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t * sock);
 
 void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in);
+
+
+msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, struct infos_socket *is, double amount,
+                                          msg_host_t sender, msg_host_t receiver);
+
+void send_task(msg_host_t receiver, msg_task_t task);
 
 #endif
