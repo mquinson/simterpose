@@ -1,29 +1,37 @@
-Simterpose aims at simulating distributed application. For this purpose, it intercepts all system calls made by the set of application.
+SimTerpose aims at simulating distributed applications. For this purpose, 
+it intercepts all system calls made by the set of application.
 
 Requirements:
-	- simgrid > 3.11 (previous releases not tested, xml parser changes since 3.6.2)
+	- SimGrid > 3.11 (previous releases not tested, xml parser changes since 
+	3.6.2)
 
-To compil program
+To compile SimTerpose:
 	make
 
-To run program
-	sudo ./run_trace [-p flops_power] platform_file deployment_file [--log=root.app:file:logfile.txt]
-or because of the LD_LIBRARY_PATH variable: ./run.sh
+To run SimTerpose:
+	./run.sh (client/server example)
+ /!\ TASKSTATS_CMD_GET in cputimer.c::cputimer_get() seems to require to be 
+ root /!\ 	
+	
+Other simulations (doesn't work for now)
+	./allpairs_run.sh (simulation of allpairs, needs to be installed: 
+	http://ccl.cse.nd.edu/software/allpairs/)
+	./pp_run.sh (simulation of pp python. python-pp package needs to be 
+	installed)
 
- /!\ TASKSTATS_CMD_GET in ask_time (calc_time_proc.c) seems to require to be root /!\ 
-
-To replay trace
+Trace replay:
 	disabled for a while
-
-
+	
 GENERAL USE:
 
-?? This version of Simterpose uses a deployment file to run processus. Function value
-is the executable, start_time represents the delay before simulation begin and 
-launchment of application. The arguments given in process are considered as commandline
-arguments and are given to the application in order. ??
+Like SimGrid, SimTerpose uses a deployment file and a platform file, in XML 
+format. The deployment file is used to give SimTerpose the processes as well as 
+their arguments and the host on which they run. The platform file describes 
+both the resources and the topology. We put information about the hosts, their
+computing power and the links between the different nodes.
+
 
 WARNING:
 
-This version of Simterpose is delivered without any waranty, it's a development 
-version and serveral things are not implemented yet.
+This version of SimTerpose is delivered without any warranty, it's a development 
+version and several things are not implemented yet.

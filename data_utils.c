@@ -1,3 +1,10 @@
+/* data utils -- contains simterpose global datas such as hosts and ports  */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
 #include "simterpose.h"
 #include "data_utils.h"
 #include "process_descriptor.h"
@@ -177,30 +184,6 @@ void register_port(msg_host_t host, int port)
   }
 }
 
-int get_port_option(msg_host_t host, int port)
-{
-  simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
-  char buff[6];
-  sprintf(buff, "%d", port);
-
-  port_desc_t *desc = xbt_dict_get_or_null(temp->port, buff);
-  if (!desc)
-    return 0;
-  else
-    return desc->option;
-}
-
-void set_port_option(msg_host_t host, int port, int option)
-{
-  simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
-  char buff[6];
-  sprintf(buff, "%d", port);
-
-  port_desc_t *desc = xbt_dict_get_or_null(temp->port, buff);
-  if (desc)
-    desc->option = option;
-}
-
 void set_port_on_binding(msg_host_t host, int port, struct infos_socket *is, int device)
 {
   simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
@@ -212,27 +195,6 @@ void set_port_on_binding(msg_host_t host, int port, struct infos_socket *is, int
     return;
   desc->option = desc->option | PORT_BIND | device;
   desc->bind_socket = is;
-}
-
-struct infos_socket *get_binding_socket(unsigned int ip, int port, int nature)
-{
-  struct in_addr in = { ip };
-  char *ip_dot = inet_ntoa(in);
-
-  char *host_name = xbt_dict_get(global_data->list_ip, ip_dot);
-  simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, host_name);
-  char buff[6];
-  sprintf(buff, "%d", port);
-  port_desc_t *desc = xbt_dict_get_or_null(temp->port, buff);
-
-
-  if (desc == NULL || !(desc->option & PORT_BIND))
-    return NULL;
-
-  if (!(nature & desc->option))
-    return NULL;
-
-  return desc->bind_socket;
 }
 
 struct infos_socket *get_binding_socket_host(msg_host_t host, int port, int device)
@@ -323,12 +285,6 @@ void unset_socket(pid_t pid, struct infos_socket *is)
   xbt_dict_remove(temp->port, buff);
 }
 
-
-time_t get_simulated_timestamp()
-{
-  return global_data->init_time + MSG_get_clock();
-}
-
 void add_new_translation(int real_port, int translated_port, unsigned int translated_ip)
 {
   XBT_DEBUG("Add new translation %d->%d", real_port, translated_port);
@@ -341,7 +297,6 @@ void add_new_translation(int real_port, int translated_port, unsigned int transl
 
   xbt_dict_set(global_data->list_translate, buff, temp, NULL);
 }
-
 
 translate_desc_t *get_translation(int real_port)
 {
@@ -371,11 +326,6 @@ int get_real_port(process_descriptor_t * proc, unsigned int ip, int port)
 
   XBT_DEBUG("Return %d", desc->real_port);
   return desc->real_port;
-}
-
-double simterpose_get_msec_per_flop()
-{
-  return global_data->msec_per_flop;
 }
 
 xbt_dict_t simterpose_get_host_list()

@@ -1,3 +1,10 @@
+/* data utils -- contains simterpose global datas such as hosts and ports  */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
 #ifndef DATA_UTILS_H
 #define DATA_UTILS_H
 
@@ -42,8 +49,6 @@ void increment_nb_detach(void);
 
 void increment_nb_geteventmsg(void);
 
-double simterpose_get_msec_per_flop(void);
-
 xbt_dict_t simterpose_get_host_list(void);
 xbt_dict_t simterpose_get_ip_list(void);
 
@@ -55,13 +60,7 @@ int is_port_in_use(msg_host_t host, int port);
 
 void register_port(msg_host_t host, int port);
 
-int get_port_option(msg_host_t host, int port);
-
-void set_port_option(msg_host_t host, int port, int option);
-
 void set_port_on_binding(msg_host_t host, int port, struct infos_socket *is, int device);
-
-struct infos_socket *get_binding_socket(unsigned int ip, int port, int nature);
 
 struct infos_socket *get_binding_socket_host(msg_host_t host, int port, int device);
 
@@ -72,8 +71,6 @@ msg_host_t get_host_by_ip(unsigned int ip);
 int get_random_port(msg_host_t host);
 
 void unset_socket(pid_t pid, struct infos_socket *is);
-
-time_t get_simulated_timestamp(void);
 
 void set_real_port(msg_host_t host, int port, int real_port);
 
