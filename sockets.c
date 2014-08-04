@@ -136,6 +136,7 @@ void socket_close(process_descriptor_t * proc, int fd)
     else {
       free(is);
     }
+    proc->fd_list[fd]->ref_nb--;
     proc->fd_list[fd] = NULL;
   }
 }
@@ -397,8 +398,8 @@ int close_all_communication(process_descriptor_t * proc)
   int result = 0;
   for (i = 0; i < MAX_FD; ++i) {
     fd_descriptor_t *file_desc = proc->fd_list[i];
-    file_desc->ref_nb++;
     if (file_desc != NULL && file_desc->type == FD_SOCKET) {
+        file_desc->ref_nb++;
       recv_information *recv = comm_get_own_recv((struct infos_socket *) file_desc);
 
       if (!recv)
@@ -425,11 +426,9 @@ int close_all_communication(process_descriptor_t * proc)
 #endif
         free(ds);
       }
-
       socket_close(proc, i);
-      file_desc->ref_nb--;
-      proc->fd_list[i] = NULL;
     }
+    // TODO: close pipes
   }
   return result;
 }
