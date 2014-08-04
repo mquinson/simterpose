@@ -20,6 +20,4 @@ msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, st
 
 void send_task(msg_host_t receiver, msg_task_t task);
 
-void receive_task(struct infos_socket *recv, process_descriptor_t * proc_receiver);
-
 #endif

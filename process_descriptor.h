@@ -1,3 +1,10 @@
+/* process_descriptor  */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
 #ifndef __PROCESS_DESCRIPTOR_H
 #define __PROCESS_DESCRIPTOR_H
 
@@ -91,12 +98,6 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid);
 
 void process_set_descriptor(process_descriptor_t * proc);
 
-void process_fork(pid_t new_pid, process_descriptor_t * forked);
-
-int process_update_cputime(process_descriptor_t * proc, long long int cputime_elapsed);
-
 void process_die(process_descriptor_t * proc);
-
-int process_get_free_fd(process_descriptor_t * proc);
 
 #endif

@@ -1,3 +1,10 @@
+/* print_syscall --  functions to print a strace-like log of syscalls */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
 #include "print_syscall.h"
 #include "sockets.h"
 #include "simterpose.h"
@@ -33,7 +40,6 @@ void print_accept_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
-
 void print_connect_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
@@ -58,7 +64,6 @@ void print_connect_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
-
 void print_bind_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   bind_arg_t arg = &(sysarg->bind);
@@ -81,8 +86,6 @@ void print_bind_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(stderr, "%d", arg->addrlen);
   fprintf(stderr, ") = %d\n", arg->ret);
 }
-
-
 
 void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
@@ -210,7 +213,6 @@ void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   }
   fprintf(stderr, ") = %d\n", arg->ret);
 }
-
 
 void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
@@ -423,6 +425,7 @@ void print_listen_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(stderr, ") = %d\n", arg->ret);
 }
 
+
 static void print_flags_send(int flags)
 {
   if (flags & MSG_CONFIRM)
@@ -441,7 +444,6 @@ static void print_flags_send(int flags)
     fprintf(stderr, " MSG_OOB |");
   fprintf(stderr, ", ");
 }
-
 
 static void print_flags_recv(int flags)
 {
@@ -659,7 +661,6 @@ void print_sendmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 }
 
 
-
 static void get_events_poll(short events)
 {
   fprintf(stderr, "events=");
@@ -740,6 +741,7 @@ static void disp_fd(fd_set * fd)
   }
   fprintf(stderr, "]");
 }
+
 
 void print_select_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
@@ -834,6 +836,7 @@ void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(stderr,"[%d] write(%d, \"...\", %d) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
   //fprintf(stderr, "write(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
+
 
 static void print_shutdown_option(int how)
 {
@@ -946,6 +949,7 @@ void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg){
 	  fprintf(stderr, "child_tidptr=0x%lx) = %d \n", (long int)arg->child_tid, arg->ret);
 }
 
+
 static int get_string(int pid, long ptr, char *buf, int size)
 {
     long data;
@@ -1000,7 +1004,6 @@ void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysar
 	 }
 	 fprintf(stderr, ") = ");
 }
-
 
 void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysarg){
 	execve_arg_t arg = &(sysarg->execve);

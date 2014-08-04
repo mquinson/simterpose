@@ -1,3 +1,10 @@
+/* process_descriptor  */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
 #include "process_descriptor.h"
 #include "sockets.h"
 #include "msg/msg.h"
@@ -70,43 +77,8 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
   free(proc);
 }
 
-int process_update_cputime(process_descriptor_t * proc, long long int new_cputime)
-{
-  int result = new_cputime - proc->cpu_time;
-  proc->cpu_time = new_cputime;
-  return result;
-}
-
-/*
-//Create and set a new file descriptor
-void process_fork(pid_t new_pid, process_descriptor_t *forked)
-{
-  process_descriptor_t *result = malloc(sizeof(process_descriptor_t));
-  result->name = strdup(forked->name);
-
-  // result->trace = forked->trace;
-  result->fd_list = malloc(sizeof(struct infos_socket *) * MAX_FD);
-  result->pid = new_pid;
-  result->cpu_time = 0;
-  int i;
-  for (i = 0; i < MAX_FD; ++i)
-    result->fd_list[i] = forked->fd_list[i];
-
-  process_set_descriptor(new_pid, result);
-}*/
-
 void process_die(process_descriptor_t * proc)
 {
   close_all_communication(proc);
   process_descriptor_destroy(proc);
-}
-
-int process_get_free_fd(process_descriptor_t * proc)
-{
-  int i;
-  for (i = 0; i < MAX_FD; ++i) {
-    if (proc->fd_list[i] == NULL)
-      return i;
-  }
-  return -1;
 }

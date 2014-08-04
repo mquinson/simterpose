@@ -1,6 +1,6 @@
 /* simterpose - simterpose intercepter based on MSG                     */
 
-/* Copyright (c) 2014. The SimGrid Team. All right reserved.                */
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.                */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU LGPL) which comes with this package. */
@@ -74,21 +74,6 @@ int main(int argc, char *argv[])
   int flop_option = 0;
 
   MSG_init(&argc, argv);
-
-  /**   Install our handler
-  sigset_t mask;
-  sigset_t old_mask;
-  sigemptyset(&mask);
-  sigaddset(&mask, SIGINT);
-  sigaddset(&mask, SIGSEGV);
-
-  struct sigaction nvt, old;
-  memset(&nvt, 0, sizeof(nvt));
-  nvt.sa_handler = sig_handler;
-  sigprocmask(SIG_SETMASK, &mask, &old_mask);
-  nvt.sa_mask = mask;
-  sigaction(SIGINT, &nvt, &old);
- */
 
   // Install our SIGSEGV handler
   struct sigaction nvt_sg, old_sg;

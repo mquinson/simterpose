@@ -1,3 +1,10 @@
+/* communication --  functions to deal with accept, connect and communications between processes */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
 #ifndef COMMUNICATION_H
 #define COMMUNICATION_H
 
@@ -49,8 +56,6 @@ struct infos_socket *comm_get_peer(struct infos_socket *is);
 recv_information *comm_get_own_recv(struct infos_socket *is);
 
 recv_information *comm_get_peer_recv(struct infos_socket *is);
-
-void comm_set_state(comm_t comm, int new_state);
 
 void comm_shutdown(struct infos_socket *is);
 

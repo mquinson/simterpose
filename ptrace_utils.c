@@ -13,7 +13,7 @@
 #include "sysdep.h"
 #include <xbt.h>
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE, simterpose, "ptrace msg log");
+XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE, simterpose, "ptrace utils log");
 
 const char *syscall_list[] = {
   "read", "write", "open", "close", "stat", "fstat", "lstat", "poll", "lseek", "mmap", "mprotect", "munmap", "brk",
@@ -249,23 +249,6 @@ void ptrace_restore_syscall(pid_t pid, unsigned long syscall, unsigned long resu
   if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace setregs %s\n", pid, strerror(errno));
 }
-
-void ptrace_restore_syscall_arg1(pid_t pid, unsigned long syscall, unsigned long arg1)
-{
-  struct user_regs_struct regs;
-
-  increment_nb_getregs();
-  if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
-    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-
-  regs.orig_rax = syscall;
-  regs.rdi = arg1;
-
-  increment_nb_setregs();
-  if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) == -1)
-    SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
-}
-
 
 void ptrace_rewind_syscalls(const pid_t pid)
 {

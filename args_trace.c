@@ -1,3 +1,10 @@
+/* args_trace -- functions to retrieve syscall arguments from registers, and to build new ones   */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPL) which comes with this package. */
+
 #include "args_trace.h"
 #include "sockets.h"
 #include "data_utils.h"
@@ -28,7 +35,6 @@ void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg
   if (domain == 16)             // PF_NETLINK
     ptrace_cpy(child, &arg->sau, (void *) reg->arg2, sizeof(struct sockaddr_in), sysname);
 }
-
 
 void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -126,7 +132,6 @@ void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
   ptrace_cpy(proc->pid, &arg->optlen, (void *) reg->arg5, sizeof(socklen_t), "getsockopt");
 }
 
-
 void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
@@ -161,7 +166,6 @@ void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
     arg->addrlen = 0;
 }
 
-
 void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
@@ -193,7 +197,6 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
   arg->addrlen = len;
 }
 
-
 void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   recvmsg_arg_t arg = &(sysarg->recvmsg);
@@ -211,7 +214,6 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
     arg->len += temp.iov_len;
   }
 }
-
 
 void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -236,7 +238,6 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   }
 #endif
 }
-
 
 void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -323,7 +324,7 @@ void get_args_execve(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
 }
 
 
-//FIXME make this function use unified union syscall_arg_u
+//TODO make this function use unified union syscall_arg_u
 void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
 {
   pid_t pid = proc->pid;
@@ -371,7 +372,6 @@ void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
   free(arg->data);
 }
 
-
 void sys_build_poll(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
 {
   pid_t pid = proc->pid;
@@ -386,6 +386,7 @@ void sys_build_poll(process_descriptor_t * proc, syscall_arg_u * sysarg, int mat
     ptrace_poke(pid, (void *) r.arg1, arg->fd_list, sizeof(struct pollfd) * arg->nbfd);
   }
 }
+
 
 void sys_translate_accept(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
