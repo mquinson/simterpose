@@ -408,13 +408,14 @@ void sys_build_poll(process_descriptor_t * proc, syscall_arg_u * sysarg, int mat
 }
 
 
-/** @brief translate the port and address of the accept syscall
+/** @brief translate the port and address of the exiting accept syscall
  *
- * We take the arguments in the registers, which correspond to global
- * simulated address and port. We translate them to real local ones,
- * and put the result back in the registers
+ * We take the arguments in the registers, which correspond to the
+ * real local address and port we obtained. We translate them into
+ * global simulated ones and put the result back in the registers, so
+ * that the application gets wronged.
  */
-void sys_translate_accept(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void sys_translate_accept_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
   pid_t pid = proc->pid;
@@ -437,12 +438,12 @@ void sys_translate_accept(process_descriptor_t * proc, syscall_arg_u * sysarg)
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-/** @brief translate the port and address of the connect syscall
+/** @brief translate the port and address of the entering connect syscall
  *
  * We take the arguments in the registers, which correspond to global
  * simulated address and port. We translate them to real local ones,
- * and put the result back in the registers to actually perform the
- * connect syscall.
+ * and put the result back in the registers to actually get the
+ * connect syscall performed by the kernel.
  */
 void sys_translate_connect_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
@@ -458,12 +459,12 @@ void sys_translate_connect_in(process_descriptor_t * proc, syscall_arg_u * sysar
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
-/** @brief translate the port and address of the connect syscall
+/** @brief translate the port and address of the exiting connect syscall
  *
- * We take the arguments in the registers, which correspond to global
- * simulated address and port. We translate them to real local ones,
- * and put the result back in the registers to actually perform the
- * connect syscall.
+ * We take the arguments in the registers, which correspond to the real
+ * local address and port we established the connection on. We translate
+ * them into global simulated ones and put the result back in the registers,
+ * so that the application gets wronged.
  */
 void sys_translate_connect_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
@@ -481,6 +482,13 @@ void sys_translate_connect_out(process_descriptor_t * proc, syscall_arg_u * sysa
   ptrace_poke(pid, (void *) reg.arg2, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
+/** @brief translate the port and address of the entering sendto syscall
+ *
+ * We take the arguments in the registers, which correspond to the global
+ * simulated address and port the application wants to send the message to.
+ * We translate them to real local ones and put the result back in the
+ * registers to actually get the sendto syscall performed by the kernel.
+ */
 void sys_translate_sendto_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
@@ -503,6 +511,13 @@ void sys_translate_sendto_in(process_descriptor_t * proc, syscall_arg_u * sysarg
   XBT_DEBUG("Using 127.0.0.1:%d", port);
 }
 
+/** @brief translate the port and address of the exiting sendto syscall
+ *
+ * We take the arguments in the registers, which correspond to the real
+ * local address and port we sent the message to. We translate them into global
+ * simulated ones and put the result back in the registers, so that the
+ * application gets wronged.
+ */
 void sys_translate_sendto_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
@@ -520,6 +535,13 @@ void sys_translate_sendto_out(process_descriptor_t * proc, syscall_arg_u * sysar
   ptrace_poke(pid, (void *) reg.arg5, &(arg->sai), sizeof(struct sockaddr_in));
 }
 
+/** @brief translate the port and address of the entering recvfrom syscall
+ *
+ * We take the arguments in the registers, which correspond to the global
+ * simulated address and port the application wants to receive the message
+ * from. We translate them to real local ones and put the result back in the
+ * registers to actually get the recvfrom syscall performed by the kernel.
+ */
 void sys_translate_recvfrom_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
@@ -540,6 +562,13 @@ void sys_translate_recvfrom_in(process_descriptor_t * proc, syscall_arg_u * sysa
   XBT_DEBUG("Using 127.0.0.1:%d", port);
 }
 
+/** @brief translate the port and address of the exiting recvfrom syscall
+ *
+ * We take the arguments in the registers, which correspond to the real
+ * local address and port we received the message from. We translate them
+ * into global simulated ones and put the result back in the registers, so
+ * that the application gets wronged.
+ */
 void sys_translate_recvfrom_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);

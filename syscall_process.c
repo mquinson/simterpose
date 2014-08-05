@@ -1429,7 +1429,7 @@ static void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u *
     struct infos_socket *is = register_socket(proc, arg->ret, domain, protocol);
 
 #ifdef address_translation
-    sys_translate_accept(proc, sysarg);
+    sys_translate_accept_out(proc, sysarg);
 #endif
 
     comm_join_on_accept(is, proc, arg->sockfd);
