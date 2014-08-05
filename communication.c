@@ -19,16 +19,19 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION, simterpose, "communication log");
 
 xbt_dynar_t comm_list;
 
+/** @brief create the list containing all communications */
 void comm_init()
 {
   comm_list = xbt_dynar_new(sizeof(comm_t), NULL);
 }
 
+/** @brief destroy the list containing all communications */
 void comm_exit()
 {
   xbt_dynar_free(&comm_list);
 }
 
+/** @brief create a new communication object and add it to the list */
 comm_t comm_new(struct infos_socket *socket)
 {
   comm_t res = malloc(sizeof(comm_s));
@@ -47,6 +50,7 @@ comm_t comm_new(struct infos_socket *socket)
   return res;
 }
 
+/** @brief destroy a communication and remove it from the list */
 void comm_destroy(comm_t comm)
 {
   recv_information_destroy(comm->info[0].recv);
@@ -63,6 +67,7 @@ void comm_destroy(comm_t comm)
   free(comm);
 }
 
+/** @brief retrieve the infos_socket at the other end of the communication */
 struct infos_socket *comm_get_peer(struct infos_socket *is)
 {
   comm_t comm = is->comm;
@@ -72,6 +77,7 @@ struct infos_socket *comm_get_peer(struct infos_socket *is)
     return comm->info[0].socket;
 }
 
+/** @brief retrieve the information received on the socket */
 recv_information *comm_get_own_recv(struct infos_socket * is)
 {
   comm_t comm = is->comm;
@@ -84,6 +90,7 @@ recv_information *comm_get_own_recv(struct infos_socket * is)
     return comm->info[1].recv;
 }
 
+/** @brief retrieve the information received at the other end of the communication */
 recv_information *comm_get_peer_recv(struct infos_socket * is)
 {
   comm_t comm = is->comm;
@@ -93,6 +100,7 @@ recv_information *comm_get_peer_recv(struct infos_socket * is)
     return comm->info[0].recv;
 }
 
+/** @brief close the communication corresponding to the socket */
 void comm_close(struct infos_socket *is)
 {
   comm_t comm = is->comm;
@@ -119,6 +127,7 @@ void comm_close(struct infos_socket *is)
     comm->state = COMM_CLOSED;
 }
 
+/** @brief shutdown the communication corresponding to the socket */
 void comm_shutdown(struct infos_socket *is)
 {
   comm_t comm = is->comm;
@@ -127,13 +136,14 @@ void comm_shutdown(struct infos_socket *is)
   comm->state = COMM_SHUT;
 }
 
-
+/** @brief put the communication in listening state */
 void comm_set_listen(comm_t comm)
 {
   comm->state = COMM_LISTEN;
   XBT_DEBUG("Listen do %d", comm->state & COMM_LISTEN);
 }
 
+/** @brief ask for a connection on a given socket */
 process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descriptor_t * proc, int fd, int device)
 {
   struct infos_socket *conn = get_binding_socket_host(host, port, device);
@@ -166,6 +176,7 @@ process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descri
   return conn->fd.proc;
 }
 
+/** @brief get the communication object after an accept */
 void comm_join_on_accept(struct infos_socket *is, process_descriptor_t * proc, int fd_listen)
 {
   struct infos_socket *sock_listen = get_infos_socket(proc, fd_listen);
@@ -180,6 +191,7 @@ void comm_join_on_accept(struct infos_socket *is, process_descriptor_t * proc, i
   is->comm = comm_conn;
 }
 
+/** @brief retrieve the address and port of the waiting process */
 void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in)
 {
   comm_t comm = is->comm;
@@ -193,7 +205,7 @@ void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in)
   comm_t comm_conn;
   xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
 
-  //Store ip and port of process which wait for connect
+  //Store the ip and port of the process waiting to connect
   struct infos_socket *s = comm_conn->info[0].socket;
   memset(in, 0, sizeof(struct sockaddr_in));
   in->sin_family = AF_INET;
@@ -201,6 +213,7 @@ void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in)
   in->sin_port = htons(s->port_local);
 }
 
+/** @brief accept the connection of the waiting process */
 process_descriptor_t *comm_accept_connect(struct infos_socket *is, struct sockaddr_in *in)
 {
   comm_t comm = is->comm;
@@ -212,7 +225,7 @@ process_descriptor_t *comm_accept_connect(struct infos_socket *is, struct sockad
   comm_t comm_conn;
   xbt_dynar_get_cpy(comm->conn_wait, 0, &comm_conn);
 
-  //Store ip and port of process which wait for connect
+  //Store the ip and port of the process waiting to connect
   struct infos_socket *s = comm_conn->info[0].socket;
   memset(in, 0, sizeof(struct sockaddr_in));
   in->sin_family = AF_INET;
@@ -224,6 +237,7 @@ process_descriptor_t *comm_accept_connect(struct infos_socket *is, struct sockad
 }
 
 
+/** @brief retrieve sockaddr_in for getpeername syscall */
 int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t * sock)
 {
   comm_t comm = is->comm;
@@ -250,16 +264,18 @@ int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t 
   return 0;
 }
 
+/** @brief check if there is a process waiting to connect */
 int comm_has_connect_waiting(struct infos_socket *is)
 {
   if (is == NULL)
-    XBT_DEBUG("Comm_has_connect_waiting? is=NULL");
+    xbt_die("The socket does not exist");
   comm_t comm = is->comm;
   if (comm == NULL)
-    XBT_DEBUG("Comm_has_connect_waiting? Comm=NULL");
+    xbt_die("The communication does not exist");
   return !xbt_dynar_is_empty(comm->conn_wait);
 }
 
+/** @brief retrieve the state of the socket */
 int comm_get_socket_state(struct infos_socket *is)
 {
 
@@ -286,20 +302,21 @@ int comm_get_socket_state(struct infos_socket *is)
   return res;
 }
 
-
+/** @brief send data to a process by putting it in his recv_task list */
 void comm_send_data(struct infos_socket *is, task_comm_info * tci)
 {
   recv_information *recv = comm_get_peer_recv(is);
   xbt_fifo_push(recv->recv_task, tci);
 }
 
+/** @brief retrieve data from the recv_task list */
 task_comm_info *comm_get_send(struct infos_socket *is)
 {
   recv_information *recv = comm_get_own_recv(is);
-
   return xbt_fifo_shift(recv->recv_task);
 }
 
+/** @brief create a MSG task and send it to a host */
 msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, struct infos_socket * is, double amount,
                                           msg_host_t sender, msg_host_t receiver)
 {
@@ -321,6 +338,7 @@ msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, st
   return task;
 }
 
+/** @brief send a task to a host */
 void send_task(msg_host_t receiver, msg_task_t task)
 {
   XBT_DEBUG("Entering send_task %s", MSG_task_get_name(task));

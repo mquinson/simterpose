@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 
-
+/** @brief create and initialize a new process descriptor */
 process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
 {
   process_descriptor_t *result = malloc(sizeof(process_descriptor_t));
@@ -56,15 +56,17 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
   return result;
 }
 
+/** @brief attribute the process descriptor to the current MSG process */
 void process_set_descriptor(process_descriptor_t * proc)
 {
   MSG_process_set_data(MSG_process_self(), proc);
 }
 
+/** @brief free the process descriptor */
 static void process_descriptor_destroy(process_descriptor_t * proc)
 {
   free(proc->name);
-  //We don't free each fd because application do this before
+  //We don't free each fd because application do this before TODO: check that
   int i;
   for (i = 0; i < MAX_FD; ++i) {
     if (proc->fd_list[i])
@@ -74,6 +76,7 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
   free(proc);
 }
 
+/** @brief the process is dead, clean everything */
 void process_die(process_descriptor_t * proc)
 {
   close_all_communication(proc);

@@ -1,4 +1,4 @@
-/* data utils -- contains simterpose global datas such as hosts and ports  */
+/* data utils -- contains SimTerpose global data such as hosts and ports  */
 
 /* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
 
@@ -30,6 +30,7 @@ struct simterpose_globals {
 typedef struct simterpose_globals simterpose_data_t;
 simterpose_data_t *global_data;
 
+/** @brief initialize SimTerpose global data */
 void simterpose_globals_init(float msec_per_flop)
 {
   global_data = malloc(sizeof(simterpose_data_t));
@@ -48,86 +49,7 @@ void simterpose_globals_init(float msec_per_flop)
   global_data->nb_geteventmsg = 0;
 }
 
-int get_nb_peek(void)
-{
-  return global_data->nb_peek;
-}
-
-int get_nb_poke()
-{
-  return global_data->nb_poke;
-}
-
-int get_nb_getregs()
-{
-  return global_data->nb_getregs;
-}
-
-int get_nb_setregs()
-{
-  return global_data->nb_setregs;
-}
-
-int get_nb_syscall()
-{
-  return global_data->nb_syscall;
-}
-
-int get_nb_setoptions()
-{
-  return global_data->nb_setoptions;
-}
-
-int get_nb_detach()
-{
-  return global_data->nb_detach;
-}
-
-int get_nb_geteventmsg()
-{
-  return global_data->nb_geteventmsg;
-}
-
-void increment_nb_peek()
-{
-  global_data->nb_peek++;
-}
-
-void increment_nb_poke()
-{
-  global_data->nb_poke++;
-}
-
-void increment_nb_getregs()
-{
-  global_data->nb_getregs++;
-}
-
-void increment_nb_setregs()
-{
-  global_data->nb_setregs++;
-}
-
-void increment_nb_syscall()
-{
-  global_data->nb_syscall++;
-}
-
-void increment_nb_setoptions()
-{
-  global_data->nb_setoptions++;
-}
-
-void increment_nb_detach()
-{
-  global_data->nb_detach++;
-}
-
-void increment_nb_geteventmsg()
-{
-  global_data->nb_geteventmsg++;
-}
-
+/** @brief free SimTerpose global data */
 void simterpose_globals_exit()
 {
   xbt_dict_free(&(global_data->list_host));
@@ -136,6 +58,103 @@ void simterpose_globals_exit()
   free(global_data);
 }
 
+/** @brief retrieve the number of calls to PTRACE_PEEKDATA */
+int get_nb_peek(void)
+{
+  return global_data->nb_peek;
+}
+
+/** @brief retrieve the number of calls to PTRACE_POKEDATA */
+int get_nb_poke()
+{
+  return global_data->nb_poke;
+}
+
+/** @brief retrieve the number of calls to PTRACE_GETREGS */
+int get_nb_getregs()
+{
+  return global_data->nb_getregs;
+}
+
+/** @brief retrieve the number of calls to PTRACE_SETREGS */
+int get_nb_setregs()
+{
+  return global_data->nb_setregs;
+}
+
+/** @brief retrieve the number of calls to PTRACE_SYSCALL */
+int get_nb_syscall()
+{
+  return global_data->nb_syscall;
+}
+
+/** @brief retrieve the number of calls to PTRACE_SETOPTIONS */
+int get_nb_setoptions()
+{
+  return global_data->nb_setoptions;
+}
+
+/** @brief retrieve the number of calls to PTRACE_DETACH */
+int get_nb_detach()
+{
+  return global_data->nb_detach;
+}
+
+/** @brief retrieve the number of calls to PTRACE_GETEVENTMSG */
+int get_nb_geteventmsg()
+{
+  return global_data->nb_geteventmsg;
+}
+
+/** @brief increment the number of calls to PTRACE_PEEKDATA */
+void increment_nb_peek()
+{
+  global_data->nb_peek++;
+}
+
+/** @brief increment the number of calls to PTRACE_POKEDATA */
+void increment_nb_poke()
+{
+  global_data->nb_poke++;
+}
+
+/** @brief increment the number of calls to PTRACE_GETREGS */
+void increment_nb_getregs()
+{
+  global_data->nb_getregs++;
+}
+
+/** @brief increment the number of calls to PTRACE_SETREGS */
+void increment_nb_setregs()
+{
+  global_data->nb_setregs++;
+}
+
+/** @brief increment the number of calls to PTRACE_SYSCALL */
+void increment_nb_syscall()
+{
+  global_data->nb_syscall++;
+}
+
+/** @brief increment the number of calls to PTRACE_SETOPTIONS */
+void increment_nb_setoptions()
+{
+  global_data->nb_setoptions++;
+}
+
+/** @brief increment the number of calls to PTRACE_DETACH */
+void increment_nb_detach()
+{
+  global_data->nb_detach++;
+}
+
+/** @brief increment the number of calls to PTRACE_GETEVENTMSG */
+void increment_nb_geteventmsg()
+{
+  global_data->nb_geteventmsg++;
+}
+
+/** @brief function called to free a host when it is removed from the host list */
 void destroy_simterpose_host(void *data)
 {
   simterpose_host_t *host = (simterpose_host_t *) data;
@@ -143,6 +162,7 @@ void destroy_simterpose_host(void *data)
   free(host);
 }
 
+/** @brief check if the port is used on the given host */
 int is_port_in_use(msg_host_t host, int port)
 {
   simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
@@ -151,6 +171,7 @@ int is_port_in_use(msg_host_t host, int port)
   return (xbt_dict_get_or_null(temp->port, buff) != NULL);
 }
 
+/** @brief register the port to the host, if not already used */
 void register_port(msg_host_t host, int port)
 {
   //try to see if port isn't already use.
@@ -173,6 +194,7 @@ void register_port(msg_host_t host, int port)
   }
 }
 
+/** @brief put the socket and port in binding state */
 void set_port_on_binding(msg_host_t host, int port, struct infos_socket *is, int device)
 {
   simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
@@ -186,6 +208,7 @@ void set_port_on_binding(msg_host_t host, int port, struct infos_socket *is, int
   desc->bind_socket = is;
 }
 
+/** @brief get the bound socket corresponding to the given port on the given host*/
 struct infos_socket *get_binding_socket_host(msg_host_t host, int port, int device)
 {
   simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
@@ -202,6 +225,7 @@ struct infos_socket *get_binding_socket_host(msg_host_t host, int port, int devi
   return desc->bind_socket;
 }
 
+/** @brief put the real port corresponding to the simulated port into port_desc_t */
 void set_real_port(msg_host_t host, int port, int real_port)
 {
   simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
@@ -211,16 +235,18 @@ void set_real_port(msg_host_t host, int port, int real_port)
 
   if (desc == NULL)
     return;
-  XBT_DEBUG("Set correspondance %d <-> %d (real) for %s", port, real_port, MSG_host_get_name(host));
+  XBT_DEBUG("Set correspondence %d <-> %d (real) for %s", port, real_port, MSG_host_get_name(host));
   desc->real_port = real_port;
 }
 
+/** @brief retrieve the ip of the given host */
 unsigned int get_ip_of_host(msg_host_t host)
 {
   simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
   return temp->ip;
 }
 
+/** @brief retrieve the host corresponding to the given ip */
 msg_host_t get_host_by_ip(unsigned int ip)
 {
   struct in_addr in = { ip };
@@ -231,6 +257,7 @@ msg_host_t get_host_by_ip(unsigned int ip)
   return MSG_get_host_by_name(name);
 }
 
+/** @brief get a random unused port */
 int get_random_port(msg_host_t host)
 {
   simterpose_host_t *temp = (simterpose_host_t *) xbt_dict_get(global_data->list_host, MSG_host_get_name(host));
@@ -249,6 +276,7 @@ int get_random_port(msg_host_t host)
   return port;
 }
 
+/** @brief the socket doesn't use the port anymore, remove it from port_desc_t */
 void unset_socket(pid_t pid, struct infos_socket *is)
 {
   msg_host_t host = is->host;
@@ -270,10 +298,11 @@ void unset_socket(pid_t pid, struct infos_socket *is)
   if (desc->amount_socket)
     return;
 
-  //if this is the last socket to use te port, we have to remove it from dict
+  //if this is the last socket to use the port, we have to remove it from dict
   xbt_dict_remove(temp->port, buff);
 }
 
+/** @brief add a new correspondence between real and simulated ip/port to the translation list  */
 void add_new_translation(int real_port, int translated_port, unsigned int translated_ip)
 {
   XBT_DEBUG("Add new translation %d->%d", real_port, translated_port);
@@ -287,6 +316,7 @@ void add_new_translation(int real_port, int translated_port, unsigned int transl
   xbt_dict_set(global_data->list_translate, buff, temp, NULL);
 }
 
+/** @brief retrieve the simulated ip/port corresponding to the given (real) one */
 translate_desc_t *get_translation(int real_port)
 {
   XBT_DEBUG("Get translation for port %d", real_port);
@@ -296,10 +326,9 @@ translate_desc_t *get_translation(int real_port)
   return xbt_dict_get_or_null(global_data->list_translate, buff);
 }
 
+/** @brief retrieve the real port corresponding to the given (simulated) ip/port */
 int get_real_port(process_descriptor_t * proc, unsigned int ip, int port)
 {
-// struct in_addr in = {ip};
-// XBT_DEBUG("Searching for real port of %s:%d", inet_ntoa(in), port);
   simterpose_host_t *temp = NULL;
   if (ip == inet_addr("127.0.0.1")) {
     XBT_DEBUG("We are on local network %d\n", port);
@@ -317,18 +346,20 @@ int get_real_port(process_descriptor_t * proc, unsigned int ip, int port)
   return desc->real_port;
 }
 
+/** @brief retrieve the list of all MSG hosts */
 xbt_dict_t simterpose_get_host_list()
 {
   return global_data->list_host;
 }
 
+/** @brief retrieve the ip list */
 xbt_dict_t simterpose_get_ip_list()
 {
   return global_data->list_ip;
 }
 
 
-/* Get the power of the current machine from a simple matrix product operation */
+/* @brief Get the power of the current machine from a simple matrix product operation */
 void benchmark_matrix_product(float *msec_per_flop)
 {
   srand(time(NULL));
@@ -361,7 +392,7 @@ void benchmark_matrix_product(float *msec_per_flop)
   xbt_cpu_timer_t timer_benchmark = cputimer_new();
   cputimer_init(timer_benchmark);
 
-  // run the experiment for real
+  // Run the experiment for real
   cputimer_get(pid, times, timer_benchmark);
   long long int initialTime = times[1] + times[2];
   int i_result, j_result;
@@ -387,6 +418,10 @@ void benchmark_matrix_product(float *msec_per_flop)
   cputimer_exit(timer_benchmark);
 }
 
+/** @brief initialize the host list
+ *
+ * We retrieve the host list from the MSG environment, which was previously
+ * created thanks to the platform file */
 void init_host_list()
 {
   xbt_dict_t list_s = simterpose_get_host_list();
@@ -403,7 +438,7 @@ void init_host_list()
 
   for (i = 0; i < size; ++i) {
     const char *prop = MSG_host_get_property_value(work_list[i], "ip");
-    //if there are no ip set, we store them to attribute one after.
+    // If the host doesn't have an ip yet, we store it to attribute one later.
     if (prop == NULL) {
       xbt_dynar_push_as(no_ip_list, int, i);
       continue;
@@ -419,12 +454,12 @@ void init_host_list()
 
   unsigned int temp_ip = 1;
   xbt_ex_t e;
-  //Now we have to attribute ip to workstation which haven't have one
+  // Now we have to give an ip to the workstations that don't have one
   while (!xbt_dynar_is_empty(no_ip_list)) {
     int i;
     xbt_dynar_shift(no_ip_list, &i);
 
-    //Now verify that ip address is not already use
+    // Check that the ip is not used
     int found = 1;
     while (found) {
       TRY {
