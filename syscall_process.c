@@ -230,7 +230,6 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   return PROCESS_CONTINUE;
 }
 
-
 static void process_recvmsg_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_recvmsg_out_call");
@@ -238,19 +237,17 @@ static void process_recvmsg_out_call(process_descriptor_t * proc)
   // process_reset_state(proc);
 }
 
-// TODO: le pattern est le même pour recvmsg_pre, recvfrom_pre, read_pre, faire une fonction
 static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
   //  XBT_DEBUG("[%d] recvmsg_in", pid);
   XBT_DEBUG("recvmsg_pre");
   get_args_recvmsg(proc, reg, sysarg);
+  recvmsg_arg_t arg = &(sysarg->recvmsg);
 
   if (reg->ret > 0) {
-    recvmsg_arg_t arg = &(sysarg->recvmsg);
     fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
     file_desc->ref_nb++;
-    XBT_DEBUG("syscall_recvmsg_pre fd = %d", file_desc->fd);
 
     if (socket_registered(proc, arg->sockfd) != -1) {
       if (!socket_netlink(proc, arg->sockfd)) {
@@ -334,15 +331,14 @@ static void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
   }
 #endif
 
+  recvfrom_arg_t arg = &(sysarg->recvfrom);
+
   if (reg->ret > 0) {
-    recvfrom_arg_t arg = &(sysarg->recvfrom);
+    fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+    file_desc->ref_nb++;
 
     if (socket_registered(proc, arg->sockfd) != -1) {
       if (!socket_netlink(proc, arg->sockfd)) {
-        fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
-        file_desc->ref_nb++;
-        XBT_DEBUG("syscall_recvfrom_pre fd = %d", file_desc->fd);
-
         const char *mailbox;
         if (MSG_process_self() == file_desc->stream->client)
           mailbox = file_desc->stream->to_client;
@@ -418,7 +414,6 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   file_desc->ref_nb++;
 
   if (socket_registered(proc, reg->arg1) != -1) {
-    XBT_DEBUG(" read socket_registered");
     const char *mailbox;
     if (MSG_process_self() == file_desc->stream->client)
       mailbox = file_desc->stream->to_client;
@@ -459,38 +454,6 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
     pipe_t *pipe = file_desc->pipe;
     if (pipe == NULL)
       THROW_IMPOSSIBLE;
-
-    // print pipes
-    unsigned int cpt_in;
-    pipe_end_t end_in;
-    xbt_dynar_t read_end = pipe->read_end;
-    XBT_WARN("  Print read end of pipe: ");
-    xbt_dynar_foreach(read_end, cpt_in, end_in)
-        XBT_WARN("fd: %d, proc name: %s, pid = %d", end_in->fd, end_in->proc->name, end_in->proc->pid);
-
-    unsigned int cpt_out;
-    pipe_end_t end_out;
-    xbt_dynar_t write_end = pipe->write_end;
-    XBT_WARN("  Print write end of pipe: ");
-    xbt_dynar_foreach(write_end, cpt_out, end_out)
-        XBT_WARN("fd: %d, proc name: %s, pid = %d", end_out->fd, end_out->proc->name, end_out->proc->pid);
-
-    //DEBUG
-    if (reg->arg1 == 0) {
-      XBT_WARN("etat des fd:");
-      int i;
-      fd_descriptor_t *file_desc;
-      for (i = 0; i < 13; i++) {
-        file_desc = proc->fd_list[i];
-        if (file_desc == NULL)
-          XBT_WARN("fd[%d] =  %s ", i, (char *) file_desc);
-        else
-          XBT_WARN("fd[%d] = %d, %s, type = %d", i, *(int *) file_desc, (char *) file_desc, file_desc->type);
-
-      }
-      file_desc = NULL;
-    }
-    //DEBUG
 
     XBT_WARN("host %s trying to receive from pipe %d", MSG_host_get_name(proc->host), arg->fd);
     char buff[256];
@@ -759,7 +722,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
           xbt_dynar_t read_end = pipe->read_end;
           xbt_dynar_foreach(read_end, cpt_in, end_in) {
             // we have to make sure we don't add endlessly the fd from the clone
-            //FIXME on ajoute encore une fois en trop
+            //FIXME we still add pipes twice sometimes
             if (end_in->proc != clone && end_in->proc->pid != clone->pid) {
               xbt_assert(end_in != NULL);
               pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
@@ -828,7 +791,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
       XBT_WARN("CLONE_IO unhandled");
 
 
-    // TODO gérer ces flags
+    // TODO handle those flags
     if (flags & CLONE_PARENT_SETTID)
       XBT_WARN("CLONE_PARENT_SETTID unhandled");
     if (flags & CLONE_CHILD_CLEARTID)
@@ -1717,6 +1680,19 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
   file_desc = NULL;
 }
 
+
+/** @brief Handle all syscalls of the tracked pid until it does a blocking action.
+ *
+ *  Blocking actions are stuff that must be reported to the simulator and which
+ *  completion takes time. The most prominent examples are related to sending and
+ *  receiving data.
+ *
+ *  The tracked pid can run more than one syscall in this function if theses calls
+ *  are about the metadata that we maintain in simterpose without exposing them to
+ *  simgrid. For example, if you call socket() or accept(), we only have to maintain
+ *  our metadata but there is no need to inform the simulator, nor to ask for the
+ *  completion time of these things.
+ */
 int process_handle(process_descriptor_t * proc, int status)
 {
   reg_s arg;

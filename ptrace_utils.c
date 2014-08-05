@@ -74,10 +74,9 @@ const char *syscall_list[] = {
 
 #define SYSERROR(...) THROWF(system_error, errno, __VA_ARGS__)
 
-
+/** @brief helper function to peek data from the registers via ptrace */
 void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, const char *syscall)
 {
-
   int i = 0;
   long size_copy = 0;
 
@@ -110,6 +109,7 @@ void ptrace_cpy(pid_t child, void *dst, void *src, size_t length, const char *sy
   }
 }
 
+/** @brief helper function to poke data to the registers via ptrace */
 void ptrace_poke(pid_t pid, void *dst, void *src, size_t len)
 {
   size_t size_copy = 0;
@@ -267,6 +267,7 @@ void ptrace_rewind_syscalls(const pid_t pid)
 
 }
 
+/** @brief retrieve the pid of the clone process */
 unsigned long ptrace_get_pid_clone(const pid_t pid)
 {
   unsigned long new_pid;

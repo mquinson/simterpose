@@ -1,4 +1,4 @@
-/* simterpose - simterpose intercepter based on MSG                     */
+/* simterpose - SimTerpose intercepter based on MSG                     */
 
 /* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.                */
 
@@ -21,7 +21,7 @@
 #include "syscall_process.h"
 #include "process_descriptor.h"
 
-XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "High-level simterpose category");
+XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "High-level SimTerpose category");
 int strace_option = 0;
 
 static void usage(char *progName, int retcode)
@@ -30,6 +30,7 @@ static void usage(char *progName, int retcode)
   exit(retcode);
 }
 
+/* Helper function to convert string to double */
 static inline float str_to_double(const char *string)
 {
   char *endptr;
@@ -70,7 +71,7 @@ static void sigsegv_handler(int sig)
 
 int main(int argc, char *argv[])
 {
-  float msec_per_flop = 0;      // variable not used
+  float msec_per_flop = 0;
   int flop_option = 0;
 
   MSG_init(&argc, argv);
@@ -150,13 +151,13 @@ int main(int argc, char *argv[])
     return 1;
 }
 
+/** @brief Default function called to handle processes */
 int simterpose_process_runner(int argc, char *argv[])
 {
   int status;
   int tracked_pid = fork();
   if (tracked_pid == 0) {
     // in child
-
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
       perror("ptrace traceme");
       exit(1);
@@ -206,12 +207,13 @@ int simterpose_process_runner(int argc, char *argv[])
       xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
     proc_next_state = process_handle(proc, status);
 
-    XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
+    XBT_DEBUG("End of treatment, status = %s ", state_names[proc_next_state]);
   }
   process_die(proc);
   return 0;
 }
 
+/** @brief runner called to handle clone processes */
 int main_loop(int argc, char *argv[])
 {
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());

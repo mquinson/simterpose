@@ -1,4 +1,4 @@
-/* sockets */
+/* sockets -- helper functions to deal with sockets */
 
 /* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
 
@@ -29,19 +29,21 @@ typedef struct {
 xbt_dynar_t all_sockets;
 int nb_sockets = 0;
 
-int get_addr_port_sock(process_descriptor_t * proc, int fd, int addr);
 void print_infos_socket(struct infos_socket *is);
 
+/** @brief create the list containing all sockets */
 void init_socket_gestion(void)
 {
   all_sockets = xbt_dynar_new(sizeof(struct infos_socket *), NULL);
 }
 
+/** @brief free the list containing all sockets */
 void socket_exit(void)
 {
   xbt_dynar_free(&all_sockets);
 }
 
+/** @brief create and initialize a recv_information object */
 recv_information *recv_information_new(void)
 {
   recv_information *res = malloc(sizeof(recv_information));
@@ -51,6 +53,7 @@ recv_information *recv_information_new(void)
   return res;
 }
 
+/** @brief free the given recv_information */
 void recv_information_destroy(recv_information * recv)
 {
   xbt_fifo_free(recv->recv_task);
@@ -58,6 +61,7 @@ void recv_information_destroy(recv_information * recv)
   free(recv);
 }
 
+/** @brief creates infos_socket and put it into the global list */
 static struct infos_socket *confirm_register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
 {
 
@@ -83,6 +87,7 @@ static struct infos_socket *confirm_register_socket(process_descriptor_t * proc,
   return is;
 }
 
+/** @brief retrieve the socket flags */
 int socket_get_flags(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -92,6 +97,7 @@ int socket_get_flags(process_descriptor_t * proc, int fd)
   return is->flags;
 }
 
+/** @brief modify the socket flags */
 void socket_set_flags(process_descriptor_t * proc, int fd, int flags)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -101,6 +107,7 @@ void socket_set_flags(process_descriptor_t * proc, int fd, int flags)
   is->flags = flags;
 }
 
+/** @brief retrieve the socket options */
 int socket_get_option(process_descriptor_t * proc, int fd, int option)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -110,6 +117,7 @@ int socket_get_option(process_descriptor_t * proc, int fd, int option)
   return is->option & option;
 }
 
+/** @brief modify the socket options */
 void socket_set_option(process_descriptor_t * proc, int fd, int option, int value)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -122,6 +130,7 @@ void socket_set_option(process_descriptor_t * proc, int fd, int option, int valu
     is->option = is->option & ~option;
 }
 
+/** @brief remove the socket from the global list */
 void delete_socket(struct infos_socket *is)
 {
   xbt_ex_t e;
@@ -134,6 +143,7 @@ void delete_socket(struct infos_socket *is)
   }
 }
 
+/** @brief close a socket */
 void socket_close(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -148,15 +158,17 @@ void socket_close(process_descriptor_t * proc, int fd)
   }
 }
 
+/** @brief register a socket for the given process */
 struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
 {
-  XBT_DEBUG("Registering socket %d for processus %d", sockfd, proc->pid);
+  XBT_DEBUG("Registering socket %d for process %d", sockfd, proc->pid);
   if (proc->fd_list[sockfd] != NULL) {
-    xbt_die("Inconsistence found in model. Socket already exist");
+    xbt_die("Inconsistency found in model. Socket already exist");
   }
   return confirm_register_socket(proc, sockfd, domain, protocol);
 }
 
+/** @brief set the local ip and local port of the socket */
 void set_localaddr_port_socket(process_descriptor_t * proc, int fd, char *ip, int port)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -165,6 +177,7 @@ void set_localaddr_port_socket(process_descriptor_t * proc, int fd, char *ip, in
 //   print_infos_socket(is);
 }
 
+/** @brief print information about the socket */
 void print_infos_socket(struct infos_socket *is)
 {
   fprintf(stdout, "\n%5s %5s %10s %10s %21s\n", "pid", "fd", "domain", "protocol", "locale_ip:port");
@@ -179,9 +192,7 @@ void print_infos_socket(struct infos_socket *is)
 
 static int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, int addr)
 {
-
   FILE *file;
-
 
   XBT_DEBUG("Socket number : %d", num_sock);
   if (type == TCP_PROTOCOL)     // TCP
@@ -217,59 +228,9 @@ static int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, 
   }
   fclose(file);
   return -1;
-
 }
 
-
-int get_addr_port_sock(process_descriptor_t * proc, int fd, int addr_type)
-{
-
-  struct infos_socket *is = get_infos_socket(proc, fd);
-  pid_t pid = proc->pid;
-  int protocol = is->protocol;
-
-  char path[512];
-  char dest[512];
-  sprintf(path, "/proc/%d/fd/%d", pid, fd);
-  if (readlink(path, dest, 512) == -1) {
-    XBT_ERROR("Failed reading /proc/%d/fd/%d", pid, fd);
-    return -1;
-  }
-
-  char *token;
-  token = strtok(dest, "[");    // left part before socket id
-  token = strtok(NULL, "]");    // socket id 
-  int num_socket = atoi(token);
-
-  struct sockaddr_in addr_port;
-
-  int res = 0;
-
-  if (protocol == 1) {          // case IPPROTO_ICMP -> protocol unknown -> test TCP
-    res = get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, LOCAL);
-    if (res == -1) {            // not tcp -> test UDP
-      res = get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, LOCAL);
-      if (res == -1)            // not udp -> test RAW
-        res = get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
-    }
-  }
-
-  if (protocol == 6 || protocol == 0)   // case IPPROTO_TCP ou IPPROTO_IP
-    res = get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, LOCAL);
-  if (protocol == 17)           // case IPPROTO_UDP 
-    res = get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, LOCAL);
-  if (protocol == 255)          // case IPPROTO_RAW 
-    res = get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
-
-
-  if (res == 1) {
-    is->ip_local = addr_port.sin_addr.s_addr;
-    is->port_local = addr_port.sin_port;
-  }
-
-  return res;
-}
-
+/** @brief retrieve the local port of socket */
 int socket_get_local_port(process_descriptor_t * proc, int fd)
 {
 
@@ -313,7 +274,7 @@ int socket_get_local_port(process_descriptor_t * proc, int fd)
   return ntohs(addr_port.sin_port);
 }
 
-
+/** @brief retrieve the domain of socket */
 int get_domain_socket(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -323,6 +284,7 @@ int get_domain_socket(process_descriptor_t * proc, int fd)
   return -1;
 }
 
+/** @brief check if socket is registered */
 int socket_registered(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -332,7 +294,7 @@ int socket_registered(process_descriptor_t * proc, int fd)
   return -1;
 }
 
-
+/** @brief retrieve information about socket */
 struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd)
 {
   // XBT_DEBUG("Info socket %d %d", proc->pid, fd);
@@ -344,6 +306,7 @@ struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd)
 }
 
 
+/** @brief retrieve the protocol of socket */
 int get_protocol_socket(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -353,6 +316,7 @@ int get_protocol_socket(process_descriptor_t * proc, int fd)
   return -1;
 }
 
+/** @brief check if socket is a netlink socket */
 int socket_netlink(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -364,6 +328,7 @@ int socket_netlink(process_descriptor_t * proc, int fd)
   return 0;
 }
 
+/** @brief check if socket is a network socket */
 int socket_network(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
@@ -374,10 +339,10 @@ int socket_network(process_descriptor_t * proc, int fd)
   return 0;
 }
 
+/** @brief send syscall data by putting it in data_fifo */
 void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
 {
   sendto_arg_t arg = &(sysarg->sendto);
-
   recv_information *recv = comm_get_peer_recv(is);
 
 #ifndef address_translation
@@ -394,11 +359,10 @@ void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
 
   xbt_fifo_push(recv->data_fifo, data);
 #endif
-
 //   XBT_DEBUG("New queue size %d", xbt_fifo_size(recv->data_fifo));
 }
 
-
+/** @brief close all the communications */
 int close_all_communication(process_descriptor_t * proc)
 {
   int i = 0;
@@ -440,6 +404,7 @@ int close_all_communication(process_descriptor_t * proc)
   return result;
 }
 
+/** @brief retrieve the state of socket */
 int socket_get_state(struct infos_socket *is)
 {
   return comm_get_socket_state(is);

@@ -1,4 +1,4 @@
-/* sockets */
+/* sockets -- helper functions to deal with sockets */
 
 /* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
 
@@ -38,7 +38,7 @@ struct recv_information {
 
 struct infos_socket {
   fd_descriptor_t fd;
-  comm_t comm;                  //point to the communication which socket involved in
+  comm_t comm;                  // points to the communication the socket is involved in
   msg_host_t host;
   int domain;
   int protocol;
