@@ -753,7 +753,8 @@ Je pars du squelette MSG:
   au lieu de relancer le connect out .. comme en l'occurrence le syscall est un recv, ça va jamais
   marcher puisque la connexion n'est pas établie.
 - Quand on a accepté il faut relancer celui qui se connecte. 
-  (avant on avait une sched list pour l'ordonnancement et le réveil du mec en face)
+  (avant on avait une sched list pour l'ordonnancement et le réveil du
+  processus en face)
 - Solution: créer des sémaphores simix et les mettre dans les metadata de la socket
   on met un "puis-je" "vas y" d'un côté, et un "vas-y" "puis-je" en face.
 ** DONE faire un essai à part
@@ -1274,7 +1275,7 @@ pour que le ps en face écrive au bon endroit
   - les clones et pipes ont l'air de tourner correctement, maintenant
     c'est au niveau de la connexion du worker que ça attend
     indéfiniment. 
-** TODO pp python essayer sans le cloexec et comparer les fd avec strace
+** DONE pp python essayer sans le cloexec et comparer les fd avec strace
 * <2014-07-31 jeu.>
 - pp python:
   - les appels systèmes ne sont pas toujours interceptés au même
@@ -1345,5 +1346,35 @@ qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
 - j'ai transféré les 2 seules fonctions qui restaient dans task.c dans
   communication.c , et supprimé task
 - suppression de variables inutilisées
-** TODO nettoyer journal
-** TODO continuer à commenter le code
+** TODO nettoyer journal + ajouter l'état du code, les choses à faire
+* <2014-08-05 mar.>
+- j'ai rajouté une description de chaque fonction du code
+** DONE reste à commenter syscall_process.c 
+- nettoyage de code, suppression de code mort
+* <2014-08-06 mer.>
+- J'ai terminé de commenter syscall_process.c . Je crois qu'il y a des
+  problèmes dans la gestion des deux méthodes:
+  - pour sendmsg et write, en address translation on ne traduit pas
+    dans le pre syscall
+  - pour write quelle que soit la méthode, si la socket n'est pas
+    enregistrée on ne fait rien, on laisse le noyau gérer les
+    syscall. 
+  - correction d'un bug en full mediation pour fcntl
+- retour sur allpairs: 
+  - ça boucle avec des nanosleep
+  - c'est parce que la connexion n'est pas établie
+  
+
+* Etat actuel du projet et choses à faire:
+- les tests avec run.sh et run_sendmsg.sh passent
+- les tests avec allpairs et pp python ne passent pas 
+  - python pp: copier explications du vendredi 1er
+  - allpairs:
+  - poll
+- refcounts
+- deux méthodes (address/full) ne sont pas toujours
+  respectées/correctes (copier les explications du mercredi 6)
+- ajouter:
+  - gestion du temps (VDSO en LD_PRELOADant une page qu'on écrit nous même)
+  - médiation port 53, DNS: intercepter tout ce qui arrive (ou bien écrire dans le resolv.conf de la machine physique)
+- faire d'autres tests
