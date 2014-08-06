@@ -31,6 +31,7 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, simterpose, "Syscall process lo
 
 int clone_number = 0;
 
+/** @brief helper function to send task */
 static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc)
 {
   XBT_DEBUG("Entering process_send_call");
@@ -62,6 +63,12 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
   return 0;
 }
 
+/** @brief handle sendmsg syscall at the entrance
+ *
+ * In case of full mediation, we retrieve the message intended to be sent by
+ * the application. We send it through MSG and neutralize the real syscall.
+ * We don't go to syscall_sendmsg_post afterwards.
+ */
 static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -85,6 +92,11 @@ static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   return PROCESS_CONTINUE;
 }
 
+/** @brief handle sendmsg syscall at the exit
+ *
+ * In case of address translation we send the MSG task in order to return
+ * control to the MSG process receiving the message
+ */
 static int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -104,6 +116,15 @@ static int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
   return PROCESS_CONTINUE;
 }
 
+/** @brief handle sendto syscall at the entrance
+ *
+ * In case of full mediation, we retrieve the message intended to be sent by
+ * the application. We send it through MSG and neutralize the real syscall.
+ * We don't go to syscall_sendto_post afterwards.
+ *
+ * In case of address translation we translate the arguments (from a global
+ * simulated address to a real local one) to let the kernel run the syscall
+ */
 static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -132,6 +153,13 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   return PROCESS_CONTINUE;
 }
 
+/** @brief handle sendto syscall at the exit
+ *
+ * In case of address translation we translate the arguments back (from the
+ * real local address to the global simulated one) to wrong the application.
+ * We also send the MSG task in order to return control to the MSG process
+ * receiving the message
+ */
 static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -155,6 +183,12 @@ static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
   return PROCESS_CONTINUE;
 }
 
+/** @brief handle write syscall at the entrance
+ *
+ * In case of full mediation and if the socket is registered we retrieve the message intended
+ * to be written by the application. We send it through MSG and neutralize the real syscall.
+ * We don't go to syscall_write_post afterwards.
+ */
 static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -175,11 +209,19 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
       proc->in_syscall = 0;
       return PROCESS_TASK_FOUND;
     }
+  } else{
+	  // FIXME: if the socket is not registered, for now we do nothing
+	  // and let the kernel run the syscall
+	  XBT_WARN("socket unregistered");
   }
 #endif
   return PROCESS_CONTINUE;
 }
 
+/** @brief handle write syscall at the exit
+ *
+ * We send the MSG task in order to return control to the MSG process reading the message
+ */
 static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -190,6 +232,8 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   write_arg_t arg = &(sysarg->write);
   fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
   file_desc->ref_nb++;
+
+  // If we're writing into a pipe, we handle things differently
   if (file_desc != NULL && file_desc->type == FD_PIPE) {
     if (strace_option)
       print_write_syscall(proc, sysarg);
@@ -230,13 +274,11 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
   return PROCESS_CONTINUE;
 }
 
-static void process_recvmsg_out_call(process_descriptor_t * proc)
-{
-  XBT_DEBUG("Entering process_recvmsg_out_call");
-  sys_build_recvmsg(proc, &(proc->sysarg));
-  // process_reset_state(proc);
-}
-
+/** @brief handle recvmsg syscall at the entrance
+ *
+ * We receive the MSG task and in case of full mediation we neutralize the
+ * real syscall and don't go to syscall_recvmsg_post afterwards.
+ */
 static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -270,17 +312,17 @@ static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
           int sock_status = socket_get_state(is);
 #ifdef address_translation
           if (sock_status & SOCKET_CLOSED)
-            process_recvmsg_out_call(proc);
+              sys_build_recvmsg(proc, &(proc->sysarg));
 #else
           if (sock_status & SOCKET_CLOSED)
             sysarg->recvmsg.ret = 0;
           ptrace_neutralize_syscall(pid);
           proc->in_syscall = 0;
-          process_recvmsg_out_call(proc);
+          sys_build_recvmsg(proc, &(proc->sysarg));
         } else {
           ptrace_neutralize_syscall(pid);
           proc->in_syscall = 0;
-          process_recvmsg_out_call(proc);
+          sys_build_recvmsg(proc, &(proc->sysarg));
 #endif
         }
         MSG_task_destroy(task);
@@ -292,6 +334,7 @@ static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
   XBT_DEBUG("recvmsg_pre");
 }
 
+/** @brief print recvmsg syscall at the exit */
 static void syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -302,6 +345,10 @@ static void syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
     print_recvmsg_syscall(proc, sysarg);
 }
 
+/** @brief helper function to deal with recvfrom syscall in full mediation
+ *
+ *  We restore the syscall registers with the right return value
+ */
 static void process_recvfrom_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_RECVFROM_out_call");
@@ -316,6 +363,15 @@ static void process_recvfrom_out_call(process_descriptor_t * proc)
   free(arg->data);
 }
 
+/** @brief handle recvfrom syscall at the entrance
+ *
+ * In case of address translation, we first translate the arguments (from a global
+ * simulated address to a real local one) to let the kernel run the syscall. We also
+ * receive the MSG task in order to unblock the MSG process sending the message
+ *
+ * In case of full mediation we receive the MSG task and we neutralize the
+ * real syscall. We don't go to syscall_recvmsg_post afterwards.
+ */
 static void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -380,6 +436,7 @@ static void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
   XBT_DEBUG("recvfrom_pre");
 }
 
+/** @brief print recvfrom syscall at the exit */
 static void syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -390,11 +447,13 @@ static void syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg
     print_recvfrom_syscall(proc, &(proc->sysarg));
 }
 
+/** @brief helper function to deal with read syscall in full mediation
+ *
+ *  We restore the syscall registers with the right return value
+ */
 static void process_read_out_call(process_descriptor_t * proc)
 {
   XBT_DEBUG("Entering process_read_out_call");
-//  process_reset_state(proc);
-
   syscall_arg_u *sysarg = &(proc->sysarg);
   read_arg_t arg = &(sysarg->read);
   ptrace_restore_syscall(proc->pid, SYS_read, arg->ret);
@@ -404,6 +463,11 @@ static void process_read_out_call(process_descriptor_t * proc)
   }
 }
 
+/** @brief handle read syscall at the entrance
+ *
+ * We receive the MSG task and in case of full mediation we neutralize the
+ * real syscall and don't go to syscall_read_post afterwards.
+ */
 static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -471,6 +535,7 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   file_desc = NULL;
 }
 
+/** @brief print read syscall at the exit */
 static void syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -480,10 +545,15 @@ static void syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     print_read_syscall(proc, sysarg);
 }
 
-
-static void process_poll_call(process_descriptor_t * proc)
+/** @brief handle poll syscall */
+// TODO: doesn't work. We do irecv on each file descriptor and then a waitany
+static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-  XBT_DEBUG("Entering poll %lf \n", SD_get_clock());
+  proc->in_syscall = 1;
+  get_args_poll(proc, reg, sysarg);
+  if (strace_option)
+    print_poll_syscall(proc, sysarg);
+
   poll_arg_t arg = (poll_arg_t) & (proc->sysarg.poll);
 
 //  XBT_WARN("Poll: Timeout not handled\n");
@@ -538,19 +608,7 @@ static void process_poll_call(process_descriptor_t * proc)
   }
 }
 
-static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-  proc->in_syscall = 1;
-
-  get_args_poll(proc, reg, sysarg);
-
-  if (strace_option)
-    print_poll_syscall(proc, sysarg);
-
-  process_poll_call(proc);
-//  ptrace_neutralize_syscall(proc->pid);
-}
-
+/** @brief print poll syscall at the exit */
 static void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
