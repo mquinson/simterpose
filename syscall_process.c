@@ -996,9 +996,9 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   fprintf(stderr, "[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
 }
 
-/** @brief handle shutdown syscall at the entrace
+/** @brief handle shutdown syscall at the entrace if in full mediation
  *
- * In case of address translation we neutralize the real syscall and don't
+ * In case of full mediation, we neutralize the real syscall and don't
  * go to syscall_shutdown_post afterwards.
  */
 static void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -1062,30 +1062,30 @@ static void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process
   arg->len_dest = (void *) reg->arg3;
   ptrace_cpy(proc->pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
 
-    if (socket_registered(proc, arg->sockfd)) {
-      if (socket_network(proc, arg->sockfd)) {
-        struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-        struct sockaddr_in in;
-        socklen_t size = 0;
-        if (!comm_getpeername(is, &in, &size)) {
-          if (size < arg->len)
-            arg->len = size;
-          arg->in = in;
-          arg->ret = 0;
-        } else
-          arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
+  if (socket_registered(proc, arg->sockfd)) {
+    if (socket_network(proc, arg->sockfd)) {
+      struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+      struct sockaddr_in in;
+      socklen_t size = 0;
+      if (!comm_getpeername(is, &in, &size)) {
+        if (size < arg->len)
+          arg->len = size;
+        arg->in = in;
+        arg->ret = 0;
+      } else
+        arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
 
-        ptrace_neutralize_syscall(pid);
-        proc->in_syscall = 0;
-        ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
-        if (arg->ret == 0) {
-          ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
-          ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
-        }
-        if (strace_option)
-          print_getpeername_syscall(proc, sysarg);
+      ptrace_neutralize_syscall(pid);
+      proc->in_syscall = 0;
+      ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
+      if (arg->ret == 0) {
+        ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
+        ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
       }
+      if (strace_option)
+        print_getpeername_syscall(proc, sysarg);
     }
+  }
 }
 
 /** @brief handle getsockopt syscall at entrance if in full mediation */
@@ -1139,19 +1139,19 @@ static void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_
 #ifndef address_translation
   get_args_setsockopt(proc, reg, sysarg);
   setsockopt_arg_t arg = &(sysarg->setsockopt);
-    pid_t pid = proc->pid;
-    //TODO really handle setsockopt that currently raise a warning
-    arg->ret = 0;
+  pid_t pid = proc->pid;
+  //TODO really handle setsockopt that currently raise a warning
+  arg->ret = 0;
 
-    if (arg->optname == SO_REUSEADDR)
-      socket_set_option(proc, arg->sockfd, SOCK_OPT_REUSEADDR, *((int *) arg->optval));
-    else
-      XBT_WARN("Option non supported by Simterpose.");
+  if (arg->optname == SO_REUSEADDR)
+    socket_set_option(proc, arg->sockfd, SOCK_OPT_REUSEADDR, *((int *) arg->optval));
+  else
+    XBT_WARN("Option non supported by Simterpose.");
 
-    ptrace_neutralize_syscall(pid);
-    ptrace_restore_syscall(pid, SYS_setsockopt, arg->ret);
+  ptrace_neutralize_syscall(pid);
+  ptrace_restore_syscall(pid, SYS_setsockopt, arg->ret);
 
-    proc->in_syscall = 0;
+  proc->in_syscall = 0;
   if (strace_option)
     print_setsockopt_syscall(proc, sysarg);
   free(sysarg->setsockopt.optval);
@@ -1171,7 +1171,7 @@ static void syscall_setsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process
 // TODO: handle the other flags
 static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
- XBT_DEBUG("process fcntl");
+  XBT_DEBUG("process fcntl");
   fcntl_arg_t arg = &(sysarg->fcntl);
   switch (arg->cmd) {
 
@@ -1298,7 +1298,7 @@ static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
   }
 }
 
-/** @brief handle socket syscall */
+/** @brief handle socket syscall by creating and registering a new socket */
 static void syscall_socket_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1312,10 +1312,17 @@ static void syscall_socket_post(reg_s * reg, syscall_arg_u * sysarg, process_des
   if (strace_option)
     print_socket_syscall(proc, sysarg);
 
-    if (arg->ret > 0)
-      register_socket(proc, arg->ret, arg->domain, arg->protocol);
+  if (arg->ret > 0)
+    register_socket(proc, arg->ret, arg->domain, arg->protocol);
 }
 
+/** @brief helper function to handle listen syscall
+ *
+ * We create a new communication and put it in a listening state.
+ * In case of full mediation, we neutralize the real syscall and don't
+ * go to syscall_listen_post afterwards.
+ *
+ */
 static void process_listen_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   listen_arg_t arg = &(sysarg->listen);
@@ -1333,6 +1340,7 @@ static void process_listen_call(process_descriptor_t * proc, syscall_arg_u * sys
 #endif
 }
 
+/** @brief handle listen syscall at the entrance in case of full mediation */
 static void syscall_listen_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -1345,6 +1353,7 @@ static void syscall_listen_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 #endif
 }
 
+/** @brief handle listen syscall at the exit in case of address translation */
 static void syscall_listen_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1359,9 +1368,11 @@ static void syscall_listen_post(reg_s * reg, syscall_arg_u * sysarg, process_des
 #endif
 }
 
-
-static int process_bind_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+/** @brief handle bind syscall */
+static void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
+  proc->in_syscall = 1;
+  get_args_bind_connect(proc, reg, sysarg);
   bind_arg_t arg = &(sysarg->bind);
   pid_t pid = proc->pid;
   if (socket_registered(proc, arg->sockfd)) {
@@ -1392,7 +1403,7 @@ static int process_bind_call(process_descriptor_t * proc, syscall_arg_u * sysarg
         proc->in_syscall = 0;
         set_real_port(proc->host, ntohs(arg->sai.sin_port), port);
         add_new_translation(port, ntohs(arg->sai.sin_port), get_ip_of_host(proc->host));
-        return 0;
+        goto end;
 #endif
       } else {
         XBT_DEBUG("Port %d isn't free", ntohs(arg->sai.sin_port));
@@ -1401,7 +1412,7 @@ static int process_bind_call(process_descriptor_t * proc, syscall_arg_u * sysarg
         bind_arg_t arg = &(sysarg->bind);
         ptrace_restore_syscall(pid, SYS_bind, arg->ret);
         proc->in_syscall = 0;
-        return 0;
+        goto end;
       }
 #ifndef address_translation
       ptrace_neutralize_syscall(pid);
@@ -1411,18 +1422,12 @@ static int process_bind_call(process_descriptor_t * proc, syscall_arg_u * sysarg
 #endif
     }
   }
-  return 0;
-}
-
-static void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-  proc->in_syscall = 1;
-  get_args_bind_connect(proc, reg, sysarg);
-  process_bind_call(proc, sysarg);
+end:
   if (strace_option)
     print_bind_syscall(proc, sysarg);
 }
 
+/** @brief print bind syscall at the exit */
 static void syscall_bind_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1432,6 +1437,10 @@ static void syscall_bind_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 }
 
 
+/** @brief helper function to handle accept syscall
+ *
+ * We use semaphores to synchronize client and server during a connection.
+ */
 static void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   XBT_DEBUG(" CONNEXION: process_accept_out_call");
@@ -1472,13 +1481,18 @@ static void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u *
   }
 }
 
-static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+/** @brief handle accept syscall at entrance
+ *
+ * We use semaphores to synchronize client and server during a connection. */
+static void syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-  XBT_DEBUG(" CONNEXION: process_accept_in_call");
+  XBT_DEBUG("syscall_accept_pre");
+  proc->in_syscall = 1;
+  get_args_accept(proc, reg, sysarg);
+
   accept_arg_t arg = &(sysarg->accept);
   fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
   file_desc->ref_nb++;
-  XBT_DEBUG("process_accept_in_call fd = %d", file_desc->fd);
 
   // We create the stream object for semaphores
   XBT_INFO("stream initialization by accept syscall");
@@ -1489,11 +1503,11 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
   stream->to_server = MSG_host_get_name(MSG_host_self());
 
   file_desc->stream = stream;
-  XBT_DEBUG(" ----> S -> accept_in j'essaie de prendre server");
+  XBT_DEBUG("accept_in: trying to take server semaphore ...");
   MSG_sem_acquire(file_desc->stream->sem_server);
-  XBT_DEBUG(" ----> S -> accept_in j'ai pris serveur je relâche client");
+  XBT_DEBUG("accept_in: took server semaphore! trying to release client");
   MSG_sem_release(file_desc->stream->sem_client);
-  XBT_DEBUG(" ----> S -> accept_in j'ai relâché client");
+  XBT_DEBUG("accept_in: client semaphore released !");
 
   //We try to find here if there's a connection to accept
   if (comm_has_connect_waiting(get_infos_socket(proc, arg->sockfd))) {
@@ -1527,25 +1541,18 @@ static void process_accept_in_call(process_descriptor_t * proc, syscall_arg_u * 
     if (strace_option)
       print_accept_syscall(proc, sysarg);
 
-    XBT_DEBUG
-        (" ----> S -> accept_in (full_mediation): j'ai fini mon accept_out, avant de continuer j'essaie de prendre SERVER (2e episode)");
+    XBT_DEBUG("accept_in: did the accept_out, before I go on I'm trying to take server semaphore ...");
     MSG_sem_acquire(file_desc->stream->sem_server);
-    XBT_DEBUG(" ----> S -> accept_in: SERVER pris! (2e episode)");
+    XBT_DEBUG("accept_in: took server semaphore! (2nd time)");
 #endif
   }
   file_desc->ref_nb--;
   file_desc = NULL;
 }
 
-static void syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-  XBT_DEBUG("syscall_accept_pre");
-  proc->in_syscall = 1;
-  get_args_accept(proc, reg, sysarg);
-
-  process_accept_in_call(proc, sysarg);
-}
-
+/** @brief handle accept syscall at exit in case of address translation
+ *
+ * We use semaphores to synchronize client and server during a connection. */
 static void syscall_accept_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1563,15 +1570,16 @@ static void syscall_accept_post(reg_s * reg, syscall_arg_u * sysarg, process_des
   fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
   file_desc->ref_nb++;
 
-
-  XBT_DEBUG(" ----> S -> accept_post (2e etape address translation?) je prends serveur");
+  XBT_DEBUG("accept_post: trying to take server semaphore ...");
   MSG_sem_acquire(file_desc->stream->sem_server);
+  XBT_DEBUG("accept_post: took server semaphore!");
 
   file_desc->ref_nb--;
   file_desc = NULL;
 }
 
 
+/** @brief helper function to handle connect syscall */
 static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   connect_arg_t arg = &(sysarg->connect);
@@ -1608,7 +1616,7 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     //We ask for a connection on the socket
     process_descriptor_t *acc_proc = comm_ask_connect(host, ntohs(sai->sin_port), proc, arg->sockfd, device);
 
-    //if the processus waiting for connection, we add it to schedule list
+    //if the process is waiting for connection
     if (acc_proc) {
       //Now attribute ip and port to the socket.
       int port = get_random_port(proc->host);
@@ -1638,8 +1646,7 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     connect_arg_t arg = &(sysarg->connect);
     ptrace_restore_syscall(pid, SYS_connect, arg->ret);
 
-    //now mark the process as waiting for conn
-
+    //now mark the process as waiting for connection
     if (flags & O_NONBLOCK)
       return 0;
 
@@ -1657,24 +1664,9 @@ static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * 
     return 0;
 }
 
-static void process_connect_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  XBT_DEBUG(" CONNEXION: process_connect_out_call");
-#ifdef address_translation
-  connect_arg_t arg = &(sysarg->connect);
-
-  int domain = get_domain_socket(proc, arg->sockfd);
-  if (domain == 2 && arg->ret >= 0) {
-    struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-
-    sys_translate_connect_out(proc, sysarg);
-    int port = socket_get_local_port(proc, arg->sockfd);
-    set_real_port(proc->host, is->port_local, ntohs(port));
-    add_new_translation(ntohs(port), is->port_local, get_ip_of_host(proc->host));
-  }
-#endif
-}
-
+/** @brief handle connect syscall at entrance
+ *
+ * We use semaphores to synchronize client and server during a connection. */
 static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -1693,40 +1685,51 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
     file_desc->stream->client = MSG_process_self();
     file_desc->stream->to_client = MSG_host_get_name(MSG_host_self());
 
-    XBT_DEBUG(" ----> S -> connect_pre je relâche serveur");
+    XBT_DEBUG("connect_pre: trying to release server semaphore ...");
     MSG_sem_release(file_desc->stream->sem_server);
-    XBT_DEBUG(" ----> S -> connect_pre j'ai relâché serveur je prends client");
+    XBT_DEBUG("connect_pre: server semaphore released, trying to take client semaphore ...");
     MSG_sem_acquire(file_desc->stream->sem_client);
-    XBT_DEBUG(" ----> S -> connect_pre j'ai pris client");
+    XBT_DEBUG("connect_pre: took client semaphore!");
 
     int status = 0;
     return process_handle(proc, status);
   } else {
-    XBT_WARN("process_connect_in_call == 0  <--------- ");
+    XBT_WARN("syscall_connect_pre: process_connect_in_call == 0  <--------- ");
     proc->in_syscall = 0;
   }
   return PROCESS_CONTINUE;
 }
 
+/** @brief handle connect syscall at exit
+ *
+ * We use semaphores to synchronize client and server during a connection. */
 static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
   XBT_DEBUG("connect_post");
   get_args_bind_connect(proc, reg, sysarg);
 
+  connect_arg_t arg = &(sysarg->connect);
 #ifdef address_translation
-  process_connect_out_call(proc, sysarg);
+  int domain = get_domain_socket(proc, arg->sockfd);
+  if (domain == 2 && arg->ret >= 0) {
+    struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+
+    sys_translate_connect_out(proc, sysarg);
+    int port = socket_get_local_port(proc, arg->sockfd);
+    set_real_port(proc->host, is->port_local, ntohs(port));
+    add_new_translation(ntohs(port), is->port_local, get_ip_of_host(proc->host));
+  }
 #endif
   if (strace_option)
     print_connect_syscall(proc, sysarg);
 
-  connect_arg_t arg = &(sysarg->connect);
   fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
   file_desc->ref_nb++;
 
-  XBT_DEBUG(" ----> S -> connect_post je relâche serveur (2e?)");
+  XBT_DEBUG("connect_post: trying to release server semaphore ...");
   MSG_sem_release(file_desc->stream->sem_server);
-  XBT_DEBUG(" ----> S -> connect_post j'ai relâché serveur");
+  XBT_DEBUG("connect_post: server semaphore released");
 
   file_desc->ref_nb--;
   file_desc = NULL;
