@@ -209,10 +209,10 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
       proc->in_syscall = 0;
       return PROCESS_TASK_FOUND;
     }
-  } else{
-	  // FIXME: if the socket is not registered, for now we do nothing
-	  // and let the kernel run the syscall
-	  XBT_WARN("socket unregistered");
+  } else {
+    // FIXME: if the socket is not registered, for now we do nothing
+    // and let the kernel run the syscall
+    XBT_WARN("socket unregistered");
   }
 #endif
   return PROCESS_CONTINUE;
@@ -312,7 +312,7 @@ static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
           int sock_status = socket_get_state(is);
 #ifdef address_translation
           if (sock_status & SOCKET_CLOSED)
-              sys_build_recvmsg(proc, &(proc->sysarg));
+            sys_build_recvmsg(proc, &(proc->sysarg));
 #else
           if (sock_status & SOCKET_CLOSED)
             sysarg->recvmsg.ret = 0;
@@ -617,6 +617,7 @@ static void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     print_poll_syscall(proc, sysarg);
 }
 
+/** @brief create a SimTerpose pipe and the corresponding file descriptors */
 static void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -673,8 +674,18 @@ static void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
   }
 }
 
-static int process_select_call(process_descriptor_t * proc)
+// TODO
+static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
+  proc->in_syscall = 1;
+  THROW_UNIMPLEMENTED;
+
+  get_args_select(proc, reg, sysarg);
+  if (strace_option)
+    print_select_syscall(proc, sysarg);
+
+  XBT_WARN("Select: Timeout not handled\n");
+
   XBT_DEBUG("Entering process_select_call");
   select_arg_t arg = &(proc->sysarg.select);
   int i;
@@ -722,38 +733,28 @@ static int process_select_call(process_descriptor_t * proc)
     sys_build_select(proc, &(proc->sysarg), match);
     if (strace_option)
       print_select_syscall(proc, &(proc->sysarg));
-    return match;
   }
-
-  return 0;
 }
 
-static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-  proc->in_syscall = 1;
-  THROW_UNIMPLEMENTED;
-
-  get_args_select(proc, reg, sysarg);
-  if (strace_option)
-    print_select_syscall(proc, sysarg);
-
-  XBT_WARN("Select: Timeout not handled\n");
-  process_select_call(proc);
-}
-
-
+/** @brief handle clone syscall at the exit
+ *
+ * We're at the exit of the syscall, so we need to check whether we are in
+ * the parent or the clone. If we are in the clone we actually create a new
+ * MSG process which inherits the file descriptors from the parent.
+ */
 static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   int ret = reg->ret;
   proc->in_syscall = 0;
 
   if (ret > 0) {
+    // we are in the parent
     int pid_clone = ptrace_get_pid_clone(proc->pid);
-    XBT_DEBUG("clone_post dans le père, ret = %d, pid_clone = %d", ret, pid_clone);
+    XBT_DEBUG("clone_post in parent, ret = %d, pid_clone = %d", ret, pid_clone);
   } else {
-
+    // we are in the clone
     int pid_clone = ptrace_get_pid_clone(proc->pid);
-    XBT_DEBUG("clone_post dans le fils, ret = %d, pid_clone = %d", ret, pid_clone);
+    XBT_DEBUG("clone_post in clone, ret = %d, pid_clone = %d", ret, pid_clone);
     proc->in_syscall = 0;
 
     get_args_clone(proc, reg, sysarg);
@@ -808,7 +809,6 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
       }
     }
 
-
     unsigned long flags = arg->clone_flags;
 
     if (flags & CLONE_VM)
@@ -848,7 +848,6 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
     if (flags & CLONE_IO)
       XBT_WARN("CLONE_IO unhandled");
 
-
     // TODO handle those flags
     if (flags & CLONE_PARENT_SETTID)
       XBT_WARN("CLONE_PARENT_SETTID unhandled");
@@ -873,17 +872,22 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 static void process_close_call(process_descriptor_t * proc, int fd);
 
+/** @brief print execve syscall at the entrance */
 static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
   get_args_execve(proc, reg, sysarg);
   XBT_DEBUG("execve_pre");
-
   if (strace_option)
     print_execve_syscall_pre(proc, sysarg);
 
 }
 
+/** @brief handle execve syscall at the exit
+ *
+ * If execve real syscall is successful it returns one more time so we add a
+ * third state for this syscall (in addition to "in" or "out")
+ */
 static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   if (proc->in_syscall == 1) {
@@ -895,8 +899,6 @@ static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_des
     if (strace_option)
       print_execve_syscall_post(proc, sysarg);
     XBT_DEBUG("execve_post");
-    /*if((int)(reg->ret) >= 0)
-       sleep(5); */
   } else {
     proc->in_syscall = 0;
     int i;
@@ -912,6 +914,7 @@ static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_des
   }
 }
 
+/** @brief create a file descriptor */
 static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -926,6 +929,7 @@ static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   }
 }
 
+/** @brief open a new file descriptor */
 static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -943,9 +947,9 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
   }
 }
 
+/** @brief helper function to close a file descriptor */
 static void process_close_call(process_descriptor_t * proc, int fd)
 {
-
   fd_descriptor_t *file_desc = proc->fd_list[fd];
   if (file_desc != NULL) {
     file_desc->ref_nb++;
@@ -982,6 +986,7 @@ static void process_close_call(process_descriptor_t * proc, int fd)
   }
 }
 
+/** @brief handle close syscall at the exit  */
 static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   XBT_DEBUG("close post");
@@ -991,17 +996,11 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   fprintf(stderr, "[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
 }
 
-static void process_shutdown_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  shutdown_arg_t arg = &(sysarg->shutdown);
-  struct infos_socket *is = get_infos_socket(proc, arg->fd);
-  if (is == NULL) {
-    arg->ret = -EBADF;
-    return;
-  }
-  comm_shutdown(is);
-}
-
+/** @brief handle shutdown syscall at the entrace
+ *
+ * In case of address translation we neutralize the real syscall and don't
+ * go to syscall_shutdown_post afterwards.
+ */
 static void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -1021,6 +1020,7 @@ static void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_de
 #endif
 }
 
+/** @brief handle shutdown syscall at the exit in case of address translation */
 static void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   XBT_DEBUG(" shutdown_post");
@@ -1030,12 +1030,18 @@ static void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_d
   arg->how = reg->arg2;
   arg->ret = reg->ret;
 
-  process_shutdown_call(proc, sysarg);
+  struct infos_socket *is = get_infos_socket(proc, arg->fd);
+  if (is == NULL) {
+    arg->ret = -EBADF;
+    return;
+  }
+  comm_shutdown(is);
 
   if (strace_option)
     print_shutdown_syscall(proc, sysarg);
 }
 
+/** @brief handle exit syscall by detaching process */
 static int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
@@ -1043,53 +1049,51 @@ static int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proc
   return PROCESS_DEAD;
 }
 
-
-static void process_getpeername_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  getpeername_arg_t arg = &(sysarg->getpeername);
-  pid_t pid = proc->pid;
-
-  if (socket_registered(proc, arg->sockfd)) {
-    if (socket_network(proc, arg->sockfd)) {
-      struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-      struct sockaddr_in in;
-      socklen_t size = 0;
-      if (!comm_getpeername(is, &in, &size)) {
-        if (size < arg->len)
-          arg->len = size;
-        arg->in = in;
-        arg->ret = 0;
-      } else
-        arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
-
-      ptrace_neutralize_syscall(pid);
-      proc->in_syscall = 0;
-      ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
-      if (arg->ret == 0) {
-        ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
-        ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
-      }
-      if (strace_option)
-        print_getpeername_syscall(proc, sysarg);
-    }
-  }
-}
-
+/** @brief handle getpeername syscall */
 static void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
   getpeername_arg_t arg = &(sysarg->getpeername);
+  pid_t pid = proc->pid;
+
   arg->ret = reg->ret;
   arg->sockfd = reg->arg1;
   arg->sockaddr_dest = (void *) reg->arg2;
   arg->len_dest = (void *) reg->arg3;
   ptrace_cpy(proc->pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
 
-  process_getpeername_call(proc, sysarg);
+    if (socket_registered(proc, arg->sockfd)) {
+      if (socket_network(proc, arg->sockfd)) {
+        struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+        struct sockaddr_in in;
+        socklen_t size = 0;
+        if (!comm_getpeername(is, &in, &size)) {
+          if (size < arg->len)
+            arg->len = size;
+          arg->in = in;
+          arg->ret = 0;
+        } else
+          arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
+
+        ptrace_neutralize_syscall(pid);
+        proc->in_syscall = 0;
+        ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
+        if (arg->ret == 0) {
+          ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
+          ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
+        }
+        if (strace_option)
+          print_getpeername_syscall(proc, sysarg);
+      }
+    }
 }
 
-static void process_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+/** @brief handle getsockopt syscall at entrance if in full mediation */
+static void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
+  proc->in_syscall = 1;
+#ifndef address_translation
+  get_args_getsockopt(proc, reg, sysarg);
   getsockopt_arg_t arg = &(sysarg->getsockopt);
   pid_t pid = proc->pid;
 
@@ -1114,19 +1118,12 @@ static void process_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_
 
   free(arg->optval);
   proc->in_syscall = 0;
-}
-
-static void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-  proc->in_syscall = 1;
-#ifndef address_translation
-  get_args_getsockopt(proc, reg, sysarg);
-  process_getsockopt_syscall(proc, sysarg);
   if (strace_option)
     print_getsockopt_syscall(proc, sysarg);
 #endif
 }
 
+/** @brief print getsockopt syscall at the exit */
 static void syscall_getsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1135,36 +1132,33 @@ static void syscall_getsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process
     print_getsockopt_syscall(proc, sysarg);
 }
 
-static void process_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  setsockopt_arg_t arg = &(sysarg->setsockopt);
-  pid_t pid = proc->pid;
-  //TODO really handle setsockopt that currently raise a warning
-  arg->ret = 0;
-
-  if (arg->optname == SO_REUSEADDR)
-    socket_set_option(proc, arg->sockfd, SOCK_OPT_REUSEADDR, *((int *) arg->optval));
-  else
-    XBT_WARN("Option non supported by Simterpose.");
-
-  ptrace_neutralize_syscall(pid);
-  ptrace_restore_syscall(pid, SYS_setsockopt, arg->ret);
-
-  proc->in_syscall = 0;
-}
-
+/** @brief handle setsockopt syscall at entrance if in full mediation */
 static void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
 #ifndef address_translation
   get_args_setsockopt(proc, reg, sysarg);
-  process_setsockopt_syscall(proc, sysarg);
+  setsockopt_arg_t arg = &(sysarg->setsockopt);
+    pid_t pid = proc->pid;
+    //TODO really handle setsockopt that currently raise a warning
+    arg->ret = 0;
+
+    if (arg->optname == SO_REUSEADDR)
+      socket_set_option(proc, arg->sockfd, SOCK_OPT_REUSEADDR, *((int *) arg->optval));
+    else
+      XBT_WARN("Option non supported by Simterpose.");
+
+    ptrace_neutralize_syscall(pid);
+    ptrace_restore_syscall(pid, SYS_setsockopt, arg->ret);
+
+    proc->in_syscall = 0;
   if (strace_option)
     print_setsockopt_syscall(proc, sysarg);
   free(sysarg->setsockopt.optval);
 #endif
 }
 
+/** @brief print setsockopt syscall at the exit */
 static void syscall_setsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1173,9 +1167,11 @@ static void syscall_setsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process
     print_setsockopt_syscall(proc, sysarg);
 }
 
-
+/** @brief helper function to handle fcntl syscall */
+// TODO: handle the other flags
 static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
+ XBT_DEBUG("process fcntl");
   fcntl_arg_t arg = &(sysarg->fcntl);
   switch (arg->cmd) {
 
@@ -1195,7 +1191,6 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
 
   case F_SETFD:
     proc->fd_list[arg->fd]->flags = arg->arg;
-    return;
     break;
 
   case F_GETFL:
@@ -1204,7 +1199,6 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
 
   case F_SETFL:
     socket_set_flags(proc, arg->fd, arg->arg);
-    return;
     break;
 
   case F_SETLK:
@@ -1221,7 +1215,6 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
 
   default:
     XBT_WARN("Unknown fcntl flag");
-    return;
     break;
   }
 #ifndef address_translation
@@ -1231,20 +1224,24 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
 #endif
 }
 
+/** @brief handle fcntl syscall at the entrance if in full mediation*/
 static void syscall_fcntl_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 1;
+  XBT_DEBUG("fcntl pre");
 #ifndef address_translation
   get_args_fcntl(proc, reg, sysarg);
+  process_fcntl_call(proc, sysarg);
   if (strace_option)
     print_fcntl_syscall(proc, sysarg);
-  process_fcntl_call(proc, sysarg);
 #endif
 }
 
+/** @brief handle fcntl syscall at the exit if in address translation */
 static void syscall_fcntl_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
+  XBT_DEBUG("fcntl post");
   get_args_fcntl(proc, reg, sysarg);
   if (strace_option)
     print_fcntl_syscall(proc, sysarg);
@@ -1253,6 +1250,7 @@ static void syscall_fcntl_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 #endif
 }
 
+/** @brief handle dup2 by updating the table of file descriptors, and also the pipe objects if needed */
 static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1300,13 +1298,7 @@ static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
   }
 }
 
-static void process_socket_call(process_descriptor_t * proc, syscall_arg_u * arg)
-{
-  socket_arg_t sock = &(arg->socket);
-  if (sock->ret > 0)
-    register_socket(proc, sock->ret, sock->domain, sock->protocol);
-}
-
+/** @brief handle socket syscall */
 static void syscall_socket_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
@@ -1319,7 +1311,9 @@ static void syscall_socket_post(reg_s * reg, syscall_arg_u * sysarg, process_des
 
   if (strace_option)
     print_socket_syscall(proc, sysarg);
-  process_socket_call(proc, sysarg);
+
+    if (arg->ret > 0)
+      register_socket(proc, arg->ret, arg->domain, arg->protocol);
 }
 
 static void process_listen_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
