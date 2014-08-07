@@ -773,12 +773,16 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
     // do NOT affect the parent unless CLONE_FILES is set
     int i;
     for (i = 0; i < MAX_FD; ++i) {
-      clone->fd_list[i] = proc->fd_list[i];
-      if (clone->fd_list[i] != NULL) {
-        xbt_assert(proc->fd_list[i]->proc == proc);
-        XBT_WARN("tutu");
-        clone->fd_list[i]->proc = clone;
-        xbt_assert(proc->fd_list[i]->proc == proc);
+      clone->fd_list[i] = malloc(sizeof(fd_descriptor_t));
+      clone->fd_list[i]->proc = clone;
+      clone->fd_list[i]->ref_nb = 0;
+      if(proc->fd_list[i]!=NULL){
+		  clone->fd_list[i]->fd = proc->fd_list[i]->fd;
+		  clone->fd_list[i]->flags = proc->fd_list[i]->flags;
+		  clone->fd_list[i]->pipe = proc->fd_list[i]->pipe;
+		  clone->fd_list[i]->stream = proc->fd_list[i]->stream;
+		  clone->fd_list[i]->type = proc->fd_list[i]->type;
+      }
 
         // deal with pipes
         if (clone->fd_list[i]->type == FD_PIPE) {
@@ -815,7 +819,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
               xbt_dynar_push(write_end, &clone_end);
             }
           }
-        }
+
       }
     }
 
