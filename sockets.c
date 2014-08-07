@@ -66,7 +66,9 @@ static struct infos_socket *confirm_register_socket(process_descriptor_t * proc,
 {
 
   struct infos_socket *is = malloc(sizeof(struct infos_socket));
+
   proc->fd_list[sockfd] = (fd_descriptor_t *) is;
+  is->ref_nb = 0;
   is->fd.type = FD_SOCKET;
   is->fd.fd = sockfd;
   is->fd.proc = proc;
@@ -83,6 +85,7 @@ static struct infos_socket *confirm_register_socket(process_descriptor_t * proc,
   is->flags = O_RDWR;
 
   xbt_dynar_push(all_sockets, &is);
+  is->ref_nb++;
 
   return is;
 }
@@ -136,6 +139,7 @@ void delete_socket(struct infos_socket *is)
   xbt_ex_t e;
   TRY {
     int i = xbt_dynar_search(all_sockets, &is);
+    is->ref_nb--;
     xbt_dynar_remove_at(all_sockets, i, NULL);
   }
   CATCH(e) {
@@ -148,12 +152,12 @@ void socket_close(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   if (is != NULL) {
+	proc->fd_list[fd]->ref_nb--;
     if (socket_network(proc, fd))
       comm_close(is);
     else {
       free(is);
     }
-    proc->fd_list[fd]->ref_nb--;
     proc->fd_list[fd] = NULL;
   }
 }
@@ -299,10 +303,13 @@ struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd)
 {
   // XBT_DEBUG("Info socket %d %d", proc->pid, fd);
   fd_descriptor_t *file_desc = proc->fd_list[fd];
-  file_desc->ref_nb++;
+
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
     return NULL;
-  return (struct infos_socket *) file_desc;
+
+  struct infos_socket *is = (struct infos_socket *) file_desc;
+
+  return is;
 }
 
 
@@ -370,7 +377,6 @@ int close_all_communication(process_descriptor_t * proc)
   for (i = 0; i < MAX_FD; ++i) {
     fd_descriptor_t *file_desc = proc->fd_list[i];
     if (file_desc != NULL && file_desc->type == FD_SOCKET) {
-      file_desc->ref_nb++;
       recv_information *recv = comm_get_own_recv((struct infos_socket *) file_desc);
 
       if (!recv)

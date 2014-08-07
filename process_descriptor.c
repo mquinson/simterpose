@@ -69,8 +69,10 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
   //We don't free each fd because application do this before TODO: check that
   int i;
   for (i = 0; i < MAX_FD; ++i) {
-    if (proc->fd_list[i])
-      free(proc->fd_list[i]);
+    if (proc->fd_list[i]){
+    	proc->fd_list[i]->ref_nb--;
+    	free(proc->fd_list[i]);
+    }
   }
   free(proc->fd_list);
   free(proc);

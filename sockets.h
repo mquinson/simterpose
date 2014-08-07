@@ -47,6 +47,7 @@ struct infos_socket {
   int flags;
   int option;
   int binded;
+  int ref_nb;                   // reference counting
 };
 
 void init_socket_gestion(void);

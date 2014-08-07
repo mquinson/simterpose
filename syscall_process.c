@@ -42,6 +42,8 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
       //   compute_computation_time(proc);   // cree la computation task
       struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
+      is->ref_nb++;
+      s->ref_nb++;
 
       XBT_DEBUG("%d->%d", arg->sockfd, arg->ret);
       XBT_DEBUG("Sending data(%d) on socket %d", arg->ret, s->fd.fd);
@@ -55,6 +57,8 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
 
       send_task(s->fd.proc->host, task);
 
+      is->ref_nb--;
+      s->ref_nb--;
       return 1;
     }
     return 0;
@@ -571,6 +575,7 @@ static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   struct infos_socket *is = get_infos_socket(proc, temp->fd);
 
   if (is != NULL) {
+	  is->ref_nb++;
     //   continue;
     //  else {
     int sock_status = socket_get_state(is);
@@ -583,6 +588,8 @@ static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
       //   xbt_dynar_push(backup, &i);
     } else
       XBT_WARN("Poll only handles POLLIN for now\n");
+
+    is->ref_nb--;
   }
 //  }
   XBT_DEBUG("wait");
@@ -768,7 +775,10 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
     for (i = 0; i < MAX_FD; ++i) {
       clone->fd_list[i] = proc->fd_list[i];
       if (clone->fd_list[i] != NULL) {
+        xbt_assert(proc->fd_list[i]->proc == proc);
+        XBT_WARN("tutu");
         clone->fd_list[i]->proc = clone;
+        xbt_assert(proc->fd_list[i]->proc == proc);
 
         // deal with pipes
         if (clone->fd_list[i]->type == FD_PIPE) {

@@ -38,6 +38,8 @@ comm_t comm_new(struct infos_socket *socket)
 
   socket->comm = res;
   res->info[0].socket = socket;
+  socket->ref_nb++;
+
   res->info[0].recv = recv_information_new();
   res->info[1].socket = NULL;
   res->info[1].recv = recv_information_new();
@@ -53,6 +55,10 @@ comm_t comm_new(struct infos_socket *socket)
 /** @brief destroy a communication and remove it from the list */
 void comm_destroy(comm_t comm)
 {
+	if(comm->info[0].socket != NULL)
+		comm->info[0].socket->ref_nb--;
+	if(comm->info[1].socket!= NULL)
+		comm->info[1].socket->ref_nb--;
   recv_information_destroy(comm->info[0].recv);
   recv_information_destroy(comm->info[1].recv);
   xbt_dynar_free(&comm->conn_wait);
@@ -111,17 +117,26 @@ void comm_close(struct infos_socket *is)
     struct infos_socket *is = comm->info[0].socket;
     unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
-    free(is);
+    if(!is->ref_nb)
+    	free(is);
+    else
+    	xbt_die("refcount = %d", is->ref_nb);
     comm_destroy(comm);
   } else if (comm->state == COMM_CLOSED) {
     struct infos_socket *is = comm->info[0].socket;
     unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
-    free(is);
+    if(!is->ref_nb)
+    	free(is);
+    else
+    	xbt_die("refcount = %d", is->ref_nb);
     is = comm->info[1].socket;
     unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
-    free(is);
+    if(!is->ref_nb)
+    	free(is);
+    else
+    	xbt_die("refcount = %d", is->ref_nb);
     comm_destroy(comm);
   } else
     comm->state = COMM_CLOSED;
@@ -169,6 +184,7 @@ process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descri
     comm->info[1].socket = conn;
   else
     comm->info[0].socket = conn;
+  conn->ref_nb++;
 
   struct in_addr in = { comm->remote_ip };
   XBT_DEBUG("%s:%d", inet_ntoa(in), comm->remote_port);
@@ -188,6 +204,7 @@ void comm_join_on_accept(struct infos_socket *is, process_descriptor_t * proc, i
   xbt_dynar_shift(comm->conn_wait, &comm_conn);
 
   comm_conn->info[1].socket = is;
+  is->ref_nb++;
   is->comm = comm_conn;
 }
 

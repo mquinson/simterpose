@@ -206,6 +206,7 @@ void set_port_on_binding(msg_host_t host, int port, struct infos_socket *is, int
     return;
   desc->option = desc->option | PORT_BIND | device;
   desc->bind_socket = is;
+  is->ref_nb++;
 }
 
 /** @brief get the bound socket corresponding to the given port on the given host*/
@@ -291,8 +292,10 @@ void unset_socket(pid_t pid, struct infos_socket *is)
     return;
   }
 
-  if (is == desc->bind_socket)
+  if (is == desc->bind_socket){
+	  is->ref_nb--;
     desc->bind_socket = NULL;
+  }
 
   --desc->amount_socket;
   if (desc->amount_socket)
