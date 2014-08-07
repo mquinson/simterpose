@@ -1298,8 +1298,9 @@ pour que le ps en face écrive au bon endroit
       comment elle est débloquée: avec strace je vois que le read(9
       bloque jusqu'à ce que le clone fasse un execve.
 * <2014-08-01 ven.>
-- python pp: 
-   - sans CLOEXEC: Deadlock quand le maître et le clone essaient de communiquer: 
+- le test de python pp ne fonctionne pas: 
+   - sans prendre en compte CLOEXEC (FD_CLOEXEC, flag de fcntl),
+     Deadlock quand le maître et le clone essaient de communiquer:
      - le maître essaie de lire sur 9, et le clone d'écrire sur 1. 
      - je comprends pas par quoi la lecture du maître est sensée être
        débloquée dans la réalité. Voici le strace de l'application
@@ -1333,7 +1334,6 @@ pour que le ps en face écrive au bon endroit
     fermer?
   - probleme des infos_sockets, qui sont infos_sockets et
     file_descriptor 
-** TODO ajouter des refcounts
 - dans dup2(oldfd, newfd) je ferme newfd avant si necessaire
 ** TODO des tests qui ressemblent autant que possible à des ptits bouts des applis
 qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
@@ -1363,18 +1363,50 @@ qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
 - retour sur allpairs: 
   - ça boucle avec des nanosleep
   - c'est parce que la connexion n'est pas établie
-  
+* <2014-08-07 jeu.>
+- ajout de refcounts sur les infos_socket: je suis embêtée parce qu'il
+  y a des cast d'infos_socket en fd_descriptors.. 
+  - dans get_infos_socket on vérifie que le type du file descriptor
+    soit bien socket, auquel cas on le caste en info socket: ça veut
+    dire que c'est à la fois une structure de fd (avec des champs qui
+    existent, comme le type) et à la fois une info socket? Ca me
+    semble impossible, les champs des deux structures n'ont rien à
+    voir. or on utilise ce mécanisme dans plein de fonctions.
+  - Dans ce cas j'hésite à conserver la même valeur du compteur pour
+    l'info_socket que pour le fd, si les deux objets peuvent être
+    utilisés indifféremment. (mais c'est pas logique. De toute façon
+    j'ai des compteurs de valeurs abérantes si je fais ça)
+  - Mes refcounts des infos_socket ne valent pas zéro à la fin
+    (mais 1) .. j'ai vérifié qu'à chaque incrémentation correspond
+    une décrémentation, mais je vois pas le souci
+** TODO corriger refcounts pour les infos_sockets
+** TODO ajouter des refcounts pour comm_t 
+- Corrigé une erreur dans le clone: je passais les descripteurs de
+  fichiers du parent directement sans les recopier
+- Ca a débloqué pp python en full mediation: la simulation termine il
+  n'y a pas de deadlock
+** TODO regarder les traces
 
 * Etat actuel du projet et choses à faire:
-- les tests avec run.sh et run_sendmsg.sh passent
-- les tests avec allpairs et pp python ne passent pas 
-  - python pp: copier explications du vendredi 1er
+- les tests avec run.sh et run_sendmsg.sh passent (si je vérifie pas
+  que les refcounts valent zéro à la fin)
+- les tests avec allpairs et pp python ne fonctionnent pas 
+  - python pp: 
+    - en full mediation ça termine, il faut regarder si les traces
+      sont correctes
+    - en address translation, cf explications du vendredi 1er août
   - allpairs:
+    - ça boucle avec des nanosleep
+    - c'est parce que la connexion n'est pas établie
   - poll
-- refcounts
+- refcounts:
+  - implementés pour fd et is mais il y a des erreurs. ne valent pas
+    zéro à la fin. 
+  - en rajouter pour comm_t
 - deux méthodes (address/full) ne sont pas toujours
-  respectées/correctes (copier les explications du mercredi 6)
+  respectées/correctes: cf explications du mercredi 6
 - ajouter:
   - gestion du temps (VDSO en LD_PRELOADant une page qu'on écrit nous même)
-  - médiation port 53, DNS: intercepter tout ce qui arrive (ou bien écrire dans le resolv.conf de la machine physique)
+  - médiation port 53, DNS: intercepter tout ce qui arrive (ou bien
+    écrire dans le resolv.conf de la machine physique) 
 - faire d'autres tests
