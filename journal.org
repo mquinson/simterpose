@@ -48,7 +48,7 @@ un descriptif du travail au jour le jour.
   expériences en y ajoutant simterpose, mais ça serait probablement un peu dur à
   faire. En plus, on est pas exactement concurrents puisque nous on peut pas
   démarrer une VM vide, par exemple.
-* Tests possibles
+* <<Tests possibles>>
 - On cherche des applications distribuées classiques. Il faut qu'elles soient
   assez complexes pour être représentatives d'une large gamme d'applis, sans
   être trop compliquées pour que ca marche en pratique.
@@ -1303,7 +1303,7 @@ pipe_end sont déjà présents avant de les ajouter dans la liste.
 * <2014-08-01 ven.>
 - le test de python pp ne fonctionne pas: 
    - sans prendre en compte CLOEXEC (FD_CLOEXEC, flag de fcntl),
-     Deadlock quand le maître et le clone essaient de communiquer:
+     <<deadlock>> quand le maître et le clone essaient de communiquer:
      - le maître essaie de lire sur 9, et le clone d'écrire sur 1. 
      - je comprends pas par quoi la lecture du maître est sensée être
        débloquée dans la réalité. Voici le strace de l'application
@@ -1356,7 +1356,7 @@ tubes avant le clone dans python pp
 - nettoyage de code, suppression de code mort
 * <2014-08-06 mer.>
 - J'ai terminé de commenter syscall_process.c . Je crois qu'il y a des
-  problèmes dans la gestion des deux méthodes:
+  <<problèmes>> dans la gestion des deux méthodes:
   - pour sendmsg et write, en address translation on ne traduit pas
     dans le pre syscall
   - pour write quelle que soit la méthode, si la socket n'est pas
@@ -1394,7 +1394,8 @@ tubes avant le clone dans python pp
 - ajout de refcounts pour les comm_t
 - Pour le pipe_t pas besoin de refcount, on regarde quand les
   descripteurs des deux côtés sont tous fermés, et on le détruit. 
-
+- j'ai rajouté la trace pour open donc je print le chemin du fichier,
+  en revanche je ne parviens pas à récupérer les flags.
 
 * Etat actuel du projet et choses à faire:
 - les tests avec run.sh et run_sendmsg.sh passent (si je vérifie pas
@@ -1414,34 +1415,46 @@ tubes avant le clone dans python pp
         valent -1 avec errno mis à la valeur appropriée. Dans
         simterpose on renvoie directement -{code d'erreur} 
       - C'est à partir des 4(pipes-fcntl) suivis du clone que les traces
-        divergent: dans simterpose il n'y a qu'un seul pipe-fcntl et
-        après ça fait nimporte quoi.
-    - en address translation ça deadlock, cf explications du vendredi
-      1er août
+        divergent: dans simterpose un fcntl renvoie -38 et après ça
+        fait nimporte quoi. 
+    - en address translation ça [[deadlock]], cf explications
   - allpairs:
     - en full ça boucle avec des nanosleep, parce que la simulation de
       connexion n'est pas faite
     - en address translation ça boucle sur la connexion
     - le process_connect_in_call renvoie 0 parce qu'il n'y a encore
       personne en face qui accepte
-** TODO  regarder de plus près
-  - poll et select pas implémentés/pas correctement. manque un
-    MSG_comm_waitany avec timeout
+  - pistes d'erreurs possibles:
+    - il y a un problème dans la numérotation des fd. Quand on
+      compare strace à SimTerpose, les fd 0 1 2 sont corrects, mais
+      ensuite c'est décalé de 1 (close 3 dans strace devient close 4
+      dans SimTerpose)
+    - beaucoup (la plupart en fait) de flags ne sont pas implémentés
+    - poll et select pas implémentés/pas correctement. manque un
+      MSG_comm_waitany avec timeout (qui n'existe pas dans MSG) 
 - refcounts:
   - implementés pour fd_descriptor_t, comm_t et infos_socket mais il y
     a des erreurs. ne valent pas zéro à la fin. 
 - les deux méthodes (address/full) ne sont pas toujours
-  respectées/correctes: cf explications du mercredi 6
+  respectées/correctes: cf explications des [[problèmes]]
 - ajouter:
   - gestion du temps (VDSO en LD_PRELOADant une page qu'on écrit nous
     même)
   - médiation port 53, DNS: intercepter tout ce qui arrive (ou bien
     écrire dans le resolv.conf de la machine physique) 
 - faire d'autres tests:
-  - durée de la simulation pour address translation/full mediation
-** TODO compléter tests
-- revoir la fermeture des processus en cas de crash: de temps en temps
-  j'ai des "address already in use" quand SimTerpose a crashé (c'est
-  un peu aléatoire comme comportement). Je pense que c'est parce que
-  je ne quitte pas bien toutes les applications ou ne ferme pas bien
-  les sockets 
+  - sur la durée:
+    - est-ce que la durée d'exécution est variable? et sur des
+      machines différentes?
+    - durée d'exécution address translation vs full mediation
+  - différents types d'applis, cf les [[Tests possibles]]
+  - performance: taille maximale des expériences?
+  - réalisme: comparer expérience réelle vs SimTerpose
+- De temps en temps j'ai des "address already in use" quand SimTerpose
+  a crashé (c'est un peu aléatoire comme comportement).
+  - On a envisagé de rajouter systématiquement l'option SO_REUSEADDR à
+    chaque fois que l'application crée une socket (en address
+    translation). Pour faire ça il faudrait qu'on fasse l'appel
+    système setsockopt, mais Simterpose ne peut pas faire ça de
+    l'extérieur. 
+
