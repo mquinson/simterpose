@@ -558,7 +558,7 @@ s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
     faudra faire à ces moments.
   - On va probablement supprimer le FES en passant à MSG, mais j'ai pas fini de
     comprendre le code, encore, alors il faut qu'on le nettoie pour voir clair.
-  - TODO: Vérifier que le FES est toujours trié.
+  - Vérifier que le FES est toujours trié.
     - j'ai l'impression qu'il ne l'est pas quand on ajoute le processus
       initialement, au moins. S'il n'est pas assez trié, cela peut expliquer les
       deadlocks: si on sort un evt dans le futur, on bloque dessus. Mais s'il y
@@ -837,10 +837,10 @@ véritables envois/réception via MSG
 les sémaphores, utiliser les informations sur la socket et pas le
 champ remote du process_descriptor, (voir si ça pourrait poser pb pour les
 connexions multiples)
-** TODO la trace n'est pas toujours la même: (pas prioritaire)
+** TODO la trace n'est pas toujours la même selon la méthode, et
+le contenu du message n'est pas toujours affiché (pas prioritaire)
 parfois sendto s'affiche, parfois c'est recvfrom, et il n'y a pas
 toujours le message dedans 
-
 * <2014-06-25 mer.>
 - Je traite les appels exit et exit_group, et j'arrête de boucler dès
   que le processus est mort: la simulation s'arrête correctement pour
@@ -928,7 +928,7 @@ toujours le message dedans
     waitany..) donc c'est pas géré pour l'instant  
   - puisqu'on veut savoir si on PEUT lire ou écrire, on doit pas le
     faire? donc est-ce que c'est correct de faire un irecv?
-** TODO modifier poll et select
+** TODO modifier poll et select pour qu'ils fonctionnent
 - Je commence à réparer la full_mediation:
   - Remise au propre: 
     - ajout des fonctions manquantes pour getsockopt
@@ -964,9 +964,11 @@ socket closed, fd null etc, comme dans process_recv_in_call ..
     - j'ai commencé à retirer le handle mediate: il n'est plus appelé
       depuis le handler principal, et la fonction existe encore
       uniquement pour sendmsg/recvmsg. Bientôt supprimé
-** TODO Il y a un 6e sendto pourri qui se print en full mediation
+** TODO Vérifier la trace de sendto en full mediation: pour run.sh, 
+il y a un 6e sendto avec des caractères bizarres qui se print
 ** DONE shutdown est mal traité en full mediation (renvoie -107)
-** TODO Vérifier la cohérence des méthodes
+** TODO Vérifier la cohérence des méthodes full mediation/address translation:
+Certains appels systèmes sont traités indiféremment de la méthode
 - En fait il y a sans doute un problème dans la méthode puisque les deux donnent
   exactement le même temps.. Ou alors c'est parce que c'est le temps simulé?
 - [Mt] Je sais pas comment tu as fait tes chronométrages, mais à priori, oui,
@@ -1250,7 +1252,8 @@ pour que le ps en face écrive au bon endroit
     associés avec le processus correspondant
   - quand on fait un clone on ajoute le fd/processus au pipe.
     - j'ai des pipe_end_t qui s'ajoutent en trop à chaque fois
-** TODO vérifier s'ils sont déjà présents avant de les ajouter
+** TODO Dans syscall_process:syscall_clone_post() vérifier s'il les 
+pipe_end sont déjà présents avant de les ajouter dans la liste.
   - quand on fait un dup on rajoute la nouvelle extrémité du pipe
     dans le bon tableau
   - dans le close on va éventuellement retirer le fd du pipe.
@@ -1335,9 +1338,9 @@ pour que le ps en face écrive au bon endroit
   - probleme des infos_sockets, qui sont infos_sockets et
     file_descriptor 
 - dans dup2(oldfd, newfd) je ferme newfd avant si necessaire
-** TODO des tests qui ressemblent autant que possible à des ptits bouts des applis
-qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
-** TODO allpairs: connexion
+** TODO des tests qui ressemblent autant que possible à des petits bouts des
+applications qu'on veut utiliser dans l'article, par exemple les 4
+tubes avant le clone dans python pp
 * <2014-08-04 lun.>
 - correction d'un segfault: je décrémentais le refcount après
   destruction de l'objet
@@ -1346,7 +1349,7 @@ qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
 - j'ai transféré les 2 seules fonctions qui restaient dans task.c dans
   communication.c , et supprimé task
 - suppression de variables inutilisées
-** TODO nettoyer journal + ajouter l'état du code, les choses à faire
+** DONE nettoyer journal + ajouter l'état du code, les choses à faire
 * <2014-08-05 mar.>
 - j'ai rajouté une description de chaque fonction du code
 ** DONE reste à commenter syscall_process.c 
@@ -1363,6 +1366,7 @@ qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
 - retour sur allpairs: 
   - ça boucle avec des nanosleep
   - c'est parce que la connexion n'est pas établie
+** TODO allpairs: revoir la connexion
 * <2014-08-07 jeu.>
 - ajout de refcounts sur les infos_socket: je suis embêtée parce qu'il
   y a des cast d'infos_socket en fd_descriptors.. 
@@ -1380,33 +1384,64 @@ qu'on veut utiliser dans l'article genre les 4 tubes avant le clone et tout
     (mais 1) .. j'ai vérifié qu'à chaque incrémentation correspond
     une décrémentation, mais je vois pas le souci
 ** TODO corriger refcounts pour les infos_sockets
-** TODO ajouter des refcounts pour comm_t 
+** DONE ajouter des refcounts pour comm_t 
 - Corrigé une erreur dans le clone: je passais les descripteurs de
   fichiers du parent directement sans les recopier
 - Ca a débloqué pp python en full mediation: la simulation termine il
   n'y a pas de deadlock
 ** TODO regarder les traces
+* <2014-08-08 ven.>
+- ajout de refcounts pour les comm_t
+- Pour le pipe_t pas besoin de refcount, on regarde quand les
+  descripteurs des deux côtés sont tous fermés, et on le détruit. 
+
 
 * Etat actuel du projet et choses à faire:
 - les tests avec run.sh et run_sendmsg.sh passent (si je vérifie pas
   que les refcounts valent zéro à la fin)
 - les tests avec allpairs et pp python ne fonctionnent pas 
   - python pp: 
-    - en full mediation ça termine, il faut regarder si les traces
-      sont correctes
-    - en address translation, cf explications du vendredi 1er août
+    - en full mediation Simterpose termine, mais en fait c'est
+      prématuré, le clone n'est jamais lancé et les traces montrent
+      que ça bug à partir du pipe: 
+      - Je compare les résultat du strace avec la trace de simterpose
+        avec les commandes suivantes:
+#+verbatim    
+	strace -f python-pp/sum_primes.py > trace_pp/strace 2>&1
+	./pp_run.sh > trace_pp/simterpose_full_mediation 2>&1
+#+endverbatim
+      - Note: en cas d'erreur, les valeurs de retour dans strace
+        valent -1 avec errno mis à la valeur appropriée. Dans
+        simterpose on renvoie directement -{code d'erreur} 
+      - C'est à partir des 4(pipes-fcntl) suivis du clone que les traces
+        divergent: dans simterpose il n'y a qu'un seul pipe-fcntl et
+        après ça fait nimporte quoi.
+    - en address translation ça deadlock, cf explications du vendredi
+      1er août
   - allpairs:
-    - ça boucle avec des nanosleep
-    - c'est parce que la connexion n'est pas établie
-  - poll
+    - en full ça boucle avec des nanosleep, parce que la simulation de
+      connexion n'est pas faite
+    - en address translation ça boucle sur la connexion
+    - le process_connect_in_call renvoie 0 parce qu'il n'y a encore
+      personne en face qui accepte
+** TODO  regarder de plus près
+  - poll et select pas implémentés/pas correctement. manque un
+    MSG_comm_waitany avec timeout
 - refcounts:
-  - implementés pour fd et is mais il y a des erreurs. ne valent pas
-    zéro à la fin. 
-  - en rajouter pour comm_t
-- deux méthodes (address/full) ne sont pas toujours
+  - implementés pour fd_descriptor_t, comm_t et infos_socket mais il y
+    a des erreurs. ne valent pas zéro à la fin. 
+- les deux méthodes (address/full) ne sont pas toujours
   respectées/correctes: cf explications du mercredi 6
 - ajouter:
-  - gestion du temps (VDSO en LD_PRELOADant une page qu'on écrit nous même)
+  - gestion du temps (VDSO en LD_PRELOADant une page qu'on écrit nous
+    même)
   - médiation port 53, DNS: intercepter tout ce qui arrive (ou bien
     écrire dans le resolv.conf de la machine physique) 
-- faire d'autres tests
+- faire d'autres tests:
+  - durée de la simulation pour address translation/full mediation
+** TODO compléter tests
+- revoir la fermeture des processus en cas de crash: de temps en temps
+  j'ai des "address already in use" quand SimTerpose a crashé (c'est
+  un peu aléatoire comme comportement). Je pense que c'est parce que
+  je ne quitte pas bien toutes les applications ou ne ferme pas bien
+  les sockets 
