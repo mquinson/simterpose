@@ -153,6 +153,7 @@ void socket_close(process_descriptor_t * proc, int fd)
   struct infos_socket *is = get_infos_socket(proc, fd);
   if (is != NULL) {
 	proc->fd_list[fd]->ref_nb--;
+	is->ref_nb--;
     if (socket_network(proc, fd))
       comm_close(is);
     else {

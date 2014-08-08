@@ -48,6 +48,7 @@ comm_t comm_new(struct infos_socket *socket)
   res->conn_wait = xbt_dynar_new(sizeof(comm_t), NULL);
 
   xbt_dynar_push(comm_list, &res);
+  res->ref_nb++;
 
   return res;
 }
@@ -59,12 +60,14 @@ void comm_destroy(comm_t comm)
 		comm->info[0].socket->ref_nb--;
 	if(comm->info[1].socket!= NULL)
 		comm->info[1].socket->ref_nb--;
+
   recv_information_destroy(comm->info[0].recv);
   recv_information_destroy(comm->info[1].recv);
   xbt_dynar_free(&comm->conn_wait);
   xbt_ex_t e;
   TRY {
     int i = xbt_dynar_search(comm_list, &comm);
+    comm->ref_nb--;
     xbt_dynar_remove_at(comm_list, i, NULL);
   }
   CATCH(e) {
@@ -120,7 +123,7 @@ void comm_close(struct infos_socket *is)
     if(!is->ref_nb)
     	free(is);
     else
-    	xbt_die("refcount = %d", is->ref_nb);
+    	XBT_ERROR("info_socket refcount = %d", is->ref_nb);
     comm_destroy(comm);
   } else if (comm->state == COMM_CLOSED) {
     struct infos_socket *is = comm->info[0].socket;
@@ -129,14 +132,14 @@ void comm_close(struct infos_socket *is)
     if(!is->ref_nb)
     	free(is);
     else
-    	xbt_die("refcount = %d", is->ref_nb);
+    	XBT_ERROR("info_socket refcount = %d", is->ref_nb);
     is = comm->info[1].socket;
     unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
     if(!is->ref_nb)
     	free(is);
     else
-    	xbt_die("refcount = %d", is->ref_nb);
+    	XBT_ERROR("info_socket refcount = %d", is->ref_nb);
     comm_destroy(comm);
   } else
     comm->state = COMM_CLOSED;
@@ -167,6 +170,7 @@ process_descriptor_t *comm_ask_connect(msg_host_t host, int port, process_descri
 
   comm_t comm = comm_new(get_infos_socket(proc, fd));
   xbt_dynar_push(conn->comm->conn_wait, &comm);
+  comm->ref_nb++;
 
   struct infos_socket *is = get_infos_socket(proc, fd);
 
@@ -202,10 +206,13 @@ void comm_join_on_accept(struct infos_socket *is, process_descriptor_t * proc, i
 
   comm_t comm_conn;
   xbt_dynar_shift(comm->conn_wait, &comm_conn);
+  comm_conn->ref_nb--;
 
   comm_conn->info[1].socket = is;
   is->ref_nb++;
+
   is->comm = comm_conn;
+  comm_conn->ref_nb++;
 }
 
 /** @brief retrieve the address and port of the waiting process */

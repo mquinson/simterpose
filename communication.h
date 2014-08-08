@@ -35,6 +35,7 @@ struct comm_s {
   comm_info info[2];
   int state;
   xbt_dynar_t conn_wait;
+  int ref_nb;                   // reference counting
 };
 
 typedef struct task_comm_info task_comm_info;
