@@ -216,7 +216,7 @@ static int syscall_write_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   } else {
     // FIXME: if the socket is not registered, for now we do nothing
     // and let the kernel run the syscall
-    XBT_WARN("socket unregistered");
+    //XBT_WARN("socket unregistered");
   }
 #endif
   return PROCESS_CONTINUE;
@@ -575,7 +575,7 @@ static void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   struct infos_socket *is = get_infos_socket(proc, temp->fd);
 
   if (is != NULL) {
-	  is->ref_nb++;
+    is->ref_nb++;
     //   continue;
     //  else {
     int sock_status = socket_get_state(is);
@@ -778,49 +778,48 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
       clone->fd_list[i] = malloc(sizeof(fd_descriptor_t));
       clone->fd_list[i]->proc = clone;
       clone->fd_list[i]->ref_nb = 0;
-      if(proc->fd_list[i]!=NULL){
-		  clone->fd_list[i]->fd = proc->fd_list[i]->fd;
-		  clone->fd_list[i]->flags = proc->fd_list[i]->flags;
-		  clone->fd_list[i]->pipe = proc->fd_list[i]->pipe;
-		  clone->fd_list[i]->stream = proc->fd_list[i]->stream;
-		  clone->fd_list[i]->type = proc->fd_list[i]->type;
+      if (proc->fd_list[i] != NULL) {
+        clone->fd_list[i]->fd = proc->fd_list[i]->fd;
+        clone->fd_list[i]->flags = proc->fd_list[i]->flags;
+        clone->fd_list[i]->pipe = proc->fd_list[i]->pipe;
+        clone->fd_list[i]->stream = proc->fd_list[i]->stream;
+        clone->fd_list[i]->type = proc->fd_list[i]->type;
       }
+      // deal with pipes
+      if (clone->fd_list[i]->type == FD_PIPE) {
+        pipe_t *pipe = clone->fd_list[i]->pipe;
+        xbt_assert(pipe != NULL);
 
-        // deal with pipes
-        if (clone->fd_list[i]->type == FD_PIPE) {
-          pipe_t *pipe = clone->fd_list[i]->pipe;
-          xbt_assert(pipe != NULL);
-
-          // copy all the fds in the read end of the pipe
-          unsigned int cpt_in;
-          pipe_end_t end_in;
-          xbt_dynar_t read_end = pipe->read_end;
-          xbt_dynar_foreach(read_end, cpt_in, end_in) {
-            // we have to make sure we don't add endlessly the fd from the clone
-            //FIXME we still add pipes twice sometimes
-            if (end_in->proc != clone && end_in->proc->pid != clone->pid) {
-              xbt_assert(end_in != NULL);
-              pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
-              clone_end->fd = end_in->fd;
-              clone_end->proc = clone;
-              xbt_dynar_push(read_end, &clone_end);
-            }
+        // copy all the fds in the read end of the pipe
+        unsigned int cpt_in;
+        pipe_end_t end_in;
+        xbt_dynar_t read_end = pipe->read_end;
+        xbt_dynar_foreach(read_end, cpt_in, end_in) {
+          // we have to make sure we don't add endlessly the fd from the clone
+          //FIXME we still add pipes twice sometimes
+          if (end_in->proc != clone && end_in->proc->pid != clone->pid) {
+            xbt_assert(end_in != NULL);
+            pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
+            clone_end->fd = end_in->fd;
+            clone_end->proc = clone;
+            xbt_dynar_push(read_end, &clone_end);
           }
+        }
 
-          // copy all the fds in the write end of the pipe
-          xbt_dynar_t write_end = pipe->write_end;
-          unsigned int cpt_out;
-          pipe_end_t end_out;
-          xbt_dynar_foreach(write_end, cpt_out, end_out) {
-            // we have to make sure we don't add endlessly the fd from the clone
-            if (end_out->proc != clone && end_out->proc->pid != clone->pid) {
-              xbt_assert(end_out != NULL);
-              pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
-              clone_end->fd = end_out->fd;
-              clone_end->proc = clone;
-              xbt_dynar_push(write_end, &clone_end);
-            }
+        // copy all the fds in the write end of the pipe
+        xbt_dynar_t write_end = pipe->write_end;
+        unsigned int cpt_out;
+        pipe_end_t end_out;
+        xbt_dynar_foreach(write_end, cpt_out, end_out) {
+          // we have to make sure we don't add endlessly the fd from the clone
+          if (end_out->proc != clone && end_out->proc->pid != clone->pid) {
+            xbt_assert(end_out != NULL);
+            pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
+            clone_end->fd = end_out->fd;
+            clone_end->proc = clone;
+            xbt_dynar_push(write_end, &clone_end);
           }
+        }
 
       }
     }
@@ -997,10 +996,10 @@ static void process_close_call(process_descriptor_t * proc, int fd)
         }
 
         // if both sides are closed we can free the pipe
-        if(xbt_dynar_is_empty(read_end) && xbt_dynar_is_empty(write_end)){
-        	xbt_dynar_free(&read_end);
-        	xbt_dynar_free(&write_end);
-        	free(pipe);
+        if (xbt_dynar_is_empty(read_end) && xbt_dynar_is_empty(write_end)) {
+          xbt_dynar_free(&read_end);
+          xbt_dynar_free(&write_end);
+          free(pipe);
         }
 
       }
@@ -2053,7 +2052,7 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else {
-        XBT_DEBUG("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+        XBT_WARN("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
         proc->in_syscall = 0;
       }
       break;

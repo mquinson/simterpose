@@ -56,10 +56,10 @@ comm_t comm_new(struct infos_socket *socket)
 /** @brief destroy a communication and remove it from the list */
 void comm_destroy(comm_t comm)
 {
-	if(comm->info[0].socket != NULL)
-		comm->info[0].socket->ref_nb--;
-	if(comm->info[1].socket!= NULL)
-		comm->info[1].socket->ref_nb--;
+  if (comm->info[0].socket != NULL)
+    comm->info[0].socket->ref_nb--;
+  if (comm->info[1].socket != NULL)
+    comm->info[1].socket->ref_nb--;
 
   recv_information_destroy(comm->info[0].recv);
   recv_information_destroy(comm->info[1].recv);
@@ -120,26 +120,26 @@ void comm_close(struct infos_socket *is)
     struct infos_socket *is = comm->info[0].socket;
     unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
-    if(!is->ref_nb)
-    	free(is);
+    if (!is->ref_nb)
+      free(is);
     else
-    	XBT_ERROR("info_socket refcount = %d", is->ref_nb);
+      XBT_ERROR("info_socket refcount = %d", is->ref_nb);
     comm_destroy(comm);
   } else if (comm->state == COMM_CLOSED) {
     struct infos_socket *is = comm->info[0].socket;
     unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
-    if(!is->ref_nb)
-    	free(is);
+    if (!is->ref_nb)
+      free(is);
     else
-    	XBT_ERROR("info_socket refcount = %d", is->ref_nb);
+      XBT_ERROR("info_socket refcount = %d", is->ref_nb);
     is = comm->info[1].socket;
     unset_socket(is->fd.proc->pid, is);
     delete_socket(is);
-    if(!is->ref_nb)
-    	free(is);
+    if (!is->ref_nb)
+      free(is);
     else
-    	XBT_ERROR("info_socket refcount = %d", is->ref_nb);
+      XBT_ERROR("info_socket refcount = %d", is->ref_nb);
     comm_destroy(comm);
   } else
     comm->state = COMM_CLOSED;

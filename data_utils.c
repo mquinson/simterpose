@@ -292,8 +292,8 @@ void unset_socket(pid_t pid, struct infos_socket *is)
     return;
   }
 
-  if (is == desc->bind_socket){
-	  is->ref_nb--;
+  if (is == desc->bind_socket) {
+    is->ref_nb--;
     desc->bind_socket = NULL;
   }
 
