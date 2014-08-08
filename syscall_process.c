@@ -952,7 +952,7 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
   open_arg_t arg = &(sysarg->open);
   arg->ret = reg->ret;
   arg->ptr_filename = reg->arg1;
-
+  arg->flags = reg->arg2; // FIXME arg2 value is always 0, so we don't print actual flags for now
 
   if (arg->ret >= 0) {
     fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
@@ -963,7 +963,8 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
     proc->fd_list[(int) reg->ret] = file_desc;
     file_desc->ref_nb++;
   }
-  // TODO print trace
+  // TODO handle flags
+  XBT_WARN("flags for open syscall are not handled");
   if (strace_option)
 	 print_open_syscall(proc, sysarg);
 }

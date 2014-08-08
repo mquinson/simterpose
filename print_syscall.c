@@ -1038,6 +1038,25 @@ void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysa
   fprintf(stderr, "%d\n", arg->ret);
 }
 
+static void print_flags_open(int flags)
+{
+fprintf(stderr, ", ");
+  if (flags & O_CLOEXEC)
+    fprintf(stderr, " O_CLOEXEC |");
+  if (flags & O_CREAT)
+    fprintf(stderr, " O_CREAT |");
+  if (flags & O_DIRECTORY)
+    fprintf(stderr, " O_DIRECTORY |");
+  if (flags & O_EXCL)
+    fprintf(stderr, " O_EXCL |");
+  if (flags & O_NOCTTY)
+    fprintf(stderr, " O_NOCTTY |");
+  if (flags & O_NOFOLLOW)
+    fprintf(stderr, " O_NOFOLLOW |");
+  if (flags & O_TRUNC)
+    fprintf(stderr, " O_TRUNC |");
+}
+
 /** @brief print open syscall */
 void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
@@ -1047,11 +1066,13 @@ void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 	  long ptr_filename;
 
 	  ptr_filename = arg->ptr_filename;
-	  fprintf(stderr, "[%d] open(", proc->pid);
+	 // fprintf(stderr, "[%d] open(", proc->pid);
+	  fprintf(stderr, "open(");
 	  if (ptr_filename) {
 	    get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
 	    fprintf(stderr, "\"%s\"", bufstr);
 	  }
-	  // TODO: add flags
+	  if (arg->flags > 0)
+		    print_flags_open(arg->flags);
 	  fprintf(stderr, ") = %d\n", arg->ret);
 }
