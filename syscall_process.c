@@ -631,6 +631,8 @@ static void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
   get_args_pipe(proc, reg, sysarg);
   pipe_arg_t arg = &(sysarg->pipe);
 
+  // TODO: add gestion of O_NONBLOCK and O_CLOEXEC flags
+
   if (arg->ret == 0) {
     // we create the pipe
     int p0 = *arg->filedes;
@@ -993,6 +995,14 @@ static void process_close_call(process_descriptor_t * proc, int fd)
             cpt_out--;
           }
         }
+
+        // if both sides are closed we can free the pipe
+        if(xbt_dynar_is_empty(read_end) && xbt_dynar_is_empty(write_end)){
+        	xbt_dynar_free(&read_end);
+        	xbt_dynar_free(&write_end);
+        	free(pipe);
+        }
+
       }
     }
     file_desc->ref_nb--;
