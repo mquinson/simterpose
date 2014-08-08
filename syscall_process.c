@@ -919,7 +919,7 @@ static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_des
     int i;
     for (i = 0; i < MAX_FD; ++i) {
       if (proc->fd_list[i] != NULL) {
-        XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
+       // XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
         if (proc->fd_list[i]->flags == FD_CLOEXEC)
           XBT_WARN("FD_CLOEXEC not handled");
         //process_close_call(proc, i);
@@ -948,18 +948,24 @@ static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
   proc->in_syscall = 0;
-  if ((int) reg->ret >= 0) {
+
+  open_arg_t arg = &(sysarg->open);
+  arg->ret = reg->ret;
+  arg->ptr_filename = reg->arg1;
+
+
+  if (arg->ret >= 0) {
     fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
     file_desc->ref_nb = 0;
-    file_desc->fd = (int) reg->ret;
+    file_desc->fd = arg->ret;
     file_desc->proc = proc;
     file_desc->type = FD_CLASSIC;
     proc->fd_list[(int) reg->ret] = file_desc;
     file_desc->ref_nb++;
-    // TODO print trace
-    if (strace_option)
-      fprintf(stderr, "[%d] open(...) = %ld\n", proc->pid, reg->ret);
   }
+  // TODO print trace
+  if (strace_option)
+	 print_open_syscall(proc, sysarg);
 }
 
 /** @brief helper function to close a file descriptor */
@@ -1016,7 +1022,8 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
   proc->in_syscall = 0;
   int fd = reg->arg1;
   process_close_call(proc, fd);
-  fprintf(stderr, "[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
+  if(strace_option)
+	  fprintf(stderr, "[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
 }
 
 /** @brief handle shutdown syscall at the entrace if in full mediation
@@ -1257,6 +1264,7 @@ static void syscall_fcntl_pre(reg_s * reg, syscall_arg_u * sysarg, process_descr
   process_fcntl_call(proc, sysarg);
   if (strace_option)
     print_fcntl_syscall(proc, sysarg);
+  sleep(4);
 #endif
 }
 
@@ -2052,7 +2060,8 @@ int process_handle(process_descriptor_t * proc, int status)
       if (!(proc->in_syscall))
         proc->in_syscall = 1;
       else {
-        XBT_WARN("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
+        fprintf(stderr,"Unhandled syscall: [%d] %s = %ld\n", pid, syscall_list[arg.reg_orig], arg.ret);
+        //XBT_WARN("Unhandled syscall: [%d] %s = %ld", pid, syscall_list[arg.reg_orig], arg.ret);
         proc->in_syscall = 0;
       }
       break;

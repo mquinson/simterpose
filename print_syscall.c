@@ -1037,3 +1037,21 @@ void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysa
   execve_arg_t arg = &(sysarg->execve);
   fprintf(stderr, "%d\n", arg->ret);
 }
+
+/** @brief print open syscall */
+void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+	 open_arg_t arg = &(sysarg->open);
+	  pid_t pid = proc->pid;
+	  char bufstr[4096];
+	  long ptr_filename;
+
+	  ptr_filename = arg->ptr_filename;
+	  fprintf(stderr, "[%d] open(", proc->pid);
+	  if (ptr_filename) {
+	    get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
+	    fprintf(stderr, "\"%s\"", bufstr);
+	  }
+	  // TODO: add flags
+	  fprintf(stderr, ") = %d\n", arg->ret);
+}

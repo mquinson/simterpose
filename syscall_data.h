@@ -233,6 +233,14 @@ typedef struct execve_arg_s {
 } execve_arg_s;
 typedef execve_arg_s *execve_arg_t;
 
+typedef struct open_arg_s {
+  int ret;
+  long ptr_filename;
+  int flags;
+  int mode;
+} open_arg_s;
+typedef open_arg_s *open_arg_t;
+
 typedef union {
   connect_arg_s connect;
   bind_arg_s bind;
@@ -260,6 +268,7 @@ typedef union {
   clockgettime_arg_s clockgettime;
   clone_arg_s clone;
   execve_arg_s execve;
+  open_arg_s open;
 } syscall_arg_u;
 
 

@@ -63,4 +63,6 @@ void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysar
 
 void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
+void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+
 #endif
