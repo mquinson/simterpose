@@ -1,38 +1,45 @@
-SimTerpose aims at simulating distributed applications. For this purpose, 
+Simterpose aims at simulating distributed applications. For this purpose, 
 it intercepts all system calls made by the set of application.
 
 Requirements:
-	- SimGrid > 3.11 (previous releases not tested, xml parser changes since 
-	3.6.2)
+	- SimGrid (tested with 3.11)
+	- linux (this application will never work on non-POSIX platform)
 
-To compile SimTerpose:
+Compiling Simterpose:
 	make
 
-To run SimTerpose:
+Running Simterpose: (as root because of cputimer_get())
 	./run.sh (client/server example with sendto/recvfrom syscalls)
 	./run_sendmsg.sh (example with sendmsg/recvmsg syscalls)
- /!\ TASKSTATS_CMD_GET in cputimer.c::cputimer_get() seems to require to be 
- root /!\ 	
 	
-Other simulations (doesn't work for now)
-	./allpairs_run.sh (simulation of allpairs, needs to be installed: 
-	http://ccl.cse.nd.edu/software/allpairs/)
-	./pp_run.sh (simulation of pp python. python-pp package needs to be 
-	installed)
+Other simulations (currently not working)
+  * ./allpairs_run.sh (simulation of allpairs, requires: http://ccl.cse.nd.edu/software/allpairs/)
+  * ./pp_run.sh (simulation of pp python, requires the python-pp package)
+  * Trace replay is currently disabled because not working.
 
-Trace replay:
-	disabled for a while
 	
 GENERAL USE:
 
-Like SimGrid, SimTerpose uses a deployment file and a platform file, in XML 
-format. The deployment file is used to give SimTerpose the processes as well as 
-their arguments and the host on which they run. The platform file describes 
-both the resources and the topology. We put information about the hosts, their
-computing power and the links between the different nodes.
+  Like SimGrid, Simterpose uses a platform file and a deployment file,
+  both in XML. Please see the SimGrid 101s for more information.
+  
+  simgrid.gforge.inria.fr/tutorials/simgrid-101.pdf
+  simgrid.gforge.inria.fr/tutorials/simgrid-use-101.pdf
+
+  Simterpose uses the deployment file to know which (real) program
+  should be launched on which (virtual) hosts, and with which
+  parameters.
 
 
 WARNING:
 
-This version of SimTerpose is delivered without any warranty, it's a development 
-version and several things are not implemented yet.
+  This is a pre-version of Simterpose, that is not ready for use in
+  production settings. Some things are not perfectly working while
+  other things are still to be implemented.
+
+
+LICENCE:
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the license (GNU GPL v2) which comes with this
+  package.
