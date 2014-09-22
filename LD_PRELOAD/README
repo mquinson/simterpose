@@ -1,5 +1,9 @@
-Try :
+This directory contains an old POC of how to run interception with
+LD_PRELOAD. Nothing fancy, actually.
 
+
+
+Try :
 	make
 	./programme
 
