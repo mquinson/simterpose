@@ -1,0 +1,15 @@
+This is an attempt at ptracing gettimeofday. That's not very
+sucessful, as we need to pass the following parameters to the linux
+boot line:
+
+  vdso=0 vsyscall=native
+
+This is because otherwise, gettimeofday is not a syscall but uses the
+VDSO trick so that the application can retrieve the time without any
+syscall. Passing these parameters is rather intrusive (it will
+probably slow down your unrelated applications).
+
+
+But once you've done that, you can then run:
+
+  ./timetravel multiplying_factor temps

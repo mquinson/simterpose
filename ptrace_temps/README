@@ -1,5 +1,0 @@
-To be able to trace gettimeofday, we need to disable vdso and vsyscall:
-
-vdso=0 vsyscall=native
-
-then run ./timetravel multiplying_factor temps

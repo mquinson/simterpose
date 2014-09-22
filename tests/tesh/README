@@ -1,0 +1,5 @@
+This directory contains an attempt at writing some integration tests
+for simterpose. It's based on the tesh utility that comes with SimGrid.
+
+As far as I know, it's not working yet, even if it would be really
+precious.
