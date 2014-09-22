@@ -1,7 +1,0 @@
-<?xml version='1.0'?>
-<!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid.dtd">
-<platform version ="3">
-  <process host="Tremblay" function="python-pp/sum_primes.py" start_time="0.00">
-    <argument value="4"/>
-  </process>
-</platform>
