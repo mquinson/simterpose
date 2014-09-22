@@ -29,5 +29,5 @@ communication.o: communication.c communication.h sockets.h
 #################################################
 
 clean:
-	rm -rf ../simterpose *.o
+	rm -rf *.o *~
 	
