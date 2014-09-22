@@ -1,0 +1,1447 @@
+Ce document contient le journal de bord et les notes de travail relatives au
+stage de Chloé Macur au Loria en 2014. Les premières entrées sont des
+informations collectées au cours du stage tandis que les entrées suivantes sont
+un descriptif du travail au jour le jour.
+
+* Bibliographie sur le sujet
+- http://scholar.google.fr/scholar?cites=3988720610537406662&as_sdt=2005&sciodt=0,5&hl=fr
+  Le papier microgrid, avec les papiers qui le citent.
+- http://prod.sandia.gov/techlib/access-control.cgi/2009/096068.pdf
+  Un article très court de 2009 qui annonce avoir démarré 1M de machines
+  virtuelles (pour étudier les botnets). Ils ont utilisé 4480 machines pour
+  parvenir à ce résultat. Nous on peut probablement pas exécuter des botnets
+  dans nos trucs (ca serait pas super safe d'essayer), mais on aurait pas besoin
+  d'autant d'ordi.
+- http://eurosys2010-dev.sigops-france.fr/workshops/HPCVirt2010/hpcvirt2010_4.pdf
+  Un retour d'expérience sur le lancement d'un million de VM sur une machine
+  donnée. Punaise, c'est dur. Ils citent le HPC et les botnets en cas
+  d'usage. Je crois que c'est les mêmes que le précédent?
+- http://www.dtic.mil/cgi-bin/GetTRDoc?AD=ADA594524
+  Un document de l'armée australienne où ils étudient différents terrains
+  d'entraînement pour la cyberguerre. Ca ressemble à ce qu'on fait, d'un peu
+  loin. On ne fera jamais ce genre de choses sur simterpose, je crois, mais
+  c'est le champ d'étude d'à coté, c'est instructif à parcourir.
+- http://www.chrislee.dhs.org/projects/rubot/rubot-thesis.pdf
+  - Un outil servant à étudier les botnets. La partie sur WineBot (page 31) est
+    super intéressante.
+  - Ils utilisent WINE (WINE Is Not an Emulator), qui est une réimplémentation
+    des DLL de base windows de façon à ce que ça marche sous linux. Ils s'en
+    servent pour faire de l'émulation légère, après avoir profondément modifié
+    WINE pour avoir plusieurs WINE avec chacun son IP sur la même machine. On
+    fait la même chose, un peu. Juste en "un peu" moins mature :)
+  - Le cas d'usage et l'explication de comment ils ont utilisé ce truc pour
+    faire du mass-join sur un réseau qui était pénible à combattre car on avait
+    pas assez d'info quand un ou deux ordis s'y connectaient. C'est super
+    marrant à lire :)
+- http://hal.inria.fr/docs/00/94/97/62/PDF/RR-8482.pdf
+  Un papier sur distem. Un must read :)
+- http://www.deter-lab.org/sites/default/files/files/mirkovic_benzel_faber_braden_wroclawski_schwab_the%20deter%20project%20advancing%20the%20science%20of%20cyber%20security%20experimentation%20and%20test_ieee_hst%20%2710_boston%20massachusetts_november%202010.pdf
+  - Solution pour l'étude des pbs de sécurité, de l'armée américaine. Ils ont
+    400 ordinateurs, et s'intéressent à plusieurs aspects tels que l'éducation,
+    le test, l'émulation, etc.
+  - Ils expliquent le fonctionnement d'une XP d'une façon qu'on pourrait reprendre.
+    Design <-> Instantiation <-> Execution <-> Analysis
+- http://link.springer.com/article/10.1007/s10723-006-9052-6
+  (dispo dans biblio/virtu-cappello.pdf)
+  Etude de la scalabilité de différentes solutions de virtualisation utilisables
+  pour tester des applications distribuées. Il serait intéressant de refaire ces
+  expériences en y ajoutant simterpose, mais ça serait probablement un peu dur à
+  faire. En plus, on est pas exactement concurrents puisque nous on peut pas
+  démarrer une VM vide, par exemple.
+* Tests possibles
+- On cherche des applications distribuées classiques. Il faut qu'elles soient
+  assez complexes pour être représentatives d'une large gamme d'applis, sans
+  être trop compliquées pour que ca marche en pratique.
+- Une première idée est de se limiter aux applications présentes dans
+  Debian. Liste préliminaire, triée avec les plus intéressants à court terme
+  devant.
+** Parallel Python (paquet python-pp)
+- http://www.parallelpython.com/
+- Permet de répartir rapidement du code python sur une paire de serveurs.
+- Cela semble assez simple à mettre en place et à intercepter, une bonne cible.
+- Problème: les exemples fournis sont un peu simplistes ?
+** CCL Software (paquet coop-computing-tools, src:cctools)
+- boite à outil pour traitement distribué, par U. Notre Dame. Certains outils
+  semblent mieux adaptés, tels que all-pairs et wavefronts. Cf:
+  http://ccl.cse.nd.edu/research/papers/abstr-jcc.pdf
+- Utilise Sun Grid Engine, Condor ou Work Queue, qui est une implem maison de
+  batch scheduler en python.
+- N'est plus dans testing à cause de deux FTBFS (portage kfreebsd et build-dep
+  manquante) depuis septembre 2013. Il y a une version 4.2 upstream depuis le 11
+  juillet. J'ai ouvert un bug debian pour demander son empaquetage pour voir si
+  ca aide.
+** MPI
+- Il serait amusant de vérifier si on sait intercepter des runtime MPI tels que
+  MPICH ou OpenMPI. Je n'ai pas de certitude sur la complexité de la chose, mais
+  j'ai dans l'idée que c'est loin d'être trivial.
+** Condor
+- Le roi des batch schedulers. Je pense que ce soft est plein de ruse de sioux
+  niveau système qui le rend difficile à intercepter, mais si on y arrive, c'est
+  la Très Grande Classe.
+* Idées suite à la présentation d'équipe
+- Autre méthode pour implémenter full mediation (Gabriel) :
+  - Aller directement écrire dans la mémoire dans /proc/<pid>/mem au lieu de se
+    misérer avec des peek et des poke
+  - Ou bien utiliser process_vm_writev / readv : permet de transférer
+    des données d'un processus à un autre sans passer par l'espace
+    noyau
+- Utiliser LD_PRELOAD directement sur write et pas sur fprintf
+  etc. Puisque fprintf et compagnie appellent write qui appelle
+  SYS_write. (Gabriel)
+- Implémenter la même technique que VDSO en LD_PRELOADant les appels au temps
+  pour qu'ils aillent lire une page partagée où simgrid écrit l'heure simulée
+  dans l'espace d'adressage des enfants (Gabriel). 
+- Tests sur la durée d'exécution: variable? et sur une machine
+  différente? (Paul)
+- Relation avec Distem? Concurrent? (Thomas)
+- Est-ce qu'on peut l'exécuter sur plusieurs machines? (Paul)
+- On peut utiliser des threads, mais c'est un peu le chantier
+  pthread/ptrace (Lucas)
+
+* du  <2014-03-31 lun.> au <2014-04-04 ven.>
+** J'ai lu les différents articles: 
+*** MicroGrid http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.122.9629
+*** celui de Marion, http://webloria.loria.fr/~quinson/Research/Publications/2011-renpar.pdf
+http://webloria.loria.fr/~quinson/Research/Publications/2011-renpar-slides.pdf
+*** section 4.1.3 page 76 du HDR, http://webloria.loria.fr/~quinson/Research/Publications/2013-hdr_quinson.pdf
+http://webloria.loria.fr/~quinson/Research/Publications/2013-hdr_quinson-slides.pdf
+*** rapport de Guillaume http://webloria.loria.fr/~quinson/Research/Students/2012-master-simterpose-rapport.pdf
+** J'ai également fait tourner le code de Marion et regardé comment il marche: 
+traçage des processus puis interception d'un certain nombre d'appels système, identification et affichage
+** Récupéré le code de Guillaume:  https://gforge.inria.fr/scm/?group_id=4125
+** j'ai effectué les modifications nécessaires pour qu'il compile avec la version 3.9 de SimGrid 
+fonctions différentes, notamment le parseur
+** il faut exécuter simterpose en root pour éviter une erreur à l'exécution
+à cause de l'appel à TASKSTATS_CMD_GET dans ask_time() (calc_time_proc.c) Si on n'est pas root, msg.n.nlmsg_type vaut NLMSG_ERROR
+** Je bloque sur l'exécution du programme.
+Les tâches à effectuer ne sont pas correctement marquées comme terminées, et ça boucle indéfiniment
+(alors que la connexion client/serveur de l'exemple s'effectue correctement). 
+j'ai notamment un: [sd_kernel/WARNING] Simulation is finished but 1 tasks are still not done
+
+* du <2014-04-07 lun.> au <2014-04-11 ven.>
+Uprobes: 
+** On est partis sur Uprobes.
+*** En théorie ça a l'air vraiment bien
+notamment parce que c'est beaucoup plus performant puisqu'on évite les changements de contexte intempestifs 
+(bon papier là dessus 'Ptrace, Utrace, Uprobes: Lightweight, Dynamic Tracing of User Apps Abstract. Linux Symposium, 2007').
+Ca permet également de mettre un probepoint au retour d'une fonction, et de gérer à la fois uprobe et kprobe donc user space et kernel. 
+*** En pratique, même si cela fait 2 ans que c'est mergé, il y a très peu d'exemples d'utilisation. 
+La doc (Documentation/trace/uprobetracer.txt) montre qu'il faut aller écrire les probepoints dans /sys/kernel/debug/tracing/uprobe_events 
+(c'est comme ça que perf l'utilise. Uprobes est également utilisé par SystemTap ou ftrace).
+ Problème : pour pouvoir crééer des handler il faut visiblement créer des modules noyau. 
+Exemple ici (https://sourceware.org/ml/systemtap/2007-q1/msg00587.html 11. Uprobes Example) à actualiser.
+*** Conclusion: on retourne à ptrace.
+** Retour sur le code de Guillaume
+On avait des tâches à effectuer qui n'étaient pas correctement marquées comme terminées, 
+et ça bouclait indéfiniment avec un: [sd_kernel/WARNING] Simulation is finished but 1 tasks are still not done.
+Le problème a l'air de venir de SimDag, en tout cas en modifiant SimGrid-3.9/src/simdag/sd_global.c et SimGrid-3.9/src/simdag/sd_task.c 
+il n'y a plus de problème d'exécution, tout se termine correctement.
+Les problèmes suivants se posaient:
+- si A envoie à B, on crée une dépendance de B vers A, pour attendre que A ait accomplit sa tâche avant d'exécuter B. 
+Donc on: schedule A, execute A, supprime A, schedule B, et B n'est jamais executé à cause de cette dépendance. 
+Le compteur "unsatisfied_dependencies" de sd_global.c est décrémenté deux fois (car la dépendance est bilatérale) au lieu d'une fois.
+- les tâches 'scheduled' ou 'runnable' étaient remises à 'schedulable' sans vérification
+Donc on a un patch: commit 'SimDag modifications" 
+
+* du <2014-04-14 lun.> au <2014-04-18 ven.>
+** Concernant SimDag:
+L'utilisation qu'on en fait dans le code n'est pas correcte, d'où l'erreur qu'on a rencontrée. 
+Frederic Suter m'a dit que pour l'instant c'est codé en SimDag en suivant une logique à la MSG à base de processus qui s'échangent des messages. 
+Pour l'instant on reste quand meme sur le patch.
+** interception des fonctions de temps
+*** Interception de gettimeofday: j'ai commencé des essais simplistes avec LD_PRELOAD
+*** Finalement on utilise ptrace
+gettimeofday est un appel système mais à cause de VDSO ça ne fait pas toujours d'appel système (conserve la valeur d'un appel récent et interpole)
+Il faut donc désactiver la vdso et vsyscall (vdso=0 et vsyscall=native dans le boot). 
+J'ai donc un prototype de programme simple où on peut modifier le temps pour gettimeofday et clock_gettime 
+(je n'arrive pas à modifier les registres pour l'appel time)
+** la full mediation est plus rapide que l'address translation ce qui n'est pas logique
+Normalement la full mediation utilise plein de peek et poke donc elle est très lente
+*** J'ai comptabilisé les peek et poke: il y a quasiment autant de (peek+poke) dans les 2 méthodes.
+En fait il y a globalement un tout petit peu moins d'appels à ptrace en Address translation (5%) mais c'est quand même plus lent. 
+Conclusions: 1) c'est bizarre qu'il y ait autant d'appels à ptrace dans les deux cas
+ 2) la différence de rapidité ne semble donc pas venir des appels à ptrace...
+*** vérifié le code, rien ne semble incohérent, les deux méthodes semblent respectées
+*** j'ai profilé avec FlameGraph, rient de concluant
+*** le strace des deux méthodes est identique
+
+* du <2014-04-22 mar.> au <2014-04-25 ven.>
+** écrit des tests avec tesh
+Tous les affichages de débug incluant du temps sont retirés pour avoir des tests reproductibles
+Je ne parviens pas à lancer le test avec BitTorrent. Je peux faire des téléchargements sans simterpose, mais ça échoue avec Simterpose
+Je mets dans le fichier de déploiement deploy.xml des scripts qui lancent chacun soit le tracker soit le seeder soit un client. 
+J'attends de savoir comment Guillaume faisait
+** Intégré l'interception et la modification de 3 appels système de gestion du temps à Simterpose 
+(gettimeofday, time et clock_gettime) L'appel est intercepté dans syscall_process, 
+puis dans arg_trace on remplace les registres et on renvoie la valeur désirée (get_simulated_timestamp)
+** passée à la version git de SimGrid: 3.11 et retiré le patch SimDag qu'on avait
+
+* <2014-04-28 lun.>
+essais pour faire fonctionner Simterpose sans le patch SimDag:
+Modifier toutes les dépendances des taches pour que ce soit conforme à l'utilisation traditionnelle 
+(en suivant le tuto SimDag) essentiellement dans task.c
+** rajouter la tache intermédiaire de transfert entre deux taches A et B (create_send_communication_task)
+*** Résultat:
+[sd_kernel/WARNING] Simulation is finished but 2 tasks are still not done
+[3.238773] /home/algorille/Documents/simterpose/simgrid/src/simdag/sd_global.c:401: [sd_kernel/WARNING] transfert comm is in SD_SCHEDULABLE state
+[3.238773] /home/algorille/Documents/simterpose/simgrid/src/simdag/sd_global.c:404: [sd_kernel/WARNING] communication recv is in SD_SCHEDULED state
+** La tache de transfert n'est pas bien schedulee. voir où les taches sont schedulees et modifier en conséquence
+*** Bon exemple dans simgrid/examples/simdag/sd_comm_throttling.c:
+- utilise des SD_task_comp_seq et SD_task_comm_e2e au lieu de SD_task
+- schedulel au lieu de schedule
+*** Résultat:
+tache d'envoi ok, mais la réception ne se fait pas (erreur réception: Transport endpoint is not connected)
+
+* <2014-04-29 mar.>
+** je me calque sur simgrid/examples/simdag/sd_comm_throttling.c
+nouvelle fonction qui crée les taches et les schedule aussitot. 
+Les dépendances se font bien, mais le problème se pose au moment de récupérer la tache de réception
+** essais avec deploy_msg_1024.xml pour trouver une nouvelle approche
+*** Résultat:
+Task 'communication recv' has already been scheduled
+*** Solution:
+ok si on retire l'appel à schedule_comm_task, puisque le recv a effectivement été schedulé au moment du send
+**  essais avec deploy_rw_512.xml
+fonctionne aussi maintenant
+** Conclusion: ok pour read/write et sendmsg/recvmsg mais toujours pas pour sendto/recvfrom
+
+* <2014-04-30 mer.>
+Pourquoi la simulation fonctionne avec sendmsg et pas sendto ?
+** send doit etre utilisé en mode connecté, et pas forcément sendmsg ni sendto
+d'où le problème de connexion: 'Transport endpoint is not connected'.
+Or la connexion s'est bien établie, pourquoi est-ce qu'elle se ferme?
+en fait peut etre qu'elle se ferme avec sendmsg aussi: exit_group(0) called, status = PROCESS_DEAD
+** Remarque: L'appel à send() (depuis client/server) est intercepté comme un appel à SYS_sendto dans simterpose
+send() est visiblement implémenté à l'aide de sendto
+Lorsque j'utilise des client/server qui utilisent directement sendto et recvfrom la simulation se fait correctement, idem que pour sendmsg.
+** Remarque: parfois l'erreur n'est pas située au meme endroit
+On alterne entre:
+- Server: error accept: Invalid argument
+- Transport endpoint is not connected
+** Ne change rien qu'on soit en full ou en addressage ...
+** regardé le patch qu'on avait fait pour trouver ce qu'on doit modifier dans simterpose. ça n'apporte pas d'indice supplémentaire
+
+** Regardé le 'scp-tsunami' comme application de test potentielle quand Simterpose fonctionnera
+algorille@midona:~/Documents/simterpose/scp-tsunami-read-only$ ./scpTsunamiB.py ../applications/ubuntu.torrent ../applications/client1/ubuntu.torrent -l localhost
+transferring ../applications/ubuntu.torrent to 1 hosts ...
+split complete!
+algorille@midona's password: algorille@midona's password: 
+algorille@localhost's password: 
+algorille@localhost's password: 
+Permission denied, please try again.
+*** mdp localhost? 
+*** regarder comment fonctionne scp
+
+* <2014-05-12 lun.>
+
+Le problème est soit: 
+
+** Au niveau de l'interception de la connexion, si on la fait mal
+*** la valeur de retour "-38" du connect ? 
+*** Regardé au niveau des syscall accept, connect et bind
+dans syscall_process.c et task.c, rien de concluant
+
+** Après la connexion, une déconnexion se produit
+*** Vérification des clients/server:
+Dans le client et le server, j'ai retiré la boucle préalable (qui tournait dans le vide)
+Les envois/reception tournent un moment puis 'Transport endpoint is not connected'
+Ne s'arrete jamais au meme endroit de la boucle, varie entre 3 et 200..
+(ou bien parfois Server: error accept 1: Invalid argument)
+*** essayé sans simterpose: aucun souci
+DONC c'est dans simterpose que la connexion a une durée de vie limitee
+
+* <2014-05-13 mar.>
+
+** SimDag:
+*** Le problème se pose en fait aussi pour read/write
+à condition de boucler suffisamment, on a la meme erreur après un write-in
+*** Parfois différence Full mediation/address translation:
+- Generalement la full mediation renvoie l'erreur 'Transport endpoint...'
+et les messages sont bien échangés entre client et server régulièrement,
+jusqu'à ce que ça se déconnecte
+- Alors que l'address translation s'arrete en plein milieu
+sans rien dire: simterpose fait son truc, et tous les messages 
+client/server arrivent tous en bloc à la fin, mais jamais après le meme 
+event (parfois après recv_in, parfois une fois que la tache de communication
+est destroy) et toujours sans aucun message d'erreur.
+
+** J'envisage une version avec MSG au lieu de SD
+Tutos/exemples pour comprendre les mecanismes:
+initialisation: Pas besoin de deployment file avec SimDag, on l'ajoute donc pour MSG
+Les workstations semblent correspondre à des host, ou process ?
+on MSG_function_register les differents "agents" liés à une fonction chacun
+ici quoi? client server? Pas réaliste que ce soit dépendant de l'application.
+Send, recv? un par syscall?
+   
+* <2014-05-14 mer.>
+** SimDag: toujours pas d'explication
+** Adaptations pour utiliser MSG
+Workstation converties en host
+La gestion des taches va etre modifiée fondamentalement: utilisation de mailbox pour la communication,
+plus de dépendances. Debut des modifications, reste tout le coeur des taches (init task runtrace)
+
+* <2014-05-15 jeu.> et <2014-05-16 ven.>
+retour au debug, avec SimDag: 
+** Affichage des logs de simterpose au meme format que strace, pour comparer avec et sans simterpose
+il y a des interruptions dans strace (unfinished, resumed) 
+et des trucs parasites (pid et adresses différents...) mais:
+*** connect renvoie -38 au lieu de 0 sans simterpose
+En fait:  -38 correspond à ENOSYS Function not implemented
+"The events generated on entry and exit to a system call are distinguished by the value of the register 
+used for the return code, which contains a special value of -ENOSYS on entry and the actual 
+return value or error code on exit."
+Déplacement des traces à la sortie du syscall. 
+On a toujours des -38 (normal): là où strace interrompt le accept et attend un connect, nous on print l'appel
+avec -38, puis quand le connect arrive on reprint le accept correct. Donc pas de souci de ce coté là.
+*** aucune autre différence majeure entre les traces
+*** parfois server error accept: invalid argument .. 
+alors que toutes les traces sont identiques d'ici là
+** traces pas assez complètes
+sans simterpose je peux stracer avec l'option -f pour suivre les enfants, mais avec simterpose
+strace -ff -o traces_reseau/ff/COMP_run ./run.sh donne:
+sudo: effective uid is not 0, is sudo installed setuid root?
+** laisser passer le connect/accept/bind chacun à son tour (attention port)
+*** bind
+il faut réussir à passer quand meme l'appel systeme, si on fait rien il passe pas
+** parfois (idem, plein d'échanges puis:)
+Server: error accept 2: Invalid argument
+
+** MSG : en fait plus de runnable etc
+voir comment se fait dans examples/msg/bittorrent ou parallel task
+
+* <2014-05-19 lun.>
+** wireshark
+** Commandes de traçage
+*** Sans simterpose:
+Toutes les traces dans 'trace': 
+
+        strace -f -o traces_reseau/trace ./lance_clientserver.sh
+
+-f utilisé pour suivre les child process, mais dans ce cas
+il y a des interruptions (unfinished, resumed)
+Si on veut un fichier par processus:
+
+        strace -ff -o traces_reseau/ff/trace ./lance_clientserver.sh
+
+(Attention à utiliser le client avec l'adresse locale 127.0.0.1)
+*** Avec simterpose:
+        ./run.sh > traces_reseau/simulation 2>&1
+Si on désactive les logs de simterpose+simdag, 
+on obtient des traces similaires à strace
+
+** address/full
+address ne rend pas la main, full si 
+en address on fait vraiment des appels système mais en full on devrait faire 
+que des peek et poke donc pas de "transport endpoint.."
+*** cherche dans full mediation où on laisse passer un vrai syscall
+bind ok
+listen ok
+*** dans address où ça plante sans rendre la main
+
+* <2014-05-20 mar.>
+** modification de l'affichage des logs (printsyscall)
+-> problème dès le premier recv
+** Dans calculate_computation_time (insert_trace.c)
+l'appel à proc->trace échoue puisque trace n'existe pas
+Le problème se posait que quand le temps avançait, d'où le fait
+qu'on ne le rencontrait pas à chaque fois
+Quand je recommente ça, boucle infinie, tache jamais prise.
+en fait le "trace" était pas totalement supprimé 
+puisqu'utilisé dans process_fork (alors que supprimé du constructeur)
+** retour à: Boucle infinie sur le recv
+ne reçoit rien, reste en médiation
+
+run (send/recv) address: infini (mediation)
+run (send/recv) full: infini (mediation)
+run_from (sendto/recvfrom) full: Cannot add a dependency between task 'communication recv' and itself
+(ou erreur réception server: Function not implemented <-- alors qu'en full on ne fait pas de communication)
+run_from (sendto/recvfrom) address: Error in `./run_trace': double free or corruption (!prev): 0x000000000147edd0 ***
+
+* <2014-05-21 mer.>
+révisions sur la forme du code
+* <2014-05-22 jeu.>
+C/système
+* <2014-05-23 ven.>
+** cwrap http://lwn.net/Articles/594863/
+*** sockets
+utilise dlopen, dlsym avec des handle
+ne touche pas à gettimeofday
+*** nss 
+modifie les etc/groups, etc/hosts (noms de domaines) etc/password
+*** uid
+** C 
+
+* <2014-05-24 sam.> (Entrée par Martin)
+- Nettoyé pas mal de code 
+  - J'ai augmenté l'encapsulation des globales de simterpose.
+  - J'ai réindenté à 120 caractères (en utilisant un <simgrid>/tools/indent modifié)
+  - J'ai renommé pas mal de symboles pour suivre une convention de nommage, qui
+    reste à rédiger proprement. Je n'ai pas suivi la convention de simgrid,
+    puisque le XX_t est la structure (en simgrid, c'est une référence à la
+    structure). Je crois qu'on devrait rendre les pointeurs explicites en
+    simgrid, mais ca va être un boulot de chien de tout changer maintenant.
+  - J'ai traduit en anglais ce que j'ai vu en français
+  - J'ai cherché à réduire la quantité de fichiers dans le projet pour qu'il
+    soit plus simple de s'y repérer.
+  - Simplification de Makefile
+  - Y'a du boulot, encore, mais l'initialisation semble clean
+- j'ai tué le processus launcher qui compliquait l'initialisation
+  - Avant, simterpose fork+exec le launcher puis simterpose envoie les lignes de
+    commandes à démarrer sur un tube vers le launcher démarré à cet effet. Le
+    launcher lit ces lignes, puis les démarre. Une fois qu'il a fini, il se met
+    en attente et wait tous ses fils.
+  - Avant tjs, simterpose avait un mal de chien à retrouver le pid des fils
+    démarrés par launcher (il devait ptracer launcher, et modifier le syscall
+    fork() de launcher pour lire ce pid)
+  - C'était ultra compliqué pour rien
+  - Maintenant, simterpose lance ses fils tout seul comme un grand (il a les
+    arguments de la ligne de controle sous une forme directement adapté à
+    execlp, pas besoin de les afficher dans un tube puis de les parser), et
+    récupère directement le pid.
+- J'ai nettoyé les applications server/client.
+  - Les affichages sont consistants
+  - chacun vérifie ce que l'autre lui envoie
+- Le code qui interagit avec simdag est vraiment effrayant. Il faut passer tout
+  ça à MSG, voire directement simix. Je n'ai pas regardé ce que Chloé avait fait
+  car c'est basé sur de la dupplication de code, et que j'avais déjà assez de
+  mal à me repérer comme ça. Je n'arrive pas encore à m'orienter dans le code
+  d'interception pour écrire un nouveau code de rejeu.
+- J'ai modifié simgrid pour exporter les fonctionnalités de xbt_os_timer, dans
+  l'espoir de les utiliser à la place de cputimer
+  - autant factoriser le code avec xbt quand c'est possible
+  - cputimer n'est pas réentrant. On peut avoir un seul timer à la fois, ce qui
+    est parfois problématique (d'après les commentaires)
+  - Malheureusement, xbt_os_timer ne permet pas d'aller espionner les autres
+    processus lourds comme cputimer permet de le faire.
+  - DONE: il faut refaire la même interface que xbt_os_timer, mais avec netlink
+    pour écouter le CPUtime des autres. On va faire ca dans simterpose pour
+    l'instant, quite à le réintégrer à xbt plus tard.
+* <2014-05-25 dim.> (Entrée par Martin)
+- Le code utilise par endroit des valeurs numériques qui sont le mal absolu
+  - Par exemple dans process_getpeername_call(), on a:
+      arg->ret = -107;
+  - Quand on lit /usr/include/asm-generic/errno.h, on découvre que 107 est la
+    valeur numérique de ENOTCONN, ce qui rend le tout assez logique puisque
+    getpeername renvoie -1 et met errno à ENOTCONN en cas de problème
+  - Reste à comprendre pourquoi c'est négatif, et comment on donne cette valeur
+    en retour dans le processus appelant
+  - A minima, quand on comprend la valeur numérique, il faut l'écrire en commentaire.
+- Un gros point de blocage à nettoyer est la fonction syscall_process.c::process_handle()
+  - Elle fait quand meme un peu plus de 700 lignes, et construite de façon très
+    difficile à suivre.
+  - J'ai ajouté un commentaire expliquant (ce que je comprend de) ce qu'elle fait
+  - Comprendre *comment* elle le fait est une autre paire de manche, justifiant la
+    réécriture de la fonction.
+  - Chaque fois qu'on intercepte un syscall dans l'application, on fait :
+    - un éventuel traitement avant le syscall
+    - éventuellement on laisse le syscall se faire dans le noyau, ou bien on l'annule
+    - une éventuelle médiation dans le simulateur
+    - un éventuel traitement après le syscall
+  - Pour l'instant, elle semble être organisée de la facon suivante. Attention,
+    ce code est vraiment plein de surprise. Ce qui suit est ma compréhension du
+    truc, faut pas prendre ca pour vérité d'airain.
+#+verbatim
+    while (1) {
+      if (je suis en pre-syscall) { // ie  if (process_in_syscall(proc)==0) {
+
+         switch (le syscall intercepté) {
+           Une centaine de cas pour chaque syscall. Chacun fait:
+             - ce qu'il faut faire avant la médiation (réécrire les paramètres
+               du syscall)
+             - on peut neutraliser le syscall en le remplaçant par le syscall
+               184 (qui est tuxcall(), qui n'est pas implémenté sous linux) puis
+               en le faisant avancer d'un pas
+             - Si le syscall est bloquant, de la magie noire compliquée pour que
+               la médiation au travers de simdag
+               (on replacera cela par MSG un jour et ce sera bien plus simple,
+               mais le code n'est pas prêt à cela, laissons cela ainsi)
+             - souvent, on bascule en mode postsyscall avec l'appel process_set_out_syscall(proc)
+         }
+      } else { // je suis alors en post-syscall
+
+         switch (le syscall intercepté) {
+           Une centaine de cas pour chaque syscall, ou chacun fait le traitement
+           nécessaire après la médiation, et retourne dans un handle ou bien
+           coupe (avec un return?) pour rendre la main à simdag
+         }
+      }
+      faire avancer le processus tracké d'un pas (ptrace_resume/waitpid)
+    }
+#+endverbatim
+  - Il faut tout changer, mais ce n'est pas simple de modifier 700 lignes aussi
+    complexes que celles-ci. La première étape est de sortir chaque case du
+    switch dans des fonctions séparées.
+    - DONE: créer des syscall_XXX_pre, avec le traitement du premier switch, et
+      changer le switch pour les utiliser
+    - DONE: créer des syscall_XXX_post, avec le traitement du second switch
+    - Pour que ca marche, chacune de ces fonctions devra renvoyer l'un des codes
+      de retour actuels de process_handle (genre PROCESS_DEAD quand le pid
+      tracké est terminé), ou bien PROCESS_CONTINUE pour dire qu'il faut continuer.
+    - DONE pour chaque XXX, écrire syscall_XXX_pre juste avant syscall_XXX_post
+      dans le fichier
+    - TODO réécrire les switch pour en faire des tableaux de pointeur sur fonction
+  - L'objectif est de réécrire le fichier pour que le traitement de chaque
+    syscall soit écrit dans l'ordre logique. Une fois ceci fait, il faudra
+    simplifier chacun d'entre eux. J'ai l'impression que certaines fonctions
+    sont appelées une seule fois (=> à inliner si elles sont courtes)
+  - DONE: ajouter un flag --strace à simterpose qui controle si les fonctions
+    print_XXX_syscall sont appelées, au lieu de s'appuyer sur un #define debug.
+    Ces fonctions visent à produire une sortie qui ressemble à strace. On
+    pourrait aussi inliner ces fonctions si elles sont appellées à un seul
+    endroit comme je le pense.
+- le module ptrace_utils, qui englobe de façon plus simple les fonctionnalités
+  offertes par ptrace me semble ok en l'état. J'ai donc ajouté les entêtes de
+  licence et tout. Je propose de pas ajouter ces trucs sur le code qu'on n'a pas
+  repris en main.
+- DONE: est ce qu'on peut tuer le code dans MSG/ ?
+- Je pense qu'il faut maintenant se concentrer sur le nettoyage du code de
+  traçage. On fera un gros coup de balai sur le rejeu pour passer de simdag à
+  MSG plus tard. Faire les deux en même temps, ou bien tenter de modifier le
+  rejeu en profondeur avec un traçage aussi incompréhensible me semble pas
+  raisonnable. On s'autorise à corriger le rejeu pour l'adapter à nos nettoyages
+  coté traçage, afin d'avoir au moins un test ou deux qui marchent (voir qu'on
+  part pas trop dans le mur). C'est ok de casser certains tests en chemin, on
+  réparera de l'autre coté du gué. Bon courage.
+
+* <2014-05-26 lun.>
+- ok je tue MSG/
+- ajout de l'option -s pour produire un log de type strace
+** dans syscall_process.c::process_handle() :
+- ajout de syscall_XXX_pre et syscall_XXX_post
+- inversion du switch du if. Maintenant on traite le syscall au meme endroit,
+que ce soit l'entree ou la sortie. Necessite encore du nettoyage
+- DONE encore beaucoup de redondances à supprimer: recreer une fonction pour les
+manips communes à tous les syscall
+- DONE inliner les get_args
+
+* <2014-05-27 mar.>
+- J'ai créé une fonction syscall_process.c::syscall_pre() qui est 
+commune à tous les syscall, c'est en fait ce qu'on faisait avant 
+entre la fin du switch et le début du else.
+- simplification des différents syscall, pour avoir le moins possible
+de bazard dans syscall_process.c::process_handle()
+- inline des sys_build_XXX ou get_args_XXX 
+qui ne sont appelés qu'une fois et/ou sont très petits
+- résolution d'un bug: en adress translation simterpose ne terminait pas correctement.
+Des syscall sont printés avant d'être corrects, et ça arrêtait le programme
+pour une raison qui m'est inconnue
+- print les syscall au bon endroit (uniquement en post et pas en pre)
+- commencé à travailler sur cputimer.c pour le rendre réentrant, en 
+s'inspirant de xbt_os_timer . /!\  Pas terminé et non testé
+
+* <2014-05-28 mer.>
+- le cputimer est fonctionnel. On utilise une structure de xbt_cpu_timer
+- DONE déplacer le timer global. il est dans cputimer.h pour l'instant
+  mais ça n'a pas l'air très propre
+  - [MT]: non, c'est un symbole faible du timer qui est dans cputimer. J'ai mis
+    le symbole fort dans cputimer.c (en y initialisant la variable hors de toute
+    fonction), ce qui est the right thing to do.
+- traitement de tous les warning créé par l'usage des flags parano de simgrid
+- DONE finir les structures pour les stats
+  - [Mt] Une facon de faire est d'intégrer ces variables dans
+    simterpose_globals_t, et ajouter des fonctions pour les
+    incrémenter/décrémenter et afficher.
+- DONE nettoyer process_descriptor.
+* <2014-05-29 jeu.> (Entrée par Martin)
+- Il devient temps de nettoyer un peu le rejeu. Il n'est pas encore assez propre
+  pour qu'on puisse le passer à MSG, car ca va être une opération très
+  intrusive : on va passer au dual du code existant (désolé, c'est pas clair dit
+  comme ca). Pour l'instant on voit bien la boucle principale de simulation et
+  le traitement fait par chaque processus est coupé entre les fonctions sans
+  qu'on arrive à suivre ce qui se passe. En MSG, on voit bien le traitement de
+  chaque processus, et la boucle principale de simulation est cachée dans des
+  fonctions spécifiques. Faire la transition a donc des points communs avec le
+  passage à un graphe dual, où les états deviennent des transitions.
+- J'ai renommé quelques types et symboles en regardant ce qu'on a
+  - Le Futur Events Set (FES) est un truc classique en simulation à evts
+    discrets. C'est une liste (triée) de dates dans le futur avec ce qu'il
+    faudra faire à ces moments.
+  - On va probablement supprimer le FES en passant à MSG, mais j'ai pas fini de
+    comprendre le code, encore, alors il faut qu'on le nettoie pour voir clair.
+  - Vérifier que le FES est toujours trié.
+    - j'ai l'impression qu'il ne l'est pas quand on ajoute le processus
+      initialement, au moins. S'il n'est pas assez trié, cela peut expliquer les
+      deadlocks: si on sort un evt dans le futur, on bloque dessus. Mais s'il y
+      a plus loin dans la liste un evt à exécuter avant, ca peut tout bloquer.
+    - J'imagine que le assert en simterpose.c:189 sert à détecter ce pb, mais
+      c'est possiblement trop tard: si la liste merde, on deadlock avant meme de
+      détecter l'inconsistance.
+  - DONE: ranger les processus directement dans le FES
+    - Pour l'instant, on y range des éléments de type time_desc_t (fonction
+      FES_schedule_at et FES_push_timeout).
+    - Il serait bien plus simple de mettre un champ "double next_event" dans
+      process_descriptor_t puis de pousser un pointeur sur le processus dans le FES.
+- DONE: renommer tout ce qui est en XXX_station en XXX_host (les noms de fonction compris)
+  En SimDag, ca s'appelle une workstation et en MSG un host. Raccourci à
+  station, c'est carrément pas beau :)
+- Dans simpterpose.c, on voit 3 listes qui servent dans la boucle principale
+  (idle_process, sched_list et mediate_list). Ces listes ne contiennent que des
+  pid, ce qui force à utiliser process_get_descriptor() dans les fonctions 
+  move_mediate_to_sched, move_idle_to_sched, add_to_sched_list.
+  - DONE: Faire en sorte de stocker des pointeurs sur process_descriptor_t dans
+    ces listes.
+  - Il faut probablement relire la doc du xbt_dynar et l'exemple sur les valeurs
+    pointées (non scalaire), pour éviter les pièges de cette interface.
+- Il reste encore beaucoup à nettoyer après ca, mais je n'arrive pas à
+  comprendre sans que ceci soit fait...
+
+* <2014-05-30 ven.>
+- J'ai renommé toutes les stations en host
+- Je range directement les processus dans le FES au lieu d'utiliser des time_desc
+- Je range directement les processus dans les listes mediate, sched et idle au lieu d'utiliser des pid
+- J'ai renommé la idle liste pour qu'elle soit cohérente avec les autres listes de process
+  (une autre variable s'appelait idle_list dans le process descripteur)
+- J'ai commencer à regarder process_descriptor()
+  - DONE: dans la structure, marquer clairement si les variables concernent l'état ou la liste 
+  - DONE: certaines variables sont modifiées directement, d'autres avec des accesseurs: uniformiser 
+* <2014-05-30 ven.> (Entrée par Martin)
+- coté rejeu, on est pas tout à fait au Grand Saut, mais on s'approche
+  - DONE: process_handle_mediate() et ses amis devraient prendre le processus
+    directement, pas le pid
+  - DONE: tuer proc->is_idle de partout (et la fonction mediate_idle, et l'état, tout)
+    - Pour l'instant, proc->is_idle n'est jamais remis à 0 une fois qu'il est mis à 1
+    - Mais c'est pas grave, car aucun syscall ne retourne jamais PROCESS_IDLE_STATE
+    - Les deux où on peut croire qu'ils le font, en fait y'a un
+      THROW_UNIMPLEMENTED plus haut, donc on arrive jamais au return.
+      On peut d'ailleurs nettoyer ces syscalls pour les marquer clairement unimplemented
+  - DONE: il faut faire un enum pour le next_state. Je parle de la poignée de
+    #define dans syscall_process.c
+  - DONE: on peut vouloir faire un tableau de chaînes de caractères contenant le
+    nom de chaque état du next_state. C'est mieux pour les msg de debug
+- Il reste du propre à faire coté tracing. Ce n'est pas forcément bloquant, mais
+  tu peux faire ca si je n'arrive pas à te donner suffisamment de choses à faire.
+  - DONE: faire la liste des syscalls existants, et vérifier qu'ils sont tous
+    traités par le gros switch
+  - TODO: prendre chaque syscall et vérifier d'après la page man qu'on couvre la
+    plupart des cas possibles. Indice: si on ne retourne pas possiblement tous
+    les code de retours indiqués, y'a probablement un bout qui manque. Cela sera
+    plus simple à faire après le Grand Saut, ceci dit.
+- La jonction entre le rejeu et le tracing est faite par une machine à état qui
+  dit pour chaque processus dans quel état il était à la ronde précédente, afin
+  de lui faire ce qu'il faut à la ronde actuelle. Il faudrait parvenir à
+  nettoyer tout ca pour y voir plus clair, et y'a du boulot.
+  - Il faut arrêter d'utiliser un masque binaire pour le proc->state
+    - DONE: faire un boolean séparé pour dire si on rentre dans le syscall ou si
+      on en sort. Pour l'instant, c'est fait avec SYSCALL_IN / SYSCALL_OUT.
+      - Il faut ajouter un flag boolean à proc, virer le define, et modifier les
+        (proc_state & PROC_ACCEPT_IN) en ((proc->state & PROC_ACCEPT) && (proc->in_syscall))
+      - C'est plus long à écrire, mais j'aime pas trop les flags.
+- Guillaume ne connaissait pas xbt_die() (ou ça marchait moins bien y'a 2 ans). 
+  - DONE: remplacer tous les XBT_ERROR()+exit() en xbt_die()
+- Raah, il faut que j'arrête de procrastiner dans ce code. Suite au prochain épisode.
+
+* <2014-06-02 lun.>
+- les handler de process utilisent directement le process et plus le pid
+- les next state sont dans un enum, et leurs noms dans un tableau de chaines
+pour les appeler plus facilement
+
+* <2014-06-03 mar.>
+- J'ai vérifié qu'on traite tous les syscall:
+  - la liste des syscall est dans <bits/syscall.h>, et triés par numéro dans <asm/unistd_64.h>
+  - je les ai remis dans l'ordre des numéros dans le switch, et à chaque fois ajouté en 
+    commentaire ceux qu'on ignore
+- j'ai remplacé les erreurs numériques par leur nom
+- j'ai remplacé les XBT_ERROR()+exit() par des xbt_die()
+- j'ai remplacé le masque SYSCALL_IN/OUT par un booléen in_syscall
+- un certain nombre de fonctions utilisent directement le process et plus le pid:
+  - process_XXX_call, process_XXX_in_call et process_XXX_out_call
+  - insert_trace.c::compute_computation_time()
+  - fonctions qui gèrent les taches dans task.c
+- J'ai supprimé task.c::create_send_communication_task() et schedule_comm_task() que je n'utilisais
+  plus puisque je les avais remplacées par create_and_schedule_communication_task(). Le but était
+  de scheduler les tâches de communication proprement, avec des dépendances comme dans le tuto SimDag
+  (ça n'avait pas completement débuggé le probleme cela dit)
+- j'ai nettoyé process_descriptor: 
+  - retiré les getters et les setters. Notamment certains ne sont plus nécessaires sans le mask, 
+    on utilise directement proc->state et proc->in_syscall
+  - supprimé proc->is_idling, PROCESS_IDLE_STATE et process_handle_idle()
+- Puisque futex et clone lançaient un THROW_UNIMPLEMENTED, je les ai retires du switch
+  j'ai gardé les fonctions qui géraient le clone, mais commentées
+
+* <2014-06-04 mer.>
+- j'ai supprimé toutes les références à idle_list
+- j'ai retiré les vérifications qu'on était dans le "in_syscall" dans 
+  process_handle_mediate() puisqu'on y est toujours
+- j'ai renommé les listes mediate et sched pour clarifier
+- Concernant la suppression du *state dans syscall_process.c::syscall_pre():
+  - Ma première tentative a échoué et je n'avais pas vu que ça avait tout cassé, d'où le revert du
+    commit 'simplify state', mais maintenant c'est bon !
+  - j'ai renommé syscall_pre() en need_computation()
+  - c'est un booléen et il n'utilise plus le *state
+  - tous les states sont initialisés à 0 (ce qui correspond à PROCESS_CONTINUE) au lieu de -1
+  - quand on appelle need_computation:
+    - s'il est à true on renvoie PROCESS_ON_COMPUTATION
+    - si false on renvoie le state
+  - j'ai nettoyé les states qui ne servaient à rien
+
+* <2014-06-05 jeu.>
+- lors d'un Ctrl-C on détache les processus et on libère tout
+** DONE Il faudrait mettre le même genre de handler sur SIGSEGV
+- Cela permettrait d'avoir simterpose qui nettoie tout derrière lui même quand
+  il segfault comme une bouse :)
+* <2014-06-10 mar.>
+Je pars du squelette MSG:
+- j'ai modifié le Makefile et ajouté un launcher pour la version MSG (run_msg.sh)
+- j'ai résolu les warnings et autres problemes de compilation (msec_per_flop n'était pas utilisé, etc..)
+- je vérifie dans le while que l'horloge avance, sinon on sleep
+- dans le runner le client ne se lance pas si on execute directement argv (execv renvoie "Bad address")
+  donc j'ai rajouté une variable
+- l'interception des syscall, même si on ne les modifie pas, fait qu'on renvoie n'importe quoi, donc la
+  connexion ne se fait pas.
+- j'ai commencé à rajouter de quoi récupérer les arguments et afficher les syscall
+  Pour l'instant le handle ne fait qu'afficher (et encore, pas tous)
+** DONE ajouter tous les trucs de sockets/communication
+** DONE ranger les descripteurs dans des MSG_process_set_data
+* <2014-06-11 mer.>
+- dans le get_args_bind_connect, le booleen qui servait à savoir si on était en bind ou
+  en connect n'était jamais utilisé, je l'ai supprimé
+- ajout des sockets, on affiche tous les syscall
+- ajout des descripteurs de process, qu'on met dans des MSG_process_set_data
+  - les MSG_process_set_data n'utilisent pas les mêmes pid que nous (numérotés 1 2 etc.)
+  - j'utilise du coup MSG_process_self()
+- j'utilise au maximum les process descriptors et pas les pid
+- je traite correctement le syscall bind
+- j'ai commencé à traiter le accept/connect et à gérer les tâches MSG
+  - j'essaie d'applatir les différents process_handle en un seul pour chaque syscall
+** DONE continuer la communication, MSG parallel task create
+** DONE supprimer les restes de SD dans sockets_msg data_utils_msg
+* <2014-06-12 jeu.>
+- traitement de SYS_socket, ce qui permet d'avoir les bons file descriptors pour
+  connect et accept
+- à part les réceptions (recvfrom, read, recvmsg), les syscall ne passent pas par
+  le handle_mediate. Le fait de renvoyer PROCESS_ON_MEDIATION ne veut pas dire
+  qu'on sera traité par le handle_mediate. Il faut avoir mediate_state
+- je pensais procéder par petits morceaux mais en fait tout est dépendant et on
+  peut difficilement choisir de traiter certains syscall puisqu'ils nécessitent
+  des initialisations préalables. (d'où l'absence de commits réguliers)
+** DONE créer les mailbox et les tasks de MSG
+* <2014-06-13 ven.>
+- dans le process_descriptor au lieu de mettre le nom du hôte j'avais mis le nom
+  du processus, ce qui empêchait de retrouver l'hôte par la suite.
+- dans tasks j'ai modifié les fonctions pour créer des tâches en MSG puis les 
+  exécuter/envoyer/recevoir. Les mailbox sont en fait les hôtes.
+- je traite le sys_listen
+- gestion du accept dans la version SD:
+  on fait appel à handle:
+  - Si in_syscall: accept pre appelle accept in (qui renvoie soit le pid qui attend soit 0)
+    - s'il retourne le pid 
+      - en FULL on a remis in_syscall à 0 et appelé out., on sort c'est terminé
+      - en address on a in_syscall à 1 donc -> accept post
+    - sinon, pas de pid personne n'attend: on a PROC_ACCEPT donc
+      - on fait appel à handle_active qui va donc faire accept_in :
+	- si 0 on PROC_ON_MEDIATION (ie on boucle sur active)
+	- si pid on ajoute à sched, on resume le process, waitpid et on appelle process handle
+  - Si à la sortie du syscall: accept post (que en address) -> on fait accept out
+  Il est simplifié avec une boucle dans la nouvelle version 
+- la gestion du accept pose probleme
+** DONE trouver comment boucler correctement sur le accept en attendant le connect
+* <2014-06-16 lun.>
+- la connexion ne fonctionne pas, le accepte bloque
+- je reviens au format comme dans l'ancienne version avec un handle mediate, un handle active
+   et un handle. Du coup j'ai tout recassé
+- dans syscall_accept_pre, je déclarais le state dans la fonction au lieu
+    de le passer en paramètre, et du coup  *state = PROCESS_ON_MEDIATION ne passait pas
+- en fait tout dépend de où on met le waitpid. Je n'arrive pas à gérer les mediate state 
+  et du coup ça libère les syscall au mauvais moment
+* <2014-06-17 mar.>
+- Je rencontre un problème avec les appels bloquants, typiquement l'établissement d'une connexion
+  J'ai ici dans l'ordre 
+  Client: connect in
+  Serveur: accept in
+  Serveur:  accept out
+  Serveur: syscall random
+  au lieu de relancer le connect out .. comme en l'occurrence le syscall est un recv, ça va jamais
+  marcher puisque la connexion n'est pas établie.
+- Quand on a accepté il faut relancer celui qui se connecte. 
+  (avant on avait une sched list pour l'ordonnancement et le réveil du
+  processus en face)
+- Solution: créer des sémaphores simix et les mettre dans les metadata de la socket
+  on met un "puis-je" "vas y" d'un côté, et un "vas-y" "puis-je" en face.
+** DONE faire un essai à part
+(j'ai trouvé un exemple de sémaphores MSG qui fonctionne dans examples/msg/semaphores)
+
+* <2014-06-18 mer.>
+- j'ai fait des essais à part avec les sémaphores
+- pour la synchronisation du couple connect/accept on va mettre
+des sémaphores (msg, simix?) avec une capacité de 0 
+- j'ai ajouté un champ msg_sem_t au process descriptor pour que chaque
+processus ait sa sémaphore, et ajouté des sémaphores aux endroits clé
+- ça ne fonctionne pas encore
+
+* <2014-06-19 jeu.>
+- Concernant la position de sémaphores:
+  - pour le connect il faudrait la mettre juste après le process_connect_in_call
+    à l'endroit où on bouclait avant sur un handle_active tant que l'accept ne nous
+    avait pas débloqué en modifiant l'état 
+    - on prend notre sémaphore (connect) puis on libère celle d'en face (accept)
+      on connaît le processus d'en face via le process_connect_in_all
+  - pour l'accept je pensais la mettre avant le process_accept_in_call: ça laisse le temps au connect
+    in de se faire, et comme ça accept_in renverra toujours un pid (sauf si la connexion 
+    a été refusée ...). 
+- probleme: trouver qui est le processus en face. Sachant que si connect n'est pas encore
+  arrivé, accept ne sait pas qui c'est. Donc accept doit d'abord bloquer
+- nouveau probleme: dès que le accept a dit ok il continue, et le connect peut pas faire son out
+  je réutilise une sémaphore, à voir ensuite si on peut simplifier.
+- Connexion établie! en address translation
+- En full il a fallu ajuster
+  - remettre la 3e sémaphore dans un ifndef address parce qu'il ne passait pas au bon endroit
+  - le connect_pre se faisait deux fois: j'ai laissé le in_syscall à 1 pour ne pas boucler
+Ok pour les connexions, passons aux send/recv
+** DONE finir send recv
+
+* <2014-06-20 ven.>
+pour les send/recv c'est pas super clair, j'essaie de trouver où positionner les
+véritables envois/réception via MSG
+- structure actuelle du recvfrom:
+  - en traduction d'adresses:
+    - recvfrom_pre -> recvfrom_in nous envoie forcément en médiation
+    - on boucle eventuellement sur handle_mediate jusqu'à ce que recvfrom_in soit ok 
+    - alors on repart dans active puis handle et on passe en post
+    - C'est dans post que la réception de la tâche est vraiment faite en appelant 
+      sockets.c::handle_new_receive().  Il faudrait en fait le faire plus tôt ce qui 
+      éviterait de boucler indéfiniment
+  - en médiation totale: ça part dans tous les sens
+    - recvfrom_pre -> recvfrom_in
+      - si ok, directement recv
+	- si ok state=PROCESS_RECVFROM, in=0 donc on appelle handle active, qui rappelle recv_in
+	  - on boucle éventuellement en médiation un moment
+	  - on reset l'état et on appelle handle
+	- si non, socket fermée, recvmsgout et on termine
+      - si pas(recvfrom_in):
+	- soit c'est non bloquant et donc on n'a personne en face on recvmsgfrom out et on termine
+	- soit c'est bloquant et alors: PROC_RECVFROM, mediate = 1 on part sur handle_mediate
+	  qui appelle recv_in. On peut boucler un moment puis on appelle recv (enfin!)
+	  - soit ok: TASK FOUND, mediate=0, in=0
+	  - sinon socket fermée, in=0, active, out  et on termine ...
+- Concernant le sento, le véritable envoi de la tache est fait 
+  soit en pré (en mediation totale) soit en post (en traduction d'adresse)
+
+* <2014-06-23 lun.>
+- Pour le recvfrom: le problème est que ça boucle en attendant le sendto. 
+  - On pourrait avancer le moment où on fait le recv via MSG pour
+  bloquer dessus en attendant le send, mais on n'a pas les
+  informations nécessaires (qui sont dans infos_sockets)
+  - Inversement si on essaie de ne pas boucler en mediate mais d'avancer
+  jusqu'au recvfrom_post pour bloquer à cet endroit, alors au moment
+  où on fait le waitpid de la fin du pre syscall, ça attend
+  indefiniment (puisque le syscall est pas correct)
+  - mettre une semaphore? attention à pas mettre la même on risquerait
+  ptet de débloquer quand il faut pas
+  - oups j'envoyais et je recevais sur des mailbox différentes
+  - manquait des include pour les #ifnef address_translation
+- Ca fonctionne en traduction d'adresse
+- Traiter le cas du full
+  les send et les recv ont l'air de se mélanger entre le client et le
+  serveur
+- Lorsqu'on cherche à connaître le processus distant pour libérer
+les sémaphores, utiliser les informations sur la socket et pas le
+champ remote du process_descriptor, (voir si ça pourrait poser pb pour les
+connexions multiples)
+** TODO la trace n'est pas toujours la même selon la méthode, et
+le contenu du message n'est pas toujours affiché (pas prioritaire)
+parfois sendto s'affiche, parfois c'est recvfrom, et il n'y a pas
+toujours le message dedans 
+* <2014-06-25 mer.>
+- Je traite les appels exit et exit_group, et j'arrête de boucler dès
+  que le processus est mort: la simulation s'arrête correctement pour
+  l'address translation
+** DONE lire le papier de Cappello
+** TODO trouver une XP ou deux à refaire de ce qu'ils ont fait 	
+- Dans le file descriptor j'ai mis un objet stream qui contient les
+  sémaphores (server, client). Il est créé par le processus qui
+  accepte la connexion.
+** DONE finir de modifier les sémaphores
+** DONE ajouter les syscall manquants par rapport à la version SD
+** DONE cas de full
+
+* <2014-06-26 jeu.>
+- le processus qui veut se connecter doit trouver qui est à l'autre
+  bout de la socket, or le file descriptor est propre à un
+  processus.
+  - Le seul endroit que j'ai trouvé pour obtenir le processus en face
+    c'est communication_msg.c::comm_get_peer() à partir des infos sur
+    la socket. Or ça fonctionne pas, il n'y a rien dedans
+  - J'ai donc rajouté au moment du comm_ask_connect() les champs
+    nécessaires pour pouvoir trouver le peer.
+  - Ca fonctionne jusqu'arrivée aux connect/accept_post. On dirait
+    que certains champs sont réinitialisés
+  - J'ai pensé que ça venait peut-être de la sémaphore qui est
+    détruite quant on arrive à zéro (Destroying synchro) mais même en
+    en prenant une nouvelle ça ne va pas
+  - En fait le stream est null dans le connect post. Or si je mets pas
+    une sémaphore ici, le accept finit sa vie, continue sur des recv
+    alors que le connect n'est pas terminé..
+
+* <2014-06-27 ven.>
+- le stream est nul dans le send aussi. Il faut voir où il est détruit
+  et soit le maintenir, soit en refaire un nouveau (avec le risque
+  qu'à chaque syscall_post il soit redétruit)
+- la solution de recréer un stream dans le accept_out ne fonctionne
+  pas. Même si je mets deux objets stream dans le file descriptor, je
+  peux pas créer le deuxieme 
+- tenter de maintenir le meme ?
+  - dans connect_post, le get_peer s'obtient bien mais il n'a pas de
+    stream (en fait il n'a pas le bon numéro de file descriptor, mais
+    aucun des deux, local ou remote, n'a de stream)
+ - en fait le stream est nul dès la fin du connect pre, puisque le
+    accept post est passé par là ! le sockfd entre autres a changé: si
+   on refait un comm_get_peer à la fin du connect pre, on n'obtient
+   plus le bon
+  - j'essaie de trouver où ça pose probleme dans le accept out. on re
+    register une socket ..
+* <2014-06-30 lun.>
+- dans le accept_out, register_socket crée une nouvelle socket. C'est
+  a priori celle-ci qui sera utilisée par la suite, j'ai donc recopié
+  l'ancien stream dedans: la connexion s'établit! (je travaille
+  uniquement sur la traduction d'adresse pour le moment)
+- Je passe aux send/recv: pas utiliser de sémaphores, juste les
+  MSG_send devraient suffire
+
+* <2014-07-01 mar.>
+- J'ai mis le stream des deux côtés (accept/connect), pour que les
+  deux file descriptors l'aient
+- J'ai rajouté des champs dans stream: msg_process_t server, client et
+  les mailbox to_server, to_client
+- Pour les sendto/recvfrom je n'utilise plus de sémaphores,
+  uniquement les MSG_send MSG_recv. 
+  - Le recv avec MSG était fait dans le recvfrom_post donc le
+    recvfrom_pre bouclait en attendant le send, puisque dans
+    handle_new_receive on vérifie qu'on a bien reçu qqchose avant de
+    continuer. J'ai donc déplacé la réception dans le pre
+  - Ca fonctionne pour le couple sendto/recvfrom
+- J'ai rajouté le traitement des sendmsg/recvmsg + test
+- ajout des syscall: getpeername, getsockopt, setsockopt, fcntl, creat
+** DONE ajout d'autres syscall? (qui n'étaient pas dans version SD)
+- en fait, on ajoutera les syscall dont on a besoin au fur et à mesure. Cela
+  évitera de se noyer dans la masse de choses que l'on pourrait faire.
+* <2014-07-02 mer.>
+- ajouter poll et select:
+   modifier la version SD avec le FES et les timeout, pour l'adapter
+   pour MSG: faire des irecv, on récupère des msg_comm_t, on les met
+   tous dans un tableau, et on fait un waitany dessus
+** TODO tests de poll et select
+* <2014-07-04 ven.>
+- Gestion de poll et select:
+  - waitany attend la fin de la tâche (et pas le début) donc ce sera
+    pas tout à fait correct 
+  - on peut pas mettre de timeout (possible sur wait mais pas
+    waitany..) donc c'est pas géré pour l'instant  
+  - puisqu'on veut savoir si on PEUT lire ou écrire, on doit pas le
+    faire? donc est-ce que c'est correct de faire un irecv?
+** TODO modifier poll et select pour qu'ils fonctionnent
+- Je commence à réparer la full_mediation:
+  - Remise au propre: 
+    - ajout des fonctions manquantes pour getsockopt
+    et setsockopt
+    - passer le proc en argument et pas le pid
+  - Sémaphores pour l'établissement de connexion
+  - Envois et réceptions
+    - 'Transport endpoint not connected' (comme avant, avec SD..) On a
+      ça dès la première tentative d'envoi. Donc soit la connexion
+      n'est pas bien établie, soit les envois se font mal. La tâche
+      d'envoi MSG a bien lieu, et la réception aussi
+** TODO sur les envois/réception gérer les erreurs:
+socket closed, fd null etc, comme dans process_recv_in_call ..
+* <2014-07-07 lun.>
+- Un peu de nettoyage:
+  - suppression de warnings, todo, fixme
+  - modification du type de logs directement dans le .sh
+- Full mediation:
+  - Attention au if (socket_registered(proc, sysarg->recvmsg.sockfd))
+    qui vaut forcément true (1 ou -1)
+  - Je comprends pas: normalement on peek/poke, donc on n'est pas
+    sensés avoir un 'not connected' ..
+  - Le print_sendto_syscall utilisait une structure de recvfrom ..
+  - Le problème venait du fait que les syscall sont neutralisés
+    différemment, et on n'a plus la valeur de retour originelle. A
+    l'envoi je conserve le message et sa taille dans l'objet
+    msg_task_t. Ca permet à la réception de le récupérer (sinon le
+    syscall a tout cassé)
+    - Pour ça j'ai dû utiliser une structure de sendto, parce que
+      send n'a pas de champ data. A voir si ça peut poser problème.
+  - Fonctionne à peu près pour sendto/recvfrom: envoie les messages et
+    termine, nécessite un bon nettoyage
+    - j'ai commencé à retirer le handle mediate: il n'est plus appelé
+      depuis le handler principal, et la fonction existe encore
+      uniquement pour sendmsg/recvmsg. Bientôt supprimé
+** TODO Vérifier la trace de sendto en full mediation: pour run.sh, 
+il y a un 6e sendto avec des caractères bizarres qui se print
+** DONE shutdown est mal traité en full mediation (renvoie -107)
+** TODO Vérifier la cohérence des méthodes full mediation/address translation:
+Certains appels systèmes sont traités indiféremment de la méthode
+- En fait il y a sans doute un problème dans la méthode puisque les deux donnent
+  exactement le même temps.. Ou alors c'est parce que c'est le temps simulé?
+- [Mt] Je sais pas comment tu as fait tes chronométrages, mais à priori, oui,
+  c'est ça. Quelle que soit la façon de contrôler l'application, les actions
+  qu'elle fait prennent exactement le même temps dans le simulo. 
+** DONE sendmsg/recvmsg
+* <2014-07-08 mar.>
+- test des deux méthodes en envoyant 50 puis 500 messages: fonctionne
+  toujours!
+- sendmsg/recvmsg en full: ok
+- nettoyage du runner: plus besoin de faire appel à handle_mediate ni
+  handle_active, qu'on supprime
+- gestion du read. J'avais pas vu qu'il était mal géré, parce que dans
+  les tests actuels on l'utilise pas et donc il est appelé sur des fd,
+  pas sur des sockets (à tester donc)
+- nettoyage des fonctions et variables non utilisées
+- je libère les tâches, les comms et les process après utilisation
+- ajout d'un handler pour SINGINT et SIGSEGV (j'ai ajouté 2 handlers
+  parce que j'ai pas réussi à utiliser sigprocmask)
+- shutdown: ok
+- suppression de la version SimDag
+- en fait les traces des syscall sont pas bonnes: pour full c'est ok,
+  mais en address on a pas le message qui s'affiche dans les
+  send/recv -> Non c'est un comportement normal, le send en address
+  translation n'a jamais affiché le message
+* <2014-07-09 mer.>
+- ajout de tests
+  - on ne print plus le benchmark, les pid, l'heure dans le
+    serveur/client, ni les syscall non traités
+  - le test est opérationnel en address translation (= reproductible)
+  - en full mediation, le sendto bizarre, en plus d'afficher un
+    message avec des caractères spéciaux, n'est pas reproductible,
+    donc il y a deux lignes qui foirent
+- sendto bizarre en full: 
+  - il y a le tout premier et le tout dernier qui ne s'impriment pas
+    correctement. Si je ne destroy plus les tâches, le premier
+    redevient correct. Quant au dernier c'est peut-être parce que le
+    processus en face est mort à ce moment là
+  - En fait les sendto ont tous été décalés, puisqu'il manque un
+    message #0 et il n'est pas sensé y en avoir un après le #4. Donc
+    effectivement le fait de détruire les tâches ou les processus
+    pose problème puisqu'on print un envoi alors que le récepteur est
+    mort/a détruit la tâche
+  - Du coup on dirait que le sendto est libéré trop tard, après le
+    recvfrom .. 
+- suppression de variables inutiles:
+  - les state dans le traitement des syscall ne servent à rien
+    puisqu'on ne renvoie presque jamais rien
+  - le state dans le process descriptor est obsolète également, on
+    n'a plus à signifier au processus en face notre état puisque
+    MSG/la sémaphore se chargent de débloquer
+- Vérification des appels existant:
+  - write utilisait les arguments de sendto
+  - codes de retour, erreurs
+* <2014-07-10 jeu.>
+** Remarques/questions suite à la présentation  
+   (ces remarques sont déplacées en entête de fichier pour être plus faciles à trouver)
+*** DONE Modifier le schéma inkscape :
+  - connect (A,80) pas B
+  - sur la machine B le port n'est pas 80 mais ?? (port service)
+  - aligner les processus sur les 2 schema
+*** TODO Ajouter un schema sur la full mediation
+** Tests:
+- http://ccl.cse.nd.edu/software/
+- Allpairs:
+  - Il faut traiter le clone:
+    - Si je fais le MSG_process_create d'abord, alors simix lance
+      direct le clone et ne s'occupe plus du parent. Donc on n'a pas
+      relâché l'appel système, et le vrai appel clone n'est pas fait,
+      donc on n'a pas de processus réel qui correspond au clone
+    - J'ai créé un handler séparé pour les processus clonés, qui ne
+      contient que la boucle principale
+    - Vérifier les pid: quand je fais un getpid() j'ai un décalage
+      de 1. Dès le début quand on crée le process dans
+      simterpose_process_runner
+    - Dans le clone_pre je ne sais pas quoi restaurer comme valeur de
+      retour. La valeur du pid actuel permet de cloner (sans qu'on me
+      dise que le processus à tracer n'existe pas) mais la valeur+1
+      aussi. Reregarder le strace (visiblement c'est soit le pid, soit
+      pid+1)
+    - C'est pas très clair mais: Admettons que je continue avec ce
+      clone: le premier appel qu'il trouve c'est un clone. Et il y a
+      qu'un seul appel (pas de in et out) ce qui décale à nouveau tous
+      les syscall. Du coup ça dépend si on donne la valeur in_syscall
+      = 1 ou 0 au ps cloné .. 
+** DONE regarder la section PTRACE_O_TRACECLONE dans le man de ptrace
+** DONE renommer sans "_msg"
+* <2014-07-11 ven.>
+- j'ai renommé tous les fichiers sans le _msg
+- appel clone: 
+  - On obtient le pid du fils en faisant un PTRACE_GETEVENTMSG (en
+    fait on obtient un message sur le dernier ptrace event, donc si
+    c'est pas un clone on obtient un truc qui n'a rien à voir)
+  - J'ai rajouté le nom, l'hôte etc. au clone
+  - Le premier clone fonctionne: master crée un premier clone, et
+    quand celui-ci meurt il en crée un deuxième, et là ça ne
+    fonctionne pas parce qu'il lui donne le même pid qu'au 1er clone,
+    or celui-ci vient d'être détruit. (donc il n'existe pas et on ne
+    peut pas faire de resume process)
+  - En fait sur un essai ça a eu le temps de créer 4 clones avant de
+    crasher . Les pid étaient différents jusqu'au dernier qui a
+    essayé de redonner le même pid et là ça crashe. 
+    - essayer de garder les clones en vie jusqu'à la fin pour
+      être surs que le nouveau pid sera distinct .. <- non, c'était
+      pas ça la solution!
+  - Normalement dans le clone_post, on distingue le pere et le fils
+    selon si le retour vaut 0 ou non. or le retour vaut -38 lors du
+    premier clone (en in ET en out), puis le pid lors du 2e clone (en
+    in ET en out -_-)
+** DONE trouver un moyen de distinguer le pere du fils
+  - J'arrive pas à comprendre à quoi correspondent les différents
+    registres. Je trouve tout et son contraire, et ça ne correspond
+    jamais .. 
+** DONE regarder fork, puisque clone est un cas particulier de fork
+http://stackoverflow.com/questions/13532137/tracing-syscalls-of-a-process-and-all-forked-processes
+* <2014-07-15 mar.>
+- La victoire des clones!!! 
+  - Je génère les 9 clones et ça bloque plus tard (sur le poll non
+    implémenté)
+  - Dans simterpose.c::main_loop - le handler pour les clones - j'ai
+    ajouté un waitpid. S'il n'est pas là, au moment où on essaie de
+    faire un ptrace_resume_process, on se prend une erreur parce
+    que le clone n'existe pas encore.
+  - Dans le handler, quand je fais un waitpid je regarde si on a un
+    PTRACE_EVENT_FORK. Ca fonctionne bien et ça permet alors de
+    récupérer le pid du fils et de créer le processus MSG
+    correspondant.
+  - En revanche sur les entrées/sorties d'appel système clone c'est
+    toujours aussi flou. 
+    - Pour le moment je ne fais rien dans le clone pre, à part
+      printer, et je n'appelle pas dutout le post. (tous les clones
+      sont tagés in_syscall=0 pour l'instant)
+    - Puisque je fais la création du processus dans le corps du
+      handler ça ne pose aucun problème
+    - Il faut juste gérer le post pour les flags et imprimer un joli
+      syscall, mais:
+      - à chaque clone d'un processus il y a en tout 4 appels au
+        handler, c'est à dire deux syscall (sans doute un pour le fils
+        un pour le pere, en in et out?) ce qui me paraît bizarre
+      - le premier appel est fait, puis on crée le clone, qui est donc
+        traité, et une fois qu'il est mort on se retrouve avec 3 appels.
+  - je print le clone. Je suis pas sûre des registres, mais c'est
+    cohérent avec le strace que j'ai fait dans le cas de l'appli
+    allpairs. 
+** DONE distinguer le clone pre/post
+** TODO gérer les flags de clone (notamment SETTID, CLEARTID)
+** TODO différencier exit de exit_group. 
+Pour ça il faut distinguer les différents tid.
+* <2014-07-16 mer.>
+- d'après le strace du programme et des clones générés, on n'a
+  vraiment qu'un appel systeme à clone à chaque fois. Donc le fait
+  que jen ai 2 est bizarre? Bon en tout cas je print qu'une fois
+  l'appel et ça donne le même résultat. Et j'ai le bon nombre de
+  clones réels.
+- J'ai déplacé la création du processus MSG cloné dans le post du
+  fils.
+- j'ai rajouté des flags pour clone, il faudrait traiter ceux qui
+  mettent le tid dans le père
+- le syscall fork n'a pas besoin d'être traité, c'est systématiquement
+  clone qui est appelé à la place.
+- J'essaie de traiter execve
+  - le syscall renvoyait une erreur parce que le chemin était
+    mauvais. Même en mettant un chemin dans le deploy, le programme
+    l'oublie et essaie de l'exécuter dans le répertoire courant. Ca
+    vient de allpairs, parce que sans simterpose j'ai le même
+    problème. Du coup pour les tests je me mets dans le répertoire
+    applications/allpairs 
+  - l'interception via PTRACE_EVENT_EXEC marche pas. est-ce que c'est
+    parce qu'il est dans le clone et que du coup c'est un grandchild ?
+** DONE lire 'execve(2) under ptrace' dans man ptrace
+* <2014-07-17 jeu.>
+- Problème: à la fin du premier clone, quand on veut retourner au
+  processus père, celui-ci n'existe pas. Et je pense que c'est à cause
+  du execve, puisque quand l'exécutable n'est pas là j'ai une erreur
+  de retour mais le reste du programme est bien simulé.
+- execve:
+  - execve ne retourne pas, ça ne crée pas de nouveau processus mais
+    ça continue sur l'ancien, avec le même pid et les mêmes fd
+  - execve remplace la mémoire par celle du pgm exécuté. D'où l'absence
+    de registres dans le execve_post
+  - 'execve(2) under ptrace' dit qu'en cas d'execve, le noyau détruit
+    les autres threads dans le processus, et reset les tid.
+  - concernant les signaux (man execve): Les signaux en attente
+    destinés au processus parent sont effacés. Les signaux prêts à
+    être intercepté par le processus parent reprennent leur
+    comportement par défaut.
+- Problème résolu, en fait:
+  - on est réveillés 3 fois par execve: entrée, sortie, et la
+    notification puisque le man d'execve dit que SIGTRAP est envoyé
+    après la réussite d'execve
+  - (man ptrace) Si on ne met pas l'option PTRACE_O_TRACEEXEC, quand le
+    processus appelle execve il reçoit un SIGTRAP, ce qui permet au
+    père de reprendre le contrôle avant que le nouveau programme
+    continue son exécution.
+    - normalement l'activation de PTRACE_O_TRACEEXEC supprime le
+      SIGTRAP supplémentaire
+    - en réalité je vois aucun changement avec ou sans l'option
+    - J'ai juste géré le fait qu'on ait 3 interruptions de execve,
+      c'est ça qui décalait tout et faisait nimporte quoi.
+- poll: 
+  - je fais donc un irecv et un waitany sur tous les files
+    descriptors.
+  - sur le waitany j'ai un segfault ..
+- si je démarre les workers en même temps c'est sur le connect qu'il
+  y a un souci, à voir (est-ce que c'est parce que les clones sont
+  pas encore tous créés)
+* <2014-07-23 mer.>
+- poll
+  - avec un waitany simterpose s'arrête, sans message d'erreur
+  - j'ai essayé avec un wait et là ça attend correctement, et l'autre
+    processus se lance bien (work_queue_worker). 
+    - le problème du wait c'est que je n'attends que sur un seul fd
+    - ensuite ça continue mais il y a un probleme sur un connect (no
+      such file, mais c'est normal on a pareil dans le strace de
+      l'appli) 
+    - tester le poll à part, parce que là avec tous les master et
+      workers on s'y retrouve plus. 
+- au lieu de tester allpairs, essayer python-pp 
+  - j'ai installé le paquet
+  - pour lancer les serveurs il faut un code secret, cf
+    http://www.parallelpython.com/content/view/15/30/#SECURITY donc
+    il faut remplacer job_server = pp.Server(ncpus,
+    ppservers=ppservers) par job_server = pp.Server(ncpus,
+    ppservers=ppservers, secret="password") dans les exemples
+  - j'utilise sum_primes.py pour commencer 
+  - correction de execve qui imprimait nimporte quoi à la place de
+    argv 
+  - j'ai un read sur stdin qui attend indéfiniment. 
+    - d'après strace de l'application, à chaque fois ce sont les
+      clones qui attendent que le maître leur écrive, mais ça ne doit
+      pas arriver sur le bon fd. Le maître écrit sur le fd dédié, càd
+      un numéro quelconque, et le clone lit toujours sur 0. 
+* <2014-07-24 jeu.>
+- Je pensais que le souci venait du dup2 qu'on ne traitait pas. Ca ne
+  résout pas le problème.
+- Il y avait un problème dans le clone: 
+  - le clone doit hériter d'une copie de tous les descripteurs de
+    fichiers de son parent, dans tous les cas
+  - Le flag CLONE_FILES permet quant à lui de partager la même table
+    de fd, càd que les modifications sont communes et se répercutent
+    du parent au clone et vice versa. 
+- Il manquait également le pipe, sinon simterpose ne sait pas qu'il existe
+  de nouveaux descripteurs de fichiers. 
+- Il y a donc des dup2 et des pipe qui sont faits, mais visiblement le
+  master en face n'envoie pas le write, ou en tout cas pas sur le bon
+  fd.. 
+** DONE Dans read faire la médiation quand c'est un pipe 
+pour que le ps en face écrive au bon endroit
+- ajout du type de fd FD_PIPE
+  - le type renvoyé n'est pas celui attendu
+* <2014-07-25 ven.>
+- quand on fait un close il ne faut pas libérer le file descriptor
+  car il peut avoir été dupliqué. 
+- pipe:
+  - créer un objet pipe, qu'on met dans le fd. 
+  - doit savoir qui écrit et qui lit dessus. Le problème c'est que le
+    père et/ou le fils peuvent faire des dup après.
+  - j'utilise MSG_send et recv pour envoyer des messages sur le pipe
+    entre le maître et le clone.
+- Le maître et le clone n'arrivent toujours pas à communiquer. (le
+  clone fait un read qui bloque) Problème (?) : ces deux processus
+  sont sur le même hôte. 
+* <2014-07-28 lun.> 
+- j'envoyais sur la mauvaise mailbox: il faut mettre le numéro du fd
+  et pas uniquement le nom de l'hôte.
+- fcntl: ajout du flag FD_CLOEXEC pour fermer les fd nécessaires lors
+  d'un exec
+- Problème maintenant: tous les fd sont fermés lors de l'exec, donc il
+  n'y a plus de pipe.. je comprends pas comment ça fonctionne dans
+  l'appli réelle.
+- J'ai rééssayé de tester allpairs: il y a un souci dans la manière
+  dont je traite les dup/pipes. Actuellement je conservais que les 2
+  extrémités du pipe, or il faut stocker tous les fd dupliqués. 
+  - Dans le pipe on met un champ entrée et un champ sortie, qui
+    contiennent la liste de tous les couples processus/fd (y compris
+    tous les dupliqués)
+* <2014-07-29 mar.>
+- J'ai modifié la structure du pipe pour prendre en compte les dup:
+  - on a un xbt array pour l'entrée du pipe, et un pour la
+    sortie. Chaque liste contient tous les descripteurs de fichiers,
+    associés avec le processus correspondant
+  - quand on fait un clone on ajoute le fd/processus au pipe.
+    - j'ai des pipe_end_t qui s'ajoutent en trop à chaque fois
+** TODO Dans syscall_process:syscall_clone_post() vérifier s'il les 
+pipe_end sont déjà présents avant de les ajouter dans la liste.
+  - quand on fait un dup on rajoute la nouvelle extrémité du pipe
+    dans le bon tableau
+  - dans le close on va éventuellement retirer le fd du pipe.
+  - quand on fait un write on va chercher le fd associé pour écrire
+    sur la bonne mailbox. Normalement il n'y a qu'un seul processus
+    en face: comme dans la réalité on ne garantit rien si
+    l'utilisateur n'a pas fermé les bons fd.
+- J'ai toujours cette histoire de CLOEXEC qui me pourrit mes pipes
+* <2014-07-30 mer.>
+- correction dans le write de la manipulation de la structure de
+  pipe. idem dans le read 
+- dans le close après un xbt_dynar_remove_at, on diminue le compteur
+  d'un sinon on loupe un élément
+- retour sur allpairs:
+  - il y avait encore un problème au niveau du clone, qui causait un
+    décalage syscall in/out quand le clone rendait la main sans
+    mourir. 
+  - ne pas tuer le clone dans le handler, sinon on le libère deux
+    fois.
+  - j'ai déplacé le write pipe dans le post, sinon la taille n'est pas
+    encore connue.
+  - les clones et pipes ont l'air de tourner correctement, maintenant
+    c'est au niveau de la connexion du worker que ça attend
+    indéfiniment. 
+** DONE pp python essayer sans le cloexec et comparer les fd avec strace
+* <2014-07-31 jeu.>
+- pp python:
+  - les appels systèmes ne sont pas toujours interceptés au même
+    moment avec simterpose ou avec strace: 
+    - le write(1, "Usage: python sum_primes.py.. est intercepté à la
+      toute fin par strace, et avant le lancement du clone par
+      simterpose
+    - plusieurs autres syscall sont rajoutés parfois
+  - dans sys_execve pour le flag CLOEXEC
+    - je supprimais le fd de la liste mais pas du pipe
+    - il faut supprimer uniquement au retour de l'exec, si celui ci a
+      réussi 
+  - le read sur lequel on bloque à la fin de python pp (write1 puis
+    read0) renvoie des fd tous nulls puisque lors de l'exec on a
+    supprimé tous les fd 
+  - si je ne traite pas le flag CLOEXEC, alors j'ai un deadlock
+    puisque le maître essaie de lire sur 9, et le clone d'écrire
+    sur 1. 
+    - Pour la lecture du maître je comprends pas dans la réalité
+      comment elle est débloquée: avec strace je vois que le read(9
+      bloque jusqu'à ce que le clone fasse un execve.
+* <2014-08-01 ven.>
+- le test de python pp ne fonctionne pas: 
+   - sans prendre en compte CLOEXEC (FD_CLOEXEC, flag de fcntl),
+     Deadlock quand le maître et le clone essaient de communiquer:
+     - le maître essaie de lire sur 9, et le clone d'écrire sur 1. 
+     - je comprends pas par quoi la lecture du maître est sensée être
+       débloquée dans la réalité. Voici le strace de l'application
+       réelle, un peu après la création du clone (12039 = maître,
+       12040 = clone, utiliser l'option -f pour voir les clones)
+#+verbatim    
+[pid 12039] read(9,  <unfinished ...>
+[pid 12040] <... close resumed> )       = 0
+[pid 12040] close(9)                    = 0
+[pid 12040] dup2(3, 0)                  = 0
+[pid 12040] dup2(6, 1)                  = 1
+[pid 12040] dup2(8, 2)                  = 2
+[pid 12040] close(3)                    = 0
+[pid 12040] close(6)                    = 0
+[pid 12040] close(8)                    = 0
+[pid 12040] execve("/usr/bin/python", ["/usr/bin/python", "-u", "-m", "ppworker", "2>/dev/null"], [/* 52 vars */] <unfinished ...>
+[pid 12039] <... read resumed> "", 1048576) = 0
+#+endverbatim
+   - avec CLOEXEC: ça ne pose plus de problème sur le read du maître,
+     mais ça bloque sur le write1 du clone. Tous les descripteurs sont
+     fermés et donc je ne peux plus communiquer: je n'ai personne en
+     face à qui envoyer mon message. Or si je n'envoie pas un send, la
+     main n'est jamais rendue au maître, donc le clone attend
+     indéfiniment. 
+- Je comprends pas bien à quoi sert mmap. Est-ce que ça permettrait
+  d'accéder aux fichiers du maître meme si on n'a plus accès aux
+  fd..? 
+- J'ai commencé à ajouter des refcounts, mais je suis pas sure de
+  faire ce qu'il faut: 
+  - quand j'appelle close, est-ce que je dois attendre avant de
+    fermer?
+  - probleme des infos_sockets, qui sont infos_sockets et
+    file_descriptor 
+- dans dup2(oldfd, newfd) je ferme newfd avant si necessaire
+** TODO des tests qui ressemblent autant que possible à des petits bouts des
+applications qu'on veut utiliser dans l'article, par exemple les 4
+tubes avant le clone dans python pp
+* <2014-08-04 lun.>
+- correction d'un segfault: je décrémentais le refcount après
+  destruction de l'objet
+- nettoyage de fonctions inutilisées dans le code
+- ajout du copyright en entête des fichiers
+- j'ai transféré les 2 seules fonctions qui restaient dans task.c dans
+  communication.c , et supprimé task
+- suppression de variables inutilisées
+** DONE nettoyer journal + ajouter l'état du code, les choses à faire
+* <2014-08-05 mar.>
+- j'ai rajouté une description de chaque fonction du code
+** DONE reste à commenter syscall_process.c 
+- nettoyage de code, suppression de code mort
+* <2014-08-06 mer.>
+- J'ai terminé de commenter syscall_process.c . Je crois qu'il y a des
+  problèmes dans la gestion des deux méthodes:
+  - pour sendmsg et write, en address translation on ne traduit pas
+    dans le pre syscall
+  - pour write quelle que soit la méthode, si la socket n'est pas
+    enregistrée on ne fait rien, on laisse le noyau gérer les
+    syscall. 
+  - correction d'un bug en full mediation pour fcntl
+- retour sur allpairs: 
+  - ça boucle avec des nanosleep
+  - c'est parce que la connexion n'est pas établie
+** TODO allpairs: revoir la connexion
+* <2014-08-07 jeu.>
+- ajout de refcounts sur les infos_socket: je suis embêtée parce qu'il
+  y a des cast d'infos_socket en fd_descriptors.. 
+  - dans get_infos_socket on vérifie que le type du file descriptor
+    soit bien socket, auquel cas on le caste en info socket: ça veut
+    dire que c'est à la fois une structure de fd (avec des champs qui
+    existent, comme le type) et à la fois une info socket? Ca me
+    semble impossible, les champs des deux structures n'ont rien à
+    voir. or on utilise ce mécanisme dans plein de fonctions.
+  - Dans ce cas j'hésite à conserver la même valeur du compteur pour
+    l'info_socket que pour le fd, si les deux objets peuvent être
+    utilisés indifféremment. (mais c'est pas logique. De toute façon
+    j'ai des compteurs de valeurs abérantes si je fais ça)
+  - Mes refcounts des infos_socket ne valent pas zéro à la fin
+    (mais 1) .. j'ai vérifié qu'à chaque incrémentation correspond
+    une décrémentation, mais je vois pas le souci
+** TODO corriger refcounts pour les infos_sockets
+** DONE ajouter des refcounts pour comm_t 
+- Corrigé une erreur dans le clone: je passais les descripteurs de
+  fichiers du parent directement sans les recopier
+- Ca a débloqué pp python en full mediation: la simulation termine il
+  n'y a pas de deadlock
+** TODO regarder les traces
+* <2014-08-08 ven.>
+- ajout de refcounts pour les comm_t
+- Pour le pipe_t pas besoin de refcount, on regarde quand les
+  descripteurs des deux côtés sont tous fermés, et on le détruit. 
+
+
+* Etat actuel du projet et choses à faire:
+- les tests avec run.sh et run_sendmsg.sh passent (si je vérifie pas
+  que les refcounts valent zéro à la fin)
+- les tests avec allpairs et pp python ne fonctionnent pas 
+  - python pp: 
+    - en full mediation Simterpose termine, mais en fait c'est
+      prématuré, le clone n'est jamais lancé et les traces montrent
+      que ça bug à partir du pipe: 
+      - Je compare les résultat du strace avec la trace de simterpose
+        avec les commandes suivantes:
+#+verbatim    
+	strace -f python-pp/sum_primes.py > trace_pp/strace 2>&1
+	./pp_run.sh > trace_pp/simterpose_full_mediation 2>&1
+#+endverbatim
+      - Note: en cas d'erreur, les valeurs de retour dans strace
+        valent -1 avec errno mis à la valeur appropriée. Dans
+        simterpose on renvoie directement -{code d'erreur} 
+      - C'est à partir des 4(pipes-fcntl) suivis du clone que les traces
+        divergent: dans simterpose il n'y a qu'un seul pipe-fcntl et
+        après ça fait nimporte quoi.
+    - en address translation ça deadlock, cf explications du vendredi
+      1er août
+  - allpairs:
+    - en full ça boucle avec des nanosleep, parce que la simulation de
+      connexion n'est pas faite
+    - en address translation ça boucle sur la connexion
+    - le process_connect_in_call renvoie 0 parce qu'il n'y a encore
+      personne en face qui accepte
+** TODO  regarder de plus près
+  - poll et select pas implémentés/pas correctement. manque un
+    MSG_comm_waitany avec timeout
+- refcounts:
+  - implementés pour fd_descriptor_t, comm_t et infos_socket mais il y
+    a des erreurs. ne valent pas zéro à la fin. 
+- les deux méthodes (address/full) ne sont pas toujours
+  respectées/correctes: cf explications du mercredi 6
+- ajouter:
+  - gestion du temps (VDSO en LD_PRELOADant une page qu'on écrit nous
+    même)
+  - médiation port 53, DNS: intercepter tout ce qui arrive (ou bien
+    écrire dans le resolv.conf de la machine physique) 
+- faire d'autres tests:
+  - durée de la simulation pour address translation/full mediation
+** TODO compléter tests
+- revoir la fermeture des processus en cas de crash: de temps en temps
+  j'ai des "address already in use" quand SimTerpose a crashé (c'est
+  un peu aléatoire comme comportement). Je pense que c'est parce que
+  je ne quitte pas bien toutes les applications ou ne ferme pas bien
+  les sockets 
