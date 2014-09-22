@@ -27,7 +27,7 @@ int main(int argc, char **argv)
   int buffer_size = atoi(argv[2]);
 
   struct timespec tvcl;
-  clock_gettime(NULL, &tvcl);
+  clock_gettime(CLOCK_REALTIME, &tvcl);
   fprintf(stderr, "Server starting on port %d: #msg: %d;(time: %d; clock_gettime: %f)\n",
           SERV_PORT, msg_count, time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
   close(client_socket);
 
   struct timespec end_tvcl;
-  clock_gettime(NULL, &end_tvcl);
+  clock_gettime(CLOCK_REALTIME, &end_tvcl);
   fprintf(stderr, "Server exiting after %d msgs (time: %d; clock_gettime: %f)\n",
           msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
