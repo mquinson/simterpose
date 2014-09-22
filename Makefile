@@ -11,7 +11,6 @@ applications/server_msg: applications/server_msg.c
 	make -C applications server_msg
 
 clean:
-	rm -rf simterpose *.o
+	rm -rf simterpose *.o *~
 	make -C src clean
 	make -C applications clean	
-	

@@ -58,4 +58,4 @@ test_restore: test_restore.c
 	gcc -o test_restore test_restore.c
 
 clean:
-	rm -f $(OBJS)
+	rm -f $(OBJS) *~
