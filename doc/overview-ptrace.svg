@@ -1,0 +1,1064 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+   inkscape:export-xdpi="300.02676"
+   inkscape:export-ydpi="300.02676"
+   sodipodi:docname="ptrace.svg">
+  <defs
+     id="defs4">
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9539"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9535"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect9531"
+       is_visible="true"
+       pattern="M 0,0 1,0"
+       copytype="single_stretched"
+       prop_scale="1"
+       scale_y_rel="false"
+       spacing="0"
+       normal_offset="0"
+       tang_offset="0"
+       prop_units="false"
+       vertical_pattern="false"
+       fuse_tolerance="0" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9529"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="skeletal"
+       id="path-effect9525"
+       is_visible="true"
+       pattern="M 0,5 C 0,2.24 2.24,0 5,0 7.76,0 10,2.24 10,5 10,7.76 7.76,10 5,10 2.24,10 0,7.76 0,5 z"
+       copytype="single_stretched"
+       prop_scale="1"
+       scale_y_rel="false"
+       spacing="0"
+       normal_offset="0"
+       tang_offset="0"
+       prop_units="false"
+       vertical_pattern="false"
+       fuse_tolerance="0" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9523"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9519"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9505"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9501"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9497"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9493"
+       is_visible="true" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect9489"
+       is_visible="true" />
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="730.74409 : 6.8473031 : 1"
+       inkscape:vp_y="-914.27223 : -165.46965 : 0"
+       inkscape:vp_z="564.6394 : 931.00827 : 1"
+       inkscape:persp3d-origin="808.04932 : 497.95011 : 1"
+       id="perspective9447" />
+    <marker
+       inkscape:stockid="Arrow2Mend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow2Mend"
+       style="overflow:visible;">
+      <path
+         id="path4235"
+         style="fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round;"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(0.6) rotate(180) translate(0,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Tail"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Tail"
+       style="overflow:visible">
+      <g
+         id="g4244"
+         transform="scale(-1.2)">
+        <path
+           id="path4246"
+           d="M -3.8048674,-3.9585227 L 0.54352094,0"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4248"
+           d="M -1.2866832,-3.9585227 L 3.0617053,0"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4250"
+           d="M 1.3053582,-3.9585227 L 5.6537466,0"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4252"
+           d="M -3.8048674,4.1775838 L 0.54352094,0.21974226"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4254"
+           d="M -1.2866832,4.1775838 L 3.0617053,0.21974226"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+        <path
+           id="path4256"
+           d="M 1.3053582,4.1775838 L 5.6537466,0.21974226"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.8;stroke-linecap:round" />
+      </g>
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Mstart"
+       style="overflow:visible">
+      <path
+         id="path4214"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.4) translate(10,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Mend"
+       style="overflow:visible;">
+      <path
+         id="path4217"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.4) rotate(180) translate(10,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;">
+      <path
+         id="path4211"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lstart"
+       style="overflow:visible">
+      <path
+         id="path4208"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt"
+         transform="scale(0.8) translate(12.5,0)" />
+    </marker>
+    <linearGradient
+       id="linearGradient3769"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop3771" />
+    </linearGradient>
+    <marker
+       inkscape:stockid="Arrow1Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow1Mend-2"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4217-2"
+         d="M 0,0 5,-5 -12.5,0 5,5 0,0 z"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt"
+         transform="matrix(-0.4,0,0,-0.4,-4,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Mend-5"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4235-6"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="scale(-0.6,-0.6)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Mend-4"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4235-4"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="scale(-0.6,-0.6)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Mend-3"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4235-9"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="scale(-0.6,-0.6)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.0643267"
+     inkscape:cx="494.2115"
+     inkscape:cy="633.0527"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-width="1276"
+     inkscape:window-height="931"
+     inkscape:window-x="1920"
+     inkscape:window-y="72"
+     inkscape:window-maximized="0" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:none;stroke:#f00000;stroke-width:1.24214685;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:4.96858713, 1.24214678;stroke-dashoffset:0;marker-start:none;marker-end:url(#Arrow2Mend)"
+       d="m 71.82621,416.97874 85.32271,0.0245"
+       id="path7788-3-0-3"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:transform-center-x="-12.475939"
+       inkscape:transform-center-y="22.281981"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:1.39018679;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999"
+       width="371.1188"
+       height="213.6368"
+       x="369.98828"
+       y="295.36517"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:1.11445403;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5"
+       width="116.55485"
+       height="214.35941"
+       x="20.396912"
+       y="295.00385"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5"
+       width="28.964399"
+       height="53.607243"
+       x="42.517761"
+       y="390.18582"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:123.00000191%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="42.714287"
+       y="425.73749"
+       id="text3847"
+       sodipodi:linespacing="123%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan3849"
+         x="42.714287"
+         y="425.73749"
+         style="font-size:24px;line-height:123.00000191%">P1</tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.7578814;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-5"
+       width="28.831518"
+       height="79.188644"
+       x="108.29852"
+       y="377.39511"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-8"
+       width="28.964399"
+       height="53.607243"
+       x="410.23209"
+       y="390.18582"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:123.00000191%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="410.42862"
+       y="425.73749"
+       id="text3847-1"
+       sodipodi:linespacing="123%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan3849-8"
+         x="410.42862"
+         y="425.73749"
+         style="font-size:24px;line-height:123.00000191%">P1</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:1.30350304;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-8-0"
+       width="122.57161"
+       height="55.10133"
+       x="481.07132"
+       y="389.43878"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-8-03"
+       width="28.964399"
+       height="53.607243"
+       x="645.08923"
+       y="390.18582"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:123.00000191%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="645.28577"
+       y="425.89569"
+       id="P2"
+       sodipodi:linespacing="123%"
+       inkscape:label="P2"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><title
+         id="title3953">P2</title><tspan
+         sodipodi:role="line"
+         x="645.28577"
+         y="425.89569"
+         style="font-size:24px;line-height:123.00000191%"
+         id="tspan3955">P2</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="484.84738"
+       y="422.50702"
+       id="text3959"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         x="484.84738"
+         y="422.50702"
+         id="tspan3963"
+         style="font-size:20px">SimTerpose</tspan></text>
+    <rect
+       style="fill:#ff7f2a;stroke:#000000;stroke-width:0.41540548;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-8-8"
+       width="12.745422"
+       height="53.816837"
+       x="438.84158"
+       y="390.08102"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:#ff7f2a;stroke:#000000;stroke-width:0.41540548;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-8-8-8"
+       width="12.745422"
+       height="53.816837"
+       x="634.05585"
+       y="390.08102"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.7578814;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-5-2"
+       width="28.831518"
+       height="79.188644"
+       x="295.59375"
+       y="-581.6637"
+       transform="matrix(9.2947967e-4,0.99999957,-0.99999957,9.2947967e-4,0,0)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="513.62134"
+       y="315.21933"
+       id="text4021"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4023"
+         x="513.62134"
+         y="315.21933"
+         style="font-size:18px">10042</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="-449.76477"
+       y="125.59639"
+       id="text4021-9"
+       sodipodi:linespacing="125%"
+       transform="matrix(-0.00261421,-0.99999658,0.99999658,-0.00261421,0,0)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4023-2"
+         x="-449.76477"
+         y="125.59639"
+         style="font-size:18px">Port 80</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="600.0094"
+       y="314.41837"
+       id="text4058"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4060"
+         x="600.0094"
+         y="314.41837"
+         style="font-size:18px">Port réel</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="447.06418"
+       y="537.36218"
+       id="text4062"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4064"
+         x="447.06418"
+         y="537.36218"
+         style="font-size:28px">Machine hôte</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="4.7299995"
+       y="537.64697"
+       id="text4062-1"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4064-8"
+         x="4.7299995"
+         y="537.64697"
+         style="font-size:28px">Machine A</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="493.54855"
+       y="282.64691"
+       id="text4062-0"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4064-5"
+         x="493.54855"
+         y="282.64691"
+         style="font-size:28px">Réalité</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="373.57144"
+       y="274.50504"
+       id="text4108"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4110"
+         x="373.57144"
+         y="274.50504" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="48.99115"
+       y="282.80066"
+       id="text4062-1-8"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4064-8-5"
+         x="48.99115"
+         y="282.80066"
+         style="font-size:28px">Plate-forme simulée</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:1.11923766;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-0"
+       width="117.56022"
+       height="214.35463"
+       x="238.20233"
+       y="295.00626"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:0.625;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-1"
+       width="28.964399"
+       height="53.607243"
+       x="-332.99063"
+       y="390.18582"
+       transform="scale(-1,1)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:123.00000191%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="303.65491"
+       y="425.89569"
+       id="text3847-3"
+       sodipodi:linespacing="123%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan3849-6"
+         x="303.65491"
+         y="425.89569"
+         style="font-size:24px;line-height:123.00000191%">P2</tspan></text>
+    <path
+       style="fill:none;stroke:#f00000;stroke-width:1.18255985;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:4.73023922, 1.1825598;stroke-dashoffset:0;marker-start:none;marker-end:url(#Arrow2Mend)"
+       d="m 304.25295,416.75871 -82.83605,0.23707"
+       id="path7788-3-0"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:transform-center-x="11.313113"
+       inkscape:transform-center-y="22.35167"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.7578814;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2999-5-5-5-1"
+       width="28.831518"
+       height="79.188644"
+       x="-266.96866"
+       y="377.39511"
+       transform="scale(-1,1)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="223.88576"
+       y="536.62573"
+       id="text4062-1-82"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4064-8-1"
+         x="223.88576"
+         y="536.62573"
+         style="font-size:28px">Machine B</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="384.24896"
+       y="-244.57777"
+       id="text4021-9-3"
+       sodipodi:linespacing="125%"
+       transform="matrix(0.00261421,0.99999658,-0.99999658,0.00261421,0,0)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan4023-2-0"
+         x="384.24896"
+         y="-244.57777"
+         style="font-size:18px">Port  ??</tspan></text>
+    <path
+       style="fill:none;stroke:#f00000;stroke-width:0.88951665;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:3.55806658, 0.88951665;stroke-dashoffset:0;marker-start:none;marker-end:url(#Arrow1Mend)"
+       d="m 439.1199,417.61004 c 0,0 32.38438,0.75052 40.98195,-1.99473 6.96457,-2.2238 13.12145,-6.95926 16.19041,-12.36733 18.53342,-32.65931 -26.35748,-88.42646 6.07139,-90.16186"
+       id="path7788"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cssc"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <path
+       style="fill:none;stroke:#f00000;stroke-width:0.88969445;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:3.55877782, 0.88969446;stroke-dashoffset:0;marker-start:none;marker-end:url(#Arrow2Mend)"
+       d="m 644.91765,417.71504 c 0,0 -32.38423,0.75082 -40.98177,-1.99554 -6.96451,-2.22471 -13.12138,-6.96209 -16.19031,-12.37234 -18.53334,-32.67253 26.35736,-88.46223 -6.07138,-90.19833"
+       id="path7788-3"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cssc"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:0.82170349px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 164.07782,402.3281 c 1.40144,-17.23141 9.67862,-17.73908 15.11347,-4.69544 0.12232,-8.23801 8.07809,-7.31523 10.41802,-0.8804 1.8327,-10.47468 14.05295,-5.02831 13.49942,1.61406 5.3746,-2.96538 13.14021,1.81127 11.15169,7.77684 5.31375,-0.002 11.32966,7.57872 5.13564,9.8311 4.66681,2.73985 4.04233,7.36973 0,9.39089 1.62214,5.09243 -0.10678,6.8213 -4.54871,9.24417 -1.11996,6.84498 -8.16855,8.05909 -13.05922,4.25525 -1.18533,6.64663 -9.51742,5.81721 -12.47228,1.17386 -8.69772,6.79103 -17.81356,8.74309 -18.92853,-3.52159 -6.62062,1.91987 -10.33658,-9.88719 -6.60297,-13.20595 -3.58209,-3.54887 -9.13503,-11.86176 -2.05426,-13.79288 -2.53478,-3.80733 -1.34672,-6.29645 2.20099,-8.0703"
+       id="path9541"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="160.99506"
+       y="423.2746"
+       id="text9567"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan9569"
+         x="160.99506"
+         y="423.2746">Réseau</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:12.29097652px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="403.07306"
+       y="451.94119"
+       id="text9571"
+       sodipodi:linespacing="125%"
+       transform="scale(0.97806378,1.0224282)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan9573"
+         x="403.07306"
+         y="451.94119"
+         style="fill:#ff0000;fill-opacity:1">1</tspan></text>
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#ff0000;stroke-width:1.28499997;stroke-linecap:butt;stroke-miterlimit:4.19999981;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path9575"
+       sodipodi:cx="21.428572"
+       sodipodi:cy="250.93361"
+       sodipodi:rx="10"
+       sodipodi:ry="9.2857141"
+       d="m 31.428572,250.93361 a 10,9.2857141 0 1 1 -20,0 10,9.2857141 0 1 1 20,0 z"
+       transform="matrix(0.78736068,0,0,0.88638846,381.2887,235.07246)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:12.29097652px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="384.90854"
+       y="336.19147"
+       id="text9571-3"
+       sodipodi:linespacing="125%"
+       transform="scale(0.97806378,1.0224282)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan9573-1"
+         x="384.90854"
+         y="336.19147"
+         style="fill:#ff0000;fill-opacity:1">2</tspan></text>
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#ff0000;stroke-width:1.28499997;stroke-linecap:butt;stroke-miterlimit:4.19999981;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path9575-8"
+       sodipodi:cx="21.428572"
+       sodipodi:cy="250.93361"
+       sodipodi:rx="10"
+       sodipodi:ry="9.2857141"
+       d="m 31.428572,250.93361 a 10,9.2857141 0 1 1 -20,0 10,9.2857141 0 1 1 20,0 z"
+       transform="matrix(0.78736068,0,0,0.88638846,363.52266,116.64357)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:12.29097652px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="603.54395"
+       y="451.93518"
+       id="text9571-2"
+       sodipodi:linespacing="125%"
+       transform="scale(0.97806378,1.0224282)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan9573-7"
+         x="603.54395"
+         y="451.93518"
+         style="fill:#ff0000;fill-opacity:1">3</tspan></text>
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#ff0000;stroke-width:1.28499997;stroke-linecap:butt;stroke-miterlimit:4.19999981;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path9575-85"
+       sodipodi:cx="21.428572"
+       sodipodi:cy="250.93361"
+       sodipodi:rx="10"
+       sodipodi:ry="9.2857141"
+       d="m 31.428572,250.93361 a 10,9.2857141 0 1 1 -20,0 10,9.2857141 0 1 1 20,0 z"
+       transform="matrix(0.78736068,0,0,0.88638846,577.36154,235.07247)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:12.29097652px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="590.01361"
+       y="336.11044"
+       id="text9571-0"
+       sodipodi:linespacing="125%"
+       transform="scale(0.97806378,1.0224282)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan9573-6"
+         x="590.01361"
+         y="336.11044"
+         style="fill:#ff0000;fill-opacity:1">4</tspan></text>
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#ff0000;stroke-width:1.28499997;stroke-linecap:butt;stroke-miterlimit:4.19999981;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="path9575-6"
+       sodipodi:cx="21.428572"
+       sodipodi:cy="250.93361"
+       sodipodi:rx="10"
+       sodipodi:ry="9.2857141"
+       d="m 31.428572,250.93361 a 10,9.2857141 0 1 1 -20,0 10,9.2857141 0 1 1 20,0 z"
+       transform="matrix(0.78736068,0,0,0.88638846,564.12803,116.64357)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="610.7406"
+       y="371.89612"
+       id="text9644"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan9646"
+         x="610.7406"
+         y="371.89612"
+         style="font-size:13px;fill:#ff7f2a;fill-opacity:1">intercepteur</tspan><tspan
+         sodipodi:role="line"
+         x="610.7406"
+         y="388.14612"
+         style="font-size:13px;fill:#ff7f2a;fill-opacity:1"
+         id="tspan9648">ptrace</tspan></text>
+    <use
+       x="0"
+       y="0"
+       xlink:href="#rect2999-5-5-8"
+       id="use3279"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"
+       transform="translate(0,-1.9073486e-6)" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#rect2999-5-5-8-0"
+       id="use3283"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#rect2999-5-5-8-03"
+       id="use3285"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#rect2999-5-5-8-8"
+       id="use3291"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#rect2999-5-5-8-8-8"
+       id="use3293"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#rect2999-5-5-5-2"
+       id="use3295"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#text4021"
+       id="use3297"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#text9571"
+       id="use3317"
+       width="744.09448"
+       height="1052.3622"
+       transform="translate(0,-1.85e-5)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#path9575"
+       id="use3319"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#text9571-3"
+       id="use3321"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#text9571-2"
+       id="use3325"
+       width="744.09448"
+       height="1052.3622"
+       transform="translate(0,-7.7e-6)"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <use
+       x="0"
+       y="0"
+       xlink:href="#path9575-85"
+       id="use3327"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676" />
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="439.41635"
+       y="268.4838"
+       id="text3353"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3355"
+         x="439.41635"
+         y="268.4838" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="594.15247"
+       y="343.74402"
+       id="text3357"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan3359"
+         x="594.15247"
+         y="343.74402"
+         style="font-size:14px">connect(hôte,10042)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="605.2641"
+       y="461.88577"
+       id="text3361"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan3363"
+         x="605.2641"
+         y="461.88577"
+         style="font-size:14px">connect(A,80)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="408.28436"
+       y="461.35257"
+       id="text3365"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan3367"
+         x="408.28436"
+         y="461.35257"
+         style="font-size:14px">accept(80)</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="460.62955"
+       y="414.45084"
+       id="text3369"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3371"
+         x="460.62955"
+         y="414.45084" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="388.9158"
+       y="342.92371"
+       id="text3357-1"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/algorille/Documents/Presentation/soutenance/ptrace.png"
+       inkscape:export-xdpi="300.02676"
+       inkscape:export-ydpi="300.02676"><tspan
+         sodipodi:role="line"
+         id="tspan3359-6"
+         x="388.9158"
+         y="342.92371"
+         style="font-size:14px">accept(10042)</tspan></text>
+  </g>
+</svg>
