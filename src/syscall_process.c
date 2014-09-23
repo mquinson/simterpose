@@ -768,7 +768,9 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
     get_args_clone(proc, reg, sysarg);
     clone_arg_t arg = &(sysarg->clone);
 
-    process_descriptor_t *clone = process_descriptor_new(proc->name, "(cloned)", pid_clone);
+    // FIXME: that ought to be attached to the MSG process. I'm just unsure of whether we are already in the MSG clone too.
+    // Where's the MSG_createprocess?
+    process_descriptor_t *clone = process_descriptor_new(proc->name, bprintf("cloned_%d",pid_clone), pid_clone);
 
     // the clone inherits the fd_list but subsequent actions on fd
     // do NOT affect the parent unless CLONE_FILES is set
