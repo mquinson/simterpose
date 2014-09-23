@@ -1,30 +1,25 @@
 Simterpose aims at simulating distributed applications. For this purpose, 
-it intercepts all system calls made by the set of application.
+it intercepts all system calls made by the set of application and
+replay them within the SimGrid framework.
 
 Requirements:
 	- SimGrid (tested with 3.11)
-	- linux (this application will never work on non-POSIX platform)
+	- A modern Linux kernel on an AMD64 machine.
 
 Compiling Simterpose:
 	make
 
 Running Simterpose: (as root because of cputimer_get())
-	./run.sh (client/server example with sendto/recvfrom syscalls)
-	./run_sendmsg.sh (example with sendmsg/recvmsg syscalls)
-	
-Other simulations (currently not working)
-  * ./allpairs_run.sh (simulation of allpairs, requires: http://ccl.cse.nd.edu/software/allpairs/)
-  * ./pp_run.sh (simulation of pp python, requires the python-pp package)
-  * Trace replay is currently disabled because not working.
-
+	Please check the launcher scripts in tests/ to get an idea of
+        how to launch simterpose (you must be root to do so).
 	
 GENERAL USE:
 
   Like SimGrid, Simterpose uses a platform file and a deployment file,
   both in XML. Please see the SimGrid 101s for more information.
   
-  simgrid.gforge.inria.fr/tutorials/simgrid-101.pdf
-  simgrid.gforge.inria.fr/tutorials/simgrid-use-101.pdf
+  http://simgrid.gforge.inria.fr/tutorials/simgrid-101.pdf
+  http://simgrid.gforge.inria.fr/tutorials/simgrid-use-101.pdf
 
   Simterpose uses the deployment file to know which (real) program
   should be launched on which (virtual) hosts, and with which
