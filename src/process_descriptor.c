@@ -57,22 +57,17 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
 
   if (strace_option) {
 	  char* filename = bprintf("simterpose-%s", argv0);
+
+	  // Take the basefile of the argv0
 	  char *lastsep;
-	  if ((lastsep = strrchr(filename,'/'))) // Take the basefile of the argv0
+	  if ((lastsep = strrchr(filename,'/')))
 		  memmove(filename+strlen("simterpose-"), lastsep+1, filename+strlen(filename)-lastsep+1);
 
-	  printf("strace output will go to %s\n",filename);
 	  result->strace_out = fopen(filename,"w");
 	  xbt_assert(result->strace_out,"Cannot create file %s: %s", filename, strerror(errno));
 	  free(filename);
   }
   return result;
-}
-
-/** @brief attribute the process descriptor to the current MSG process */
-void process_set_descriptor(process_descriptor_t * proc)
-{
-  MSG_process_set_data(MSG_process_self(), proc);
 }
 
 /** @brief free the process descriptor */

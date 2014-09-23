@@ -95,8 +95,6 @@ struct process_descriptor {
 
 process_descriptor_t *process_descriptor_new(const char *name, const char *argv0, pid_t pid);
 
-void process_set_descriptor(process_descriptor_t * proc);
-
 void process_die(process_descriptor_t * proc);
 
 #endif
