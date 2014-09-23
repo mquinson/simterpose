@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 {
 
   if (argc < 4) {
-    fprintf(stderr, "usage: %s port messages_count message_size \n", argv[0]);
+    fprintf(stderr, "usage: %s port msg_count msg_size \n", argv[0]);
     return EXIT_FAILURE;
   }
 

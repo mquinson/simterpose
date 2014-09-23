@@ -19,23 +19,22 @@
 #include <errno.h>
 #include <time.h>
 
-#define SERV_PORT 2227
+//#define IP "162.32.43.1"
+#define IP "127.0.0.1"
 
-//#define BUFFER_SIZE 1000
 
-#define IP "162.32.43.1"
-//#define IP "127.0.0.1"
 
 int main(int argc, char **argv)
 {
 
-  if (argc < 3) {
-    fprintf(stderr, "usage: %s amount_of_messages message_size \n", argv[0]);
+  if (argc < 4) {
+    fprintf(stderr, "usage: %s port msg_count msg_size \n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  int msg_count = atoi(argv[1]);
-  int message_size = atoi(argv[2]);
+  u_short server_port = atoi(argv[1]);
+  int msg_count = atoi(argv[2]);
+  int message_size = atoi(argv[3]);
 
   struct timespec tvcl;
   clock_gettime(CLOCK_REALTIME, &tvcl);
@@ -44,7 +43,6 @@ int main(int argc, char **argv)
 
 
   int clientSocket;
-  u_short port;
   int res;
   char *buff = malloc(message_size);
   char *expected = malloc(message_size);
@@ -59,9 +57,8 @@ int main(int argc, char **argv)
   memset(&cli_addr, 0, sizeof(struct sockaddr_in));
   serverHostEnt = gethostbyname(IP);
   memcpy(&(cli_addr.sin_addr), serverHostEnt->h_addr, serverHostEnt->h_length);
-  port = SERV_PORT;
   cli_addr.sin_family = AF_INET;
-  cli_addr.sin_port = htons(port);
+  cli_addr.sin_port = htons(server_port);
 
   if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
     fprintf(stderr, "Client: Cannot connect to server: %s\n", strerror(errno));
