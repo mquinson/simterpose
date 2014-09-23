@@ -1,3 +1,11 @@
+/* send_server -- A simple server listening to send_client using send/recv   */
+/*                Its only merit is to constitute a test case for simterpose */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPLv2) which comes with this package. */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,23 +17,23 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
-
-#define SERV_PORT 2227
+#include <time.h>
 
 int main(int argc, char **argv)
 {
 
-  if (argc < 3) {
-    fprintf(stderr, "usage: %s amount_of_messages message_size \n", argv[0]);
+  if (argc < 4) {
+    fprintf(stderr, "usage: %s port messages_count message_size \n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  int msg_count = atoi(argv[1]);
-  int msg_size = atoi(argv[2]);
+  int server_port = atoi(argv[1]);
+  int msg_count = atoi(argv[2]);
+  int msg_size = atoi(argv[3]);
 
   struct timespec tvcl;
-  clock_gettime(NULL, &tvcl);
-  fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", SERV_PORT, msg_count, msg_size);
+  clock_gettime(CLOCK_REALTIME, &tvcl);
+  fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", server_port, msg_count, msg_size);
   //fprintf(stderr,"(Server, time: %d; clock_gettime: %f)\n", time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
   int serverSocket;
@@ -43,7 +51,7 @@ int main(int argc, char **argv)
   struct sockaddr_in *serv_addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
   memset((char *) serv_addr, (char) 0, sizeof(struct sockaddr_in));
 
-  port = SERV_PORT;
+  port = server_port;
   serv_addr->sin_family = AF_INET;
   serv_addr->sin_port = htons(port);
   serv_addr->sin_addr.s_addr = htonl(INADDR_ANY);
@@ -52,12 +60,6 @@ int main(int argc, char **argv)
   int on = 1;
   if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
     perror("Server: error setsockopt");
-    exit(1);
-  }
-
-
-  if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
-    perror("Server: error getsockopt");
     exit(1);
   }
 
@@ -108,7 +110,7 @@ int main(int argc, char **argv)
   close(client_socket);
 
   struct timespec end_tvcl;
-  clock_gettime(NULL, &end_tvcl);
+  clock_gettime(CLOCK_REALTIME, &end_tvcl);
   fprintf(stderr, "Server exiting after %d msgs\n", msg_count);
   //fprintf(stderr, "(Server, time: %d; clock_gettime: %f)\n", time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
   //fprintf(stderr, "(Server, Elapsed clock_gettime: %f)\n", (end_tvcl.tv_sec - tvcl.tv_sec) + (end_tvcl.tv_nsec - tvcl.tv_nsec)/ 1000000000.0);

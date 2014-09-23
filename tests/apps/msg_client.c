@@ -1,3 +1,11 @@
+/* msg_client -- A simple client talking to msg_server using sendmsg/recvmsg */
+/*                Its only merit is to constitute a test case for simterpose */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPLv2) which comes with this package. */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -8,6 +16,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <time.h>
 
 
 #define SERV_PORT 2227
@@ -26,17 +35,16 @@ int main(int argc, char **argv)
   int buffer_size = atoi(argv[2]);
 
   struct timespec tvcl;
-  clock_gettime(NULL, &tvcl);
+  clock_gettime(CLOCK_REALTIME, &tvcl);
   fprintf(stderr, "Client starting: #msg: %d; (time: %d; clock_gettime: %f)\n",
-          msg_count, time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
+          msg_count, (int)time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
   int clientSocket;
   u_short port;
   int res;
   char buff[buffer_size];
   strcpy(buff, "Message from client ");
-  int server_socket;
-  long host_addr;
+  //long host_addr = inet_addr("162.32.43.1");
   struct hostent *serverHostEnt;
 
 
@@ -46,7 +54,6 @@ int main(int argc, char **argv)
   }
   struct sockaddr_in cli_addr;
   memset(&cli_addr, 0, sizeof(struct sockaddr_in));
-  host_addr = inet_addr("162.32.43.1");
   serverHostEnt = gethostbyname("162.32.43.1");
   memcpy(&(cli_addr.sin_addr), serverHostEnt->h_addr, serverHostEnt->h_length);
   port = SERV_PORT;
@@ -91,9 +98,9 @@ int main(int argc, char **argv)
   close(clientSocket);
 
   struct timespec end_tvcl;
-  clock_gettime(NULL, &end_tvcl);
+  clock_gettime(CLOCK_REALTIME, &end_tvcl);
   fprintf(stderr, "Client exiting after %d msgs (time: %d; clock_gettime: %f)\n",
-          msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
+          msg_count, (int)time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;
 }

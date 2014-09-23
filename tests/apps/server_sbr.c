@@ -65,7 +65,7 @@ int main()
           perror("error accept");
           exit(1);
         } else {
-          char *message = "Hello\n";
+          const char *message = "Hello\n";
           send(client_socket, message, sizeof("Hello\n"), 0);
 
           res = recv(client_socket, buff, BUFFER_SIZE, 0);

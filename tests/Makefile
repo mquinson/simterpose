@@ -2,5 +2,5 @@ all:
 	make -C apps all
 
 clean:
-	rm *~
+	rm -f *~
 	make -C apps clean

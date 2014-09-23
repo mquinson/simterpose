@@ -21,7 +21,6 @@ int main()
   int serverSocket;
   char *buff = malloc(BUFFER_SIZE);
   u_short port;
-  int res;
   int client_socket;
 
   if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -73,7 +72,7 @@ int main()
           serv_addr->sin_addr.s_addr = inet_addr("127.0.0.1");
 
           if (connect(c, (struct sockaddr *) serv_addr, sizeof(struct sockaddr_in)) < 0) {
-            if (errno = !EINPROGRESS) {
+            if (errno != EINPROGRESS) {
               printf(" %s echec demande de connexionn", strerror(errno));
               exit(0);
             }

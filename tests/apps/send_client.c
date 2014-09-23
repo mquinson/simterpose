@@ -1,3 +1,11 @@
+/* send_client -- A simple client talking to send_server using send/recv     */
+/*                Its only merit is to constitute a test case for simterpose */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPLv2) which comes with this package. */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,6 +17,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
+#include <time.h>
 
 #define SERV_PORT 2227
 
@@ -29,7 +38,7 @@ int main(int argc, char **argv)
   int message_size = atoi(argv[2]);
 
   struct timespec tvcl;
-  clock_gettime(NULL, &tvcl);
+  clock_gettime(CLOCK_REALTIME, &tvcl);
   fprintf(stderr, "Client starting: #msg: %d; size: %d \n", msg_count, message_size);
   //fprintf(stderr, "(Client, time: %d; clock_gettime: %f)\n", time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
@@ -39,8 +48,7 @@ int main(int argc, char **argv)
   int res;
   char *buff = malloc(message_size);
   char *expected = malloc(message_size);
-  int server_socket;
-  long host_addr;
+  // long host_addr = inet_addr(IP);
   struct hostent *serverHostEnt;
 
   if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -49,7 +57,6 @@ int main(int argc, char **argv)
   }
   struct sockaddr_in cli_addr;
   memset(&cli_addr, 0, sizeof(struct sockaddr_in));
-  host_addr = inet_addr(IP);
   serverHostEnt = gethostbyname(IP);
   memcpy(&(cli_addr.sin_addr), serverHostEnt->h_addr, serverHostEnt->h_length);
   port = SERV_PORT;
@@ -92,7 +99,7 @@ int main(int argc, char **argv)
   close(clientSocket);
 
   struct timespec end_tvcl;
-  clock_gettime(NULL, &end_tvcl);
+  clock_gettime(CLOCK_REALTIME, &end_tvcl);
   fprintf(stderr, "Client exiting after %d msgs \n", msg_count);
   //fprintf(stderr, "(Client, time: %d; clock_gettime: %f)\n", time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
   //fprintf(stderr, "(Client, Elapsed clock_gettime: %f)\n", (end_tvcl.tv_sec - tvcl.tv_sec) + (end_tvcl.tv_nsec - tvcl.tv_nsec)/ 1000000000.0);

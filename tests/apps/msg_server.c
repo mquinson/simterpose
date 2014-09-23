@@ -1,3 +1,11 @@
+/* msg_server -- A simple server listening to msg_client using sendmsg/recvmsg */
+/*               Its only merit is to constitute a test case for simterpose  */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPLv2) which comes with this package. */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -29,7 +37,7 @@ int main(int argc, char **argv)
   struct timespec tvcl;
   clock_gettime(CLOCK_REALTIME, &tvcl);
   fprintf(stderr, "Server starting on port %d: #msg: %d;(time: %d; clock_gettime: %f)\n",
-          SERV_PORT, msg_count, time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
+          SERV_PORT, msg_count, (int)time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
 
   int serverSocket;
@@ -55,11 +63,6 @@ int main(int argc, char **argv)
   int on = 1;
   if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
     perror("Server: error setsockopt");
-    exit(1);
-  }
-
-  if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
-    perror("Server: error getsockopt");
     exit(1);
   }
 
@@ -109,7 +112,7 @@ int main(int argc, char **argv)
   struct timespec end_tvcl;
   clock_gettime(CLOCK_REALTIME, &end_tvcl);
   fprintf(stderr, "Server exiting after %d msgs (time: %d; clock_gettime: %f)\n",
-          msg_count, time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
+          msg_count, (int)time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;
 }
