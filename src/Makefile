@@ -1,5 +1,6 @@
 OBJS = args_trace.o communication.o cputimer.o data_utils.o print_syscall.o \
-process_descriptor.o ptrace_utils.o simterpose.o sockets.o syscall_process.o
+process_descriptor.o ptrace_utils.o simterpose.o sockets.o syscall_process.o \
+xbt_log_strace.o
 
 CFLAGS = -Wall -Werror -g -I/opt/simgrid/include/
 CFLAGS += -fno-common -Wunused -Wmissing-prototypes -Wmissing-declarations -Wpointer-arith -Wchar-subscripts -Wcomment

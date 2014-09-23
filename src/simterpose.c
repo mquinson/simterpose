@@ -20,6 +20,7 @@
 #include "ptrace_utils.h"
 #include "syscall_process.h"
 #include "process_descriptor.h"
+#include "print_syscall.h"
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "Main simterpose log channel");
 int strace_option = 0;
@@ -129,6 +130,12 @@ int main(int argc, char *argv[])
 
   MSG_function_register_default(simterpose_process_runner);
   MSG_launch_application(application_file);
+
+  if (strace_option) {
+	  xbt_log_appender_set(&_simgrid_log_category__simterpose, xbt_log_appender_strace_new());
+      xbt_log_layout_set(&_simgrid_log_category__simterpose, xbt_log_layout_simple_new(NULL));
+	  xbt_log_additivity_set(&_simgrid_log_category__simterpose, 0);
+  }
 
   msg_error_t res = MSG_main();
   const char *interposer_name =

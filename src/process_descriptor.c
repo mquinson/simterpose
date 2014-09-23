@@ -56,7 +56,7 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
   result->host = MSG_get_host_by_name(result->name);
 
   if (strace_option) {
-	  char* filename = bprintf("simterpose-%s", argv0);
+	  char* filename = bprintf("simterpose-%s.log", argv0);
 
 	  // Take the basefile of the argv0
 	  char *lastsep;
@@ -66,6 +66,8 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
 	  result->strace_out = fopen(filename,"w");
 	  xbt_assert(result->strace_out,"Cannot create file %s: %s", filename, strerror(errno));
 	  free(filename);
+  } else {
+	  result->strace_out = NULL;
   }
   return result;
 }
