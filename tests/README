@@ -1,7 +1,11 @@
 Here are some tests for simterpose. Nothing automatic yet, but the
 provided scripts start the simulation with all the needed parameters.
 
- - send-recv.sh:       little client/server app using send-recv       (should works)
- - sendmsg-recvmsg.sh: little client/server app using sendmsg-recvmsg (kinda works)
- - allpairs.sh: Try to use allpair, but it's not working yet
- - python-pp.sh: another ongoing try
+ apps/                  The little applications used in tests
+
+ send_clientserver.sh:  Client/server app using send / recv       (should works)
+ msg_clientserver.sh    Client/server app using sendmsg / recvmsg (kinda works)
+
+ allpairs.sh:           Simterpose test using allpair, but it's not working yet
+ allpair/               Usecase of allpair
+ python-pp.sh:          another ongoing try
