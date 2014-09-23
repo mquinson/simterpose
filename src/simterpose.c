@@ -1,6 +1,6 @@
-/* simterpose - SimTerpose intercepter based on MSG                     */
+/* simterpose - Emulate real applications on top of SimGrid                   */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.                */
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.            */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU LGPLv2) which comes with this package. */
@@ -21,7 +21,7 @@
 #include "syscall_process.h"
 #include "process_descriptor.h"
 
-XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "High-level SimTerpose category");
+XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "Main simterpose log channel");
 int strace_option = 0;
 
 static void usage(char *progName, int retcode)
