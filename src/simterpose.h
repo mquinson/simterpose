@@ -8,6 +8,10 @@
 #ifndef SIMTERPOSE_H
 #define SIMTERPOSE_H
 
+// Runtime options
+extern int strace_option; // whether we should display strace-like outputs
+
+
 //#define address_translation
 
 #include <sys/types.h>

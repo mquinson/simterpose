@@ -24,7 +24,6 @@
 #include </usr/include/linux/sched.h>   /* For clone flags */
 
 #define SYSCALL_ARG1 rdi
-extern int strace_option;
 const char *state_names[4] = { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND" };
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, simterpose, "Syscall process log");
@@ -769,7 +768,7 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
     get_args_clone(proc, reg, sysarg);
     clone_arg_t arg = &(sysarg->clone);
 
-    process_descriptor_t *clone = process_descriptor_new(proc->name, pid_clone);
+    process_descriptor_t *clone = process_descriptor_new(proc->name, "(cloned)", pid_clone);
 
     // the clone inherits the fd_list but subsequent actions on fd
     // do NOT affect the parent unless CLONE_FILES is set

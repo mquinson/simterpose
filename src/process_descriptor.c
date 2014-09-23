@@ -8,11 +8,12 @@
 #include "process_descriptor.h"
 #include "sockets.h"
 #include "msg/msg.h"
+#include "simterpose.h"
 
 #include <stdlib.h>
 
 /** @brief create and initialize a new process descriptor */
-process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
+process_descriptor_t *process_descriptor_new(const char *name, const char *argv0, pid_t pid)
 {
   process_descriptor_t *result = malloc(sizeof(process_descriptor_t));
   result->name = strdup(name);
@@ -53,6 +54,18 @@ process_descriptor_t *process_descriptor_new(const char *name, pid_t pid)
   file_desc->ref_nb++;
 
   result->host = MSG_get_host_by_name(result->name);
+
+  if (strace_option) {
+	  char* filename = bprintf("simterpose-%s", argv0);
+	  char *lastsep;
+	  if ((lastsep = strrchr(filename,'/'))) // Take the basefile of the argv0
+		  memmove(filename+strlen("simterpose-"), lastsep+1, filename+strlen(filename)-lastsep+1);
+
+	  printf("strace output will go to %s\n",filename);
+	  result->strace_out = fopen(filename,"w");
+	  xbt_assert(result->strace_out,"Cannot create file %s: %s", filename, strerror(errno));
+	  free(filename);
+  }
   return result;
 }
 
@@ -66,13 +79,16 @@ void process_set_descriptor(process_descriptor_t * proc)
 static void process_descriptor_destroy(process_descriptor_t * proc)
 {
   free(proc->name);
-  //We don't free each fd because application do this before TODO: check that
+  //We don't free each fd because application do this before us. TODO: check that
   int i;
   for (i = 0; i < MAX_FD; ++i) {
     if (proc->fd_list[i]) {
       proc->fd_list[i]->ref_nb--;
       free(proc->fd_list[i]);
     }
+  }
+  if (strace_option) {
+	  fclose(proc->strace_out);
   }
   free(proc->fd_list);
   free(proc);

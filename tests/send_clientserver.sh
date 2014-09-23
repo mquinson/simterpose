@@ -1,6 +1,9 @@
 #!/bin/bash
 
-make -C apps send_server send_client
+set -e # fail fast
+
+make -C ../src/ simterpose
+make -C apps/   send_server send_client
 
 rm -rf deploy_temp.xml
 cat > deploy_temp.xml <<EOF

@@ -88,10 +88,12 @@ struct process_descriptor {
   int in_syscall;
 
   syscall_arg_u sysarg;
+
+  FILE* strace_out; // (real) file descriptor to use to write the strace-like output when ran in --strace mode
 };
 
 
-process_descriptor_t *process_descriptor_new(const char *name, pid_t pid);
+process_descriptor_t *process_descriptor_new(const char *name, const char *argv0, pid_t pid);
 
 void process_set_descriptor(process_descriptor_t * proc);
 

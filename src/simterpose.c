@@ -181,7 +181,7 @@ int simterpose_process_runner(int argc, char *argv[])
 
   // Wait for the traceme to apply (ie, for the child to start)
   waitpid(tracked_pid, &status, 0);
-  process_set_descriptor(process_descriptor_new(MSG_host_get_name(MSG_host_self()), tracked_pid));
+  process_set_descriptor(process_descriptor_new(MSG_host_get_name(MSG_host_self()), argv[0], tracked_pid));
 
   // Trace the child and all upcoming granchilds
   increment_nb_setoptions();
