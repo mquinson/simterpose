@@ -1,5 +1,7 @@
 #!/bin/bash
 
+make -C apps server client
+
 rm -rf deploy_temp.xml
 cat > deploy_temp.xml <<EOF
 <?xml version='1.0'?>
