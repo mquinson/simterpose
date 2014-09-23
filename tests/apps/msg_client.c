@@ -17,34 +17,31 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <time.h>
+#include <errno.h>
 
-
-#define SERV_PORT 2227
-
-//#define BUFFER_SIZE 1024
 
 int main(int argc, char **argv)
 {
 
-  if (argc < 3) {
-    fprintf(stderr, "usage: %s amount_of_messages buffer_size \n", argv[0]);
+  if (argc < 5) {
+    fprintf(stderr, "usage: %s IP port msg_count msg_size\n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  int msg_count = atoi(argv[1]);
-  int buffer_size = atoi(argv[2]);
+  char *IP = argv[1];
+  u_short port = atoi(argv[2]);
+  int msg_count = atoi(argv[3]);
+  int buffer_size = atoi(argv[4]);
 
   struct timespec tvcl;
   clock_gettime(CLOCK_REALTIME, &tvcl);
-  fprintf(stderr, "Client starting: #msg: %d; (time: %d; clock_gettime: %f)\n",
+  fprintf(stderr, "msg_client starting: #msg: %d; (time: %d; clock_gettime: %f)\n",
           msg_count, (int)time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
   int clientSocket;
-  u_short port;
   int res;
   char buff[buffer_size];
   strcpy(buff, "Message from client ");
-  //long host_addr = inet_addr("162.32.43.1");
   struct hostent *serverHostEnt;
 
 
@@ -54,18 +51,17 @@ int main(int argc, char **argv)
   }
   struct sockaddr_in cli_addr;
   memset(&cli_addr, 0, sizeof(struct sockaddr_in));
-  serverHostEnt = gethostbyname("162.32.43.1");
+  serverHostEnt = gethostbyname(IP);
   memcpy(&(cli_addr.sin_addr), serverHostEnt->h_addr, serverHostEnt->h_length);
-  port = SERV_PORT;
   cli_addr.sin_family = AF_INET;
   cli_addr.sin_port = htons(port);
 
   if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
-    printf("echec demande de connexion\n");
+    printf("msg_client: cannot connect to the server: %s\n", strerror(errno));
     exit(1);
   }
 
-  printf("Connexion avec le serveur établie %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
+  fprintf(stderr, "msg_client: connected to the server %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
   struct iovec iov[1];
   struct msghdr msg;
 
@@ -99,7 +95,7 @@ int main(int argc, char **argv)
 
   struct timespec end_tvcl;
   clock_gettime(CLOCK_REALTIME, &end_tvcl);
-  fprintf(stderr, "Client exiting after %d msgs (time: %d; clock_gettime: %f)\n",
+  fprintf(stderr, "Client exiting after %d messages (time: %d; clock_gettime: %f)\n",
           msg_count, (int)time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;

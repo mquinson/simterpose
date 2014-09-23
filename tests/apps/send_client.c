@@ -19,33 +19,28 @@
 #include <errno.h>
 #include <time.h>
 
-//#define IP "162.32.43.1"
-#define IP "127.0.0.1"
+int main(int argc, char **argv) {
 
-
-
-int main(int argc, char **argv)
-{
-
-  if (argc < 4) {
-    fprintf(stderr, "usage: %s port msg_count msg_size \n", argv[0]);
+  if (argc < 5) {
+    fprintf(stderr, "usage: %s IP port msg_count msg_size \n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  u_short server_port = atoi(argv[1]);
-  int msg_count = atoi(argv[2]);
-  int message_size = atoi(argv[3]);
+  char* IP = argv[1];
+  u_short server_port = atoi(argv[2]);
+  int msg_count = atoi(argv[3]);
+  int msg_size = atoi(argv[4]);
 
   struct timespec tvcl;
   clock_gettime(CLOCK_REALTIME, &tvcl);
-  fprintf(stderr, "Client starting: #msg: %d; size: %d \n", msg_count, message_size);
+  fprintf(stderr, "Client starting: #msg: %d; size:%d (the server is on %s:%d) \n", msg_count, msg_size, IP, server_port);
   //fprintf(stderr, "(Client, time: %d; clock_gettime: %f)\n", time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
 
   int clientSocket;
   int res;
-  char *buff = malloc(message_size);
-  char *expected = malloc(message_size);
+  char *buff = malloc(msg_size);
+  char *expected = malloc(msg_size);
   // long host_addr = inet_addr(IP);
   struct hostent *serverHostEnt;
 
@@ -69,14 +64,14 @@ int main(int argc, char **argv)
 
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
     sprintf(buff, "This is the message #%d produced on the client.", msg_number);
-    res = send(clientSocket, buff, message_size, 0);
+    res = send(clientSocket, buff, msg_size, 0);
     if (res == -1) {
       perror("Client: cannot send message");
       exit(1);
     }
     fprintf(stderr, "Client: sent message #%d\n", msg_number);
 
-    int length = message_size;
+    int length = msg_size;
     while (length > 0) {
       res = recv(clientSocket, buff, length, 0);
       if (res == -1) {

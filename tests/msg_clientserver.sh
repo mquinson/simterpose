@@ -8,11 +8,13 @@ cat > deploy_temp.xml <<EOF
 <!DOCTYPE platform SYSTEM "http://simgrid.gforge.inria.fr/simgrid.dtd">
 <platform version ="3">
   <process host="Tremblay" function="apps/msg_server" start_time="0.00">
+    <argument value="2227"/> <!-- port -->
     <argument value="5"/> <!-- Amount of messages to send -->
     <argument value="128"/>
-    <argument value="2227"/>
   </process>
   <process host="Jupiter" function="apps/msg_client" start_time="3.0">
+    <argument value="162.32.43.1"/> <!-- IP -->
+    <argument value="2227"/> <!-- port -->
     <argument value="5"/> <!-- Amount of messages to send -->
     <argument value="128"/>
   </process>

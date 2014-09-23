@@ -18,31 +18,26 @@
 #include <pthread.h>
 #include <errno.h>
 
-#define SERV_PORT 2227
-
-//#define BUFFER_SIZE 1024
-
-
 int main(int argc, char **argv)
 {
 
-  if (argc < 3) {
-    fprintf(stderr, "usage: %s amount_of_messages buffer_size \n", argv[0]);
+  if (argc < 4) {
+    fprintf(stderr, "usage: %s port msg_count msg_size\n", argv[0]);
     return EXIT_FAILURE;
   }
 
-  int msg_count = atoi(argv[1]);
-  int buffer_size = atoi(argv[2]);
+  u_short port = atoi(argv[1]);
+  int msg_count = atoi(argv[2]);
+  int buffer_size = atoi(argv[3]);
 
   struct timespec tvcl;
   clock_gettime(CLOCK_REALTIME, &tvcl);
-  fprintf(stderr, "Server starting on port %d: #msg: %d;(time: %d; clock_gettime: %f)\n",
-          SERV_PORT, msg_count, (int)time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
+  fprintf(stderr, "msg_server starting on port %d: #msg: %d;(time: %d; clock_gettime: %f)\n",
+          port, msg_count, (int)time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
 
 
   int serverSocket;
   char *buff = malloc(buffer_size);
-  u_short port;
   int res;
   int client_socket;
 
@@ -54,7 +49,6 @@ int main(int argc, char **argv)
   struct sockaddr_in *serv_addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
   memset((char *) serv_addr, (char) 0, sizeof(struct sockaddr_in));
 
-  port = SERV_PORT;
   serv_addr->sin_family = AF_INET;
   serv_addr->sin_port = htons(port);
   serv_addr->sin_addr.s_addr = htonl(INADDR_ANY);
@@ -80,7 +74,7 @@ int main(int argc, char **argv)
 
 
   if ((client_socket = accept(serverSocket, (struct sockaddr *) cli_addr, (socklen_t *) & clilen)) < 0) {
-    perror("Server: error accepting real connexion");
+    perror("Server: error accepting real connection");
     exit(1);
   }
   struct iovec iov[1];
@@ -103,7 +97,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "Server: error while receiving message #%d: %s\n", msg_number, strerror(errno));
       exit(1);
     }
-    printf("Receive %d bytes : Message reçu du client %s\n", res, buff);
+    printf("Receive %d bytes: >>%s<<\n", res, buff);
   }
 
   shutdown(client_socket, 2);
@@ -111,7 +105,7 @@ int main(int argc, char **argv)
 
   struct timespec end_tvcl;
   clock_gettime(CLOCK_REALTIME, &end_tvcl);
-  fprintf(stderr, "Server exiting after %d msgs (time: %d; clock_gettime: %f)\n",
+  fprintf(stderr, "Server exiting after %d messages (time: %d; clock_gettime: %f)\n",
           msg_count, (int)time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;
