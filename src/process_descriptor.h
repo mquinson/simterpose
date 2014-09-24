@@ -48,48 +48,48 @@
 typedef struct process_descriptor process_descriptor_t;
 
 typedef struct {
-  msg_sem_t sem_client;
-  msg_sem_t sem_server;
-  msg_process_t client;
-  msg_process_t server;
-  const char *to_client;        // name of the mailbox
-  const char *to_server;        // name of the mailbox
+	msg_sem_t sem_client;
+	msg_sem_t sem_server;
+	msg_process_t client;
+	msg_process_t server;
+	const char *to_client;        // name of the mailbox
+	const char *to_server;        // name of the mailbox
 } stream_t;
 
 typedef struct pipe_end_s pipe_end_s;
 typedef pipe_end_s *pipe_end_t;
 
 struct pipe_end_s {
-  int fd;
-  process_descriptor_t *proc;
+	int fd;
+	process_descriptor_t *proc;
 };
 
 typedef struct {
-  xbt_dynar_t read_end;
-  xbt_dynar_t write_end;
+	xbt_dynar_t read_end;
+	xbt_dynar_t write_end;
 } pipe_t;
 
 typedef struct {
-  int type;
-  process_descriptor_t *proc;
-  int fd;
-  stream_t *stream;
-  pipe_t *pipe;
-  int flags;
-  int ref_nb;                   // reference counting
+	int type;
+	process_descriptor_t *proc;
+	int fd;
+	stream_t *stream;
+	pipe_t *pipe;
+	int flags;
+	int ref_nb;                   // reference counting
 } fd_descriptor_t;
 
 struct process_descriptor {
-  pid_t pid;
-  char *name;
-  msg_host_t host;
-  fd_descriptor_t **fd_list;
+	pid_t pid;
+	char *name;
+	msg_host_t host;
+	fd_descriptor_t **fd_list;
 
-  int in_syscall;
+	int in_syscall;
 
-  syscall_arg_u sysarg;
+	syscall_arg_u sysarg;
 
-  FILE* strace_out; // (real) file descriptor to use to write the strace-like output when ran in --strace mode
+	FILE* strace_out; // (real) file descriptor to use to write the strace-like output when ran in --strace mode
 };
 
 

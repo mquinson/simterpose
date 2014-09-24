@@ -13,9 +13,9 @@
 
 //#include "xbt/log_private.h" // Oops, sorry for violating your intimacy this way
 struct xbt_log_appender_s {    // Yeah, I know. Sorry.
-  void (*do_append) (xbt_log_appender_t this_appender, char *event);
-  void (*free_) (xbt_log_appender_t this_);
-  void *data;
+	void (*do_append) (xbt_log_appender_t this_appender, char *event);
+	void (*free_) (xbt_log_appender_t this_);
+	void *data;
 };
 
 
@@ -32,15 +32,15 @@ static void append_file(xbt_log_appender_t this_, char *str) {
 }
 
 static void free_(xbt_log_appender_t this_) {
-  if (this_->data != stderr)
-    fclose(this_->data);
+	if (this_->data != stderr)
+		fclose(this_->data);
 }
 
 xbt_log_appender_t xbt_log_appender_strace_new(void) {
 
-  xbt_log_appender_t res = xbt_new0(s_xbt_log_appender_t, 1);
-  res->do_append = append_file;
-  res->free_ = free_;
-  res->data = (void *) stderr;
-  return res;
+	xbt_log_appender_t res = xbt_new0(s_xbt_log_appender_t, 1);
+	res->do_append = append_file;
+	res->free_ = free_;
+	res->data = (void *) stderr;
+	return res;
 }

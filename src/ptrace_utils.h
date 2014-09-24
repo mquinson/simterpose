@@ -12,14 +12,14 @@
 #include <sys/types.h>
 
 typedef struct {
-  unsigned long reg_orig;
-  unsigned long ret;
-  unsigned long arg1;
-  unsigned long arg2;
-  unsigned long arg3;
-  unsigned long arg4;
-  unsigned long arg5;
-  unsigned long arg6;
+	unsigned long reg_orig;
+	unsigned long ret;
+	unsigned long arg1;
+	unsigned long arg2;
+	unsigned long arg3;
+	unsigned long arg4;
+	unsigned long arg5;
+	unsigned long arg6;
 } reg_s;
 
 extern const char *syscall_list[];

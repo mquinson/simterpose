@@ -34,21 +34,21 @@ typedef struct translate_desc translate_desc_t;
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
 
 struct port_desc {
-  int port_num;
-  int real_port;
-  int option;
-  int amount_socket;
-  struct infos_socket *bind_socket;
+	int port_num;
+	int real_port;
+	int option;
+	int amount_socket;
+	struct infos_socket *bind_socket;
 };
 
 struct translate_desc {
-  int port_num;
-  unsigned int ip;
+	int port_num;
+	unsigned int ip;
 };
 
 struct simterpose_host {
-  unsigned int ip;
-  xbt_dict_t port;
+	unsigned int ip;
+	xbt_dict_t port;
 };
 
 int simterpose_process_runner(int argc, char *argv[]);
