@@ -1,6 +1,9 @@
 all:
 	make -C apps all
 
+../src/simterpose: $(shell ls ../src/*.[ch])
+	make -C ../src simterpose
+
 strace-send_client.log strace-send_server.log: apps/send_server apps/send_client
 	strace apps/send_server 2227 5 128 >strace-send_server.log 2>&1&
 	sleep 1
