@@ -768,8 +768,6 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		get_args_clone(proc, reg, sysarg);
 		clone_arg_t arg = &(sysarg->clone);
 
-		// FIXME: that ought to be attached to the MSG process. I'm just unsure of whether we are already in the MSG clone too.
-		// Where's the MSG_createprocess?
 		process_descriptor_t *clone = process_descriptor_new(proc->name, bprintf("cloned_%d",pid_clone), pid_clone);
 
 		// the clone inherits the fd_list but subsequent actions on fd
@@ -881,6 +879,9 @@ static void syscall_clone_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		char name[256];
 		sprintf(name, "clone n°%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
 		XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
+		// FIXME: the current MSG process should not continue past that point:
+		//        the clone is started, current can go back to its own considerations.
+		// but maybe we want to start the clone in a different manner?
 		MSG_process_create(name, main_loop, clone, MSG_host_self());
 		proc->in_syscall = 1;
 	}
