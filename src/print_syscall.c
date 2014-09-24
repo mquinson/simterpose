@@ -14,6 +14,51 @@
 #include <stdio.h>
 #include </usr/include/linux/sched.h>   /* For clone flags */
 
+typedef struct {
+	int val;
+	const char* name;
+} flag_names_t;
+#define FLAG_NAME(x) { x, #x}
+#define FLAG_NAME_EOL {0,NULL}
+
+static flag_names_t flags_open[] = {
+		FLAG_NAME(O_RDWR),
+		FLAG_NAME(O_RDONLY),
+		FLAG_NAME(O_WRONLY),
+		FLAG_NAME(O_NONBLOCK),
+		FLAG_NAME(O_APPEND),
+		FLAG_NAME(O_CREAT),
+		FLAG_NAME(O_TRUNC),
+		FLAG_NAME(O_EXCL),
+		FLAG_NAME(O_NOCTTY),
+		FLAG_NAME(O_SYNC),
+		FLAG_NAME(O_DSYNC),
+		FLAG_NAME(O_RSYNC),
+		FLAG_NAME(O_NDELAY),
+		FLAG_NAME(O_CLOEXEC),
+		FLAG_NAME_EOL
+};
+
+/** @brief Display the flags that a given syscal may have from a value/name list */
+static void print_flags(process_descriptor_t *proc, int flags, flag_names_t *names) {
+	int first = 1;
+	for (; names->name;names++) {
+		if ((names->val & flags) == names->val) {
+			if (!first)
+				fprintf(proc->strace_out,"|");
+			first = 0;
+			fprintf(proc->strace_out,names->name);
+			flags &= ~names->val;
+		}
+	}
+    if (flags) {
+    	if (!first)
+    		fprintf(proc->strace_out,"|");
+    	fprintf(proc->strace_out, "%#x", flags);
+    }
+}
+
+
 /** @brief print a strace-like log of accept syscall */
 void print_accept_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
@@ -1038,25 +1083,6 @@ void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysa
 	fprintf(proc->strace_out, "%d\n", arg->ret);
 }
 
-static void print_flags_open(process_descriptor_t * proc, int flags)
-{
-	fprintf(proc->strace_out, ", ");
-	if (flags & O_CLOEXEC)
-		fprintf(proc->strace_out, " O_CLOEXEC |");
-	if (flags & O_CREAT)
-		fprintf(proc->strace_out, " O_CREAT |");
-	if (flags & O_DIRECTORY)
-		fprintf(proc->strace_out, " O_DIRECTORY |");
-	if (flags & O_EXCL)
-		fprintf(proc->strace_out, " O_EXCL |");
-	if (flags & O_NOCTTY)
-		fprintf(proc->strace_out, " O_NOCTTY |");
-	if (flags & O_NOFOLLOW)
-		fprintf(proc->strace_out, " O_NOFOLLOW |");
-	if (flags & O_TRUNC)
-		fprintf(proc->strace_out, " O_TRUNC |");
-}
-
 /** @brief print open syscall */
 void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
@@ -1072,7 +1098,9 @@ void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 		get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
 		fprintf(proc->strace_out, "\"%s\"", bufstr);
 	}
-	if (arg->flags > 0)
-		print_flags_open(proc, arg->flags);
+	if (arg->flags) {
+		fprintf(proc->strace_out,", ");
+		print_flags(proc, arg->flags, flags_open);
+	}
 	fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
