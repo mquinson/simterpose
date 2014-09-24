@@ -36,7 +36,143 @@ static flag_names_t flags_open[] = {
 		FLAG_NAME(O_RSYNC),
 		FLAG_NAME(O_NDELAY),
 		FLAG_NAME(O_CLOEXEC),
-		FLAG_NAME_EOL
+        FLAG_NAME_EOL
+};
+
+static flag_names_t errno_values[] = {
+		//grep define /usr/include/asm-generic/errno-base.h|grep [0-9]|sed -e 's/#define[[:space:]]*E/FLAG_NAME(E/' -e 's/[[:space:]].*/),/' -e 's/^/        /'
+        FLAG_NAME(EPERM),
+        FLAG_NAME(ENOENT),
+        FLAG_NAME(ESRCH),
+        FLAG_NAME(EINTR),
+        FLAG_NAME(EIO),
+        FLAG_NAME(ENXIO),
+        FLAG_NAME(E2BIG),
+        FLAG_NAME(ENOEXEC),
+        FLAG_NAME(EBADF),
+        FLAG_NAME(ECHILD),
+        FLAG_NAME(EAGAIN),
+        FLAG_NAME(ENOMEM),
+        FLAG_NAME(EACCES),
+        FLAG_NAME(EFAULT),
+        FLAG_NAME(ENOTBLK),
+        FLAG_NAME(EBUSY),
+        FLAG_NAME(EEXIST),
+        FLAG_NAME(EXDEV),
+        FLAG_NAME(ENODEV),
+        FLAG_NAME(ENOTDIR),
+        FLAG_NAME(EISDIR),
+        FLAG_NAME(EINVAL),
+        FLAG_NAME(ENFILE),
+        FLAG_NAME(EMFILE),
+        FLAG_NAME(ENOTTY),
+        FLAG_NAME(ETXTBSY),
+        FLAG_NAME(EFBIG),
+        FLAG_NAME(ENOSPC),
+        FLAG_NAME(ESPIPE),
+        FLAG_NAME(EROFS),
+        FLAG_NAME(EMLINK),
+        FLAG_NAME(EPIPE),
+        //grep define /usr/include/asm-generic/errno.h|grep [0-9]|sed -e 's/#define[[:space:]]*E/FLAG_NAME(E/' -e 's/[[:space:]].*/),/' -e 's/^/        /'
+        FLAG_NAME(EDEADLK),
+        FLAG_NAME(ENAMETOOLONG),
+        FLAG_NAME(ENOLCK),
+        FLAG_NAME(ENOSYS),
+        FLAG_NAME(ENOTEMPTY),
+        FLAG_NAME(ELOOP),
+        FLAG_NAME(ENOMSG),
+        FLAG_NAME(EIDRM),
+        FLAG_NAME(ECHRNG),
+        FLAG_NAME(EL2NSYNC),
+        FLAG_NAME(EL3HLT),
+        FLAG_NAME(EL3RST),
+        FLAG_NAME(ELNRNG),
+        FLAG_NAME(EUNATCH),
+        FLAG_NAME(ENOCSI),
+        FLAG_NAME(EL2HLT),
+        FLAG_NAME(EBADE),
+        FLAG_NAME(EBADR),
+        FLAG_NAME(EXFULL),
+        FLAG_NAME(ENOANO),
+        FLAG_NAME(EBADRQC),
+        FLAG_NAME(EBADSLT),
+        FLAG_NAME(EBFONT),
+        FLAG_NAME(ENOSTR),
+        FLAG_NAME(ENODATA),
+        FLAG_NAME(ETIME),
+        FLAG_NAME(ENOSR),
+        FLAG_NAME(ENONET),
+        FLAG_NAME(ENOPKG),
+        FLAG_NAME(EREMOTE),
+        FLAG_NAME(ENOLINK),
+        FLAG_NAME(EADV),
+        FLAG_NAME(ESRMNT),
+        FLAG_NAME(ECOMM),
+        FLAG_NAME(EPROTO),
+        FLAG_NAME(EMULTIHOP),
+        FLAG_NAME(EDOTDOT),
+        FLAG_NAME(EBADMSG),
+        FLAG_NAME(EOVERFLOW),
+        FLAG_NAME(ENOTUNIQ),
+        FLAG_NAME(EBADFD),
+        FLAG_NAME(EREMCHG),
+        FLAG_NAME(ELIBACC),
+        FLAG_NAME(ELIBBAD),
+        FLAG_NAME(ELIBSCN),
+        FLAG_NAME(ELIBMAX),
+        FLAG_NAME(ELIBEXEC),
+        FLAG_NAME(EILSEQ),
+        FLAG_NAME(ERESTART),
+        FLAG_NAME(ESTRPIPE),
+        FLAG_NAME(EUSERS),
+        FLAG_NAME(ENOTSOCK),
+        FLAG_NAME(EDESTADDRREQ),
+        FLAG_NAME(EMSGSIZE),
+        FLAG_NAME(EPROTOTYPE),
+        FLAG_NAME(ENOPROTOOPT),
+        FLAG_NAME(EPROTONOSUPPORT),
+        FLAG_NAME(ESOCKTNOSUPPORT),
+        FLAG_NAME(EOPNOTSUPP),
+        FLAG_NAME(EPFNOSUPPORT),
+        FLAG_NAME(EAFNOSUPPORT),
+        FLAG_NAME(EADDRINUSE),
+        FLAG_NAME(EADDRNOTAVAIL),
+        FLAG_NAME(ENETDOWN),
+        FLAG_NAME(ENETUNREACH),
+        FLAG_NAME(ENETRESET),
+        FLAG_NAME(ECONNABORTED),
+        FLAG_NAME(ECONNRESET),
+        FLAG_NAME(ENOBUFS),
+        FLAG_NAME(EISCONN),
+        FLAG_NAME(ENOTCONN),
+        FLAG_NAME(ESHUTDOWN),
+        FLAG_NAME(ETOOMANYREFS),
+        FLAG_NAME(ETIMEDOUT),
+        FLAG_NAME(ECONNREFUSED),
+        FLAG_NAME(EHOSTDOWN),
+        FLAG_NAME(EHOSTUNREACH),
+        FLAG_NAME(EALREADY),
+        FLAG_NAME(EINPROGRESS),
+        FLAG_NAME(ESTALE),
+        FLAG_NAME(EUCLEAN),
+        FLAG_NAME(ENOTNAM),
+        FLAG_NAME(ENAVAIL),
+        FLAG_NAME(EISNAM),
+        FLAG_NAME(EREMOTEIO),
+        FLAG_NAME(EDQUOT),
+        FLAG_NAME(ENOMEDIUM),
+        FLAG_NAME(EMEDIUMTYPE),
+        FLAG_NAME(ECANCELED),
+        FLAG_NAME(ENOKEY),
+        FLAG_NAME(EKEYEXPIRED),
+        FLAG_NAME(EKEYREVOKED),
+        FLAG_NAME(EKEYREJECTED),
+        FLAG_NAME(EOWNERDEAD),
+        FLAG_NAME(ENOTRECOVERABLE),
+        FLAG_NAME(ERFKILL),
+        FLAG_NAME(EHWPOISON),
+        // End of list
+       FLAG_NAME_EOL
 };
 
 /** @brief Display the flags that a given syscal may have from a value/name list */
@@ -1092,7 +1228,6 @@ void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 	long ptr_filename;
 
 	ptr_filename = arg->ptr_filename;
-	// fprintf(proc->strace_out, "[%d] open(", proc->pid);
 	fprintf(proc->strace_out, "open(");
 	if (ptr_filename) {
 		get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
@@ -1102,5 +1237,14 @@ void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 		fprintf(proc->strace_out,", ");
 		print_flags(proc, arg->flags, flags_open);
 	}
-	fprintf(proc->strace_out, ") = %d\n", arg->ret);
+	if (arg->ret < 0) {
+		char errbuff[1024];
+		strerror_r(-arg->ret, errbuff, 1024);
+		// The manpage says that the open syscall returns -1 while it returns -errno. Obey the manpage, at least in appearance
+		fprintf(proc->strace_out, ") = -1 ");
+		print_flags(proc, -arg->ret, errno_values);
+		fprintf(proc->strace_out," (%s)\n", strerror(-(arg->ret)));
+	} else {
+		fprintf(proc->strace_out, ") = %d\n", arg->ret);
+	}
 }

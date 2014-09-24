@@ -965,7 +965,8 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 		file_desc->ref_nb++;
 	}
 	// TODO handle flags
-	XBT_WARN("flags for open syscall are not handled");
+	if (sysarg->open.flags)
+		XBT_WARN("open(2): flags are not handled");
 	if (strace_option)
 		print_open_syscall(proc, sysarg);
 }

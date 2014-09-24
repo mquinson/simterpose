@@ -42,6 +42,8 @@
 #include <linux/cgroupstats.h>
 #include <linux/netlink.h>
 
+#include <errno.h>
+
 #define MAX_PROCS 512
 
 
