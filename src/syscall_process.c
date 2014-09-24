@@ -5,23 +5,45 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "simterpose.h"
 #include "syscall_process.h"
-#include "syscall_data.h"
-#include "sysdep.h"
+
+#include <arpa/inet.h>
+#include <asm-generic/errno.h>
+#include <asm-generic/errno-base.h>
+#include <asm-generic/socket.h>
+#include <bits/fcntl-linux.h>
+//#include <linux/futex.h>
+#include <linux/sched.h>   /* For clone flags */
+#include <msg/datatypes.h>
+#include <msg/msg.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <setjmp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/select.h>
+#include <sys/wait.h>
+#include <syscall.h>
+//#include <time.h>
+#include <unistd.h>
+#include <xbt/asserts.h>
+#include <xbt/dynar.h>
+#include <xbt/ex.h>
+#include <xbt/log.h>
+#include <xbt/misc.h>
+#include <xbt/sysdep.h>
+//#include "xbt.h"
+
 #include "args_trace.h"
+#include "communication.h"
 #include "data_utils.h"
-#include "ptrace_utils.h"
 #include "print_syscall.h"
-#include "process_descriptor.h"
+//#include "process_descriptor.h"
+//#include "ptrace_utils.h"
+#include "simterpose.h"
 #include "sockets.h"
-
-#include "xbt.h"
-#include "xbt/log.h"
-
-#include <time.h>
-#include <linux/futex.h>
-#include </usr/include/linux/sched.h>   /* For clone flags */
+#include "syscall_data.h"
+//#include "sysdep.h"
 
 #define SYSCALL_ARG1 rdi
 const char *state_names[4] = { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND" };
@@ -76,7 +98,6 @@ static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 {
 	proc->in_syscall = 1;
 #ifndef address_translation
-	//  XBT_DEBUG("[%d] sendmsg_pre", pid);
 	XBT_DEBUG("sendmsg_pre");
 	get_args_sendmsg(proc, reg, sysarg);
 	process_descriptor_t remote_proc;
@@ -1585,6 +1606,24 @@ static void syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 	file_desc = NULL;
 }
 
+/** @brief handle the return of a brk syscall (just display it in strace) */
+
+static void syscall_brk_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+	if (!strace_option)
+		return;
+
+	char buff[1024];
+	if (reg->arg1) {
+		sprintf(buff, "brk(                                    = ");
+		int offset = sprintf(buff+4,"%#lx)",reg->arg1);
+		buff[offset+4] = ' '; // kill the \0
+	} else {
+		sprintf(buff, "brk(0)                                  = ");
+	}
+	sprintf(buff+42,"%#lx\n",reg->ret);
+	fprintf(proc->strace_out,buff);
+}
+
 /** @brief handle accept syscall at exit in case of address translation
  *
  * We use semaphores to synchronize client and server during a connection. */
@@ -2059,6 +2098,15 @@ int process_handle(process_descriptor_t * proc, int status)
 			// SYS_pipe2, SYS_inotify_init1, SYS_preadv, SYS_pwritev, SYS_rt_tgsigqueueinfo, SYS_perf_event_open, SYS_recvmmsg,
 			// SYS_fanotify_init, SYS_fanotify_mark, SYS_prlimit64, SYS_name_to_handle_at, SYS_open_by_handle_at, SYS_clock_adjtime,
 			// SYS_syncfs, SYS_sendmmsg, SYS_setns, SYS_getcpu, SYS_process_vm_readv, SYS_process_vm_writev, SYS_kcmp, SYS_finit_module
+
+		case SYS_brk:
+			if (!(proc->in_syscall)) {
+				proc->in_syscall = 1;
+			} else {
+				proc->in_syscall = 0;
+				syscall_brk_post(&arg,sysarg, proc);
+			}
+			break;
 
 		default:
 			if (!(proc->in_syscall))
