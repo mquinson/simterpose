@@ -113,7 +113,7 @@ static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 		return PROCESS_TASK_FOUND;
 	}
 #endif
-return PROCESS_CONTINUE;
+	return PROCESS_CONTINUE;
 }
 
 /** @brief handle sendmsg syscall at the exit
@@ -295,7 +295,7 @@ static int syscall_write_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 		}
 	}
 #endif
-return PROCESS_CONTINUE;
+	return PROCESS_CONTINUE;
 }
 
 /** @brief handle recvmsg syscall at the entrance
@@ -335,14 +335,14 @@ static void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, 
 					struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
 					int sock_status = socket_get_state(is);
 #ifdef address_translation
-if (sock_status & SOCKET_CLOSED)
-	sys_build_recvmsg(proc, &(proc->sysarg));
+					if (sock_status & SOCKET_CLOSED)
+						sys_build_recvmsg(proc, &(proc->sysarg));
 #else
-if (sock_status & SOCKET_CLOSED)
-	sysarg->recvmsg.ret = 0;
-ptrace_neutralize_syscall(pid);
-proc_outside(proc);
-sys_build_recvmsg(proc, &(proc->sysarg));
+					if (sock_status & SOCKET_CLOSED)
+						sysarg->recvmsg.ret = 0;
+					ptrace_neutralize_syscall(pid);
+					proc_outside(proc);
+					sys_build_recvmsg(proc, &(proc->sysarg));
 				} else {
 					ptrace_neutralize_syscall(pid);
 					proc_outside(proc);
@@ -437,14 +437,14 @@ static void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
 					struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
 					int sock_status = socket_get_state(is);
 #ifdef address_translation
-if (sock_status & SOCKET_CLOSED)
-	process_recvfrom_out_call(proc);
+					if (sock_status & SOCKET_CLOSED)
+						process_recvfrom_out_call(proc);
 #else
-if (sock_status & SOCKET_CLOSED)
-	sysarg->recvfrom.ret = 0;
-ptrace_neutralize_syscall(pid);
-proc_outside(proc);
-process_recvfrom_out_call(proc);
+					if (sock_status & SOCKET_CLOSED)
+						sysarg->recvfrom.ret = 0;
+					ptrace_neutralize_syscall(pid);
+					proc_outside(proc);
+					process_recvfrom_out_call(proc);
 				} else {
 					ptrace_neutralize_syscall(pid);
 					proc_outside(proc);
@@ -520,14 +520,14 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 			struct infos_socket *is = get_infos_socket(proc, arg->fd);
 			int sock_status = socket_get_state(is);
 #ifdef address_translation
-if (sock_status & SOCKET_CLOSED)
-	process_read_out_call(proc);
+			if (sock_status & SOCKET_CLOSED)
+				process_read_out_call(proc);
 #else
-if (sock_status & SOCKET_CLOSED)
-	sysarg->read.ret = 0;
-ptrace_neutralize_syscall(proc->pid);
-proc_outside(proc);
-process_read_out_call(proc);
+			if (sock_status & SOCKET_CLOSED)
+				sysarg->read.ret = 0;
+			ptrace_neutralize_syscall(proc->pid);
+			proc_outside(proc);
+			process_read_out_call(proc);
 		} else {
 			ptrace_neutralize_syscall(proc->pid);
 			proc_outside(proc);
@@ -1795,18 +1795,18 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
 		add_new_translation(ntohs(port), is->port_local, get_ip_of_host(proc->host));
 	}
 #endif
-if (strace_option)
-	print_connect_syscall(proc, sysarg);
+	if (strace_option)
+		print_connect_syscall(proc, sysarg);
 
-fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
-file_desc->ref_nb++;
+	fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+	file_desc->ref_nb++;
 
-XBT_DEBUG("connect_post: trying to release server semaphore ...");
-MSG_sem_release(file_desc->stream->sem_server);
-XBT_DEBUG("connect_post: server semaphore released");
+	XBT_DEBUG("connect_post: trying to release server semaphore ...");
+	MSG_sem_release(file_desc->stream->sem_server);
+	XBT_DEBUG("connect_post: server semaphore released");
 
-file_desc->ref_nb--;
-file_desc = NULL;
+	file_desc->ref_nb--;
+	file_desc = NULL;
 }
 
 
