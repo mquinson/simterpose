@@ -169,8 +169,8 @@ static int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, pr
 		return PROCESS_TASK_FOUND;
 	}
 #else
-	if (socket_registered(proc, reg->arg1) != -1) {
-		if (socket_network(proc, reg->arg1))
+	if (socket_registered(proc, reg->arg[0]) != -1) {
+		if (socket_network(proc, reg->arg[0]))
 			sys_translate_sendto_in(proc, sysarg);
 	}
 #endif
@@ -193,8 +193,8 @@ static int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, p
 	if (strace_option)
 		print_sendto_syscall(proc, sysarg);
 #ifdef address_translation
-	if (socket_registered(proc, reg->arg1) != -1) {
-		if (socket_network(proc, reg->arg1)) {
+	if (socket_registered(proc, reg->arg[0]) != -1) {
+		if (socket_network(proc, reg->arg[0])) {
 			sys_translate_sendto_out(proc, sysarg);
 		}
 	}
@@ -404,8 +404,8 @@ static void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg,
 	get_args_recvfrom(proc, reg, sysarg);
 
 #ifdef address_translation
-	if (socket_registered(proc, reg->arg1) != -1) {
-		if (socket_network(proc, reg->arg1)) {
+	if (socket_registered(proc, reg->arg[0]) != -1) {
+		if (socket_network(proc, reg->arg[0])) {
 			sys_translate_recvfrom_out(proc, sysarg);
 		}
 	}
@@ -501,7 +501,7 @@ static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 	fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
 	file_desc->ref_nb++;
 
-	if (socket_registered(proc, reg->arg1) != -1) {
+	if (socket_registered(proc, reg->arg[0]) != -1) {
 		const char *mailbox;
 		if (MSG_process_self() == file_desc->stream->client)
 			mailbox = file_desc->stream->to_client;
@@ -974,8 +974,8 @@ static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 
 	open_arg_t arg = &(sysarg->open);
 	arg->ret = reg->ret;
-	arg->ptr_filename = reg->arg1;
-	arg->flags = reg->arg2; // FIXME arg2 value is always 0, so we don't print actual flags for now
+	arg->ptr_filename = reg->arg[0];
+	arg->flags = reg->arg[1]; // FIXME arg[1] value is always 0, so we don't print actual flags for now
 
 	if (arg->ret >= 0) {
 		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
@@ -1045,7 +1045,7 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 {
 	XBT_DEBUG("close post");
 	proc->in_syscall = 0;
-	int fd = reg->arg1;
+	int fd = reg->arg[0];
 	process_close_call(proc, fd);
 	if(strace_option)
 		fprintf(stderr, "[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
@@ -1062,8 +1062,8 @@ static void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_de
 #ifndef address_translation
 	XBT_DEBUG(" shutdown_pre");
 	shutdown_arg_t arg = &(sysarg->shutdown);
-	arg->fd = reg->arg1;
-	arg->how = reg->arg2;
+	arg->fd = reg->arg[0];
+	arg->how = reg->arg[1];
 	arg->ret = reg->ret;
 
 	ptrace_neutralize_syscall(proc->pid);
@@ -1081,8 +1081,8 @@ static void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_d
 	XBT_DEBUG(" shutdown_post");
 	proc->in_syscall = 0;
 	shutdown_arg_t arg = &(sysarg->shutdown);
-	arg->fd = reg->arg1;
-	arg->how = reg->arg2;
+	arg->fd = reg->arg[0];
+	arg->how = reg->arg[1];
 	arg->ret = reg->ret;
 
 	struct infos_socket *is = get_infos_socket(proc, arg->fd);
@@ -1112,9 +1112,9 @@ static void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process
 	pid_t pid = proc->pid;
 
 	arg->ret = reg->ret;
-	arg->sockfd = reg->arg1;
-	arg->sockaddr_dest = (void *) reg->arg2;
-	arg->len_dest = (void *) reg->arg3;
+	arg->sockfd = reg->arg[0];
+	arg->sockaddr_dest = (void *) reg->arg[1];
+	arg->len_dest = (void *) reg->arg[2];
 	ptrace_cpy(proc->pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
 
 	if (socket_registered(proc, arg->sockfd)) {
@@ -1310,8 +1310,8 @@ static void syscall_fcntl_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	proc->in_syscall = 0;
-	unsigned int oldfd = (int) reg->arg1;
-	unsigned int newfd = (int) reg->arg2;
+	unsigned int oldfd = (int) reg->arg[0];
+	unsigned int newfd = (int) reg->arg[1];
 
 	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
 	file_desc->ref_nb++;
@@ -1361,9 +1361,9 @@ static void syscall_socket_post(reg_s * reg, syscall_arg_u * sysarg, process_des
 
 	socket_arg_t arg = &sysarg->socket;
 	arg->ret = reg->ret;
-	arg->domain = (int) reg->arg1;
-	arg->type = (int) reg->arg2;
-	arg->protocol = (int) reg->arg3;
+	arg->domain = (int) reg->arg[0];
+	arg->type = (int) reg->arg[1];
+	arg->protocol = (int) reg->arg[2];
 
 	if (strace_option)
 		print_socket_syscall(proc, sysarg);
@@ -1613,9 +1613,9 @@ static void syscall_brk_post(reg_s * reg, syscall_arg_u * sysarg, process_descri
 		return;
 
 	char buff[1024];
-	if (reg->arg1) {
+	if (reg->arg[0]) {
 		sprintf(buff, "brk(                                    = ");
-		int offset = sprintf(buff+4,"%#lx)",reg->arg1);
+		int offset = sprintf(buff+4,"%#lx)",reg->arg[0]);
 		buff[offset+4] = ' '; // kill the \0
 	} else {
 		sprintf(buff, "brk(0)                                  = ");
@@ -2022,7 +2022,7 @@ int process_handle(process_descriptor_t * proc, int status)
 
 		case SYS_exit:
 			if (!(proc->in_syscall)) {
-				XBT_DEBUG("exit(%ld) called", arg.arg1);
+				XBT_DEBUG("exit(%ld) called", arg.arg[0]);
 				return syscall_exit_pre(pid, &arg, sysarg, proc);
 			} else
 				proc->in_syscall = 0;
@@ -2080,7 +2080,7 @@ int process_handle(process_descriptor_t * proc, int status)
 
 		case SYS_exit_group:
 			if (!(proc->in_syscall)) {
-				XBT_DEBUG("exit_group(%ld) called", arg.arg1);
+				XBT_DEBUG("exit_group(%ld) called", arg.arg[0]);
 				return syscall_exit_pre(pid, &arg, sysarg, proc);
 			} else
 				proc->in_syscall = 0;

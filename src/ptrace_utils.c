@@ -197,12 +197,12 @@ void ptrace_get_register(const pid_t pid, reg_s * arg)
 	// FIXME: test architecture and use the right registers
 	arg->reg_orig = regs.orig_rax;
 	arg->ret = regs.rax;
-	arg->arg1 = regs.rdi;
-	arg->arg2 = regs.rsi;
-	arg->arg3 = regs.rdx;
-	arg->arg4 = regs.r10;
-	arg->arg5 = regs.r8;
-	arg->arg6 = regs.r9;
+	arg->arg[0] = regs.rdi;
+	arg->arg[1] = regs.rsi;
+	arg->arg[2] = regs.rdx;
+	arg->arg[3] = regs.r10;
+	arg->arg[4] = regs.r8;
+	arg->arg[5] = regs.r9;
 }
 
 /** @brief Make sure that the syscall that the tracked process is about to do does nothing
