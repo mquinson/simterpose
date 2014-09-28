@@ -169,6 +169,9 @@ int simterpose_process_runner(int argc, char *argv[])
 			perror("ptrace traceme");
 			exit(1);
 		}
+		// Wait for master
+		kill(getpid(), SIGSTOP);
+
 		xbt_dynar_t cmdline_dynar = xbt_dynar_new(sizeof(char *), NULL);
 		int i;
 		for (i = 0; i < argc; i++)
@@ -185,11 +188,11 @@ int simterpose_process_runner(int argc, char *argv[])
 		exit(1);
 	}
 	// We are still in simterpose, so we are the thread that is the representative of the external process
+	MSG_process_set_data(MSG_process_self(),
+			process_descriptor_new(MSG_host_get_name(MSG_host_self()), argv[0], tracked_pid));
 
 	// Wait for the traceme to apply (ie, for the child to start)
 	waitpid(tracked_pid, &status, 0);
-	MSG_process_set_data(MSG_process_self(),
-			process_descriptor_new(MSG_host_get_name(MSG_host_self()), argv[0], tracked_pid));
 
 	// Trace the child and all upcoming granchilds
 	increment_nb_setoptions();
@@ -204,7 +207,7 @@ int simterpose_process_runner(int argc, char *argv[])
 	process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
 
 	// Main loop where we track our external process and do the simcall that represent its syscalls
-	int proc_next_state;
+	int proc_next_state = PROCESS_CONTINUE;
 	while (proc_next_state != PROCESS_DEAD) {
 		XBT_DEBUG("Starting treatment");
 
