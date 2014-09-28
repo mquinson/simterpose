@@ -30,5 +30,5 @@ communication.o: communication.c communication.h sockets.h
 #################################################
 
 clean:
-	rm -rf *.o *~
+	rm -rf simterpose *.o *~
 	
