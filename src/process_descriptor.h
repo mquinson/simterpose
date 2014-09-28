@@ -85,13 +85,22 @@ struct process_descriptor {
 	msg_host_t host;
 	fd_descriptor_t **fd_list;
 
-	int in_syscall;
+	int in_syscall:2; // whether we are inside or outside of the syscall
 
 	syscall_arg_u sysarg;
 
 	FILE* strace_out; // (real) file descriptor to use to write the strace-like output when ran in --strace mode
 };
 
+static int proc_entering(process_descriptor_t *proc) {
+	return !proc->in_syscall;
+}
+static void proc_inside(process_descriptor_t *proc) {
+	proc->in_syscall = 1;
+}
+static void proc_outside(process_descriptor_t *proc) {
+	proc->in_syscall = 0;
+}
 
 process_descriptor_t *process_descriptor_new(const char *name, const char *argv0, pid_t pid);
 
