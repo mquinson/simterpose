@@ -45,6 +45,10 @@
 #include "syscall_data.h"
 //#include "sysdep.h"
 
+#ifndef unknown_error // that stupid eclipse seems to not find that symbol
+#define unknown_error 0
+#endif
+
 #define SYSCALL_ARG1 rdi
 const char *state_names[4] = { "PROCESS_CONTINUE", "PROCESS_DEAD", "PROCESS_GROUP_DEAD", "PROCESS_TASK_FOUND" };
 
@@ -90,55 +94,54 @@ static int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg
 
 /** @brief handle sendmsg syscall at the entrance
  *
- * In case of full mediation, we retrieve the message intended to be sent by
- * the application. We send it through MSG and neutralize the real syscall.
- * We don't go to syscall_sendmsg_post afterwards.
- */
-static int syscall_sendmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_inside(proc);
-#ifndef address_translation
-	XBT_DEBUG("sendmsg_pre");
-	get_args_sendmsg(proc, reg, sysarg);
-	process_descriptor_t remote_proc;
-	if (process_send_call(proc, sysarg, &remote_proc)) {
-		ptrace_neutralize_syscall(pid);
-
-		sendmsg_arg_t arg = &(sysarg->sendmsg);
-		proc_outside(proc);
-		ptrace_restore_syscall(pid, SYS_sendmsg, arg->ret);
-
-		if (strace_option)
-			print_sendmsg_syscall(proc, sysarg);
-		return PROCESS_TASK_FOUND;
-	}
-#endif
-	return PROCESS_CONTINUE;
-}
-
-/** @brief handle sendmsg syscall at the exit
+ * In case of full mediation, everything is done when entering the syscall:
+ *   - We retrieve the message intended to be sent by the application
+ *   - We send it through MSG
+ *   - We neutralize the real syscall so that we never exit the syscall afterward
  *
  * In case of address translation we send the MSG task in order to return
  * control to the MSG process receiving the message
  */
-static int syscall_sendmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static int syscall_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	proc_outside(proc);
-	// XBT_DEBUG("[%d] sendmsg_out", pid);
-	XBT_DEBUG("sendmsg_post");
-	get_args_sendmsg(proc, reg, sysarg);
-	if (strace_option)
-		print_sendmsg_syscall(proc, sysarg);
-#ifdef address_translation
-	if (reg->ret > 0) {
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+#ifndef address_translation
+		XBT_DEBUG("sendmsg_pre");
+		get_args_sendmsg(proc, reg, sysarg);
 		process_descriptor_t remote_proc;
 		if (process_send_call(proc, sysarg, &remote_proc)) {
+			ptrace_neutralize_syscall(pid);
+
+			sendmsg_arg_t arg = &(sysarg->sendmsg);
+			proc_outside(proc);
+			ptrace_restore_syscall(pid, SYS_sendmsg, arg->ret);
+
+			if (strace_option)
+				print_sendmsg_syscall(proc, sysarg);
 			return PROCESS_TASK_FOUND;
 		}
-	}
 #endif
-	return PROCESS_CONTINUE;
+		return PROCESS_CONTINUE;
+	} else {
+		proc_outside(proc);
+		// XBT_DEBUG("[%d] sendmsg_out", pid);
+		XBT_DEBUG("sendmsg_post");
+		get_args_sendmsg(proc, reg, sysarg);
+		if (strace_option)
+			print_sendmsg_syscall(proc, sysarg);
+#ifdef address_translation
+		if (reg->ret > 0) {
+			process_descriptor_t remote_proc;
+			if (process_send_call(proc, sysarg, &remote_proc)) {
+				return PROCESS_TASK_FOUND;
+			}
+		}
+#endif
+		return PROCESS_CONTINUE;
+	}
 }
+
 
 /** @brief handle sendto syscall at the entrance
  *
@@ -1932,11 +1935,7 @@ int process_handle(process_descriptor_t * proc, int status)
 			break;
 
 		case SYS_sendmsg:
-			if (proc_entering(proc))
-				ret = syscall_sendmsg_pre(pid, &arg, sysarg, proc);
-			else
-				ret = syscall_sendmsg_post(pid, &arg, sysarg, proc);
-			if (ret)
+			if ((ret = syscall_sendmsg(pid, &arg, sysarg, proc)))
 				return ret;
 			break;
 
