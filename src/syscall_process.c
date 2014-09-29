@@ -966,29 +966,33 @@ static void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 }
 
 /** @brief open a new file descriptor */
-static void syscall_open_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	proc_outside(proc);
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+	} else {
+		proc_outside(proc);
 
-	open_arg_t arg = &(sysarg->open);
-	arg->ret = reg->ret;
-	arg->ptr_filename = reg->arg[0];
-	arg->flags = reg->arg[1]; // FIXME arg[1] value is always 0, so we don't print actual flags for now
+		open_arg_t arg = &(sysarg->open);
+		arg->ret = reg->ret;
+		arg->ptr_filename = reg->arg[0];
+		arg->flags = reg->arg[1]; // FIXME arg[1] value is always 0, so we don't print actual flags for now
 
-	if (arg->ret >= 0) {
-		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
-		file_desc->ref_nb = 0;
-		file_desc->fd = arg->ret;
-		file_desc->proc = proc;
-		file_desc->type = FD_CLASSIC;
-		proc->fd_list[(int) reg->ret] = file_desc;
-		file_desc->ref_nb++;
+		if (arg->ret >= 0) {
+			fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+			file_desc->ref_nb = 0;
+			file_desc->fd = arg->ret;
+			file_desc->proc = proc;
+			file_desc->type = FD_CLASSIC;
+			proc->fd_list[(int) reg->ret] = file_desc;
+			file_desc->ref_nb++;
+		}
+		// TODO handle flags
+		if (sysarg->open.flags)
+			XBT_WARN("open(2): flags are not handled");
+		if (strace_option)
+			print_open_syscall(proc, sysarg);
 	}
-	// TODO handle flags
-	if (sysarg->open.flags)
-		XBT_WARN("open(2): flags are not handled");
-	if (strace_option)
-		print_open_syscall(proc, sysarg);
 }
 
 /** @brief helper function to close a file descriptor */
@@ -1843,10 +1847,7 @@ int process_handle(process_descriptor_t * proc, int status)
 			break;
 
 		case SYS_open:
-			if (proc_entering(proc))
-				proc_inside(proc);
-			else
-				syscall_open_post(&arg, sysarg, proc);
+			syscall_open(&arg, sysarg, proc);
 			break;
 
 		case SYS_close:
