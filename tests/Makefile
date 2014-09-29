@@ -16,10 +16,14 @@ strace-msg_client.log strace-msg_server.log: apps/msg_server apps/msg_client
 
 simterpose-send_client.log: ../src/simterpose send_clientserver.sh apps/send_client.c apps/send_server.c
 	./send_clientserver.sh
+simterpose-msg_client.log: ../src/simterpose msg_clientserver.sh apps/msg_client.c apps/msg_server.c
+	./msg_clientserver.sh
 
 diff-send: strace-send_client.log simterpose-send_client.log
 	diff -u simterpose-send_client.log strace-send_client.log
-.PHONY: diff-send
+diff-msg: strace-msg_client.log simterpose-msg_client.log
+	diff -u simterpose-msg_client.log strace-msg_client.log
+.PHONY: diff-send diff-msg
 
 	
 
