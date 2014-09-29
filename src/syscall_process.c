@@ -1398,32 +1398,28 @@ static void process_listen_call(process_descriptor_t * proc, syscall_arg_u * sys
 #endif
 }
 
-/** @brief handle listen syscall at the entrance in case of full mediation */
-static void syscall_listen_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static void syscall_listen(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	proc_inside(proc);
-#ifndef address_translation
-	XBT_DEBUG("listen_in");
-	get_args_listen(proc, reg, sysarg);
-	process_listen_call(proc, sysarg);
-	if (strace_option)
-		print_listen_syscall(proc, sysarg);
-#endif
-}
+	if (proc_entering(proc)) {
 
-/** @brief handle listen syscall at the exit in case of address translation */
-static void syscall_listen_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_outside(proc);
-	XBT_DEBUG("listen_out");
-#ifdef address_translation
-	get_args_listen(proc, reg, sysarg);
-	process_listen_call(proc, sysarg);
-	if (strace_option)
-		print_listen_syscall(proc, sysarg);
-#else
-	THROW_IMPOSSIBLE;
+		proc_inside(proc);
+#ifndef address_translation
+		get_args_listen(proc, reg, sysarg);
+		process_listen_call(proc, sysarg);
+		if (strace_option)
+			print_listen_syscall(proc, sysarg);
 #endif
+	} else {
+		proc_outside(proc);
+#ifdef address_translation
+		get_args_listen(proc, reg, sysarg);
+		process_listen_call(proc, sysarg);
+		if (strace_option)
+			print_listen_syscall(proc, sysarg);
+#else
+		THROW_IMPOSSIBLE;
+#endif
+	}
 }
 
 /** @brief handle bind syscall */
@@ -1953,10 +1949,7 @@ int process_handle(process_descriptor_t * proc, int status)
 			break;
 
 		case SYS_listen:
-			if (proc_entering(proc))
-				syscall_listen_pre(&arg, sysarg, proc);
-			else
-				syscall_listen_post(&arg, sysarg, proc);
+			syscall_listen(&arg, sysarg, proc);
 			break;
 
 		case SYS_getpeername:
