@@ -492,81 +492,79 @@ static void process_read_out_call(process_descriptor_t * proc)
  * We receive the MSG task and in case of full mediation we neutralize the
  * real syscall and don't go to syscall_read_post afterwards.
  */
-static void syscall_read_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	proc_inside(proc);
-	XBT_DEBUG(" read_pre");
-	get_args_read(proc, reg, sysarg);
-	read_arg_t arg = &(sysarg->read);
-	fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
-	file_desc->ref_nb++;
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+		XBT_DEBUG(" read_pre");
+		get_args_read(proc, reg, sysarg);
+		read_arg_t arg = &(sysarg->read);
+		fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+		file_desc->ref_nb++;
 
-	if (socket_registered(proc, reg->arg[0]) != -1) {
-		const char *mailbox;
-		if (MSG_process_self() == file_desc->stream->client)
-			mailbox = file_desc->stream->to_client;
-		else if (MSG_process_self() == file_desc->stream->server)
-			mailbox = file_desc->stream->to_server;
-		else
-			THROW_IMPOSSIBLE;
+		if (socket_registered(proc, reg->arg[0]) != -1) {
+			const char *mailbox;
+			if (MSG_process_self() == file_desc->stream->client)
+				mailbox = file_desc->stream->to_client;
+			else if (MSG_process_self() == file_desc->stream->server)
+				mailbox = file_desc->stream->to_server;
+			else
+				THROW_IMPOSSIBLE;
 
-		msg_task_t task = NULL;
-		msg_error_t err = MSG_task_receive(&task, mailbox);
+			msg_task_t task = NULL;
+			msg_error_t err = MSG_task_receive(&task, mailbox);
 
-		arg->ret = (int) MSG_task_get_data_size(task);
-		arg->data = MSG_task_get_data(task);
+			arg->ret = (int) MSG_task_get_data_size(task);
+			arg->data = MSG_task_get_data(task);
 
-		if (err != MSG_OK) {
-			struct infos_socket *is = get_infos_socket(proc, arg->fd);
-			int sock_status = socket_get_state(is);
+			if (err != MSG_OK) {
+				struct infos_socket *is = get_infos_socket(proc, arg->fd);
+				int sock_status = socket_get_state(is);
 #ifdef address_translation
-			if (sock_status & SOCKET_CLOSED)
-				process_read_out_call(proc);
+				if (sock_status & SOCKET_CLOSED)
+					process_read_out_call(proc);
 #else
-			if (sock_status & SOCKET_CLOSED)
-				sysarg->read.ret = 0;
-			ptrace_neutralize_syscall(proc->pid);
-			proc_outside(proc);
-			process_read_out_call(proc);
-		} else {
-			ptrace_neutralize_syscall(proc->pid);
-			proc_outside(proc);
-			process_read_out_call(proc);
+				if (sock_status & SOCKET_CLOSED)
+					sysarg->read.ret = 0;
+				ptrace_neutralize_syscall(proc->pid);
+				proc_outside(proc);
+				process_read_out_call(proc);
+			} else {
+				ptrace_neutralize_syscall(proc->pid);
+				proc_outside(proc);
+				process_read_out_call(proc);
 #endif
+			}
+			MSG_task_destroy(task);
+		} else if (file_desc != NULL && file_desc->type == FD_PIPE) {
+			if (strace_option)
+				print_read_syscall(proc, sysarg);
+			fprintf(stderr, "[%d] read pre, pipe \n", proc->pid);
+			pipe_t *pipe = file_desc->pipe;
+			if (pipe == NULL)
+				THROW_IMPOSSIBLE;
+
+			XBT_WARN("host %s trying to receive from pipe %d", MSG_host_get_name(proc->host), arg->fd);
+			char buff[256];
+			sprintf(buff, "%d", arg->fd);
+
+			msg_task_t task = NULL;
+			MSG_task_receive(&task, buff);
+			arg->ret = (int) MSG_task_get_data_size(task);
+			arg->data = MSG_task_get_data(task);
+			XBT_WARN("hosts: %s received from pipe %d (size: %d)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
+
+			MSG_task_destroy(task);
 		}
-		MSG_task_destroy(task);
-	} else if (file_desc != NULL && file_desc->type == FD_PIPE) {
+		file_desc->ref_nb--;
+		file_desc = NULL;
+	} else {
+		proc_outside(proc);
+		XBT_DEBUG("read_post");
+		get_args_read(proc, reg, sysarg);
 		if (strace_option)
 			print_read_syscall(proc, sysarg);
-		fprintf(stderr, "[%d] read pre, pipe \n", proc->pid);
-		pipe_t *pipe = file_desc->pipe;
-		if (pipe == NULL)
-			THROW_IMPOSSIBLE;
-
-		XBT_WARN("host %s trying to receive from pipe %d", MSG_host_get_name(proc->host), arg->fd);
-		char buff[256];
-		sprintf(buff, "%d", arg->fd);
-
-		msg_task_t task = NULL;
-		MSG_task_receive(&task, buff);
-		arg->ret = (int) MSG_task_get_data_size(task);
-		arg->data = MSG_task_get_data(task);
-		XBT_WARN("hosts: %s received from pipe %d (size: %d)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
-
-		MSG_task_destroy(task);
 	}
-	file_desc->ref_nb--;
-	file_desc = NULL;
-}
-
-/** @brief print read syscall at the exit */
-static void syscall_read_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_outside(proc);
-	XBT_DEBUG("read_post");
-	get_args_read(proc, reg, sysarg);
-	if (strace_option)
-		print_read_syscall(proc, sysarg);
 }
 
 /** @brief handle poll syscall */
@@ -1836,10 +1834,7 @@ int process_handle(process_descriptor_t * proc, int status)
 
 		switch (arg.reg_orig) {
 		case SYS_read:
-			if (proc_entering(proc))
-				syscall_read_pre(&arg, sysarg, proc);
-			else
-				syscall_read_post(&arg, sysarg, proc);
+			syscall_read(&arg, sysarg, proc);
 			break;
 
 		case SYS_write:
