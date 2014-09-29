@@ -1164,12 +1164,13 @@ static int get_string(int pid, long ptr, char *buf, int size)
 	while ((data = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr, 0)) && j < size) {
 		int i;
 		for (i = 0; i < sizeof(data) && j < size; i++, j++) {
-			if (!(buf[j] = p[i]))
-				goto done;
+			if (!(buf[j] = p[i])) {
+				buf[j] = '\0';
+				return j;
+			}
 		}
 		ptr += sizeof(data);
 	}
-	done:
 	buf[j] = '\0';
 	return j;
 }

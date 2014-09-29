@@ -1461,7 +1461,9 @@ static void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 				proc_outside(proc);
 				set_real_port(proc->host, ntohs(arg->sai.sin_port), port);
 				add_new_translation(port, ntohs(arg->sai.sin_port), get_ip_of_host(proc->host));
-				goto end;
+				if (strace_option)
+					print_bind_syscall(proc, sysarg);
+				return;
 #endif
 			} else {
 				XBT_DEBUG("Port %d isn't free", ntohs(arg->sai.sin_port));
@@ -1470,7 +1472,9 @@ static void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 				bind_arg_t arg = &(sysarg->bind);
 				ptrace_restore_syscall(pid, SYS_bind, arg->ret);
 				proc_outside(proc);
-				goto end;
+				if (strace_option)
+					print_bind_syscall(proc, sysarg);
+				return;
 			}
 #ifndef address_translation
 			ptrace_neutralize_syscall(pid);
@@ -1480,7 +1484,6 @@ static void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 #endif
 		}
 	}
-	end:
 	if (strace_option)
 		print_bind_syscall(proc, sysarg);
 }

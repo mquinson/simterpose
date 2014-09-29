@@ -56,11 +56,9 @@ static int netlink_sock_new(int protocol)
 	memset(&local, 0, sizeof(local));
 	local.nl_family = AF_NETLINK;
 
-	if (bind(fd, (struct sockaddr *) &local, sizeof(local)) < 0)
-		goto error;
+	if (bind(fd, (struct sockaddr *) &local, sizeof(local)) >= 0)
+		return fd;
 
-	return fd;
-	error:
 	close(fd);
 	return -1;
 }
