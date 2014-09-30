@@ -6,6 +6,7 @@
  * under the terms of the license (GNU LGPLv2) which comes with this package. */
 
 #include <sys/ptrace.h>
+#include <sys/personality.h>
 #include <wait.h>
 #include <errno.h>
 #include <unistd.h>
@@ -171,6 +172,9 @@ int simterpose_process_runner(int argc, char *argv[])
 		}
 		// Wait for master
 		kill(getpid(), SIGSTOP);
+
+		// Ask linux to not randomize our stacks
+		personality(personality(0xffffffff) | ADDR_NO_RANDOMIZE);
 
 		xbt_dynar_t cmdline_dynar = xbt_dynar_new(sizeof(char *), NULL);
 		int i;

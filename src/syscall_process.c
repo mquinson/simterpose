@@ -558,7 +558,8 @@ static void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor
 		}
 		file_desc->ref_nb--;
 		file_desc = NULL;
-	} else {
+
+	} else { // ---- Exiting syscall ---- //
 		proc_outside(proc);
 		XBT_DEBUG("read_post");
 		get_args_read(proc, reg, sysarg);
