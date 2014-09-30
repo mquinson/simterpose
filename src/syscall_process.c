@@ -1539,70 +1539,97 @@ static void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u *
 /** @brief handle accept syscall at entrance
  *
  * We use semaphores to synchronize client and server during a connection. */
-static void syscall_accept_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	XBT_DEBUG("syscall_accept_pre");
-	proc_inside(proc);
-	get_args_accept(proc, reg, sysarg);
+	if (proc_entering(proc)) {
+		XBT_DEBUG("syscall_accept_pre");
+		proc_inside(proc);
+		get_args_accept(proc, reg, sysarg);
 
-	accept_arg_t arg = &(sysarg->accept);
-	fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
-	file_desc->ref_nb++;
+		accept_arg_t arg = &(sysarg->accept);
+		fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+		file_desc->ref_nb++;
 
-	// We create the stream object for semaphores
-	XBT_INFO("stream initialization by accept syscall");
-	stream_t *stream = malloc(sizeof(stream_t));
-	stream->sem_client = MSG_sem_init(0);
-	stream->sem_server = MSG_sem_init(0);
-	stream->server = MSG_process_self();
-	stream->to_server = MSG_host_get_name(MSG_host_self());
+		// We create the stream object for semaphores
+		XBT_INFO("stream initialization by accept syscall");
+		stream_t *stream = malloc(sizeof(stream_t));
+		stream->sem_client = MSG_sem_init(0);
+		stream->sem_server = MSG_sem_init(0);
+		stream->server = MSG_process_self();
+		stream->to_server = MSG_host_get_name(MSG_host_self());
 
-	file_desc->stream = stream;
-	XBT_DEBUG("accept_in: trying to take server semaphore ...");
-	MSG_sem_acquire(file_desc->stream->sem_server);
-	XBT_DEBUG("accept_in: took server semaphore! trying to release client");
-	MSG_sem_release(file_desc->stream->sem_client);
-	XBT_DEBUG("accept_in: client semaphore released !");
+		file_desc->stream = stream;
+		XBT_DEBUG("accept_in: trying to take server semaphore ...");
+		MSG_sem_acquire(file_desc->stream->sem_server);
+		XBT_DEBUG("accept_in: took server semaphore! trying to release client");
+		MSG_sem_release(file_desc->stream->sem_client);
+		XBT_DEBUG("accept_in: client semaphore released !");
 
-	//We try to find here if there's a connection to accept
-	if (comm_has_connect_waiting(get_infos_socket(proc, arg->sockfd))) {
-		struct sockaddr_in in;
+		//We try to find here if there's a connection to accept
+		if (comm_has_connect_waiting(get_infos_socket(proc, arg->sockfd))) {
+			struct sockaddr_in in;
 
 #ifdef address_translation
-		process_descriptor_t *conn_proc = comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
-		arg->sai = in;
-		ptrace_resume_process(conn_proc->pid);
+			process_descriptor_t *conn_proc = comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
+			arg->sai = in;
+			ptrace_resume_process(conn_proc->pid);
 #else
-		comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
-		arg->sai = in;
+			comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
+			arg->sai = in;
 #endif
 
 #ifndef address_translation
-		pid_t pid = proc->pid;
-		//Now we rebuild the syscall.
-		int new_fd = ptrace_record_socket(pid);
+			pid_t pid = proc->pid;
+			//Now we rebuild the syscall.
+			int new_fd = ptrace_record_socket(pid);
 
-		arg->ret = new_fd;
-		ptrace_neutralize_syscall(pid);
+			arg->ret = new_fd;
+			ptrace_neutralize_syscall(pid);
+			proc_outside(proc);
+
+			accept_arg_t arg = &(sysarg->accept);
+			ptrace_restore_syscall(pid, SYS_accept, arg->ret);
+
+			ptrace_poke(pid, arg->addr_dest, &(arg->sai), sizeof(struct sockaddr_in));
+
+			process_accept_out_call(proc, sysarg);
+
+			if (strace_option)
+				print_accept_syscall(proc, sysarg);
+
+			XBT_DEBUG("accept_in: did the accept_out, before I go on I'm trying to take server semaphore ...");
+			MSG_sem_acquire(file_desc->stream->sem_server);
+			XBT_DEBUG("accept_in: took server semaphore! (2nd time)");
+#endif
+		}
+		file_desc->ref_nb--;
+		file_desc = NULL;
+
+
+	} else { // **** Exit syscall ****
+
 		proc_outside(proc);
-
-		accept_arg_t arg = &(sysarg->accept);
-		ptrace_restore_syscall(pid, SYS_accept, arg->ret);
-
-		ptrace_poke(pid, arg->addr_dest, &(arg->sai), sizeof(struct sockaddr_in));
-
+		get_args_accept(proc, reg, sysarg);
+#ifdef address_translation
 		process_accept_out_call(proc, sysarg);
+#endif
 
 		if (strace_option)
 			print_accept_syscall(proc, sysarg);
 
-		XBT_DEBUG("accept_in: did the accept_out, before I go on I'm trying to take server semaphore ...");
+		// Never called by full mediation
+		get_args_accept(proc, reg, sysarg);
+		accept_arg_t arg = &(sysarg->accept);
+		fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+		file_desc->ref_nb++;
+
+		XBT_DEBUG("accept_post: trying to take server semaphore ...");
 		MSG_sem_acquire(file_desc->stream->sem_server);
-		XBT_DEBUG("accept_in: took server semaphore! (2nd time)");
-#endif
+		XBT_DEBUG("accept_post: took server semaphore!");
+
+		file_desc->ref_nb--;
+		file_desc = NULL;
 	}
-	file_desc->ref_nb--;
-	file_desc = NULL;
 }
 
 /** @brief handle the return of a brk syscall (just display it in strace) */
@@ -1621,34 +1648,6 @@ static void syscall_brk_post(reg_s * reg, syscall_arg_u * sysarg, process_descri
 	}
 	sprintf(buff+42,"%#lx\n",reg->ret);
 	fprintf(proc->strace_out,buff);
-}
-
-/** @brief handle accept syscall at exit in case of address translation
- *
- * We use semaphores to synchronize client and server during a connection. */
-static void syscall_accept_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_outside(proc);
-	get_args_accept(proc, reg, sysarg);
-#ifdef address_translation
-	process_accept_out_call(proc, sysarg);
-#endif
-
-	if (strace_option)
-		print_accept_syscall(proc, sysarg);
-
-	// Never called by full mediation
-	get_args_accept(proc, reg, sysarg);
-	accept_arg_t arg = &(sysarg->accept);
-	fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
-	file_desc->ref_nb++;
-
-	XBT_DEBUG("accept_post: trying to take server semaphore ...");
-	MSG_sem_acquire(file_desc->stream->sem_server);
-	XBT_DEBUG("accept_post: took server semaphore!");
-
-	file_desc->ref_nb--;
-	file_desc = NULL;
 }
 
 
@@ -1898,10 +1897,7 @@ int process_handle(process_descriptor_t * proc, int status)
 			break;
 
 		case SYS_accept:
-			if (proc_entering(proc))
-				syscall_accept_pre(&arg, sysarg, proc);
-			else
-				syscall_accept_post(&arg, sysarg, proc);
+			syscall_accept(&arg, sysarg, proc);
 			break;
 
 		case SYS_sendto:
