@@ -1282,31 +1282,28 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
 #endif
 }
 
-/** @brief handle fcntl syscall at the entrance if in full mediation*/
-static void syscall_fcntl_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static void syscall_fcntl(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	proc_inside(proc);
-	XBT_DEBUG("fcntl pre");
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+		XBT_DEBUG("fcntl pre");
 #ifndef address_translation
-	get_args_fcntl(proc, reg, sysarg);
-	process_fcntl_call(proc, sysarg);
-	if (strace_option)
-		print_fcntl_syscall(proc, sysarg);
-	sleep(4);
+		get_args_fcntl(proc, reg, sysarg);
+		process_fcntl_call(proc, sysarg);
+		if (strace_option)
+			print_fcntl_syscall(proc, sysarg);
+		sleep(4);
 #endif
-}
-
-/** @brief handle fcntl syscall at the exit if in address translation */
-static void syscall_fcntl_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_outside(proc);
-	XBT_DEBUG("fcntl post");
-	get_args_fcntl(proc, reg, sysarg);
-	if (strace_option)
-		print_fcntl_syscall(proc, sysarg);
+	} else {
+		proc_outside(proc);
+		XBT_DEBUG("fcntl post");
+		get_args_fcntl(proc, reg, sysarg);
+		if (strace_option)
+			print_fcntl_syscall(proc, sysarg);
 #ifdef address_translation
-	process_fcntl_call(proc, sysarg);
+		process_fcntl_call(proc, sysarg);
 #endif
+	}
 }
 
 /** @brief handle dup2 by updating the table of file descriptors, and also the pipe objects if needed */
@@ -1998,10 +1995,7 @@ int process_handle(process_descriptor_t * proc, int status)
 			break;
 
 		case SYS_fcntl:
-			if (proc_entering(proc))
-				syscall_fcntl_pre(&arg, sysarg, proc);
-			else
-				syscall_fcntl_post(&arg, sysarg, proc);
+			syscall_fcntl(&arg, sysarg, proc);
 			break;
 
 		case SYS_creat:
