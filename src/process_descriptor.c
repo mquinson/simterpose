@@ -27,31 +27,31 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
 
 	// Initialize stdin, stdout, stderr
 	fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
-	file_desc->ref_nb = 0;
+	file_desc->refcount = 0;
 	file_desc->type = FD_STDIN;
 	file_desc->proc = result;
 	file_desc->fd = 0;
 	file_desc->flags = 0;
 	result->fd_list[0] = file_desc;
-	file_desc->ref_nb++;
+	file_desc->refcount++;
 
 	file_desc = malloc(sizeof(fd_descriptor_t));
-	file_desc->ref_nb = 0;
+	file_desc->refcount = 0;
 	file_desc->type = FD_STDOUT;
 	file_desc->proc = result;
 	file_desc->fd = 1;
 	file_desc->flags = 0;
 	result->fd_list[1] = file_desc;
-	file_desc->ref_nb++;
+	file_desc->refcount++;
 
 	file_desc = malloc(sizeof(fd_descriptor_t));
-	file_desc->ref_nb = 0;
+	file_desc->refcount = 0;
 	file_desc->type = FD_STDERR;
 	file_desc->proc = result;
 	file_desc->fd = 2;
 	file_desc->flags = 0;
 	result->fd_list[2] = file_desc;
-	file_desc->ref_nb++;
+	file_desc->refcount++;
 
 	result->host = MSG_get_host_by_name(result->name);
 
@@ -80,7 +80,7 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
 	int i;
 	for (i = 0; i < MAX_FD; ++i) {
 		if (proc->fd_list[i]) {
-			proc->fd_list[i]->ref_nb--;
+			proc->fd_list[i]->refcount--;
 			free(proc->fd_list[i]);
 		}
 	}

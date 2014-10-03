@@ -76,7 +76,7 @@ typedef struct {
 	stream_t *stream;
 	pipe_t *pipe;
 	int flags;
-	int ref_nb;                   // reference counting
+	int refcount;                   // reference counting
 } fd_descriptor_t;
 
 struct process_descriptor {
