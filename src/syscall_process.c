@@ -1099,12 +1099,15 @@ static void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_d
 		print_shutdown_syscall(proc, sysarg);
 }
 
-/** @brief handle exit syscall by detaching process */
-static int syscall_exit_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static int syscall_exit(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	proc_inside(proc);
-	ptrace_detach_process(pid);
-	return PROCESS_DEAD;
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+		ptrace_detach_process(pid);
+		return PROCESS_DEAD;
+	} else {
+		THROW_IMPOSSIBLE;
+	}
 }
 
 /** @brief handle getpeername syscall */
@@ -1983,11 +1986,13 @@ int process_handle(process_descriptor_t * proc, int status)
 
 
 		case SYS_exit:
-			if (proc_entering(proc)) {
-				XBT_DEBUG("exit(%ld) called", arg.arg[0]);
-				return syscall_exit_pre(pid, &arg, sysarg, proc);
-			} else
-				proc_outside(proc);
+			XBT_DEBUG("exit(%ld) called", arg.arg[0]);
+			return syscall_exit(pid, &arg, sysarg, proc);
+			break;
+
+		case SYS_exit_group:
+			XBT_DEBUG("exit_group(%ld) called", arg.arg[0]);
+			return syscall_exit(pid, &arg, sysarg, proc);
 			break;
 
 		case SYS_fcntl:
@@ -1999,14 +2004,6 @@ int process_handle(process_descriptor_t * proc, int status)
 				proc_inside(proc);
 			else
 				syscall_creat_post(&arg, sysarg, proc);
-			break;
-
-		case SYS_exit_group:
-			if (proc_entering(proc)) {
-				XBT_DEBUG("exit_group(%ld) called", arg.arg[0]);
-				return syscall_exit_pre(pid, &arg, sysarg, proc);
-			} else
-				proc_outside(proc);
 			break;
 
 		case SYS_brk:
