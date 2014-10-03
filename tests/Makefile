@@ -28,14 +28,14 @@ simterpose-msg_client.log: ../src/simterpose msg_clientserver.sh apps/msg_client
 diff-msg: strace-msg_client.log simterpose-msg_client.log
 	diff -u simterpose-msg_client.log strace-msg_client.log
 
-strace-procmaps.log: 
-	strace cat /proc/self/maps > procmaps.log 2>&1 
-simterpose-procmaps.log: ../src/simterpose procmaps.sh
-	./procmaps.sh
-diff-procmaps: strace-procmaps.log simterpose-procmaps.log
-	diff -u simterpose-procmaps.log strace-procmaps.log
+strace-pthread.log: 
+	setarch x86_64 -R strace apps/pthread > strace-pthread.log 2>&1
+simterpose-pthread.log: ../src/simterpose pthread.sh
+	./pthread.sh
+diff-pthread: strace-pthread.log simterpose-pthread.log
+	diff -u simterpose-pthread.log strace-pthread.log
 
-.PHONY: diff-send diff-msg diff-procmaps	
+.PHONY: diff-send diff-msg diff-pthread	
 
 clean:
 	rm -f *~ strace-*.log simterpose-*.log

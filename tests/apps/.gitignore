@@ -2,6 +2,7 @@ send_client
 send_server
 msg_client
 msg_server
+pthread
 
 client_sbr
 client_select

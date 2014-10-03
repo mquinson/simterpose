@@ -1,13 +1,19 @@
+/* pthread -- A program that spawns threads                                  */
+
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPLv2) which comes with this package. */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 
-void *hello(void *arg)
+static void *hello(void *arg)
 {
 
   int *id = (int *) arg;
   printf("%d : hello world \n", *id);
-  dup(*id);
   pthread_exit(NULL);
 
 }
@@ -21,7 +27,7 @@ int main()
   int n = 10;
 
   for (i = 0; i < n; i++) {
-    printf("Crée thread %d\n", i + 1);
+    printf("Create thread %d\n", i + 1);
     pthread_create(&threads[i], NULL, hello, (void *) &id[i]);
   }
   for (i = 0; i < n; i++) {

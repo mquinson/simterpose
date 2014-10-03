@@ -1,5 +1,6 @@
 BINS = send_server send_client \
-       msg_client  msg_server
+       msg_client  msg_server  \
+       pthread
 
 # server_select client_select client_simple server_simple server_poll\
 #	server_poll_multi server_close client_sbr server_sbr fcntl_ex server_read \
@@ -23,7 +24,8 @@ msg_server : msg_server.c
 msg_client : msg_client.c
 	gcc $(CFLAGS) -o msg_client msg_client.c
 
-
+pthread: pthread.c
+	gcc $(CFLAGS) -o pthread -pthread pthread.c
 
 
 
