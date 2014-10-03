@@ -1048,8 +1048,10 @@ static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_desc
 	proc_outside(proc);
 	int fd = reg->arg[0];
 	process_close_call(proc, fd);
-	if(strace_option)
-		fprintf(stderr, "[%d] close(%d) = %ld\n", proc->pid, fd, reg->ret);
+	if(strace_option) {
+		fprintf(proc->strace_out, "close(%d)                  %s%s            = %ld\n",
+				fd,  (fd>9? "":" "), (fd>99?"":" "),reg->ret);
+	}
 }
 
 /** @brief handle shutdown syscall at the entrace if in full mediation
