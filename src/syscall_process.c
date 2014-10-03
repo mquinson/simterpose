@@ -1041,16 +1041,18 @@ static void process_close_call(process_descriptor_t * proc, int fd)
 	}
 }
 
-/** @brief handle close syscall at the exit  */
-static void syscall_close_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+static void syscall_close(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	XBT_DEBUG("close post");
-	proc_outside(proc);
-	int fd = reg->arg[0];
-	process_close_call(proc, fd);
-	if(strace_option) {
-		fprintf(proc->strace_out, "close(%d)                  %s%s            = %ld\n",
-				fd,  (fd>9? "":" "), (fd>99?"":" "),reg->ret);
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+	} else {
+		proc_outside(proc);
+		int fd = reg->arg[0];
+		process_close_call(proc, fd);
+		if(strace_option) {
+			fprintf(proc->strace_out, "close(%d)                  %s%s            = %ld\n",
+					fd,  (fd>9? "":" "), (fd>99?"":" "),reg->ret);
+		}
 	}
 }
 
@@ -1850,10 +1852,7 @@ int process_handle(process_descriptor_t * proc, int status)
 			break;
 
 		case SYS_close:
-			if (proc_entering(proc))
-				proc_inside(proc);
-			else
-				syscall_close_post(&arg, sysarg, proc);
+			syscall_close(&arg, sysarg, proc);
 			break;
 
 		case SYS_poll:
