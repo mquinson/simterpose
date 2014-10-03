@@ -170,11 +170,12 @@ int simterpose_process_runner(int argc, char *argv[])
 			perror("ptrace traceme");
 			exit(1);
 		}
-		// Wait for master
-		kill(getpid(), SIGSTOP);
 
 		// Ask linux to not randomize our stacks
 		personality(personality(0xffffffff) | ADDR_NO_RANDOMIZE);
+
+		// Wait for master
+		kill(getpid(), SIGSTOP);
 
 		xbt_dynar_t cmdline_dynar = xbt_dynar_new(sizeof(char *), NULL);
 		int i;
