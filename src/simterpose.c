@@ -165,13 +165,16 @@ int simterpose_process_runner(int argc, char *argv[])
 	int status;
 	int tracked_pid = fork();
 	if (tracked_pid == 0) {
+		// Close the NETLINK socket if any that would offset our fd values
+		cputimer_exit(global_timer);
+
 		// in child
 		if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
 			perror("ptrace traceme");
 			exit(1);
 		}
 
-		// Ask linux to not randomize our stacks
+		// Ask Linux to not randomize our stacks
 		personality(personality(0xffffffff) | ADDR_NO_RANDOMIZE);
 
 		// Wait for master
@@ -196,7 +199,7 @@ int simterpose_process_runner(int argc, char *argv[])
 	MSG_process_set_data(MSG_process_self(),
 			process_descriptor_new(MSG_host_get_name(MSG_host_self()), argv[0], tracked_pid));
 
-	// Wait for the traceme to apply (ie, for the child to start)
+	// Wait for the traced to start
 	waitpid(tracked_pid, &status, 0);
 
 	// Trace the child and all upcoming granchilds
