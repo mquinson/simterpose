@@ -168,7 +168,20 @@ int simterpose_process_runner(int argc, char *argv[])
 		// Close the NETLINK socket if any that would offset our fd values
 		cputimer_exit(global_timer);
 
-		// in child
+		// In strace mode, we also need to close all strace_out files that were opened for the previous childs
+		if (strace_option) {
+			  void *process;
+			  unsigned int cpt;
+			  xbt_dynar_foreach(MSG_processes_as_dynar(), cpt, process) {
+				  process_descriptor_t * p=(process_descriptor_t *)MSG_process_get_data(process);
+				  if (!p)
+					  continue;
+				  fclose( p->strace_out );
+				  p->strace_out = NULL;
+			  }
+		}
+
+		// End of cleanups; we are in the child
 		if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
 			perror("ptrace traceme");
 			exit(1);

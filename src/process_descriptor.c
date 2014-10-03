@@ -84,7 +84,7 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
 			free(proc->fd_list[i]);
 		}
 	}
-	if (strace_option) {
+	if (strace_option && proc->strace_out) {
 		fclose(proc->strace_out);
 	}
 	free(proc->fd_list);
