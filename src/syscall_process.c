@@ -1638,22 +1638,26 @@ static void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descript
 	}
 }
 
-/** @brief handle the return of a brk syscall (just display it in strace) */
-
-static void syscall_brk_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
-	if (!strace_option)
-		return;
-
-	char buff[1024];
-	if (reg->arg[0]) {
-		sprintf(buff, "brk(                                    = ");
-		int offset = sprintf(buff+4,"%#lx)",reg->arg[0]);
-		buff[offset+4] = ' '; // kill the \0
+static void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+	if (proc_entering(proc)) {
+		proc_inside(proc);
 	} else {
-		sprintf(buff, "brk(0)                                  = ");
+		proc_outside(proc);
+
+		if (!strace_option)
+			return;
+
+		char buff[1024];
+		if (reg->arg[0]) {
+			sprintf(buff, "brk(                                    = ");
+			int offset = sprintf(buff+4,"%#lx)",reg->arg[0]);
+			buff[offset+4] = ' '; // kill the \0
+		} else {
+			sprintf(buff, "brk(0)                                  = ");
+		}
+		sprintf(buff+42,"%#lx\n",reg->ret);
+		fprintf(proc->strace_out,buff);
 	}
-	sprintf(buff+42,"%#lx\n",reg->ret);
-	fprintf(proc->strace_out,buff);
 }
 
 
@@ -2004,12 +2008,7 @@ int process_handle(process_descriptor_t * proc, int status)
 			break;
 
 		case SYS_brk:
-			if (proc_entering(proc)) {
-				proc_inside(proc);
-			} else {
-				proc_outside(proc);
-				syscall_brk_post(&arg,sysarg, proc);
-			}
+			syscall_brk(&arg,sysarg, proc);
 			break;
 
 		default:
