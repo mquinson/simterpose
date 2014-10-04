@@ -1647,16 +1647,13 @@ static void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_
 		if (!strace_option)
 			return;
 
-		char buff[1024];
-		if (reg->arg[0]) {
-			sprintf(buff, "brk(                                    = ");
-			int offset = sprintf(buff+4,"%#lx)",reg->arg[0]);
-			buff[offset+4] = ' '; // kill the \0
-		} else {
-			sprintf(buff, "brk(0)                                  = ");
-		}
-		sprintf(buff+42,"%#lx\n",reg->ret);
-		fprintf(proc->strace_out,buff);
+		if (reg->arg[0])
+			stprintf(proc,"brk(%#lx)",reg->arg[0]);
+		else
+			stprintf(proc,"brk(0)");
+		stprintf_tabto(proc);
+		stprintf(proc,"= %#lx",reg->ret);
+		stprintf_eol(proc);
 	}
 }
 
