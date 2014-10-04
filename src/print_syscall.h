@@ -69,4 +69,7 @@ void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysa
 
 void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
+void stprintf(process_descriptor_t * proc, const char*fmt, ...);
+void stprintf_tabto(process_descriptor_t * proc);
+void stprintf_eol(process_descriptor_t * proc);
 #endif

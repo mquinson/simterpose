@@ -90,6 +90,7 @@ struct process_descriptor {
 	syscall_arg_u sysarg;
 
 	FILE* strace_out; // (real) file descriptor to use to write the strace-like output when ran in --strace mode
+	int curcol;
 };
 
 static int proc_entering(process_descriptor_t *proc) {

@@ -64,6 +64,7 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
 			memmove(filename+strlen("simterpose-"), lastsep+1, filename+strlen(filename)-lastsep+1);
 
 		result->strace_out = fopen(filename,"w");
+		result->curcol = 0;
 		xbt_assert(result->strace_out,"Cannot create file %s: %s", filename, strerror(errno));
 		free(filename);
 	} else {

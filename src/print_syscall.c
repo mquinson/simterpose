@@ -1249,3 +1249,35 @@ void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 		fprintf(proc->strace_out, ") = %d\n", arg->ret);
 	}
 }
+
+/* These functions are highly inspirated from the strace source code.
+ * But mimicking the strace output without them is utterly difficult. */
+void stprintf(process_descriptor_t * proc, const char*fmt, ...) {
+    va_list args;
+
+    va_start(args, fmt);
+    if (proc->strace_out) {
+    	int n = vfprintf(proc->strace_out, fmt, args);
+    	if (n < 0) {
+    		if (proc->strace_out != stderr)
+    			perror("vfprintf failed");
+    	} else
+    		proc->curcol += n;
+    }
+    va_end(args);
+
+}
+static int acolumn = 40;
+static const char *acolumn_spaces = "          " "          " "          " "          ";
+void stprintf_tabto(process_descriptor_t * proc) {
+    if (proc->curcol < acolumn)
+            stprintf(proc, "%s", acolumn_spaces + proc->curcol);
+
+}
+void stprintf_eol(process_descriptor_t * proc) {
+    if (proc->strace_out) {
+    	fprintf(proc->strace_out, "\n");
+    	proc->curcol = 0;
+    	fflush(proc->strace_out);
+    }
+}
