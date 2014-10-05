@@ -1051,8 +1051,10 @@ static void syscall_close(reg_s * reg, syscall_arg_u * sysarg, process_descripto
 		int fd = reg->arg[0];
 		process_close_call(proc, fd);
 		if(strace_option) {
-			fprintf(proc->strace_out, "close(%d)                  %s%s            = %ld\n",
-					fd,  (fd>9? "":" "), (fd>99?"":" "),reg->ret);
+			stprintf(proc,"close(%d)",fd);
+			stprintf_tabto(proc);
+			stprintf(proc,"= %ld",reg->ret);
+			stprintf_eol(proc);
 		}
 	}
 }
