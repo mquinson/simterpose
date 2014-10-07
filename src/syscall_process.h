@@ -21,4 +21,7 @@ int process_handle(process_descriptor_t * proc, int status);
 /* memory-related */
 void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 
+/* process-related */
+void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+
 #endif
