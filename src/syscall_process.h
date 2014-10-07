@@ -18,4 +18,7 @@ extern const char *state_names[4];
 
 int process_handle(process_descriptor_t * proc, int status);
 
+/* memory-related */
+void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+
 #endif

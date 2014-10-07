@@ -1640,25 +1640,6 @@ static void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descript
 	}
 }
 
-static void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
-	if (proc_entering(proc)) {
-		proc_inside(proc);
-	} else {
-		proc_outside(proc);
-
-		if (!strace_option)
-			return;
-
-		if (reg->arg[0])
-			stprintf(proc,"brk(%#lx)",reg->arg[0]);
-		else
-			stprintf(proc,"brk(0)");
-		stprintf_tabto(proc);
-		stprintf(proc,"= %#lx",reg->ret);
-		stprintf_eol(proc);
-	}
-}
-
 
 /** @brief helper function to handle connect syscall */
 static int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
