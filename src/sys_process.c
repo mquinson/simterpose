@@ -46,6 +46,12 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 			XBT_INFO("clone returning in parent, ret = %d, pid_clone = %d", ret, pid_clone);
 		} else {
 			// we are in the clone
+
+			// The first time we come here, ret=-38, that is, -ENOSYS as if the syscall were not implemented.
+			// According to the ptrace manpage, that means that we are actually entering the syscall, not exiting.
+			// It must be the case that having 2 processes leaving the syscall fools our proc_inside() / proc_outside() mechanism
+			// I guess that we should rely on PTRACE_GETSIGINFO instead of our mechanism here
+
 			int pid_clone = ptrace_get_pid_clone(proc->pid);
 			XBT_INFO("clone returning in child, ret = %d, pid_clone = %d", ret, pid_clone);
 			proc_outside(proc);
@@ -113,7 +119,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 			//if (flags & CLONE_VM) // Nothing to do: we don't care if they share the memory
 			//if (flags & CLONE_FS) // Nothing to do: we don't care if they share the file system
 			if (flags & CLONE_FILES)
-				xbt_die("CLONE_FILES unhandled");
+				XBT_WARN("CLONE_FILES unhandled");
 			if (flags & CLONE_SIGHAND)
 				XBT_WARN("CLONE_SIGHAND unhandled");
 			if (flags & CLONE_PTRACE)
@@ -158,7 +164,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 				print_clone_syscall(proc, sysarg);
 
 			char name[256];
-			sprintf(name, "clone n°%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
+			sprintf(name, "clone #%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
 			XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
 			// FIXME: the current MSG process should not continue past that point:
 			//        the clone is started, current can go back to its own considerations.
