@@ -1,0 +1,8 @@
+A small poc using LD_PRELOAD and dlsym to intercept pthread calls.
+
+It just prints out an interception message inside the modified call and finally redirects to the real pthread call using dlsym.
+
+To run the example:
+
+  make
+  ./ld_preload.sh
