@@ -1,6 +1,8 @@
-gcc -Wall -fpic -shared -ggdb mdfpthread.c -pthread -ldl -o libpthr.so
-gcc -Wall -ggdb test.c -pthread
-LD_PRELOAD=./libpthr.so ./a.out
+A small poc using LD_PRELOAD and dlsym to intercept pthread calls.
 
-# In gdb
-set environment LD_PRELOAD=./libpthr.so
+It just prints out an interception message inside the modified call and finally redirects to the real pthread call using dlsym.
+
+To run the example:
+
+  make
+  ./ld_preload.sh
