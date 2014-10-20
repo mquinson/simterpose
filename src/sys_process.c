@@ -10,6 +10,8 @@
 #include "simterpose.h"
 #include "syscall_process.h"
 #include "print_syscall.h"
+#include "args_trace.h"
+
 #include <xbt.h>
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
@@ -177,5 +179,35 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 		proc_inside(proc);
 	} else {
 		fprintf(stderr,"No idea why I'm here after cloning (not in a syscall-stop nor in a clone event)\n");
+	}
+}
+
+
+void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+	if (proc_event_exec(proc)) {
+		XBT_DEBUG("Ignore an exec event");
+
+	} else if (proc_entering(proc)) {
+		proc_inside(proc);
+		get_args_execve(proc, reg, sysarg);
+		if (strace_option)
+			print_execve_syscall_pre(proc, sysarg);
+
+	} else {
+		proc_outside(proc);
+		get_args_execve(proc, reg, sysarg);
+		if (strace_option)
+			print_execve_syscall_post(proc, sysarg);
+
+		int i;
+		for (i = 0; i < MAX_FD; ++i) {
+			if (proc->fd_list[i] != NULL) {
+				// XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
+				if (proc->fd_list[i]->flags == FD_CLOEXEC)
+					XBT_WARN("FD_CLOEXEC not handled");
+				//process_close_call(proc, i);
+			}
+		}
+		XBT_DEBUG("execve retour");
 	}
 }

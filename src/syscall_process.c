@@ -42,7 +42,6 @@
 #include "simterpose.h"
 #include "sockets.h"
 #include "syscall_data.h"
-//#include "sysdep.h"
 
 #ifndef unknown_error // that stupid eclipse seems to not find that symbol
 #define unknown_error 0
@@ -759,42 +758,6 @@ static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		if (strace_option)
 			print_select_syscall(proc, &(proc->sysarg));
 	}
-}
-
-/** @brief print execve syscall at the entrance */
-static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_inside(proc);
-	get_args_execve(proc, reg, sysarg);
-	XBT_DEBUG("execve_pre");
-	if (strace_option)
-		print_execve_syscall_pre(proc, sysarg);
-
-}
-
-/** @brief handle execve syscall at the exit
- *
- * If execve real syscall is successful it returns one more time so we add a
- * third state for this syscall (in addition to "in" or "out")
- */
-static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	get_args_execve(proc, reg, sysarg);
-	proc_outside(proc);
-	if (strace_option)
-		print_execve_syscall_post(proc, sysarg);
-	XBT_DEBUG("execve_post");
-
-	int i;
-	for (i = 0; i < MAX_FD; ++i) {
-		if (proc->fd_list[i] != NULL) {
-			// XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
-			if (proc->fd_list[i]->flags == FD_CLOEXEC)
-				XBT_WARN("FD_CLOEXEC not handled");
-			//process_close_call(proc, i);
-		}
-	}
-	XBT_DEBUG("execve retour");
 }
 
 /** @brief create a file descriptor */
@@ -1804,12 +1767,7 @@ int process_handle(process_descriptor_t * proc)
 			break;
 
 		case SYS_execve:
-			if (proc_event_exec(proc)) {
-				XBT_DEBUG("Ignore an exec event");
-			} else if (proc_entering(proc))
-				syscall_execve_pre(&arg, sysarg, proc);
-			else
-				syscall_execve_post(&arg, sysarg, proc);
+			syscall_execve(&arg, sysarg, proc);
 			break;
 
 

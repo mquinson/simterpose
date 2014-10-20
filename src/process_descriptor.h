@@ -86,7 +86,7 @@ struct process_descriptor {
 	fd_descriptor_t **fd_list;
 	int status;
 
-	int in_syscall:2; // whether we are inside or outside of the syscall
+	int in_syscall:1; // whether we are inside or outside of the syscall
 
 	syscall_arg_u sysarg;
 
