@@ -182,20 +182,22 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 	}
 }
 
-
 void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+	execve_arg_t arg = &(sysarg->execve);
+	arg->ret = reg->ret;
+	arg->ptr_filename = reg->arg[0];
+	arg->ptr_argv = reg->arg[1];
+
 	if (proc_event_exec(proc)) {
 		XBT_DEBUG("Ignore an exec event");
 
 	} else if (proc_entering(proc)) {
 		proc_inside(proc);
-		get_args_execve(proc, reg, sysarg);
 		if (strace_option)
 			print_execve_syscall_pre(proc, sysarg);
 
 	} else {
 		proc_outside(proc);
-		get_args_execve(proc, reg, sysarg);
 		if (strace_option)
 			print_execve_syscall_post(proc, sysarg);
 

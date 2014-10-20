@@ -320,15 +320,6 @@ void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 #endif
 }
 
-/** @brief retrieve the arguments of execve syscall */
-void get_args_execve(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-	execve_arg_t arg = &(sysarg->execve);
-	arg->ret = reg->ret;
-	arg->ptr_filename = reg->arg[0];
-	arg->ptr_argv = reg->arg[1];
-}
-
 
 /** @brief put the arguments we want in the registers of select syscall */
 void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
