@@ -734,13 +734,13 @@ static void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 
 		int sock_status = socket_get_state(is);
 		if (FD_ISSET(i, &(fd_rd))) {
-			if (sock_status & SOCKET_READ_OK || sock_status & SOCKET_CLOSED || sock_status & SOCKET_SHUT)
+			if ((sock_status & SOCKET_READ_OK) || (sock_status & SOCKET_CLOSED) || (sock_status & SOCKET_SHUT))
 				++match;
 			else
 				FD_CLR(i, &(fd_rd));
 		}
 		if (FD_ISSET(i, &(fd_wr))) {
-			if (sock_status & SOCKET_WR_NBLK && !(sock_status & SOCKET_CLOSED) && !(sock_status & SOCKET_SHUT))
+			if ((sock_status & SOCKET_WR_NBLK) && !(sock_status & SOCKET_CLOSED) && !(sock_status & SOCKET_SHUT))
 				++match;
 			else
 				FD_CLR(i, &(fd_wr));
