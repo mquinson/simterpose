@@ -16,7 +16,7 @@ extern const char *state_names[4];
 
 #define RECV_CLOSE              10
 
-int process_handle(process_descriptor_t * proc, int status);
+int process_handle(process_descriptor_t * proc);
 
 /* memory-related */
 void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);

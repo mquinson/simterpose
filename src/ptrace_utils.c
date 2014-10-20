@@ -130,6 +130,7 @@ void ptrace_poke(pid_t pid, void *dst, void *src, size_t len)
 void ptrace_resume_process(const pid_t pid)
 {
 	increment_nb_syscall();
+	XBT_DEBUG("Resume process %d",pid);
 	if (ptrace(PTRACE_SYSCALL, pid, NULL, NULL) == -1)
 		SYSERROR("[%d] Error while resuming until next syscall: %s\n", pid, strerror(errno));
 }
@@ -166,7 +167,7 @@ int ptrace_record_socket(pid_t pid)
 	ptrace_resume_process(pid);
 
 	int status;
-	waitpid(pid, &status, 0);
+	waitpid(pid, &status, __WALL);
 
 	increment_nb_getregs();
 	if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
@@ -180,7 +181,7 @@ int ptrace_record_socket(pid_t pid)
 	ptrace_rewind_syscalls(pid);
 	ptrace_resume_process(pid);
 
-	waitpid(pid, &status, 0);
+	waitpid(pid, &status, __WALL);
 
 	return res;
 }
@@ -226,7 +227,7 @@ void ptrace_neutralize_syscall(const pid_t pid)
 		SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
 
 	ptrace_resume_process(pid);
-	waitpid(pid, &status, 0);
+	waitpid(pid, &status, __WALL);
 }
 
 /** @brief Fake the result of a syscall that was neutralized earlier
@@ -304,7 +305,7 @@ int ptrace_find_free_binding_port(const pid_t pid)
 		temp.sin_addr.s_addr = inet_addr("127.0.0.1");
 		ptrace_poke(pid, (void *) reg.rsi, &temp, reg.rdx);
 		ptrace_resume_process(pid);
-		waitpid(pid, &status, 0);
+		waitpid(pid, &status, __WALL);
 		increment_nb_getregs();
 		if (ptrace(PTRACE_GETREGS, pid, NULL, &reg) == -1)
 			SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
@@ -314,7 +315,7 @@ int ptrace_find_free_binding_port(const pid_t pid)
 		--port;
 		ptrace_rewind_syscalls(pid);
 		ptrace_resume_process(pid);
-		waitpid(pid, &status, 0);
+		waitpid(pid, &status, __WALL);
 	}
 	ptrace_poke(pid, (void *) reg.rsi, &in, reg.rdx);
 

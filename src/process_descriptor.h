@@ -84,6 +84,7 @@ struct process_descriptor {
 	char *name;
 	msg_host_t host;
 	fd_descriptor_t **fd_list;
+	int status;
 
 	int in_syscall:2; // whether we are inside or outside of the syscall
 
@@ -93,7 +94,42 @@ struct process_descriptor {
 	int curcol;
 };
 
+#define getevent(status) (( (status) >> 16) & 0xffff)
+static int proc_event_exec(process_descriptor_t *proc) {
+  return WIFSTOPPED(proc->status) &&  ( getevent(proc->status) == PTRACE_EVENT_EXEC );
+}
+static int proc_event_syscall(process_descriptor_t *proc) {
+	  return WIFSTOPPED(proc->status) &&  ( WSTOPSIG(proc->status) & (SIGTRAP | 0x80) );
+	}
+
 static int proc_entering(process_descriptor_t *proc) {
+	if (! proc_event_syscall(proc) ) {
+		unsigned int event = (proc->status >> 16) & 0xffff;
+        switch (event) {
+        case PTRACE_EVENT_FORK:
+    		fprintf(stderr, "[%d] That's not a syscall-stop event but a fork!\n", proc->pid);
+            break;
+        case PTRACE_EVENT_VFORK:
+    		fprintf(stderr, "[%d] That's not a syscall-stop event but a vfork!\n", proc->pid);
+            break;
+        case PTRACE_EVENT_CLONE:
+    		fprintf(stderr, "[%d] That's not a syscall-stop event but a clone!\n", proc->pid);
+            break;
+        case PTRACE_EVENT_VFORK_DONE:
+    		fprintf(stderr, "[%d] That's not a syscall-stop event but a fork_done!\n", proc->pid);
+            break;
+        case PTRACE_EVENT_EXEC:
+    		fprintf(stderr, "[%d] That's not a syscall-stop event but an exec!\n", proc->pid);
+            break;
+        case PTRACE_EVENT_EXIT:
+    		fprintf(stderr, "[%d] That's not a syscall-stop event but an exit!\n", proc->pid);
+            break;
+        default:
+    		fprintf(stderr, "[%d] That's not a syscall-stop event but I'm not sure which event that is  :-(\n", proc->pid);
+            break;
+        }
+		xbt_backtrace_display_current();
+	}
 	return !proc->in_syscall;
 }
 static void proc_inside(process_descriptor_t *proc) {

@@ -213,13 +213,15 @@ int simterpose_process_runner(int argc, char *argv[])
 			process_descriptor_new(MSG_host_get_name(MSG_host_self()), argv[0], tracked_pid));
 
 	// Wait for the traced to start
-	waitpid(tracked_pid, &status, 0);
+	int res = waitpid(tracked_pid, &status, __WALL);
+	if (res < 0)
+		perror("waitpid failed");
 
 	// Trace the child and all upcoming granchilds
 	increment_nb_setoptions();
 	if (ptrace(PTRACE_SETOPTIONS, tracked_pid, NULL,
-			PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE |
-			PTRACE_O_TRACEEXEC)
+			PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE | PTRACE_O_TRACEEXEC |
+			PTRACE_O_TRACESYSGOOD)
 			== -1) {
 		perror("Error setoptions");
 		exit(1);
@@ -232,12 +234,11 @@ int simterpose_process_runner(int argc, char *argv[])
 	while (proc_next_state != PROCESS_DEAD) {
 		XBT_DEBUG("Starting treatment");
 
-		int status;
 		pid_t pid = proc->pid;
 		ptrace_resume_process(pid);
-		if (waitpid(pid, &status, 0) < 0)
+		if (waitpid(pid, &(proc->status), __WALL) < 0)
 			xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-		proc_next_state = process_handle(proc, status);
+		proc_next_state = process_handle(proc);
 
 		XBT_DEBUG("End of treatment, status = %s ", state_names[proc_next_state]);
 	}
@@ -254,16 +255,13 @@ int main_loop(int argc, char *argv[])
 	while (proc_next_state != PROCESS_DEAD) {
 		XBT_DEBUG("Starting treatment (pid = %d)", proc->pid);
 
-		int status;
-		pid_t pid = proc->pid;
-
 		// wait for the process to be created before trying to resume it
-		waitpid(-1, &status, __WALL);
+		waitpid(-1, &(proc->status), __WALL);
 
-		ptrace_resume_process(pid);
-		if (waitpid(pid, &status, 0) < 0)
-			xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
-		proc_next_state = process_handle(proc, status);
+		ptrace_resume_process(proc->pid);
+		if (waitpid(proc->pid, &(proc->status), __WALL) < 0)
+			xbt_die(" [%d] waitpid %s %d\n", proc->pid, strerror(errno), errno);
+		proc_next_state = process_handle(proc);
 
 		XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
 	}

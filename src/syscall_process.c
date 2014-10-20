@@ -1107,6 +1107,7 @@ static void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysa
 		break;
 
 	case F_SETFD:
+		XBT_DEBUG("SETFD %d",arg->fd);
 		proc->fd_list[arg->fd]->flags = arg->arg;
 		break;
 
@@ -1604,8 +1605,7 @@ static int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
 		MSG_sem_acquire(file_desc->stream->sem_client);
 		XBT_DEBUG("connect_pre: took client semaphore!");
 
-		int status = 0;
-		return process_handle(proc, status);
+		return process_handle(proc);
 	} else {
 		XBT_WARN("syscall_connect_pre: process_connect_in_call == 0  <--------- ");
 		proc_outside(proc);
@@ -1661,7 +1661,7 @@ static void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_de
  *  our metadata but there is no need to inform the simulator, nor to ask for the
  *  completion time of these things.
  */
-int process_handle(process_descriptor_t * proc, int status)
+int process_handle(process_descriptor_t * proc)
 {
 	reg_s arg;
 	syscall_arg_u *sysarg = &(proc->sysarg);
@@ -1810,7 +1810,9 @@ int process_handle(process_descriptor_t * proc, int status)
 			break;
 
 		case SYS_execve:
-			if (proc_entering(proc))
+			if (proc_event_exec(proc)) {
+				XBT_DEBUG("Ignore an exec event");
+			} else if (proc_entering(proc))
 				syscall_execve_pre(&arg, sysarg, proc);
 			else
 				syscall_execve_post(&arg, sysarg, proc);
@@ -1855,7 +1857,7 @@ int process_handle(process_descriptor_t * proc, int status)
 		// Step the traced process
 		ptrace_resume_process(pid);
 		// XBT_DEBUG("process resumed, waitpid");
-		waitpid(pid, &status, 0);
+		waitpid(pid, &(proc->status), __WALL);
 	}                             // while(1)
 
 	THROW_IMPOSSIBLE;             //There's no way to quit the loop

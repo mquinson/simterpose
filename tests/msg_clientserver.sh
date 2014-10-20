@@ -5,6 +5,8 @@ set -e # fail fast
 make -C ../src/ simterpose
 make -C apps/   msg_server msg_client
 
+runner=$1
+
 rm -rf deploy_temp.xml
 cat > deploy_temp.xml <<EOF
 <?xml version='1.0'?>
@@ -24,5 +26,5 @@ cat > deploy_temp.xml <<EOF
 </platform>
 EOF
 
-sudo LD_LIBRARY_PATH=/opt/simgrid/lib/ ../src/simterpose -s platform.xml deploy_temp.xml #--log=simterpose.:debug --log=msg.:debug  --log=simix_synchro.:debug # --log=simix.:debug   #--log=root.fmt:"'%l: [%c/%p]: %m%n'"  #--log=xbt_dyn.:debug
+sudo LD_LIBRARY_PATH=/opt/simgrid/lib/ $runner ../src/simterpose -s platform.xml deploy_temp.xml --log=simterpose.:debug #--log=msg.:debug  --log=simix_synchro.:debug # --log=simix.:debug   #--log=root.fmt:"'%l: [%c/%p]: %m%n'"  #--log=xbt_dyn.:debug
 rm deploy_temp.xml
