@@ -779,28 +779,22 @@ static void syscall_execve_pre(reg_s * reg, syscall_arg_u * sysarg, process_desc
  */
 static void syscall_execve_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
-	if (proc->in_syscall == 1) {
-		get_args_execve(proc, reg, sysarg);
-		if (reg->ret == 0)
-			proc->in_syscall = 2;
-		else
-			proc_outside(proc);
-		if (strace_option)
-			print_execve_syscall_post(proc, sysarg);
-		XBT_DEBUG("execve_post");
-	} else {
-		proc_outside(proc);
-		int i;
-		for (i = 0; i < MAX_FD; ++i) {
-			if (proc->fd_list[i] != NULL) {
-				// XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
-				if (proc->fd_list[i]->flags == FD_CLOEXEC)
-					XBT_WARN("FD_CLOEXEC not handled");
-				//process_close_call(proc, i);
-			}
+	get_args_execve(proc, reg, sysarg);
+	proc_outside(proc);
+	if (strace_option)
+		print_execve_syscall_post(proc, sysarg);
+	XBT_DEBUG("execve_post");
+
+	int i;
+	for (i = 0; i < MAX_FD; ++i) {
+		if (proc->fd_list[i] != NULL) {
+			// XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
+			if (proc->fd_list[i]->flags == FD_CLOEXEC)
+				XBT_WARN("FD_CLOEXEC not handled");
+			//process_close_call(proc, i);
 		}
-		XBT_DEBUG("execve retour");
 	}
+	XBT_DEBUG("execve retour");
 }
 
 /** @brief create a file descriptor */
