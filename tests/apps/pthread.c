@@ -13,7 +13,7 @@ static void *hello(void *arg)
 {
 
   int *id = (int *) arg;
-  printf("%d : hello world \n", *id);
+  fprintf(stderr, "child %d: hello world \n", *id);
   pthread_exit(NULL);
 
 }
@@ -27,7 +27,7 @@ int main()
   int n = 10;
 
   for (i = 0; i < n; i++) {
-    printf("Create thread %d\n", i + 1);
+    fprintf(stderr, "Create thread %d\n", i + 1);
     pthread_create(&threads[i], NULL, hello, (void *) &id[i]);
   }
   for (i = 0; i < n; i++) {
