@@ -61,7 +61,7 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
 		// Take the basefile of the argv0
 		char *lastsep;
 		if ((lastsep = strrchr(filename,'/')))
-			memmove(filename+strlen("simterpose-"), lastsep+1, filename+strlen(filename)-lastsep+1);
+			memmove(filename+strlen("simterpose-"), lastsep+1, filename+strlen(filename)-lastsep);
 
 		result->strace_out = fopen(filename,"w");
 		result->curcol = 0;
