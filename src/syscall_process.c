@@ -43,7 +43,7 @@
 #include "sockets.h"
 #include "syscall_data.h"
 
-#ifndef unknown_error // that stupid eclipse seems to not find that symbol
+#ifndef unknown_error // that stupid eclipse seems to not find that symbol (which comes from SimGrid logging features)
 #define unknown_error 0
 #endif
 
@@ -1171,24 +1171,6 @@ static void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descr
 	}
 }
 
-/** @brief handle socket syscall by creating and registering a new socket */
-static void syscall_socket_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_outside(proc);
-
-	socket_arg_t arg = &sysarg->socket;
-	arg->ret = reg->ret;
-	arg->domain = (int) reg->arg[0];
-	arg->type = (int) reg->arg[1];
-	arg->protocol = (int) reg->arg[2];
-
-	if (strace_option)
-		print_socket_syscall(proc, sysarg);
-
-	if (arg->ret > 0)
-		register_socket(proc, arg->ret, arg->domain, arg->protocol);
-}
-
 /** @brief helper function to handle listen syscall
  *
  * We create a new communication and put it in a listening state.
@@ -1678,10 +1660,7 @@ int process_handle(process_descriptor_t * proc)
 			break;
 
 		case SYS_socket:
-			if (proc_entering(proc))
-				proc_inside(proc);
-			else
-				syscall_socket_post(&arg, sysarg, proc);
+			syscall_socket(&arg, sysarg, proc);
 			break;
 
 		case SYS_connect:

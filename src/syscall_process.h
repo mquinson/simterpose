@@ -10,6 +10,7 @@
 
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
+#include "sockets.h"
 
 enum { PROCESS_CONTINUE = 0, PROCESS_DEAD, PROCESS_GROUP_DEAD, PROCESS_TASK_FOUND };
 extern const char *state_names[4];
@@ -24,5 +25,8 @@ void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pro
 /* process-related */
 void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+
+/* Network-related */
+void syscall_socket(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 
 #endif
