@@ -100,7 +100,7 @@ static int proc_event_exec(process_descriptor_t *proc) {
 }
 static int proc_event_syscall(process_descriptor_t *proc) {
 	  return WIFSTOPPED(proc->status) &&  ( WSTOPSIG(proc->status) & (SIGTRAP | 0x80) );
-	}
+}
 
 static int proc_entering(process_descriptor_t *proc) {
 	if (! proc_event_syscall(proc) ) {
