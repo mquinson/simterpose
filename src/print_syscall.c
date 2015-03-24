@@ -183,7 +183,7 @@ static void print_flags(process_descriptor_t *proc, int flags, flag_names_t *nam
 			if (!first)
 				fprintf(proc->strace_out,"|");
 			first = 0;
-			fprintf(proc->strace_out,names->name);
+			fprintf(proc->strace_out, "%s", names->name);
 			flags &= ~names->val;
 		}
 	}
