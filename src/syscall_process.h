@@ -18,9 +18,21 @@ extern const char *state_names[4];
 #define RECV_CLOSE              10
 
 int process_handle(process_descriptor_t * proc);
+int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc);
+void process_close_call(process_descriptor_t * proc, int fd);
 
 /* memory-related */
 void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void process_read_out_call(process_descriptor_t * proc);
+int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_close(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 
 /* process-related */
 void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
