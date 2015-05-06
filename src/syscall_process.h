@@ -20,6 +20,7 @@ extern const char *state_names[4];
 int process_handle(process_descriptor_t * proc);
 int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc);
 void process_close_call(process_descriptor_t * proc, int fd);
+int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
 /* memory-related */
 void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
@@ -40,5 +41,28 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 
 /* Network-related */
 void syscall_socket(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
+int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+int syscall_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_recvfrom_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void process_recvfrom_out_call(process_descriptor_t * proc);
+void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_bind_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_listen(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void process_listen_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 
+void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_getsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_setsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 #endif
