@@ -34,10 +34,14 @@ void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
 void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_fcntl(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 
 /* process-related */
 void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+int syscall_exit(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 
 /* Network-related */
 void syscall_socket(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
@@ -65,4 +69,6 @@ void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
 void syscall_getsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 void syscall_setsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+
+
 #endif
