@@ -16,17 +16,6 @@
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
-/** @brief retrieve the arguments of clone syscall */
-static void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-	clone_arg_t arg = &(sysarg->clone);
-	arg->ret = reg->ret;
-	arg->clone_flags = reg->arg[0];
-	arg->newsp = reg->arg[1];
-	arg->parent_tid = (void *) reg->arg[2];
-	arg->child_tid = (void *) reg->arg[3];
-}
-
 static int clone_number = 0;
 
 
