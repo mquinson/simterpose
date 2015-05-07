@@ -1,16 +1,17 @@
-/* sys_mem -- handlers of all memory-related syscalls                        */
+/* sys_memory -- Handlers of all memory-related syscalls                        */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "simterpose.h"
 #include "sys_memory.h"
-#include "syscall_process.h"
-#include "print_syscall.h"
 
 #include "args_trace.h"
+#include "print_syscall.h"
+#include "sockets.h"
+#include "syscall_process.h"
+#include "simterpose.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 

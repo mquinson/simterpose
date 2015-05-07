@@ -1,6 +1,6 @@
-/* print_syscall --  functions to print a strace-like log of syscalls */
+/* print_syscall --  Functions to print a strace-like log of syscalls */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
@@ -9,10 +9,11 @@
 #define PRINT_SYSCALL_H
 
 #include <xbt/log.h>
-#include "syscall_data.h"
-#include "process_descriptor.h"
-
 #include <sys/types.h>
+
+#include "process_descriptor.h"
+#include "syscall_data.h"
+
 
 // The XBT log appender that we use to write our logs to the corresponding files.
 xbt_log_appender_t xbt_log_appender_strace_new(void);

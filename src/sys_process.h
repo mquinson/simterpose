@@ -1,4 +1,4 @@
-/* sys_mem -- Handles every memory-syscall. */
+/* sys_process -- Handles every process-syscall. */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
@@ -9,9 +9,8 @@
 /* #define SYSCALL_PROCESS_H */
 
 #include "process_descriptor.h"
-#include "syscall_data.h"
 #include "ptrace_utils.h"
-#include "syscall_process.h" /* Just to have a definition of PROCESS_DEAD */
+#include "syscall_data.h"
 
 void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);

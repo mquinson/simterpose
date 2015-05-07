@@ -1,17 +1,18 @@
-/* args_trace -- retrieve the syscall arguments from registers, and build new ones   */
+/* args_trace -- Retrieve the syscall arguments from registers, and build new ones   */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "args_trace.h"
-#include "sockets.h"
-#include "data_utils.h"
-#include "simterpose.h"
-#include "sysdep.h"
 #include "xbt/log.h"
 #include <sys/uio.h>
+
+#include "args_trace.h"
+#include "data_utils.h"
+/* #include "sockets.h" */
+/* #include "simterpose.h" */
+/* #include "sysdep.h" */
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 

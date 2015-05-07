@@ -8,25 +8,12 @@
 #ifndef SYSCALL_PROCESS_H
 #define SYSCALL_PROCESS_H
 
-#include "process_descriptor.h"
-#include "ptrace_utils.h"
-#include "sockets.h"
-#include "syscall_data.h"
-#include "args_trace.h"
-#include "communication.h"
-#include "data_utils.h"
-#include "print_syscall.h"
-#include "simterpose.h"
-#include "syscall_data.h"
-
-#include "sys_process.h"
 /* Memory-related */
 #include "sys_memory.h"
 /* Network-related */
 #include "sys_network.h"
 /* Process-related */
-/* #include "sys_process.h" */
-
+#include "sys_process.h"
 
 enum { PROCESS_CONTINUE = 0, PROCESS_DEAD, PROCESS_GROUP_DEAD, PROCESS_TASK_FOUND };
 extern const char *state_names[4];

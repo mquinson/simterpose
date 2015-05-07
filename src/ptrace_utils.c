@@ -1,17 +1,18 @@
-/* ptrace -- helper functions to not call ptrace manually            */
+/* ptrace -- Helper functions to not call ptrace manually            */
 
 /* most of the provided functions are documented. The remaining ones should be documented or removed/placed elsewhere */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-
-#include "ptrace_utils.h"
-#include "data_utils.h"
-#include "sysdep.h"
 #include <xbt.h>
+
+#include "data_utils.h"
+#include "ptrace_utils.h"
+#include "sysdep.h"
+
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(PTRACE, simterpose, "ptrace utils log");
 

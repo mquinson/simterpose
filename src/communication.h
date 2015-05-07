@@ -1,6 +1,6 @@
-/* communication --  functions to deal with accept, connect and communications between processes */
+/* communication --  Functions to deal with accept, connect and communications between processes */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
@@ -15,13 +15,16 @@
 #define COMM_LISTEN     0x004
 #define COMM_SHUT       0x008
 
+#include <sys/types.h>
+
+#include "xbt.h"
+
+#include "process_descriptor.h"
+#include "sockets.h"
+
 typedef struct comm_s comm_s;
 typedef comm_s *comm_t;
 
-#include "xbt.h"
-#include "process_descriptor.h"
-#include "sockets.h"
-#include <sys/types.h>
 
 typedef struct {
 	struct infos_socket *socket;

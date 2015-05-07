@@ -1,4 +1,4 @@
-/* sys_net -- handlers of all network-related syscalls                       */
+/* sys_net -- Handlers of all network-related syscalls                       */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
@@ -6,11 +6,13 @@
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include "sys_network.h"
-#include "simterpose.h"
-#include "syscall_process.h"
-#include "print_syscall.h"
+
 #include "args_trace.h"
 #include "data_utils.h"
+#include "print_syscall.h"
+#include "sockets.h"
+#include "syscall_process.h"
+#include "simterpose.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 

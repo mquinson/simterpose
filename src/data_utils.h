@@ -1,6 +1,6 @@
-/* data utils -- contains simterpose global datas such as hosts and ports  */
+/* data utils -- Contains simterpose global datas such as hosts and ports  */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
@@ -9,8 +9,11 @@
 #define DATA_UTILS_H
 
 #include <sys/types.h>
+
+#include "process_descriptor.h"
 #include "simterpose.h"
 #include "sockets.h"
+
 
 #define MAX_PID 32768
 

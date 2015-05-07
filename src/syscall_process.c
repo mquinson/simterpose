@@ -30,6 +30,10 @@
 
 #include "syscall_process.h"
 
+#include "communication.h"
+#include "data_utils.h"
+#include "sockets.h"
+
 #ifndef unknown_error // that stupid eclipse seems to not find that symbol (which comes from SimGrid logging features)
 #define unknown_error 0
 #endif

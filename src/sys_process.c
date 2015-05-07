@@ -6,14 +6,14 @@
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include <linux/sched.h>   /* For clone flags */
+#include <xbt.h>
 
 #include "sys_process.h"
-#include "simterpose.h"
-/* #include "syscall_process.h" */
-#include "print_syscall.h"
-#include "args_trace.h"
 
-#include <xbt.h>
+#include "args_trace.h"
+#include "print_syscall.h"
+#include "simterpose.h"
+#include "syscall_process.h" /* Just to have a definition of PROCESS_DEAD */
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
