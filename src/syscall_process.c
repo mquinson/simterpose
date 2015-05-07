@@ -1,18 +1,15 @@
 /* syscall_process -- Handles every syscall at the entrance/exit. */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
-
-#include "syscall_process.h"
 
 #include <arpa/inet.h>
 #include <asm-generic/errno.h>
 #include <asm-generic/errno-base.h>
 #include <asm-generic/socket.h>
-#include <bits/fcntl-linux.h>
-//#include <linux/futex.h>
+#include <fcntl.h>
 #include <msg/datatypes.h>
 #include <msg/msg.h>
 #include <netinet/in.h>
@@ -23,7 +20,6 @@
 #include <sys/select.h>
 #include <sys/wait.h>
 #include <syscall.h>
-//#include <time.h>
 #include <unistd.h>
 #include <xbt/asserts.h>
 #include <xbt/dynar.h>
@@ -31,17 +27,8 @@
 #include <xbt/log.h>
 #include <xbt/misc.h>
 #include <xbt/sysdep.h>
-//#include "xbt.h"
 
-#include "args_trace.h"
-#include "communication.h"
-#include "data_utils.h"
-#include "print_syscall.h"
-//#include "process_descriptor.h"
-//#include "ptrace_utils.h"
-#include "simterpose.h"
-#include "sockets.h"
-#include "syscall_data.h"
+#include "syscall_process.h"
 
 #ifndef unknown_error // that stupid eclipse seems to not find that symbol (which comes from SimGrid logging features)
 #define unknown_error 0
@@ -87,15 +74,6 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
 		xbt_die("The socket is not registered");
 	return 0;
 }
-
-
-
-
-
-
-
-
-
 
 /** @brief helper function to close a file descriptor */
 void process_close_call(process_descriptor_t * proc, int fd)
@@ -143,19 +121,6 @@ void process_close_call(process_descriptor_t * proc, int fd)
 		proc->fd_list[fd] = NULL;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /** @brief helper function to handle connect syscall */
 int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
@@ -241,8 +206,6 @@ int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 	} else
 		return 0;
 }
-
-
 
 /** @brief Handle all syscalls of the tracked pid until it does a blocking action.
  *

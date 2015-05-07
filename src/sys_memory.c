@@ -1,25 +1,18 @@
 /* sys_mem -- handlers of all memory-related syscalls                        */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include "simterpose.h"
+#include "sys_memory.h"
 #include "syscall_process.h"
 #include "print_syscall.h"
 
 #include "args_trace.h"
-#include <unistd.h>
-#include <xbt/asserts.h>
-#include <xbt/dynar.h>
-#include <xbt/ex.h>
-#include <xbt/log.h>
-#include <xbt/misc.h>
-#include <xbt/sysdep.h>
-//#include "xbt.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_MEM_PROCESS, simterpose, "Syscall memory process log");
+XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
 	if (proc_entering(proc)) {
@@ -514,5 +507,102 @@ void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
 				xbt_dynar_push(write_end, &dup_end);
 			}
 		}
+	}
+}
+
+void syscall_fcntl(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+		XBT_DEBUG("fcntl pre");
+#ifndef address_translation
+		get_args_fcntl(proc, reg, sysarg);
+		process_fcntl_call(proc, sysarg);
+		if (strace_option)
+			print_fcntl_syscall(proc, sysarg);
+		sleep(4);
+#endif
+	} else {
+		proc_outside(proc);
+		XBT_DEBUG("fcntl post");
+		get_args_fcntl(proc, reg, sysarg);
+		if (strace_option)
+			print_fcntl_syscall(proc, sysarg);
+#ifdef address_translation
+		process_fcntl_call(proc, sysarg);
+#endif
+	}
+}
+
+/** @brief helper function to handle fcntl syscall */
+// TODO: handle the other flags
+void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+	XBT_DEBUG("process fcntl");
+	fcntl_arg_t arg = &(sysarg->fcntl);
+	switch (arg->cmd) {
+
+	case F_DUPFD:
+		XBT_WARN("F_DUPFD unhandled");
+		break;
+
+	case F_DUPFD_CLOEXEC:
+		XBT_WARN("F_DUPFD_CLOEXEC unhandled");
+		break;
+
+	case F_GETFD:
+#ifndef address_translation
+		arg->ret = proc->fd_list[arg->fd]->flags;
+#endif
+		break;
+
+	case F_SETFD:
+		XBT_DEBUG("SETFD %d",arg->fd);
+		proc->fd_list[arg->fd]->flags = arg->arg;
+		break;
+
+	case F_GETFL:
+		XBT_WARN("F_GETFL unhandled");
+		break;
+
+	case F_SETFL:
+		socket_set_flags(proc, arg->fd, arg->arg);
+		break;
+
+	case F_SETLK:
+		XBT_WARN("F_SETLK unhandled");
+		break;
+
+	case F_SETLKW:
+		XBT_WARN("F_SETLKW unhandled");
+		break;
+
+	case F_GETLK:
+		XBT_WARN("F_GETLK unhandled");
+		break;
+
+	default:
+		XBT_WARN("Unknown fcntl flag");
+		break;
+	}
+#ifndef address_translation
+	ptrace_neutralize_syscall(proc->pid);
+	ptrace_restore_syscall(proc->pid, SYS_fcntl, arg->ret);
+	proc_outside(proc);
+#endif
+}
+
+/** @brief create a file descriptor */
+void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	proc_outside(proc);
+	if ((int) reg->ret >= 0) {
+		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+		file_desc->refcount = 0;
+		file_desc->fd = (int) reg->ret;
+		file_desc->proc = proc;
+		file_desc->type = FD_CLASSIC;
+		proc->fd_list[(int) reg->ret] = file_desc;
+		file_desc->refcount++;
 	}
 }

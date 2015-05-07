@@ -1,18 +1,18 @@
 /* sys_net -- handlers of all network-related syscalls                       */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
+#include "sys_network.h"
 #include "simterpose.h"
 #include "syscall_process.h"
 #include "print_syscall.h"
-
 #include "args_trace.h"
 #include "data_utils.h"
 
-XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_NETWORK_PROCESS, simterpose, "Syscall network process log");
+XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 void syscall_socket(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
