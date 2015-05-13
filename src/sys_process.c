@@ -210,14 +210,3 @@ void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
 		XBT_DEBUG("execve retour");
 	}
 }
-
-int syscall_exit(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	if (proc_entering(proc)) {
-		proc_inside(proc);
-		ptrace_detach_process(pid);
-		return PROCESS_DEAD;
-	} else {
-		THROW_IMPOSSIBLE;
-	}
-}
