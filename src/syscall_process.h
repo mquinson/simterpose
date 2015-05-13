@@ -8,18 +8,18 @@
 #ifndef SYSCALL_PROCESS_H
 #define SYSCALL_PROCESS_H
 
-<<<<<<< HEAD
 /* Memory-related */
 #include "sys_memory.h"
 /* Network-related */
 #include "sys_network.h"
 /* Process-related */
 #include "sys_process.h"
-=======
+
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
 #include "sockets.h"
->>>>>>> parent of 9254bbd...  A file .h for every file .c
+/* #include "sys_process.h" */
+
 
 enum { PROCESS_CONTINUE = 0, PROCESS_DEAD, PROCESS_GROUP_DEAD, PROCESS_TASK_FOUND };
 extern const char *state_names[4];

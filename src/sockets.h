@@ -1,6 +1,6 @@
-/* sockets -- Helper functions to deal with sockets */
+/* sockets -- helper functions to deal with sockets */
 
-/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
@@ -21,12 +21,14 @@ struct infos_socket;
 
 #define SOCK_OPT_REUSEADDR      0x0001
 
+
 #include "sysdep.h"
 #include "xbt.h"
 #include "xbt/fifo.h"
 #include "syscall_data.h"
-#include "process_descriptor.h"
 #include "communication.h"
+#include "process_descriptor.h"
+
 
 struct recv_information {
 	xbt_fifo_t data_fifo;

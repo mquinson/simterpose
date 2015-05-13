@@ -1,23 +1,23 @@
-/* sys_memory -- Handlers of all memory-related syscalls                        */
+/* sys_mem -- handlers of all memory-related syscalls                        */
 
 /* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-<<<<<<< HEAD:src/sys_memory.c
+#include "simterpose.h"
 #include "sys_memory.h"
+#include "syscall_process.h"
+#include "print_syscall.h"
 
 #include "args_trace.h"
 #include "print_syscall.h"
 #include "sockets.h"
 #include "syscall_process.h"
 #include "simterpose.h"
-=======
 #include "simterpose.h"
 #include "syscall_process.h"
 #include "print_syscall.h"
-
 #include "args_trace.h"
 #include <unistd.h>
 #include <xbt/asserts.h>
@@ -27,7 +27,6 @@
 #include <xbt/misc.h>
 #include <xbt/sysdep.h>
 //#include "xbt.h"
->>>>>>> parent of 9254bbd...  A file .h for every file .c:src/sys_mem.c
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_MEM_PROCESS, simterpose, "Syscall memory process log");
 

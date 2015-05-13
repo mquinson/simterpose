@@ -1,6 +1,6 @@
 /* simterpose - Emulate real applications on top of SimGrid                   */
 
-/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.            */
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.            */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU LGPLv2) which comes with this package. */
@@ -10,19 +10,18 @@
 #include <wait.h>
 #include <errno.h>
 #include <unistd.h>
+
 #include <msg/msg.h>
-
+#include <xbt.h>
 #include "simterpose.h"
-
-#include "cputimer.h"
-#include "data_utils.h"
 #include "sockets.h"
+#include "cputimer.h"
+#include "communication.h"
+#include "data_utils.h"
+#include "ptrace_utils.h"
 #include "syscall_process.h"
-
-/* #include "communication.h" */
-
-/* #include "ptrace_utils.h" */
-/* #include "print_syscall.h" */
+#include "process_descriptor.h"
+#include "print_syscall.h"
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "Main simterpose log channel");
 int strace_option = 0;

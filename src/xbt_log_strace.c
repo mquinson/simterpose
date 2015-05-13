@@ -1,16 +1,15 @@
-/* strace_appender - A fancy log appender for the SimGrid logging mechanism
+/* strace_appender - a fancy log appender for the SimGrid logging mechanism
  *                   that sends the output to the strace-like files         */
 
-/* Copyright (c) 2007-2015. The SimGrid Team.  All rights reserved.         */
+/* Copyright (c) 2007-2014. The SimGrid Team.  All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU LGPL) which comes with this package. */
 
 #include <xbt.h>
 #include <msg/msg.h>
-
-#include "print_syscall.h"
 #include "process_descriptor.h"
+#include "print_syscall.h"
 
 //#include "xbt/log_private.h" // Oops, sorry for violating your intimacy this way
 struct xbt_log_appender_s {    // Yeah, I know. Sorry.
