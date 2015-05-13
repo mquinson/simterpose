@@ -1,7 +1,13 @@
 OBJS = args_trace.o communication.o cputimer.o data_utils.o print_syscall.o \
+<<<<<<< HEAD
        process_descriptor.o ptrace_utils.o simterpose.o sockets.o \
        sys_memory.o sys_network.o sys_process.o \
        xbt_log_strace.o  syscall_process.o  
+=======
+       process_descriptor.o ptrace_utils.o simterpose.o sockets.o syscall_process.o \
+       sys_mem.o sys_net.o sys_process.o \
+       xbt_log_strace.o
+>>>>>>> parent of 9254bbd...  A file .h for every file .c
 
 CFLAGS = -Wall -Werror -g -I/opt/simgrid/include/
 CFLAGS += -fno-common -Wunused -Wmissing-prototypes -Wmissing-declarations -Wpointer-arith -Wchar-subscripts -Wcomment
@@ -20,6 +26,7 @@ simterpose.o: simterpose.c simterpose.h
 args_trace.o: args_trace.c args_trace.h 
 ptrace_utils.o: ptrace_utils.c ptrace_utils.h
 process_descriptor.o: process_descriptor.c process_descriptor.h
+<<<<<<< HEAD
 syscall_process.o: syscall_process.c syscall_process.h 
 data_utils.o : data_utils.c data_utils.h 
 print_syscall.o: print_syscall.c print_syscall.h 
@@ -28,8 +35,20 @@ communication.o: communication.c communication.h
 sys_memory.o: sys_memory.c sys_memory.h
 sys_network.o: sys_network.c sys_network.h
 sys_process.o: sys_process.c sys_process.h
+=======
+syscall_process.o: syscall_process.c syscall_process.h sockets.h simterpose.h \
+	ptrace_utils.h process_descriptor.h args_trace.h print_syscall.h
+data_utils.o : data_utils.c data_utils.h sysdep.h process_descriptor.h cputimer.h
+print_syscall.o: print_syscall.c print_syscall.h syscall_data.h  sockets.h
+sockets.o: sockets.c sockets.h simterpose.h sysdep.h communication.h
+communication.o: communication.c communication.h sockets.h
+sys_mem.o: sys_mem.c syscall_process.h
+sys_net.o: sys_net.c syscall_process.h
+sys_process.o: sys_process.c syscall_process.h
+>>>>>>> parent of 9254bbd...  A file .h for every file .c
 
 #################################################
 
 clean:
 	rm -rf simterpose *.o *~
+	

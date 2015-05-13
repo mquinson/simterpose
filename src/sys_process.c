@@ -1,6 +1,6 @@
-/* sys_mem -- Handlers of all memory-related syscalls                        */
+/* sys_mem -- handlers of all memory-related syscalls                        */
 
-/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
+/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
@@ -8,7 +8,14 @@
 #include <linux/sched.h>   /* For clone flags */
 #include <xbt.h>
 
+<<<<<<< HEAD
 #include "sys_process.h"
+=======
+#include "simterpose.h"
+#include "syscall_process.h"
+#include "print_syscall.h"
+#include "args_trace.h"
+>>>>>>> parent of 9254bbd...  A file .h for every file .c
 
 #include "args_trace.h"
 #include "print_syscall.h"
