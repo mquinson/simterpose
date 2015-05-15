@@ -1,13 +1,14 @@
-/* process_descriptor  */
+/* process_descriptor */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include "process_descriptor.h"
 #include "sockets.h"
-#include "msg/msg.h"
+/* #include "simgrid/msg.h" */
+#include <msg/msg.h>
 #include "simterpose.h"
 
 #include <stdlib.h>

@@ -1,12 +1,19 @@
-/* sys_mem -- handlers of all memory-related syscalls                        */
+/* sys_process -- Handles of all memory-related syscalls                        */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include <linux/sched.h>   /* For clone flags */
 
+#include "sys_process.h"
+#include "simterpose.h"
+/* #include "syscall_process.h" */
+#include "print_syscall.h"
+#include "args_trace.h"
+
+#include <xbt.h>
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
@@ -194,5 +201,16 @@ void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
 			}
 		}
 		XBT_DEBUG("execve retour");
+	}
+}
+
+int syscall_exit(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+		ptrace_detach_process(pid);
+		return PROCESS_DEAD;
+	} else {
+		THROW_IMPOSSIBLE;
 	}
 }

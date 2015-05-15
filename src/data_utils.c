@@ -1,6 +1,6 @@
-/* data utils -- contains SimTerpose global data such as hosts and ports  */
+/* data utils -- Contains SimTerpose global data such as hosts and ports  */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */

@@ -1,4 +1,4 @@
-/* sys_mem -- Handles every memory-syscall. */
+/* sys_process -- Handlers every memory-syscall. */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 

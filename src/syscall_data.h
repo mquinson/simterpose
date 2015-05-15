@@ -1,6 +1,6 @@
-/* syscall_data -- structures to store syscall arguments */
+/* syscall_data -- Structures to store syscall arguments */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.         */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
