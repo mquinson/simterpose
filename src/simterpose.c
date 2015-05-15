@@ -5,24 +5,29 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU LGPLv2) which comes with this package. */
 
+/* To compile with a new version of SimGrid */
+#include <simgrid/msg.h>
+/* To compile with an old version of SimGrid */
+/* #include <msg/msg.h> */
+
 #include <sys/ptrace.h>
 #include <sys/personality.h>
 #include <wait.h>
 #include <errno.h>
 #include <unistd.h>
-
-#include <msg/msg.h>
-/* #include <simgrid/msg.h> */
 #include <xbt.h>
+
+#include "communication.h"
+#include "cputimer.h"
+#include "data_utils.h"
+#include "print_syscall.h"
+#include "process_descriptor.h"
+#include "ptrace_utils.h"
 #include "simterpose.h"
 #include "sockets.h"
-#include "cputimer.h"
-#include "communication.h"
-#include "data_utils.h"
-#include "ptrace_utils.h"
 #include "syscall_process.h"
-#include "process_descriptor.h"
-#include "print_syscall.h"
+
+
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "Main simterpose log channel");
 int strace_option = 0;

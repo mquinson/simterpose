@@ -61,7 +61,11 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
 			msg_task_t task = NULL;
 			msg_error_t err = MSG_task_receive(&task, mailbox);
 
-			arg->ret = (int) MSG_task_get_data_size(task);
+			/* To compile with an old version of SimGrid */
+			/* arg->ret = (int) MSG_task_get_data_size(task); */
+			/* To compile with a new version of SimGrid */
+			arg->ret = (int) MSG_task_get_bytes_amount(task);
+			
 			arg->data = MSG_task_get_data(task);
 
 			if (err != MSG_OK) {
@@ -97,7 +101,11 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
 
 			msg_task_t task = NULL;
 			MSG_task_receive(&task, buff);
-			arg->ret = (int) MSG_task_get_data_size(task);
+			/* To compile with an old version of SimGrid */
+			/* arg->ret = (int) MSG_task_get_data_size(task); */
+			/* To compile with a new version of SimGrid */
+			arg->ret = (int) MSG_task_get_bytes_amount(task);
+			
 			arg->data = MSG_task_get_data(task);
 			XBT_WARN("hosts: %s received from pipe %d (size: %d)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
 

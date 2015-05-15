@@ -5,16 +5,19 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
+/* To compile with a new version of SimGrid */
+#include <simgrid/platf.h>
+#include <simgrid/datatypes.h>
+#include <simgrid/msg.h>
+/* To compile with an old version of SimGrid */
+/* #include <msg/datatypes.h> */
+/* #include <msg/msg.h> */
+
 #include <arpa/inet.h>
 #include <asm-generic/errno.h>
 #include <asm-generic/errno-base.h>
 #include <asm-generic/socket.h>
 #include <fcntl.h>
-#include <msg/datatypes.h>
-/* #include <simgrid/platf.h> */
-/* #include <simgrid/datatypes.h> */
-/* #include <simgrid/msg.h> */
-#include <msg/msg.h>
 #include <netinet/in.h>
 #include <poll.h>
 #include <setjmp.h>
@@ -30,6 +33,7 @@
 #include <xbt/log.h>
 #include <xbt/misc.h>
 #include <xbt/sysdep.h>
+
 #include "syscall_process.h"
 
 #ifndef unknown_error // that stupid eclipse seems to not find that symbol (which comes from SimGrid logging features)
@@ -62,8 +66,14 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
 			msg_task_t task = create_send_communication_task(proc, is, arg->ret, proc->host, s->fd.proc->host);
 			XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
 					arg->ret);
-			MSG_task_set_data_size(task, arg->ret);
-			MSG_task_set_data(task, arg->data);
+
+		
+			/* To compile with an old version of SimGrid */
+			/* MSG_task_set_data_size(task, arg->ret); */
+			/* To compile with a new version of SimGrid */
+			MSG_task_set_bytes_amount(task, arg->ret);
+
+			MSG_task_set_data(task, arg->data); 
 
 			send_task(s->fd.proc->host, task);
 

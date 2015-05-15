@@ -41,8 +41,11 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-/* #include <simgrid/msg.h> */
-#include <msg/msg.h>
+
+/* To compile with a new version of SimGrid */
+#include <simgrid/msg.h>
+/* To compile with an old version of SimGrid */
+/* #include <msg/msg.h> */
 
 #include "syscall_data.h"
 

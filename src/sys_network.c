@@ -1,4 +1,4 @@
-/* sys_network -- Handles of all network-related syscalls                       */
+/* sys_network -- Handles of all network-related syscalls */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
@@ -358,7 +358,11 @@ void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
 				msg_task_t task = NULL;
 				msg_error_t err = MSG_task_receive(&task, mailbox);
 
-				arg->ret = (int) MSG_task_get_data_size(task);
+				/* To compile with an old version of SimGrid */
+				/* arg->ret = (int) MSG_task_get_data_size(task); */
+				/* To compile with a new version of SimGrid */
+				arg->ret = (int) MSG_task_get_bytes_amount(task);
+				
 				arg->data = MSG_task_get_data(task);
 
 				if (err != MSG_OK) {
@@ -498,7 +502,12 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
 				msg_task_t task = NULL;
 				msg_error_t err = MSG_task_receive(&task, mailbox);
 
-				arg->ret = (int) MSG_task_get_data_size(task);
+						
+				/* To compile with an old version of SimGrid */
+				/* arg->ret = (int) MSG_task_get_data_size(task); */
+				/* To compile with a new version of SimGrid */
+				arg->ret = (int) MSG_task_get_bytes_amount(task);
+				
 				arg->data = MSG_task_get_data(task);
 
 				if (err != MSG_OK) {

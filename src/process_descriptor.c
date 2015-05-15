@@ -5,13 +5,16 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "process_descriptor.h"
-#include "sockets.h"
-/* #include "simgrid/msg.h" */
-#include <msg/msg.h>
-#include "simterpose.h"
-
 #include <stdlib.h>
+
+/* To compile with a new version of SimGrid */
+#include "simgrid/msg.h"
+/* To compile with an old version of SimGrid */
+/* #include <msg/msg.h> */
+
+#include "process_descriptor.h"
+#include "simterpose.h"
+#include "sockets.h"
 
 /** @brief create and initialize a new process descriptor */
 process_descriptor_t *process_descriptor_new(const char *name, const char *argv0, pid_t pid)
