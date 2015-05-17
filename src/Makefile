@@ -4,9 +4,9 @@ OBJS = args_trace.o communication.o cputimer.o data_utils.o print_syscall.o \
        xbt_log_strace.o
 
 # To compile with a new version of SimGrid
-CFLAGS = -Wall -Werror -g -I/opt/simgrid/include/
-# To compile with a new version of SimGrid
-# CFLAGS = -Wall -Werror -g -I/opt/Simgrid/include/
+CFLAGS = -Wall -Werror -g -I/opt/Simgrid/include/
+# To compile with a old version of SimGrid
+# CFLAGS = -Wall -Werror -g -I/opt/simgrid/include/
 
 CFLAGS += -fno-common -Wunused -Wmissing-prototypes -Wmissing-declarations -Wpointer-arith -Wchar-subscripts -Wcomment
 CFLAGS += -Wformat -Wwrite-strings -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing -Wno-format-nonliteral
@@ -14,9 +14,9 @@ CFLAGS += -Wformat -Wwrite-strings -Wno-unused-function -Wno-unused-parameter -W
 CC=gcc
 
 # To compile with a new version of SimGrid
-LDFLAGS= -L/opt/simgrid/lib/ -lsimgrid -lm
-# To compile with a new version of SimGrid
-# LDFLAGS= -L/opt/Simgrid/lib/ -lsimgrid -lm
+LDFLAGS= -L/opt/Simgrid/lib/ -lsimgrid -lm
+# To compile with an old version of SimGrid
+# LDFLAGS= -L/opt/simgrid/lib/ -lsimgrid -lm
 
 all : simterpose
 
