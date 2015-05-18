@@ -1,4 +1,4 @@
-/* simterpose -- Main configurations of simterpose                       */
+/* simterpose -- Main configurations of Simterpose                       */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 

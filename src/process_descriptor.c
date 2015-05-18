@@ -7,10 +7,11 @@
 
 #include <stdlib.h>
 
-/* To compile with a new version of SimGrid */
+#ifdef new_version
 #include "simgrid/msg.h"
-/* To compile with an old version of SimGrid */
-/* #include <msg/msg.h> */
+#else
+#include <msg/msg.h>
+#endif
 
 #include "process_descriptor.h"
 #include "simterpose.h"

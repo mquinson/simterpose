@@ -5,13 +5,14 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-/* To compile with a new version of SimGrid */
+#ifdef new_version
 #include <simgrid/platf.h>
 #include <simgrid/datatypes.h>
 #include <simgrid/msg.h>
-/* To compile with an old version of SimGrid */
-/* #include <msg/datatypes.h> */
-/* #include <msg/msg.h> */
+#else
+#include <msg/datatypes.h>
+#include <msg/msg.h>
+#endif
 
 #include <arpa/inet.h>
 #include <asm-generic/errno.h>
@@ -67,11 +68,12 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
 			XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
 					arg->ret);
 
-		
-			/* To compile with an old version of SimGrid */
-			/* MSG_task_set_data_size(task, arg->ret); */
-			/* To compile with a new version of SimGrid */
+
+#ifdef new_version
 			MSG_task_set_bytes_amount(task, arg->ret);
+#else
+			MSG_task_set_data_size(task, arg->ret);
+#endif
 
 			MSG_task_set_data(task, arg->data); 
 

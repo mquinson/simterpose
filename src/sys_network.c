@@ -357,12 +357,13 @@ void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
 
 				msg_task_t task = NULL;
 				msg_error_t err = MSG_task_receive(&task, mailbox);
-
-				/* To compile with an old version of SimGrid */
-				/* arg->ret = (int) MSG_task_get_data_size(task); */
-				/* To compile with a new version of SimGrid */
-				arg->ret = (int) MSG_task_get_bytes_amount(task);
 				
+#ifdef new_version
+				arg->ret = (int) MSG_task_get_bytes_amount(task);
+#else
+				arg->ret = (int) MSG_task_get_data_size(task);
+#endif
+
 				arg->data = MSG_task_get_data(task);
 
 				if (err != MSG_OK) {
@@ -502,11 +503,11 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
 				msg_task_t task = NULL;
 				msg_error_t err = MSG_task_receive(&task, mailbox);
 
-						
-				/* To compile with an old version of SimGrid */
-				/* arg->ret = (int) MSG_task_get_data_size(task); */
-				/* To compile with a new version of SimGrid */
+/* #ifdef new_version */
 				arg->ret = (int) MSG_task_get_bytes_amount(task);
+/* #else */
+/* 				arg->ret = (int) MSG_task_get_data_size(task); */
+/* #endif */
 				
 				arg->data = MSG_task_get_data(task);
 

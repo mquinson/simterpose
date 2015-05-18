@@ -42,10 +42,11 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-/* To compile with a new version of SimGrid */
+#ifdef new_version
 #include <simgrid/msg.h>
-/* To compile with an old version of SimGrid */
-/* #include <msg/msg.h> */
+#else
+#include <msg/msg.h>
+#endif
 
 #include "syscall_data.h"
 

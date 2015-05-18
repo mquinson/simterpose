@@ -6,11 +6,11 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU LGPL) which comes with this package. */
 
-
-/* To compile with a new version of SimGrid */
+#ifdef new_version
 #include <simgrid/msg.h>
-/* To compile with an old version of SimGrid */
-/* #include <msg/msg.h> */
+#else
+#include <msg/msg.h>
+#endif
 
 #include <xbt.h>
 
