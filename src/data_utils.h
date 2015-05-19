@@ -9,6 +9,7 @@
 #define DATA_UTILS_H
 
 #include <sys/types.h>
+
 #include "simterpose.h"
 #include "sockets.h"
 

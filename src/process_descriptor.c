@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 #ifdef new_version
-#include "simgrid/msg.h"
+#include <simgrid/msg.h>
 #else
 #include <msg/msg.h>
 #endif

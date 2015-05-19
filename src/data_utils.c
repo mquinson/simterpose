@@ -5,12 +5,11 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "simterpose.h"
+#include <xbt.h>
+
 #include "data_utils.h"
 #include "process_descriptor.h"
 #include "cputimer.h"
-#include "xbt.h"
-#include "sockets.h"
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(DATA_UTILS, simterpose, "data_utils log");
 

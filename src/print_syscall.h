@@ -8,11 +8,12 @@
 #ifndef PRINT_SYSCALL_H
 #define PRINT_SYSCALL_H
 
+#include <sys/types.h>
+
 #include <xbt/log.h>
+
 #include "syscall_data.h"
 #include "process_descriptor.h"
-
-#include <sys/types.h>
 
 // The XBT log appender that we use to write our logs to the corresponding files.
 xbt_log_appender_t xbt_log_appender_strace_new(void);

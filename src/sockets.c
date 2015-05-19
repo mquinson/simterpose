@@ -6,10 +6,6 @@
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include "sockets.h"
-#include "sysdep.h"
-#include "xbt.h"
-#include "syscall_data.h"
-#include "process_descriptor.h"
 #include "simterpose.h"
 
 #define LOCAL 1

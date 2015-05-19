@@ -5,13 +5,15 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
+#include <sys/uio.h>
+
+#include <xbt/log.h>
+
 #include "args_trace.h"
 #include "sockets.h"
 #include "data_utils.h"
 #include "simterpose.h"
 #include "sysdep.h"
-#include "xbt/log.h"
-#include <sys/uio.h>
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 

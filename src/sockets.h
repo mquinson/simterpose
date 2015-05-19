@@ -21,10 +21,10 @@ struct infos_socket;
 
 #define SOCK_OPT_REUSEADDR      0x0001
 
+#include <xbt.h>
+#include <xbt/fifo.h>
 
 #include "sysdep.h"
-#include "xbt.h"
-#include "xbt/fifo.h"
 #include "syscall_data.h"
 #include "communication.h"
 #include "process_descriptor.h"

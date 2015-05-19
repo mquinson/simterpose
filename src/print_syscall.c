@@ -5,14 +5,15 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
+#include <stdio.h>
+#include </usr/include/linux/sched.h>   /* For clone flags */
+
+#include <xbt.h>
+
 #include "print_syscall.h"
 #include "sockets.h"
 #include "simterpose.h"
 #include "sysdep.h"
-#include <xbt.h>
-
-#include <stdio.h>
-#include </usr/include/linux/sched.h>   /* For clone flags */
 
 typedef struct {
 	int val;

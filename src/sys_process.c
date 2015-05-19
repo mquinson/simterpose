@@ -9,7 +9,6 @@
 
 #include "sys_process.h"
 #include "simterpose.h"
-/* #include "syscall_process.h" */
 #include "print_syscall.h"
 #include "args_trace.h"
 

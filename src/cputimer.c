@@ -5,9 +5,9 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
+#include <xbt.h>
 
 #include "cputimer.h"
-#include <xbt.h>
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(CPUTIMER, simterpose, "Retrieve the CPU time of a given thread using netlink");
 

@@ -18,10 +18,12 @@
 typedef struct comm_s comm_s;
 typedef comm_s *comm_t;
 
-#include "xbt.h"
+#include <sys/types.h>
+
+#include <xbt.h>
+
 #include "process_descriptor.h"
 #include "sockets.h"
-#include <sys/types.h>
 
 typedef struct {
 	struct infos_socket *socket;

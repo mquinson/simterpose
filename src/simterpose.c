@@ -17,13 +17,11 @@
 #include <wait.h>
 #include <errno.h>
 #include <unistd.h>
-#include <xbt.h>
 
 #include "communication.h"
 #include "cputimer.h"
 #include "data_utils.h"
 #include "print_syscall.h"
-#include "process_descriptor.h"
 #include "ptrace_utils.h"
 #include "simterpose.h"
 #include "sockets.h"

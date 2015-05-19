@@ -5,15 +5,13 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "sockets.h"
+#include <stdlib.h>
+
+#include <xbt/log.h>
+
 #include "communication.h"
-#include "xbt.h"
 #include "data_utils.h"
 #include "sysdep.h"
-
-#include <sys/types.h>
-#include <stdlib.h>
-#include "xbt/log.h"
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(COMMUNICATION, simterpose, "communication log");
 
