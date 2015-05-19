@@ -36,7 +36,6 @@ extern const char *state_names[4];
 int process_handle(process_descriptor_t * proc);
 int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc);
 void process_close_call(process_descriptor_t * proc, int fd);
-int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
-
+void syscall_default(pid_t pid, reg_s * reg, process_descriptor_t * proc);
 
 #endif

@@ -14,6 +14,7 @@
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
+/** @brief handles socket syscall at the entrance and the exit */
 void syscall_socket(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	if (proc_entering(proc))
@@ -35,7 +36,17 @@ void syscall_socket(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
 	}
 }
 
-/** @brief handle connect syscall at entrance
+/** @brief handles connect syscall at the entrance and the exit */
+void syscall_connect(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+  if (proc_entering(proc))
+    syscall_connect_pre(reg, sysarg, proc);
+  else
+    syscall_connect_post(reg, sysarg, proc);
+
+}
+
+/** @brief handles connect syscall at the entrance
  *
  * We use semaphores to synchronize client and server during a connection. */
 int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -70,7 +81,7 @@ int syscall_connect_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_
 	return PROCESS_CONTINUE;
 }
 
-/** @brief handle connect syscall at exit
+/** @brief handles connect syscall at exit
  *
  * We use semaphores to synchronize client and server during a connection. */
 void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -105,7 +116,222 @@ void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_descripto
 	file_desc = NULL;
 }
 
-/** @brief handle accept syscall at entrance
+/** @brief helper function to handle connect syscall */
+int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+	connect_arg_t arg = &(sysarg->connect);
+	XBT_DEBUG("CONNEXION: process_connect_in_call");
+	pid_t pid = proc->pid;
+	int domain = get_domain_socket(proc, arg->sockfd);
+
+	if (domain == 2)              //PF_INET
+	{
+		struct sockaddr_in *sai = &(arg->sai);
+
+		msg_host_t host;
+		int device;
+		struct in_addr in;
+
+		if (sai->sin_addr.s_addr == inet_addr("127.0.0.1")) {
+			in.s_addr = inet_addr("127.0.0.1");
+			device = PORT_LOCAL;
+			host = proc->host;
+		} else {
+			in.s_addr = get_ip_of_host(proc->host);
+			device = PORT_REMOTE;
+			host = get_host_by_ip(sai->sin_addr.s_addr);
+			if (host == NULL) {
+				arg->ret = -ECONNREFUSED;       /* ECONNREFUSED       111 Connection refused */
+				ptrace_neutralize_syscall(pid);
+				proc_outside(proc);
+				connect_arg_t arg = &(sysarg->connect);
+				ptrace_restore_syscall(pid, SYS_connect, arg->ret);
+				return 0;
+			}
+		}
+
+		//We ask for a connection on the socket
+		process_descriptor_t *acc_proc = comm_ask_connect(host, ntohs(sai->sin_port), proc, arg->sockfd, device);
+
+		//if the process is waiting for connection
+		if (acc_proc) {
+			//Now attribute ip and port to the socket.
+			int port = get_random_port(proc->host);
+
+			XBT_DEBUG("New socket %s:%d", inet_ntoa(in), port);
+			set_localaddr_port_socket(proc, arg->sockfd, inet_ntoa(in), port);
+			register_port(proc->host, port);
+			XBT_DEBUG("Free port found on host %s (%s:%d)", MSG_host_get_name(proc->host), inet_ntoa(in), port);
+		} else {
+			XBT_DEBUG("No peer found");
+			arg->ret = -ECONNREFUSED; /* ECONNREFUSED 111 Connection refused */
+			ptrace_neutralize_syscall(pid);
+			proc_outside(proc);
+			connect_arg_t arg = &(sysarg->connect);
+			ptrace_restore_syscall(pid, SYS_connect, arg->ret);
+			return 0;
+		}
+#ifndef address_translation
+		//Now we try to see if the socket is blocking of not
+		int flags = socket_get_flags(proc, arg->sockfd);
+		if (flags & O_NONBLOCK)
+			arg->ret = -EINPROGRESS;  /* EINPROGRESS  115      Operation now in progress */
+		else
+			arg->ret = 0;
+
+		ptrace_neutralize_syscall(pid);
+		connect_arg_t arg = &(sysarg->connect);
+		ptrace_restore_syscall(pid, SYS_connect, arg->ret);
+
+		//now mark the process as waiting for connection
+		if (flags & O_NONBLOCK)
+			return 0;
+
+		return 1;
+#else
+		XBT_DEBUG("connect_in address translation");
+		sys_translate_connect_in(proc, sysarg);
+		int flags = socket_get_flags(proc, arg->sockfd);
+		if (flags & O_NONBLOCK)
+			return 0;
+
+		return 1;
+#endif
+	} else
+		return 0;
+}
+
+/** @brief handles bind syscall at the entrance and the exit */
+void syscall_bind(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+if (proc_entering(proc))
+	syscall_bind_pre(reg, sysarg, proc);
+      else
+	syscall_bind_post(reg, sysarg, proc);
+      
+}
+
+/** @brief handles bind syscall at the entrance */
+void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	proc_inside(proc);
+	get_args_bind_connect(proc, reg, sysarg);
+	bind_arg_t arg = &(sysarg->bind);
+	pid_t pid = proc->pid;
+	if (socket_registered(proc, arg->sockfd)) {
+		if (socket_network(proc, arg->sockfd)) {
+
+			if (!is_port_in_use(proc->host, ntohs(arg->sai.sin_port))) {
+				XBT_DEBUG("Port %d is free", ntohs(arg->sai.sin_port));
+				register_port(proc->host, ntohs(arg->sai.sin_port));
+
+				struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+				int device = 0;
+				if (arg->sai.sin_addr.s_addr == INADDR_ANY)
+					device = (PORT_LOCAL | PORT_REMOTE);
+				else if (arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
+					device = PORT_LOCAL;
+				else
+					device = PORT_REMOTE;
+
+				set_port_on_binding(proc->host, ntohs(arg->sai.sin_port), is, device);
+
+				is->binded = 1;
+
+				set_localaddr_port_socket(proc, arg->sockfd, inet_ntoa(arg->sai.sin_addr), ntohs(arg->sai.sin_port));
+				arg->ret = 0;
+#ifdef address_translation
+				int port = ptrace_find_free_binding_port(pid);
+				XBT_DEBUG("Free port found %d", port);
+				proc_outside(proc);
+				set_real_port(proc->host, ntohs(arg->sai.sin_port), port);
+				add_new_translation(port, ntohs(arg->sai.sin_port), get_ip_of_host(proc->host));
+				if (strace_option)
+					print_bind_syscall(proc, sysarg);
+				return;
+#endif
+			} else {
+				XBT_DEBUG("Port %d isn't free", ntohs(arg->sai.sin_port));
+				arg->ret = -EADDRINUSE; /* EADDRINUSE 98 Address already in use */
+				ptrace_neutralize_syscall(pid);
+				bind_arg_t arg = &(sysarg->bind);
+				ptrace_restore_syscall(pid, SYS_bind, arg->ret);
+				proc_outside(proc);
+				if (strace_option)
+					print_bind_syscall(proc, sysarg);
+				return;
+			}
+#ifndef address_translation
+			ptrace_neutralize_syscall(pid);
+			bind_arg_t arg = &(sysarg->bind);
+			ptrace_restore_syscall(pid, SYS_bind, arg->ret);
+			proc_outside(proc);
+#endif
+		}
+	}
+	if (strace_option)
+		print_bind_syscall(proc, sysarg);
+}
+
+/** @brief print bind syscall at the exit */
+void syscall_bind_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	proc_outside(proc);
+	get_args_bind_connect(proc, reg, sysarg);
+	if (strace_option)
+		print_bind_syscall(proc, sysarg);
+}
+
+/** @brief handles listen syscall at the entrance and the exit */
+void syscall_listen(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	if (proc_entering(proc)) {
+
+		proc_inside(proc);
+#ifndef address_translation
+		get_args_listen(proc, reg, sysarg);
+		process_listen_call(proc, sysarg);
+		if (strace_option)
+			print_listen_syscall(proc, sysarg);
+#endif
+	} else {
+		proc_outside(proc);
+#ifdef address_translation
+		get_args_listen(proc, reg, sysarg);
+		process_listen_call(proc, sysarg);
+		if (strace_option)
+			print_listen_syscall(proc, sysarg);
+#else
+		THROW_IMPOSSIBLE;
+#endif
+	}
+}
+
+/** @brief helper function to handle listen syscall
+ *
+ * We create a new communication and put it in a listening state.
+ * In case of full mediation, we neutralize the real syscall and don't
+ * go to syscall_listen_post afterwards.
+ *
+ */
+void process_listen_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+	listen_arg_t arg = &(sysarg->listen);
+	struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+	comm_t comm = comm_new(is);
+	comm_set_listen(comm);
+
+#ifndef address_translation
+	pid_t pid = proc->pid;
+	arg->ret = 0;
+	ptrace_neutralize_syscall(pid);
+	arg = &(sysarg->listen);
+	ptrace_restore_syscall(pid, SYS_listen, arg->ret);
+	proc_outside(proc);
+#endif
+}
+
+/** @brief handles accept syscall at the entrance
  *
  * We use semaphores to synchronize client and server during a connection. */
 void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -245,11 +471,22 @@ void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg
 	}
 }
 
+/** @brief handles sendto syscall at the entrance and the exit */
+int syscall_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
 
+  int ret;
 
+  if (proc_entering(proc))
+    ret = syscall_sendto_pre(pid, reg, sysarg, proc);
+  else
+    ret = syscall_sendto_post(pid, reg, sysarg, proc);
+  if (ret)
+    return ret;			
 
+  return 0;
+}
 
-/** @brief handle sendto syscall at the entrance
+/** @brief handles sendto syscall at the entrance
  *
  * In case of full mediation, we retrieve the message intended to be sent by
  * the application. We send it through MSG and neutralize the real syscall.
@@ -286,7 +523,7 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
 	return PROCESS_CONTINUE;
 }
 
-/** @brief handle sendto syscall at the exit
+/** @brief handles sendto syscall at the exit
  *
  * In case of address translation we translate the arguments back (from the
  * real local address to the global simulated one) to wrong the application.
@@ -315,7 +552,18 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
 #endif
 	return PROCESS_CONTINUE;
 }
-/** @brief handle recvfrom syscall at the entrance
+
+/** @brief handles recvfrom syscall at the entrance and the exit */
+void syscall_recvfrom(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+  if (proc_entering(proc))
+    syscall_recvfrom_pre(pid, reg, sysarg, proc);
+  else
+    syscall_recvfrom_post(pid, reg, sysarg, proc);
+			
+}
+
+/** @brief handles recvfrom syscall at the entrance
  *
  * In case of address translation, we first translate the arguments (from a global
  * simulated address to a real local one) to let the kernel run the syscall. We also
@@ -423,7 +671,7 @@ void process_recvfrom_out_call(process_descriptor_t * proc)
 	free(arg->data);
 }
 
-/** @brief handle sendmsg syscall at the entrance
+/** @brief handles sendmsg syscall at the entrance
  *
  * In case of full mediation, everything is done when entering the syscall:
  *   - We retrieve the message intended to be sent by the application
@@ -473,7 +721,17 @@ int syscall_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_desc
 	}
 }
 
-/** @brief handle recvmsg syscall at the entrance
+/** @brief handles recvmsg syscall at the entrance and the exit */
+void syscall_recvmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+  if (proc_entering(proc))
+    syscall_recvmsg_pre(pid, reg, sysarg, proc);
+  else
+    syscall_recvmsg_post(pid, reg, sysarg, proc);
+
+}
+
+/** @brief handles recvmsg syscall at the entrance
  *
  * We receive the MSG task and in case of full mediation we neutralize the
  * real syscall and don't go to syscall_recvmsg_post afterwards.
@@ -549,7 +807,17 @@ void syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
 		print_recvmsg_syscall(proc, sysarg);
 }
 
-/** @brief handle shutdown syscall at the entrace if in full mediation
+/** @brief handles shutdown syscall at the entrance at the exit */
+void syscall_shutdown(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+  if (proc_entering(proc))
+    syscall_shutdown_pre(reg, sysarg, proc);
+  else
+    syscall_shutdown_post(reg, sysarg, proc);
+      
+}
+
+/** @brief handles shutdown syscall at the entrace if in full mediation
  *
  * In case of full mediation, we neutralize the real syscall and don't
  * go to syscall_shutdown_post afterwards.
@@ -573,7 +841,7 @@ void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descripto
 #endif
 }
 
-/** @brief handle shutdown syscall at the exit in case of address translation */
+/** @brief handles shutdown syscall at the exit in case of address translation */
 void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	XBT_DEBUG(" shutdown_post");
@@ -593,126 +861,18 @@ void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descript
 	if (strace_option)
 		print_shutdown_syscall(proc, sysarg);
 }
-/** @brief handle bind syscall */
-void syscall_bind_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_inside(proc);
-	get_args_bind_connect(proc, reg, sysarg);
-	bind_arg_t arg = &(sysarg->bind);
-	pid_t pid = proc->pid;
-	if (socket_registered(proc, arg->sockfd)) {
-		if (socket_network(proc, arg->sockfd)) {
 
-			if (!is_port_in_use(proc->host, ntohs(arg->sai.sin_port))) {
-				XBT_DEBUG("Port %d is free", ntohs(arg->sai.sin_port));
-				register_port(proc->host, ntohs(arg->sai.sin_port));
+/** @brief handles getpeername syscall at the entrance at the exit */
+void syscall_getpeername(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
 
-				struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-				int device = 0;
-				if (arg->sai.sin_addr.s_addr == INADDR_ANY)
-					device = (PORT_LOCAL | PORT_REMOTE);
-				else if (arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
-					device = PORT_LOCAL;
-				else
-					device = PORT_REMOTE;
-
-				set_port_on_binding(proc->host, ntohs(arg->sai.sin_port), is, device);
-
-				is->binded = 1;
-
-				set_localaddr_port_socket(proc, arg->sockfd, inet_ntoa(arg->sai.sin_addr), ntohs(arg->sai.sin_port));
-				arg->ret = 0;
-#ifdef address_translation
-				int port = ptrace_find_free_binding_port(pid);
-				XBT_DEBUG("Free port found %d", port);
-				proc_outside(proc);
-				set_real_port(proc->host, ntohs(arg->sai.sin_port), port);
-				add_new_translation(port, ntohs(arg->sai.sin_port), get_ip_of_host(proc->host));
-				if (strace_option)
-					print_bind_syscall(proc, sysarg);
-				return;
-#endif
-			} else {
-				XBT_DEBUG("Port %d isn't free", ntohs(arg->sai.sin_port));
-				arg->ret = -EADDRINUSE; /* EADDRINUSE 98 Address already in use */
-				ptrace_neutralize_syscall(pid);
-				bind_arg_t arg = &(sysarg->bind);
-				ptrace_restore_syscall(pid, SYS_bind, arg->ret);
-				proc_outside(proc);
-				if (strace_option)
-					print_bind_syscall(proc, sysarg);
-				return;
-			}
-#ifndef address_translation
-			ptrace_neutralize_syscall(pid);
-			bind_arg_t arg = &(sysarg->bind);
-			ptrace_restore_syscall(pid, SYS_bind, arg->ret);
-			proc_outside(proc);
-#endif
-		}
-	}
-	if (strace_option)
-		print_bind_syscall(proc, sysarg);
+  if (proc_entering(proc))
+    syscall_getpeername_pre(reg, sysarg, proc);
+ else
+   proc_outside(proc);
+    
 }
 
-/** @brief print bind syscall at the exit */
-void syscall_bind_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_outside(proc);
-	get_args_bind_connect(proc, reg, sysarg);
-	if (strace_option)
-		print_bind_syscall(proc, sysarg);
-}
-
-/** @brief helper function to handle listen syscall
- *
- * We create a new communication and put it in a listening state.
- * In case of full mediation, we neutralize the real syscall and don't
- * go to syscall_listen_post afterwards.
- *
- */
-void process_listen_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-	listen_arg_t arg = &(sysarg->listen);
-	struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-	comm_t comm = comm_new(is);
-	comm_set_listen(comm);
-
-#ifndef address_translation
-	pid_t pid = proc->pid;
-	arg->ret = 0;
-	ptrace_neutralize_syscall(pid);
-	arg = &(sysarg->listen);
-	ptrace_restore_syscall(pid, SYS_listen, arg->ret);
-	proc_outside(proc);
-#endif
-}
-
-void syscall_listen(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	if (proc_entering(proc)) {
-
-		proc_inside(proc);
-#ifndef address_translation
-		get_args_listen(proc, reg, sysarg);
-		process_listen_call(proc, sysarg);
-		if (strace_option)
-			print_listen_syscall(proc, sysarg);
-#endif
-	} else {
-		proc_outside(proc);
-#ifdef address_translation
-		get_args_listen(proc, reg, sysarg);
-		process_listen_call(proc, sysarg);
-		if (strace_option)
-			print_listen_syscall(proc, sysarg);
-#else
-		THROW_IMPOSSIBLE;
-#endif
-	}
-}
-
-/** @brief handle getpeername syscall */
+/** @brief handles getpeername syscall at the entrance */
 void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	proc_inside(proc);
@@ -751,7 +911,17 @@ void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
 	}
 }
 
-/** @brief handle getsockopt syscall at entrance if in full mediation */
+/** @brief handles getsockopt syscall at the entrance at the exit */
+void syscall_getsockopt(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+      if (proc_entering(proc))
+	syscall_getsockopt_pre(reg, sysarg, proc);
+      else
+	syscall_getsockopt_post(reg, sysarg, proc);
+      
+}
+
+/** @brief handles getsockopt syscall at the entrance if in full mediation */
 void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	proc_inside(proc);
@@ -795,7 +965,17 @@ void syscall_getsockopt_post(reg_s * reg, syscall_arg_u * sysarg, process_descri
 		print_getsockopt_syscall(proc, sysarg);
 }
 
-/** @brief handle setsockopt syscall at entrance if in full mediation */
+/** @brief handles setsockopt syscall at the entrance at the exit */
+void syscall_setsockopt(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+      if (proc_entering(proc))
+	syscall_setsockopt_pre(reg, sysarg, proc);
+      else
+	syscall_setsockopt_post(reg, sysarg, proc);
+      
+}
+
+/** @brief handles setsockopt syscall at the entrance if in full mediation */
 void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	proc_inside(proc);
@@ -803,7 +983,7 @@ void syscall_setsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
 	get_args_setsockopt(proc, reg, sysarg);
 	setsockopt_arg_t arg = &(sysarg->setsockopt);
 	pid_t pid = proc->pid;
-	//TODO really handle setsockopt that currently raise a warning
+	//TODO really handles setsockopt that currently raise a warning
 	arg->ret = 0;
 
 	if (arg->optname == SO_REUSEADDR)

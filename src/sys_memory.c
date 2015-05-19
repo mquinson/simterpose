@@ -14,27 +14,81 @@
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
-void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+/** @brief handles creat syscall at the entrance and the exit
+Create a file descriptor */
+void syscall_creat(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+      if (proc_entering(proc))
+	proc_inside(proc);
+      else
+	syscall_creat_post(reg, sysarg, proc);
+    
+}
+
+/** @brief handles creat syscall at the exit*/
+void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	proc_outside(proc);
+	if ((int) reg->ret >= 0) {
+		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+		file_desc->refcount = 0;
+		file_desc->fd = (int) reg->ret;
+		file_desc->proc = proc;
+		file_desc->type = FD_CLASSIC;
+		proc->fd_list[(int) reg->ret] = file_desc;
+		file_desc->refcount++;
+	}
+}
+
+/** @brief handles open syscall at the entrance and the exit
+Open a new file descriptor */
+void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
 	if (proc_entering(proc)) {
 		proc_inside(proc);
 	} else {
 		proc_outside(proc);
 
-		if (!strace_option)
-			return;
+		open_arg_t arg = &(sysarg->open);
+		arg->ret = reg->ret;
+		arg->ptr_filename = reg->arg[0];
+		arg->flags = reg->arg[1]; // FIXME arg[1] value is always 0, so we don't print actual flags for now
 
-		if (reg->arg[0])
-			stprintf(proc,"brk(%#lx)",reg->arg[0]);
-		else
-			stprintf(proc,"brk(0)");
-		stprintf_tabto(proc);
-		stprintf(proc,"= %#lx",reg->ret);
-		stprintf_eol(proc);
+		if (arg->ret >= 0) {
+			fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+			file_desc->refcount = 0;
+			file_desc->fd = arg->ret;
+			file_desc->proc = proc;
+			file_desc->type = FD_CLASSIC;
+			proc->fd_list[(int) reg->ret] = file_desc;
+			file_desc->refcount++;
+		}
+		// TODO handle flags
+		if (strace_option)
+			print_open_syscall(proc, sysarg);
 	}
 }
 
+/** @brief handles close syscall at the entrance and the exit
+Close a file descriptor */
+void syscall_close(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+	} else {
+		proc_outside(proc);
+		int fd = reg->arg[0];
+		process_close_call(proc, fd);
+		if(strace_option) {
+			stprintf(proc,"close(%d)",fd);
+			stprintf_tabto(proc);
+			stprintf(proc,"= %ld",reg->ret);
+			stprintf_eol(proc);
+		}
+	}
+}
 
-/** @brief handle read syscall at the entrance
+/** @brief handle read syscall at the entrance and the exit
  *
  * We receive the MSG task and in case of full mediation we neutralize the
  * real syscall and don't go to syscall_read_post afterwards.
@@ -143,13 +197,13 @@ void process_read_out_call(process_descriptor_t * proc)
 	}
 }
 
-/** @brief handle write syscall at the entrance
+/** @brief handle write syscall at the entrance and the exit
  *
- * At entrance, in case of full mediation and if the socket is registered we retrieve the message intended
+ * At the entrance, in case of full mediation and if the socket is registered we retrieve the message intended
  * to be written by the application. We send it through MSG and neutralize the real syscall.
  * We don't go to syscall_write_post afterwards.
  *
- * At exit, we send the MSG task in order to return control to the MSG process reading the message
+ * At the exit, we send the MSG task in order to return control to the MSG process reading the message
  */
 int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
@@ -231,53 +285,159 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
 	}
 }
 
-/** @brief open a new file descriptor */
-void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+/** @brief handles dup2 syscall at the entrance and the exit */
+void syscall_dup2(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+  if (proc_entering(proc))
+    proc_inside(proc);
+  else
+    syscall_dup2_post(reg, sysarg, proc);
+
+}
+
+/** @brief handles dup2 at the exit
+Update the table of file descriptors, and also the pipe objects if needed */
+void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+{
+	proc_outside(proc);
+	unsigned int oldfd = (int) reg->arg[0];
+	unsigned int newfd = (int) reg->arg[1];
+
+	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
+	file_desc->refcount++;
+	proc->fd_list[newfd]->refcount--;
+	process_close_call(proc, newfd);
+	proc->fd_list[newfd] = file_desc;
+	file_desc->refcount++;
+
+	if (strace_option)
+		fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
+
+	if (file_desc->type == FD_PIPE) {
+		pipe_t *pipe = file_desc->pipe;
+
+		// look for the fd in the read end of the pipe
+		xbt_dynar_t read_end = pipe->read_end;
+		unsigned int cpt_in;
+		pipe_end_t end_in;
+		xbt_dynar_foreach(read_end, cpt_in, end_in) {
+			if (end_in->fd == oldfd && end_in->proc == proc) {
+				pipe_end_t dup_end = malloc(sizeof(pipe_end_s));
+				dup_end->fd = newfd;
+				dup_end->proc = end_in->proc;
+				xbt_dynar_push(read_end, &dup_end);
+			}
+		}
+
+		// look for the fd in the write end of the pipe
+		xbt_dynar_t write_end = pipe->write_end;
+		unsigned int cpt_out;
+		pipe_end_t end_out;
+		xbt_dynar_foreach(write_end, cpt_out, end_out) {
+			if (end_out->fd == oldfd && end_out->proc == proc) {
+				pipe_end_t dup_end = malloc(sizeof(pipe_end_s));
+				dup_end->fd = newfd;
+				dup_end->proc = end_out->proc;
+				xbt_dynar_push(write_end, &dup_end);
+			}
+		}
+	}
+}
+
+/** @brief handles fcntl syscall at the entrance and the exit */
+void syscall_fcntl(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	if (proc_entering(proc)) {
 		proc_inside(proc);
-	} else {
-		proc_outside(proc);
-
-		open_arg_t arg = &(sysarg->open);
-		arg->ret = reg->ret;
-		arg->ptr_filename = reg->arg[0];
-		arg->flags = reg->arg[1]; // FIXME arg[1] value is always 0, so we don't print actual flags for now
-
-		if (arg->ret >= 0) {
-			fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
-			file_desc->refcount = 0;
-			file_desc->fd = arg->ret;
-			file_desc->proc = proc;
-			file_desc->type = FD_CLASSIC;
-			proc->fd_list[(int) reg->ret] = file_desc;
-			file_desc->refcount++;
-		}
-		// TODO handle flags
+		XBT_DEBUG("fcntl pre");
+#ifndef address_translation
+		get_args_fcntl(proc, reg, sysarg);
+		process_fcntl_call(proc, sysarg);
 		if (strace_option)
-			print_open_syscall(proc, sysarg);
-	}
-}
-
-
-void syscall_close(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	if (proc_entering(proc)) {
-		proc_inside(proc);
+			print_fcntl_syscall(proc, sysarg);
+		sleep(4);
+#endif
 	} else {
 		proc_outside(proc);
-		int fd = reg->arg[0];
-		process_close_call(proc, fd);
-		if(strace_option) {
-			stprintf(proc,"close(%d)",fd);
-			stprintf_tabto(proc);
-			stprintf(proc,"= %ld",reg->ret);
-			stprintf_eol(proc);
-		}
+		XBT_DEBUG("fcntl post");
+		get_args_fcntl(proc, reg, sysarg);
+		if (strace_option)
+			print_fcntl_syscall(proc, sysarg);
+#ifdef address_translation
+		process_fcntl_call(proc, sysarg);
+#endif
 	}
 }
 
-/** @brief handle poll syscall */
+/** @brief helper function to handle fcntl syscall */
+// TODO: handles the other flags
+void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+	XBT_DEBUG("process fcntl");
+	fcntl_arg_t arg = &(sysarg->fcntl);
+	switch (arg->cmd) {
+
+	case F_DUPFD:
+		XBT_WARN("F_DUPFD unhandled");
+		break;
+
+	case F_DUPFD_CLOEXEC:
+		XBT_WARN("F_DUPFD_CLOEXEC unhandled");
+		break;
+
+	case F_GETFD:
+#ifndef address_translation
+		arg->ret = proc->fd_list[arg->fd]->flags;
+#endif
+		break;
+
+	case F_SETFD:
+		XBT_DEBUG("SETFD %d",arg->fd);
+		proc->fd_list[arg->fd]->flags = arg->arg;
+		break;
+
+	case F_GETFL:
+		XBT_WARN("F_GETFL unhandled");
+		break;
+
+	case F_SETFL:
+		socket_set_flags(proc, arg->fd, arg->arg);
+		break;
+
+	case F_SETLK:
+		XBT_WARN("F_SETLK unhandled");
+		break;
+
+	case F_SETLKW:
+		XBT_WARN("F_SETLKW unhandled");
+		break;
+
+	case F_GETLK:
+		XBT_WARN("F_GETLK unhandled");
+		break;
+
+	default:
+		XBT_WARN("Unknown fcntl flag");
+		break;
+	}
+#ifndef address_translation
+	ptrace_neutralize_syscall(proc->pid);
+	ptrace_restore_syscall(proc->pid, SYS_fcntl, arg->ret);
+	proc_outside(proc);
+#endif
+}
+
+/** @brief handles poll syscall at the entrance and the exit */
+void syscall_poll(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+  if (proc_entering(proc))
+    syscall_poll_pre(reg, sysarg, proc);
+  else
+    syscall_poll_post(reg, sysarg, proc);
+
+}
+
+/** @brief handles poll syscall at the entrance */
 // TODO: doesn't work. We do irecv on each file descriptor and then a waitany
 void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
@@ -343,7 +503,7 @@ void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t 
 	}
 }
 
-/** @brief print poll syscall at the exit */
+/** @brief prints poll syscall at the exit */
 void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	proc_outside(proc);
@@ -352,65 +512,17 @@ void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
 		print_poll_syscall(proc, sysarg);
 }
 
-/** @brief create a SimTerpose pipe and the corresponding file descriptors */
-void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_outside(proc);
-	get_args_pipe(proc, reg, sysarg);
-	pipe_arg_t arg = &(sysarg->pipe);
+/** @brief handles select syscall at the entrance and the exit */
+void syscall_select(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
 
-	// TODO: add gestion of O_NONBLOCK and O_CLOEXEC flags
+  if (proc_entering(proc))
+    syscall_select_pre(reg, sysarg, proc);
+  else
+    proc_outside(proc);
 
-	if (arg->ret == 0) {
-		// we create the pipe
-		int p0 = *arg->filedes;
-		int p1 = *(arg->filedes + 1);
-
-		pipe_end_t in = malloc(sizeof(pipe_end_s));
-		in->fd = p0;
-		in->proc = proc;
-
-		pipe_end_t out = malloc(sizeof(pipe_end_s));
-		out->fd = p1;
-		out->proc = proc;
-
-		xbt_dynar_t end_in = xbt_dynar_new(sizeof(pipe_end_t), NULL);
-		xbt_dynar_t end_out = xbt_dynar_new(sizeof(pipe_end_t), NULL);
-
-		xbt_dynar_push(end_in, &in);
-		xbt_dynar_push(end_out, &out);
-
-		pipe_t *pipe = malloc(sizeof(pipe_t));
-		pipe->read_end = end_in;
-		pipe->write_end = end_out;
-
-		// we create the fd
-		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
-		file_desc->refcount = 0;
-		file_desc->fd = p0;
-		file_desc->proc = proc;
-		file_desc->type = FD_PIPE;
-		file_desc->pipe = pipe;
-		proc->fd_list[p0] = file_desc;
-		file_desc->refcount++;
-
-		file_desc = malloc(sizeof(fd_descriptor_t));
-		file_desc->refcount = 0;
-		file_desc->fd = p1;
-		file_desc->proc = proc;
-		file_desc->type = FD_PIPE;
-		file_desc->pipe = pipe;
-		proc->fd_list[p1] = file_desc;
-		file_desc->refcount++;
-
-		if (strace_option)
-			fprintf(stderr, "[%d] pipe([%d,%d]) = %d \n", proc->pid, p0, p1, arg->ret);
-	} else {
-		if (strace_option)
-			fprintf(stderr, "[%d] pipe = %d \n", proc->pid, arg->ret);
-	}
 }
 
+/** @brief handles select syscall at the entrance */
 // TODO
 void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
@@ -473,147 +585,107 @@ void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_
 	}
 }
 
-/** @brief handle dup2 by updating the table of file descriptors, and also the pipe objects if needed */
-void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+/** @brief handles pipe syscall at the entrance and the exit */
+void syscall_pipe(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+
+  if (proc_entering(proc))
+    proc_inside(proc);
+  else
+    syscall_pipe_post(reg, sysarg, proc);
+
+}
+ 
+/** @brief handles pipe syscall at the entrance
+Create a SimTerpose pipe and the corresponding file descriptors */
+void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
 {
 	proc_outside(proc);
-	unsigned int oldfd = (int) reg->arg[0];
-	unsigned int newfd = (int) reg->arg[1];
+	get_args_pipe(proc, reg, sysarg);
+	pipe_arg_t arg = &(sysarg->pipe);
 
-	fd_descriptor_t *file_desc = proc->fd_list[oldfd];
-	file_desc->refcount++;
-	proc->fd_list[newfd]->refcount--;
-	process_close_call(proc, newfd);
-	proc->fd_list[newfd] = file_desc;
-	file_desc->refcount++;
+	// TODO: add gestion of O_NONBLOCK and O_CLOEXEC flags
 
-	if (strace_option)
-		fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
+	if (arg->ret == 0) {
+		// we create the pipe
+		int p0 = *arg->filedes;
+		int p1 = *(arg->filedes + 1);
 
-	if (file_desc->type == FD_PIPE) {
-		pipe_t *pipe = file_desc->pipe;
+		pipe_end_t in = malloc(sizeof(pipe_end_s));
+		in->fd = p0;
+		in->proc = proc;
 
-		// look for the fd in the read end of the pipe
-		xbt_dynar_t read_end = pipe->read_end;
-		unsigned int cpt_in;
-		pipe_end_t end_in;
-		xbt_dynar_foreach(read_end, cpt_in, end_in) {
-			if (end_in->fd == oldfd && end_in->proc == proc) {
-				pipe_end_t dup_end = malloc(sizeof(pipe_end_s));
-				dup_end->fd = newfd;
-				dup_end->proc = end_in->proc;
-				xbt_dynar_push(read_end, &dup_end);
-			}
-		}
+		pipe_end_t out = malloc(sizeof(pipe_end_s));
+		out->fd = p1;
+		out->proc = proc;
 
-		// look for the fd in the write end of the pipe
-		xbt_dynar_t write_end = pipe->write_end;
-		unsigned int cpt_out;
-		pipe_end_t end_out;
-		xbt_dynar_foreach(write_end, cpt_out, end_out) {
-			if (end_out->fd == oldfd && end_out->proc == proc) {
-				pipe_end_t dup_end = malloc(sizeof(pipe_end_s));
-				dup_end->fd = newfd;
-				dup_end->proc = end_out->proc;
-				xbt_dynar_push(write_end, &dup_end);
-			}
-		}
-	}
-}
+		xbt_dynar_t end_in = xbt_dynar_new(sizeof(pipe_end_t), NULL);
+		xbt_dynar_t end_out = xbt_dynar_new(sizeof(pipe_end_t), NULL);
 
-void syscall_fcntl(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	if (proc_entering(proc)) {
-		proc_inside(proc);
-		XBT_DEBUG("fcntl pre");
-#ifndef address_translation
-		get_args_fcntl(proc, reg, sysarg);
-		process_fcntl_call(proc, sysarg);
-		if (strace_option)
-			print_fcntl_syscall(proc, sysarg);
-		sleep(4);
-#endif
-	} else {
-		proc_outside(proc);
-		XBT_DEBUG("fcntl post");
-		get_args_fcntl(proc, reg, sysarg);
-		if (strace_option)
-			print_fcntl_syscall(proc, sysarg);
-#ifdef address_translation
-		process_fcntl_call(proc, sysarg);
-#endif
-	}
-}
+		xbt_dynar_push(end_in, &in);
+		xbt_dynar_push(end_out, &out);
 
-/** @brief helper function to handle fcntl syscall */
-// TODO: handle the other flags
-void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-	XBT_DEBUG("process fcntl");
-	fcntl_arg_t arg = &(sysarg->fcntl);
-	switch (arg->cmd) {
+		pipe_t *pipe = malloc(sizeof(pipe_t));
+		pipe->read_end = end_in;
+		pipe->write_end = end_out;
 
-	case F_DUPFD:
-		XBT_WARN("F_DUPFD unhandled");
-		break;
-
-	case F_DUPFD_CLOEXEC:
-		XBT_WARN("F_DUPFD_CLOEXEC unhandled");
-		break;
-
-	case F_GETFD:
-#ifndef address_translation
-		arg->ret = proc->fd_list[arg->fd]->flags;
-#endif
-		break;
-
-	case F_SETFD:
-		XBT_DEBUG("SETFD %d",arg->fd);
-		proc->fd_list[arg->fd]->flags = arg->arg;
-		break;
-
-	case F_GETFL:
-		XBT_WARN("F_GETFL unhandled");
-		break;
-
-	case F_SETFL:
-		socket_set_flags(proc, arg->fd, arg->arg);
-		break;
-
-	case F_SETLK:
-		XBT_WARN("F_SETLK unhandled");
-		break;
-
-	case F_SETLKW:
-		XBT_WARN("F_SETLKW unhandled");
-		break;
-
-	case F_GETLK:
-		XBT_WARN("F_GETLK unhandled");
-		break;
-
-	default:
-		XBT_WARN("Unknown fcntl flag");
-		break;
-	}
-#ifndef address_translation
-	ptrace_neutralize_syscall(proc->pid);
-	ptrace_restore_syscall(proc->pid, SYS_fcntl, arg->ret);
-	proc_outside(proc);
-#endif
-}
-
-/** @brief create a file descriptor */
-void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-	proc_outside(proc);
-	if ((int) reg->ret >= 0) {
+		// we create the fd
 		fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
 		file_desc->refcount = 0;
-		file_desc->fd = (int) reg->ret;
+		file_desc->fd = p0;
 		file_desc->proc = proc;
-		file_desc->type = FD_CLASSIC;
-		proc->fd_list[(int) reg->ret] = file_desc;
+		file_desc->type = FD_PIPE;
+		file_desc->pipe = pipe;
+		proc->fd_list[p0] = file_desc;
 		file_desc->refcount++;
+
+		file_desc = malloc(sizeof(fd_descriptor_t));
+		file_desc->refcount = 0;
+		file_desc->fd = p1;
+		file_desc->proc = proc;
+		file_desc->type = FD_PIPE;
+		file_desc->pipe = pipe;
+		proc->fd_list[p1] = file_desc;
+		file_desc->refcount++;
+
+		if (strace_option)
+			fprintf(stderr, "[%d] pipe([%d,%d]) = %d \n", proc->pid, p0, p1, arg->ret);
+	} else {
+		if (strace_option)
+			fprintf(stderr, "[%d] pipe = %d \n", proc->pid, arg->ret);
 	}
 }
+
+/** @brief handles brk syscall at the entrance and the exit */
+void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+	if (proc_entering(proc)) {
+		proc_inside(proc);
+	} else {
+		proc_outside(proc);
+
+		if (!strace_option)
+			return;
+
+		if (reg->arg[0])
+			stprintf(proc,"brk(%#lx)",reg->arg[0]);
+		else
+			stprintf(proc,"brk(0)");
+		stprintf_tabto(proc);
+		stprintf(proc,"= %#lx",reg->ret);
+		stprintf_eol(proc);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
