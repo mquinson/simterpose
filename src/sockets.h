@@ -31,23 +31,23 @@ struct infos_socket;
 
 
 struct recv_information {
-	xbt_fifo_t data_fifo;
-	xbt_fifo_t recv_task;
-	int quantity_recv;
+  xbt_fifo_t data_fifo;
+  xbt_fifo_t recv_task;
+  int quantity_recv;
 };
 
 struct infos_socket {
-	fd_descriptor_t fd;
-	comm_t comm;                  // points to the communication the socket is involved in
-	msg_host_t host;
-	int domain;
-	int protocol;
-	unsigned int ip_local;
-	int port_local;
-	int flags;
-	int option;
-	int binded;
-	int ref_nb;                   // reference counting
+  fd_descriptor_t fd;
+  comm_t comm;                  // points to the communication the socket is involved in
+  msg_host_t host;
+  int domain;
+  int protocol;
+  unsigned int ip_local;
+  int port_local;
+  int flags;
+  int option;
+  int binded;
+  int ref_nb;                   // reference counting
 };
 
 void init_socket_gestion(void);

@@ -1,4 +1,5 @@
-/* data utils -- Contains simterpose global datas such as hosts and ports  */
+/* data utils -- Contains simterpose global datas such as hosts and
+   ports */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 

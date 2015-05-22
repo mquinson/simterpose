@@ -1,4 +1,4 @@
-/* sysdep - All the good includes that we need                                */
+/* sysdep - All the good includes that we need */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.            */
 

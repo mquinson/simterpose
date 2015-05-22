@@ -1,4 +1,5 @@
-/* communication --  Functions to deal with accept, connect and communications between processes */
+/* communication -- Functions to deal with accept, connect and
+   communications between processes */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
@@ -26,25 +27,25 @@ typedef comm_s *comm_t;
 #include "sockets.h"
 
 typedef struct {
-	struct infos_socket *socket;
-	recv_information *recv;
+  struct infos_socket *socket;
+  recv_information *recv;
 } comm_info;
 
 
 struct comm_s {
-	unsigned int remote_ip;
-	int remote_port;
-	comm_info info[2];
-	int state;
-	xbt_dynar_t conn_wait;
-	int ref_nb;                   // reference counting
+  unsigned int remote_ip;
+  int remote_port;
+  comm_info info[2];
+  int state;
+  xbt_dynar_t conn_wait;
+  int ref_nb;                   // reference counting
 };
 
 typedef struct task_comm_info task_comm_info;
 
 struct task_comm_info {
-	msg_task_t task;
-	msg_host_t sender_host;
+  msg_task_t task;
+  msg_host_t sender_host;
 };
 
 
@@ -93,7 +94,7 @@ void comm_get_ip_port_accept(struct infos_socket *is, struct sockaddr_in *in);
 
 
 msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, struct infos_socket *is, double amount,
-		msg_host_t sender, msg_host_t receiver);
+					  msg_host_t sender, msg_host_t receiver);
 
 void send_task(msg_host_t receiver, msg_task_t task);
 

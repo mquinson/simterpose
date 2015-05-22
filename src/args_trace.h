@@ -1,4 +1,5 @@
-/* args_trace -- Retrieve the syscall arguments from registers, and build new ones   */
+/* args_trace -- Retrieve the syscall arguments from registers, and
+   build new ones */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 

@@ -1,4 +1,5 @@
-/* print_syscall --  Functions to print a strace-like log of syscalls */
+/* print_syscall -- Functions to print a strace-like log of
+   syscalls */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 

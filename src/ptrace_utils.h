@@ -1,4 +1,4 @@
-/* ptrace -- Helpers functions to not call ptrace manually            */
+/* ptrace -- Helpers functions to not call ptrace manually */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
@@ -12,9 +12,9 @@
 #include <sys/types.h>
 
 typedef struct {
-	unsigned long reg_orig;
-	unsigned long ret;
-	unsigned long arg[6];
+  unsigned long reg_orig;
+  unsigned long ret;
+  unsigned long arg[6];
 } reg_s;
 
 extern const char *syscall_list[];

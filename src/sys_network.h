@@ -1,4 +1,4 @@
-/* sys_network -- Handlers every network-related syscalls                       */
+/* sys_network -- Handlers every network-related syscalls */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 

@@ -1,4 +1,4 @@
-/* cputimer -- Retrieve the cputime of a given thread using netlink        */
+/* cputimer -- Retrieve the cputime of a given thread using netlink */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.         */
 
