@@ -27,7 +27,7 @@ EOF
 # Allow to run under valgrind or gdb easily
 runner=$2
 
-sudo LD_LIBRARY_PATH=/opt/Simgrid/lib/ $runner ../src/simterpose -s platform.xml deploy_temp.xml --log=simterpose.:debug
+sudo LD_LIBRARY_PATH=/opt/Simgrid/lib/ $runner ../src/simterpose -s platform.xml deploy_temp.xml  #--log=simterpose.:debug
 #--log=msg.:debug  --log=simix_synchro.:debug # --log=simix.:debug   #--log=root.fmt:"'%l: [%c/%p]: %m%n'"  #--log=xbt_dyn.:debug
 
 rm deploy_temp.xml
