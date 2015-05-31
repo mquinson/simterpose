@@ -122,7 +122,7 @@ void comm_close(struct infos_socket *is)
     if (!is->ref_nb)
       free(is);
     else
-      XBT_ERROR("info_socket refcount = %d", is->ref_nb);
+      XBT_ERROR("Don't free the info_socket since its refcount is still %d", is->ref_nb);
     comm_destroy(comm);
   } else if (comm->state == COMM_CLOSED) {
     struct infos_socket *is = comm->info[0].socket;

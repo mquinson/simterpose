@@ -105,7 +105,7 @@ int main(int argc, char **argv)
 
   struct timespec end_tvcl;
   clock_gettime(CLOCK_REALTIME, &end_tvcl);
-  fprintf(stderr, "Server exiting after %d messages (time: %d; clock_gettime: %f)\n",
+  fprintf(stderr, "OK: Server exiting after %d messages (time: %d; clock_gettime: %f)\n",
           msg_count, (int)time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
 
   return 0;

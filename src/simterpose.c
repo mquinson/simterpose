@@ -184,8 +184,7 @@ int simterpose_process_runner(int argc, char *argv[])
 
     // End of cleanups; we are in the child
     if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
-      perror("ptrace traceme");
-      exit(1);
+      xbt_die("Error when calling ptrace(TRACEME). Bailing out! (%s)", strerror(errno));
     }
 
     // Ask Linux to not randomize our stacks
@@ -206,8 +205,7 @@ int simterpose_process_runner(int argc, char *argv[])
 
     execv(cmdline_array[0], cmdline_array);     // If successful, the execution flow does not go any further here
 
-    fprintf(stderr, "Error while starting %s: %s (full cmdline: %s)", cmdline_array[0], strerror(errno), cmdline_str);
-    exit(1);
+    xbt_die("Error while starting %s: %s (full cmdline: %s)", cmdline_array[0], strerror(errno), cmdline_str);
   }
   // We are still in simterpose, so we are the thread that is the representative of the external process
   MSG_process_set_data(MSG_process_self(),
@@ -224,8 +222,7 @@ int simterpose_process_runner(int argc, char *argv[])
 	     PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE | PTRACE_O_TRACEEXEC |
 	     PTRACE_O_TRACESYSGOOD)
       == -1) {
-    perror("Error setoptions");
-    exit(1);
+	xbt_die("Error in setoptions, bailing out now. (%s)",strerror(errno));
   }
 
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());

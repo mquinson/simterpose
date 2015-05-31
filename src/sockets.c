@@ -203,8 +203,7 @@ static int get_addr_port(int type, int num_sock, struct sockaddr_in *addr_port, 
   else                          // RAW
     file = fopen("/proc/net/raw", "r");
   if (file == NULL) {
-    perror("Open file /proc/net/...");
-    exit(1);
+    xbt_die("ERROR while opening file /proc/net/???. Bailing out now (%s)",strerror(errno));
   }
   char buff[512];
   char *loc_addr_hex;
