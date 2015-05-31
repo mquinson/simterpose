@@ -7,12 +7,7 @@
 
 #include <stdlib.h>
 
-#ifdef new_version
 #include <simgrid/msg.h>
-#else
-#include <msg/msg.h>
-#endif
-
 #include "process_descriptor.h"
 #include "simterpose.h"
 #include "sockets.h"

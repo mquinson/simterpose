@@ -7,12 +7,7 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU LGPL) which comes with this package. */
 
-#ifdef new_version
 #include <simgrid/msg.h>
-#else
-#include <msg/msg.h>
-#endif
-
 #include <xbt.h>
 
 #include "print_syscall.h"

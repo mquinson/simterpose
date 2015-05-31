@@ -6,11 +6,7 @@
  * under the terms of the license (GNU LGPLv2) which comes with this package. */
 
 
-#ifdef new_version
 #include <simgrid/msg.h>
-#else
-#include <msg/msg.h>
-#endif
 
 #include <sys/ptrace.h>
 #include <sys/personality.h>
@@ -26,7 +22,6 @@
 #include "simterpose.h"
 #include "sockets.h"
 #include "syscall_process.h"
-
 
 
 XBT_LOG_NEW_DEFAULT_CATEGORY(simterpose, "Main simterpose log channel");

@@ -115,12 +115,7 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
       msg_task_t task = NULL;
       msg_error_t err = MSG_task_receive(&task, mailbox);
 			
-#ifdef new_version
       arg->ret = (int) MSG_task_get_bytes_amount(task);
-#else
-      arg->ret = (int) MSG_task_get_data_size(task);
-#endif
-
       arg->data = MSG_task_get_data(task);
 
       if (err != MSG_OK) {
@@ -157,12 +152,7 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
       msg_task_t task = NULL;
       MSG_task_receive(&task, buff);
 
-#ifdef new_version
       arg->ret = (int) MSG_task_get_bytes_amount(task);
-#else
-      arg->ret = (int) MSG_task_get_data_size(task);
-#endif
-			
       arg->data = MSG_task_get_data(task);
       XBT_WARN("hosts: %s received from pipe %d (size: %d)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
 

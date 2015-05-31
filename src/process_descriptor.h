@@ -42,12 +42,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#ifdef new_version
 #include <simgrid/msg.h>
-#else
-#include <msg/msg.h>
-#endif
-
 #include "syscall_data.h"
 
 typedef struct process_descriptor process_descriptor_t;
