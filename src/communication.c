@@ -33,7 +33,7 @@ void comm_exit()
 /** @brief create a new communication object and add it to the list */
 comm_t comm_new(struct infos_socket *socket)
 {
-  comm_t res = malloc(sizeof(comm_s));
+  comm_t res = xbt_new0(comm_s,1);
 
   socket->comm = res;
   res->info[0].socket = socket;
@@ -346,13 +346,13 @@ msg_task_t create_send_communication_task(process_descriptor_t * proc_sender, st
   char buff[256];
   sprintf(buff, "%s send", proc_sender->name);
 
-  msg_host_t *work_list = malloc(sizeof(msg_host_t) * 2);
+  msg_host_t *work_list = xbt_new0(msg_host_t, 2);
   work_list[0] = sender;
   work_list[1] = receiver;
 
   msg_task_t task = MSG_parallel_task_create(buff, 2, work_list, 0, &amount, &(proc_sender->pid));
 
-  task_comm_info *temp = malloc(sizeof(task_comm_info));
+  task_comm_info *temp = xbt_new0(task_comm_info,1);
   temp->task = task;
   temp->sender_host = proc_sender->host;
 

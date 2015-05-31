@@ -15,9 +15,9 @@
 /** @brief create and initialize a new process descriptor */
 process_descriptor_t *process_descriptor_new(const char *name, const char *argv0, pid_t pid)
 {
-  process_descriptor_t *result = malloc(sizeof(process_descriptor_t));
-  result->name = strdup(name);
-  result->fd_list = malloc(sizeof(fd_descriptor_t *) * MAX_FD);
+  process_descriptor_t *result = xbt_malloc0(sizeof(process_descriptor_t));
+  result->name = xbt_strdup(name);
+  result->fd_list = xbt_new0(fd_descriptor_t *, MAX_FD);
   result->pid = pid;
   result->in_syscall = 0;
 
@@ -26,7 +26,7 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
     result->fd_list[i] = NULL;
 
   // Initialize stdin, stdout, stderr
-  fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+  fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
   file_desc->refcount = 0;
   file_desc->type = FD_STDIN;
   file_desc->proc = result;
@@ -35,7 +35,7 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
   result->fd_list[0] = file_desc;
   file_desc->refcount++;
 
-  file_desc = malloc(sizeof(fd_descriptor_t));
+  file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
   file_desc->refcount = 0;
   file_desc->type = FD_STDOUT;
   file_desc->proc = result;
@@ -44,7 +44,7 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
   result->fd_list[1] = file_desc;
   file_desc->refcount++;
 
-  file_desc = malloc(sizeof(fd_descriptor_t));
+  file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
   file_desc->refcount = 0;
   file_desc->type = FD_STDERR;
   file_desc->proc = result;

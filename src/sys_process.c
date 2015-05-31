@@ -61,7 +61,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     // do NOT affect the parent unless CLONE_FILES is set
     int i;
     for (i = 0; i < MAX_FD; ++i) {
-      clone->fd_list[i] = malloc(sizeof(fd_descriptor_t));
+      clone->fd_list[i] = xbt_malloc0(sizeof(fd_descriptor_t));
       clone->fd_list[i]->proc = clone;
       clone->fd_list[i]->refcount = 0;
       if (proc->fd_list[i] != NULL) {
@@ -85,7 +85,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 	  //FIXME we still add pipes twice sometimes
 	  if (end_in->proc != clone && end_in->proc->pid != clone->pid) {
 	    xbt_assert(end_in != NULL);
-	    pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
+	    pipe_end_t clone_end = xbt_malloc0(sizeof(pipe_end_s));
 	    clone_end->fd = end_in->fd;
 	    clone_end->proc = clone;
 	    xbt_dynar_push(read_end, &clone_end);
@@ -100,7 +100,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 	  // we have to make sure we don't add endlessly the fd from the clone
 	  if (end_out->proc != clone && end_out->proc->pid != clone->pid) {
 	    xbt_assert(end_out != NULL);
-	    pipe_end_t clone_end = malloc(sizeof(pipe_end_s));
+	    pipe_end_t clone_end = xbt_malloc0(sizeof(pipe_end_s));
 	    clone_end->fd = end_out->fd;
 	    clone_end->proc = clone;
 	    xbt_dynar_push(write_end, &clone_end);

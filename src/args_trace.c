@@ -122,7 +122,7 @@ void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
   arg->optlen = reg->arg[4];
 
 #ifndef address_translation
-  arg->optval = malloc(arg->optlen);
+  arg->optval = xbt_new0(char, arg->optlen);
   ptrace_cpy(proc->pid, arg->optval, (void *) arg->dest, arg->optlen, "setsockopt");
 #endif
 }
@@ -166,7 +166,7 @@ void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
     arg->is_addr = 0;
 
 #ifndef address_translation
-  arg->data = malloc(arg->len);
+  arg->data = xbt_new0(char, arg->len);
   ptrace_cpy(pid, arg->data, (void *) reg->arg[1], arg->len, "sendto");
 #endif
 
@@ -265,7 +265,7 @@ void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
   arg->timeout = reg->arg[2] / 1000.;     //the timeout is in millisecond
 
   if (src != 0) {
-    arg->fd_list = malloc(arg->nbfd * sizeof(struct pollfd));
+    arg->fd_list = xbt_new0(struct pollfd, arg->nbfd);
     ptrace_cpy(child, arg->fd_list, src, arg->nbfd * sizeof(struct pollfd), "poll");
 
   } else
@@ -277,7 +277,7 @@ void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
 {
   pipe_arg_t arg = &(sysarg->pipe);
   arg->ret = reg->ret;
-  arg->filedes = malloc(2 * sizeof(int));
+  arg->filedes = xbt_new0(int, 2);
   ptrace_cpy(proc->pid, arg->filedes, (void *) reg->arg[0], 2 * sizeof(int), "pipe");
 }
 
@@ -316,7 +316,7 @@ void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
   pid_t pid = proc->pid;
   if (socket_registered(proc, arg->fd)) {
     if (socket_network(proc, arg->fd)) {
-      arg->data = malloc(arg->count);
+      arg->data = xbt_new0(char, arg->count);
       ptrace_cpy(pid, arg->data, (void *) reg->arg[1], arg->count, "write");
     }
   }

@@ -30,7 +30,7 @@ void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_
 {
   proc_outside(proc);
   if ((int) reg->ret >= 0) {
-    fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+    fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->refcount = 0;
     file_desc->fd = (int) reg->ret;
     file_desc->proc = proc;
@@ -55,7 +55,7 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     arg->flags = reg->arg[1]; // FIXME arg[1] value is always 0, so we don't print actual flags for now
 
     if (arg->ret >= 0) {
-      fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+      fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
       file_desc->refcount = 0;
       file_desc->fd = arg->ret;
       file_desc->proc = proc;
@@ -312,7 +312,7 @@ void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     pipe_end_t end_in;
     xbt_dynar_foreach(read_end, cpt_in, end_in) {
       if (end_in->fd == oldfd && end_in->proc == proc) {
-	pipe_end_t dup_end = malloc(sizeof(pipe_end_s));
+	pipe_end_t dup_end = xbt_malloc0(sizeof(pipe_end_s));
 	dup_end->fd = newfd;
 	dup_end->proc = end_in->proc;
 	xbt_dynar_push(read_end, &dup_end);
@@ -325,7 +325,7 @@ void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     pipe_end_t end_out;
     xbt_dynar_foreach(write_end, cpt_out, end_out) {
       if (end_out->fd == oldfd && end_out->proc == proc) {
-	pipe_end_t dup_end = malloc(sizeof(pipe_end_s));
+	pipe_end_t dup_end = xbt_malloc0(sizeof(pipe_end_s));
 	dup_end->fd = newfd;
 	dup_end->proc = end_out->proc;
 	xbt_dynar_push(write_end, &dup_end);
@@ -600,11 +600,11 @@ void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     int p0 = *arg->filedes;
     int p1 = *(arg->filedes + 1);
 
-    pipe_end_t in = malloc(sizeof(pipe_end_s));
+    pipe_end_t in = xbt_malloc0(sizeof(pipe_end_s));
     in->fd = p0;
     in->proc = proc;
 
-    pipe_end_t out = malloc(sizeof(pipe_end_s));
+    pipe_end_t out = xbt_malloc0(sizeof(pipe_end_s));
     out->fd = p1;
     out->proc = proc;
 
@@ -614,12 +614,12 @@ void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     xbt_dynar_push(end_in, &in);
     xbt_dynar_push(end_out, &out);
 
-    pipe_t *pipe = malloc(sizeof(pipe_t));
+    pipe_t *pipe = xbt_malloc0(sizeof(pipe_t));
     pipe->read_end = end_in;
     pipe->write_end = end_out;
 
     // we create the fd
-    fd_descriptor_t *file_desc = malloc(sizeof(fd_descriptor_t));
+    fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->refcount = 0;
     file_desc->fd = p0;
     file_desc->proc = proc;
@@ -628,7 +628,7 @@ void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     proc->fd_list[p0] = file_desc;
     file_desc->refcount++;
 
-    file_desc = malloc(sizeof(fd_descriptor_t));
+    file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->refcount = 0;
     file_desc->fd = p1;
     file_desc->proc = proc;
@@ -664,18 +664,3 @@ void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pro
     stprintf_eol(proc);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -347,7 +347,7 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
 
     // We create the stream object for semaphores
     XBT_INFO("stream initialization by accept syscall");
-    stream_t *stream = malloc(sizeof(stream_t));
+    stream_t *stream = xbt_malloc0(sizeof(stream_t));
     stream->sem_client = MSG_sem_init(0);
     stream->sem_server = MSG_sem_init(0);
     stream->server = MSG_process_self();
@@ -923,7 +923,7 @@ void syscall_getsockopt_pre(reg_s * reg, syscall_arg_u * sysarg, process_descrip
   arg->ret = 0;
   if (arg->optname == SO_REUSEADDR) {
     arg->optlen = sizeof(int);
-    arg->optval = malloc(arg->optlen);
+    arg->optval = xbt_malloc(sizeof(arg->optlen));
     *((int *) arg->optval) = socket_get_option(proc, arg->sockfd, SOCK_OPT_REUSEADDR);
   } else {
     XBT_WARN("Option non supported by Simterpose.");

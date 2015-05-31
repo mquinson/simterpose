@@ -33,7 +33,7 @@ simterpose_data_t *global_data;
 /** @brief initialize SimTerpose global data */
 void simterpose_globals_init(float msec_per_flop)
 {
-  global_data = malloc(sizeof(simterpose_data_t));
+  global_data = xbt_new0(simterpose_data_t,1);
 
   global_data->list_host = xbt_dict_new_homogeneous(&destroy_simterpose_host);
   global_data->list_ip = xbt_dict_new_homogeneous(&free);
@@ -184,7 +184,7 @@ void register_port(msg_host_t host, int port)
   if ((temp = (port_desc_t *) xbt_dict_get_or_null(host_desc->port, buff))) {
     ++(temp->amount_socket);
   } else {
-    temp = malloc(sizeof(port_desc_t));
+    temp = xbt_malloc0(sizeof(port_desc_t));
     temp->port_num = port;
     temp->option = 0;
     temp->amount_socket = 1;
@@ -309,7 +309,7 @@ void unset_socket(pid_t pid, struct infos_socket *is)
 void add_new_translation(int real_port, int translated_port, unsigned int translated_ip)
 {
   XBT_DEBUG("Add new translation %d->%d", real_port, translated_port);
-  translate_desc_t *temp = malloc(sizeof(translate_desc_t));
+  translate_desc_t *temp = xbt_malloc0(sizeof(translate_desc_t));
   temp->port_num = translated_port;
   temp->ip = translated_ip;
 
@@ -371,15 +371,15 @@ void benchmark_matrix_product(float *msec_per_flop)
   int i, j;
 
 
-  float **matrix1 = malloc(sizeof(float *) * matrixSize);
-  float **matrix2 = malloc(sizeof(float *) * matrixSize);
-  float **matrix_result = malloc(sizeof(float *) * matrixSize);
+  float **matrix1 = xbt_new0(float *, matrixSize);
+  float **matrix2 = xbt_new0(float *, matrixSize);
+  float **matrix_result = xbt_new0(float *, matrixSize);
 
   // Warmup the caches
   for (i = 0; i < matrixSize; ++i) {
-    matrix1[i] = malloc(sizeof(float) * matrixSize);
-    matrix2[i] = malloc(sizeof(float) * matrixSize);
-    matrix_result[i] = malloc(sizeof(float) * matrixSize);
+    matrix1[i] = xbt_new0(float, matrixSize);
+    matrix2[i] = xbt_new0(float, matrixSize);
+    matrix_result[i] = xbt_new0(float, matrixSize);
     for (j = 0; j < matrixSize; ++j) {
       matrix1[i][j] = rand() % 20;
       matrix2[i][j] = rand() % 20;
@@ -446,11 +446,11 @@ void init_host_list()
       xbt_dynar_push_as(no_ip_list, int, i);
       continue;
     } else {
-      simterpose_host_t *temp = malloc(sizeof(simterpose_host_t));
+      simterpose_host_t *temp = xbt_malloc0(sizeof(simterpose_host_t));
       temp->ip = inet_addr(prop);
       temp->port = xbt_dict_new_homogeneous(free);
       xbt_dict_set(list_s, MSG_host_get_name(work_list[i]), temp, NULL);
-      xbt_dict_set(list_ip, prop, strdup(MSG_host_get_name(work_list[i])), NULL);
+      xbt_dict_set(list_ip, prop, xbt_strdup(MSG_host_get_name(work_list[i])), NULL);
       xbt_dynar_push_as(ip_list, unsigned int, temp->ip);
     }
   }
@@ -475,11 +475,11 @@ void init_host_list()
       }
     }
     struct in_addr in = { temp_ip };
-    simterpose_host_t *temp = malloc(sizeof(simterpose_host_t));
+    simterpose_host_t *temp = xbt_new0(simterpose_host_t,1);
     temp->ip = temp_ip;
     temp->port = xbt_dict_new_homogeneous(NULL);
     xbt_dict_set(list_s, MSG_host_get_name(work_list[i]), temp, NULL);
-    xbt_dict_set(list_ip, inet_ntoa(in), strdup(MSG_host_get_name(work_list[i])), NULL);
+    xbt_dict_set(list_ip, inet_ntoa(in), xbt_strdup(MSG_host_get_name(work_list[i])), NULL);
     xbt_dynar_push_as(ip_list, unsigned int, temp->ip);
   }
 

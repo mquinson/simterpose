@@ -42,7 +42,7 @@ void socket_exit(void)
 /** @brief create and initialize a recv_information object */
 recv_information *recv_information_new(void)
 {
-  recv_information *res = malloc(sizeof(recv_information));
+  recv_information *res = xbt_malloc0(sizeof(recv_information));
   res->quantity_recv = 0;
   res->recv_task = xbt_fifo_new();
   res->data_fifo = xbt_fifo_new();
@@ -61,7 +61,7 @@ void recv_information_destroy(recv_information * recv)
 static struct infos_socket *confirm_register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
 {
 
-  struct infos_socket *is = malloc(sizeof(struct infos_socket));
+  struct infos_socket *is = xbt_malloc0(sizeof(struct infos_socket));
 
   proc->fd_list[sockfd] = (fd_descriptor_t *) is;
   is->ref_nb = 0;
@@ -349,7 +349,7 @@ void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
   recv_information *recv = comm_get_peer_recv(is);
 
 #ifndef address_translation
-  data_send_s *ds = malloc(sizeof(data_send_s));
+  data_send_s *ds = xbt_malloc0(sizeof(data_send_s));
   ds->data = arg->data;
   ds->size = arg->len;
 
@@ -357,7 +357,7 @@ void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
 
   arg->ret = arg->len;
 #else
-  int *data = malloc(sizeof(int));
+  int *data = xbt_malloc(sizeof(int));
   *data = arg->ret;
 
   xbt_fifo_push(recv->data_fifo, data);
