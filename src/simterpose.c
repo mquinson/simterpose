@@ -60,8 +60,8 @@ static void sigint_handler(int sig)
 /* A little handler for segfaults */
 static void sigsegv_handler(int sig)
 {
-  XBT_ERROR("Segfault. Current time of simulation %lf", MSG_get_clock());
-  XBT_ERROR("Killing processes...");
+  fprintf(stderr, "Segfault. Current time of simulation %lf\n", MSG_get_clock());
+  fprintf(stderr, "Killing processes...\n");
 
   MSG_process_killall(0);
   comm_exit();
