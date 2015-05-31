@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Run simterpose in valgrind but not its childs:
+# make -C ../src/ simterpose && ./msg_clientserver.sh valgrind ; echo $?
+
 set -e # fail fast
 
 make -C ../src/ simterpose
@@ -25,7 +28,8 @@ cat > deploy_temp.xml <<EOF
 EOF
 
 # Allow to run under valgrind or gdb easily
-runner=$2
+export VALGRIND_OPTS="--verbose --trace-children=no --child-silent-after-fork=yes"
+runner=$1
 
 sudo LD_LIBRARY_PATH=/opt/Simgrid/lib/ $runner ../src/simterpose -s platform.xml deploy_temp.xml  #--log=simterpose.:debug
 #--log=msg.:debug  --log=simix_synchro.:debug # --log=simix.:debug   #--log=root.fmt:"'%l: [%c/%p]: %m%n'"  #--log=xbt_dyn.:debug
