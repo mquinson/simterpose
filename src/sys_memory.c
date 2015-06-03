@@ -365,10 +365,19 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   XBT_DEBUG("process fcntl");
   fcntl_arg_t arg = &(sysarg->fcntl);
+  fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
   switch (arg->cmd) {
 
-  case F_DUPFD:
-    XBT_WARN("F_DUPFD unhandled");
+  case F_DUPFD:   
+    file_desc->type = proc->fd_list[arg->fd]->type;
+    file_desc->proc = proc;
+    file_desc->fd = arg->ret;
+    file_desc->stream = proc->fd_list[arg->fd]->stream;
+    file_desc->pipe = proc->fd_list[arg->fd]->pipe;
+    file_desc->flags = proc->fd_list[arg->fd]->flags;
+    file_desc->refcount = 1; /* To check or 0 and then ++ */
+
+    /* XBT_WARN("F_DUPFD unhandled"); */
     break;
 
   case F_DUPFD_CLOEXEC:
