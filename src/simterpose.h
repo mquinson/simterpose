@@ -19,7 +19,7 @@ extern int strace_option; // whether we should display strace-like outputs
 
 #include "process_descriptor.h"
 
-#define MAX_FD 1024
+#define MAX_FD 2048
 #define MAX_PID 32768
 
 #define PORT_BIND       0x1

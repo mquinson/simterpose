@@ -230,11 +230,11 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     get_args_write(proc, reg, sysarg);
 
     write_arg_t arg = &(sysarg->write);
-
+    
     fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+    printf("valeur du pointeur %p %p \n", proc->fd_list[arg->fd], file_desc);
     file_desc->refcount++;
 
-    // If we're writing into a pipe, we handle things differently
     if (file_desc != NULL && file_desc->type == FD_PIPE) {
       if (strace_option)
 	print_write_syscall(proc, sysarg);
@@ -365,46 +365,27 @@ void syscall_fcntl(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   XBT_DEBUG("process fcntl");
-  //fcntl_arg_t arg = xbt_malloc0(sizeof(fcntl_arg_t));
-  fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
 
+  fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
   fcntl_arg_t arg = &(sysarg->fcntl);
 
-  int i;
-  int index = 0;
-  int cpt_open=0;
-
-  for (i = 0; i < MAX_FD; i++){
-    printf("Valeur max %d", MAX_FD);
-    printf("Valeur avant if \n %d \n", arg->fd);
-    printf("i vaut %d \n ", i);
-    if ( proc->fd_list[i]->fd == arg->fd){
-      index = i;
-      cpt_open++; /* To check that the file has been open just one time */
-    }
-    printf("Valeur apres if \n %d \n", arg->fd);
-    printf("i vaut %d", i);
-    
-  }
-
-  if (cpt_open > 1)
-    XBT_WARN("File open more than once for the same process");
-
-  if (cpt_open == 0)
-    XBT_WARN("File not yet open");
+  file_desc->refcount = 0; /* Is it usefull */
 
   switch (arg->cmd) {
 
   case F_DUPFD:   
-    file_desc->type = proc->fd_list[index]->type;
+    /* We have to be there only when we exit the syscall */
+#ifdef address_translation
+    file_desc->type = proc->fd_list[arg->fd]->type;
     file_desc->proc = proc;
     file_desc->fd = arg->ret;
-    file_desc->stream = proc->fd_list[index]->stream;
-    file_desc->pipe = proc->fd_list[index]->pipe;
-    file_desc->flags = proc->fd_list[index]->flags;
+    file_desc->stream = proc->fd_list[arg->fd]->stream;
+    file_desc->pipe = proc->fd_list[arg->fd]->pipe;
+    file_desc->flags = proc->fd_list[arg->fd]->flags;
     file_desc->refcount = 1; /* To check or 0 and then ++ */
-
-    /* XBT_WARN("F_DUPFD unhandled"); */
+  
+    proc->fd_list[arg->ret] = file_desc;
+#endif
     break;
 
   case F_DUPFD_CLOEXEC:
@@ -413,18 +394,22 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   case F_GETFD:
 #ifndef address_translation
-    arg->ret = proc->fd_list[i]->flags;
+    arg->ret = proc->fd_list[arg->fd]->flags;
 #endif
     break;
 
   case F_SETFD:
     XBT_DEBUG("SETFD %d",arg->fd);
-    proc->fd_list[index]->flags = arg->arg;
-    
+    proc->fd_list[arg->fd]->flags = arg->arg;    
     break;
 
   case F_GETFL:
-    XBT_WARN("F_GETFL unhandled");
+#ifndef address_translation 
+    arg->ret = socket_get_flags(proc, arg->fd, arg->arg);
+    
+    /* Si on a autre chose que des sockets */
+    /* arg->ret = proc->fd_list[arg->fd]->flags */
+#endif
     break;
 
   case F_SETFL:
@@ -453,12 +438,6 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
   proc_outside(proc);
 #endif
 
-  /* free(&(arg->fd)); */
-  /* free(&(arg->cmd)); */
-  /* free(&(arg->arg)); */
-  /* free(&(arg->ret)); */
-  /* free(arg); */
-  free(file_desc);
 }
 
 /** @brief handles poll syscall at the entrance and the exit */

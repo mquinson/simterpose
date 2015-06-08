@@ -37,7 +37,7 @@
 #define FD_SOCKET               0x08
 #define FD_PIPE                 0x10
 
-#define MAX_FD 1024
+#define MAX_FD 2048
 
 #include <stdio.h>
 #include <sys/types.h>
