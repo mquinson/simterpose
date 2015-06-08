@@ -307,7 +307,7 @@ void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
 /** @brief retrieve the arguments of write syscall */
 void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
-  read_arg_t arg = &(sysarg->read);
+  write_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg[0];
   arg->dest = (void *) reg->arg[1];
   arg->ret = reg->ret;
