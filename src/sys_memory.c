@@ -52,7 +52,7 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     open_arg_t arg = &(sysarg->open);
     arg->ret = reg->ret;
     arg->ptr_filename = reg->arg[0];
-    arg->flags = reg->arg[1]; // FIXME arg[1] value is always 0, so we don't print actual flags for now
+    arg->flags = reg->arg[1]; // TODO arg[1] value is always 0, so we don't print actual flags for now
 
     if (arg->ret >= 0) {
       fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
@@ -67,7 +67,7 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     if (strace_option)
       print_open_syscall(proc, sysarg);
   
-    printf("An open syscall was made for the fd %d\n", arg->ret);
+    printf("An open syscall was made for the fd %d via reg %lu\n", arg->ret, reg->ret);
   }
 }
 
@@ -219,7 +219,7 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
 	return PROCESS_TASK_FOUND;
       }
     } else {
-      // FIXME: if the socket is not registered, for now we do nothing
+      // TODO: if the socket is not registered, for now we do nothing
       // and let the kernel run the syscall
       //XBT_WARN("socket unregistered");
     }
@@ -234,7 +234,7 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     write_arg_t arg = &(sysarg->write);
     
     fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
-    printf("value of arg %p, arg->fd %d, return value %d \n", arg, arg->fd, arg->ret);
+    printf("On syscall_write pointer value of arg %p \n arg->fd = %d \n return value = %d \n", arg, arg->fd, arg->ret);
     printf("value of pointer via proc->fd_list %p, via file_desc %p \n", proc->fd_list[arg->fd], file_desc);
     file_desc->refcount++;
 

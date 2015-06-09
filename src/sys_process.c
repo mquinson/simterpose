@@ -82,7 +82,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 	xbt_dynar_t read_end = pipe->read_end;
 	xbt_dynar_foreach(read_end, cpt_in, end_in) {
 	  // we have to make sure we don't add endlessly the fd from the clone
-	  //FIXME we still add pipes twice sometimes
+	  //TODO we still add pipes twice sometimes
 	  if (end_in->proc != clone && end_in->proc->pid != clone->pid) {
 	    xbt_assert(end_in != NULL);
 	    pipe_end_t clone_end = xbt_malloc0(sizeof(pipe_end_s));
@@ -162,7 +162,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     char name[256];
     sprintf(name, "clone #%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));
     XBT_DEBUG("Creating %s, pid = %d", name, clone->pid);
-    // FIXME: the current MSG process should not continue past that point:
+    // TODO: the current MSG process should not continue past that point:
     //        the clone is started, current can go back to its own considerations.
     // but maybe we want to start the clone in a different manner?
     MSG_process_create(name, main_loop, clone, MSG_host_self());
