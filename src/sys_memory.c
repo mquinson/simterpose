@@ -66,6 +66,8 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     // TODO handle flags
     if (strace_option)
       print_open_syscall(proc, sysarg);
+  
+    printf("An open syscall was made for the fd %d\n", arg->ret);
   }
 }
 
@@ -232,7 +234,8 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     write_arg_t arg = &(sysarg->write);
     
     fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
-    printf("valeur du pointeur %p %p \n", proc->fd_list[arg->fd], file_desc);
+    printf("value of arg %p, arg->fd %d, return value %d \n", arg, arg->fd, arg->ret);
+    printf("value of pointer via proc->fd_list %p, via file_desc %p \n", proc->fd_list[arg->fd], file_desc);
     file_desc->refcount++;
 
     if (file_desc != NULL && file_desc->type == FD_PIPE) {
@@ -407,13 +410,23 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 #ifndef address_translation 
     arg->ret = socket_get_flags(proc, arg->fd, arg->arg);
     
-    /* Si on a autre chose que des sockets */
-    /* arg->ret = proc->fd_list[arg->fd]->flags */
+    /* TODO: */
+    /* If the fd is not a socket: */
+    /* arg->ret = proc->fd_list[arg->fd]->flags; */
 #endif
     break;
 
   case F_SETFL:
     socket_set_flags(proc, arg->fd, arg->arg);
+
+    /* TODO: */
+    /* If the fd is not a socket: */
+    /* proc->fd_list[arg->fd]->flags = arg->arg; */
+
+#ifndef address_translation
+    /* TODO: */
+    /* Change manually the state and mode flags in memory of the file */
+#endif
     break;
 
   case F_SETLK:
