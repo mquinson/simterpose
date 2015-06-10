@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <poll.h>
 #include <time.h>
-#include <fcntl.h>
 #include <signal.h>
 #include <stdarg.h>
 #include <netdb.h>

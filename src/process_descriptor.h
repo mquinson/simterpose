@@ -77,6 +77,10 @@ typedef struct {
   pipe_t *pipe;
   int flags;
   int refcount;                   // reference counting
+  int lock;
+  off_t begin;
+  off_t end;
+  pid_t proc_locker;
 } fd_descriptor_t;
 
 struct process_descriptor {

@@ -989,10 +989,10 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   case F_SETFD:
     fprintf(proc->strace_out, "F_SETFD");
-    if (arg->arg)
+    if (arg->arg.cmd_arg)
       fprintf(proc->strace_out, ", FD_CLOEXEC");
     else
-      fprintf(proc->strace_out, ", %d", arg->arg);
+      fprintf(proc->strace_out, ", %d", arg->arg.cmd_arg);
     break;
 
   case F_GETFL:

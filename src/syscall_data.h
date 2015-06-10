@@ -174,7 +174,11 @@ typedef setsockopt_arg_s *setsockopt_arg_t;
 typedef struct fcntl_arg_s {
   int fd;
   int cmd;
-  int arg;
+  union{
+    int cmd_arg;
+    struct f_owner_ex * owner;
+    struct flock * lock;
+  } arg;
   int ret;
 } fcntl_arg_s;
 
