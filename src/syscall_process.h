@@ -21,11 +21,35 @@
 
 #include "sys_process.h"
 /* Memory-related */
-#include "sys_memory.h"
+#include "sys_close.h"
+#include "sys_create.h"
+#include "sys_fcntl.h"
+#include "sys_dup2.h"
+#include "sys_open.h"
+#include "sys_pipe.h"
+#include "sys_pool.h"
+#include "sys_read.h"
+#include "sys_select.h"
+#include "sys_write.h"
+#include "sys_brk.h"
 /* Network-related */
-#include "sys_network.h"
+#include "sys_accept.h"
+#include "sys_bind.h"
+#include "sys_connect.h"
+#include "sys_getpeername.h"
+#include "sys_getsockopt.h"
+#include "sys_listen.h"
+#include "sys_recvfrom.h"
+#include "sys_recvmsg.h"
+#include "sys_sendmsg.h"
+#include "sys_sendto.h"
+#include "sys_setsockopt.h"
+#include "sys_shutdown.h"
+#include "sys_socket.h"
 /* Process-related */
-#include "sys_process.h"
+#include "sys_clone.h"
+#include "sys_execve.h"
+#include "sys_exit.h"
 
 
 enum { PROCESS_CONTINUE = 0, PROCESS_DEAD, PROCESS_GROUP_DEAD, PROCESS_TASK_FOUND };

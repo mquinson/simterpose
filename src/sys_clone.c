@@ -1,4 +1,4 @@
-/* sys_process -- Handles of all memory-related syscalls */
+/* sys_clone -- Handles clone syscall */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
@@ -7,17 +7,17 @@
 
 #include <linux/sched.h>   /* For clone flags */
 
-#include "sys_process.h"
-#include "simterpose.h"
-#include "print_syscall.h"
-#include "args_trace.h"
-
 #include <xbt.h>
+
+#include "sys_clone.h"
+
+#include "args_trace.h"
+#include "print_syscall.h"
+#include "simterpose.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 static int clone_number = 0;
-
 
 /** @brief handles clone syscall at the entrance ant the exit
  *  At the exit of the syscall, we can be either in the parent or the clone. 
@@ -169,50 +169,5 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     proc_inside(proc);
   } else {
     fprintf(stderr,"No idea why I'm here after cloning (not in a syscall-stop nor in a clone event)\n");
-  }
-}
-
-/** @brief handles execve syscall at the entrance and the exit */
-void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
-  execve_arg_t arg = &(sysarg->execve);
-  arg->ret = reg->ret;
-  arg->ptr_filename = reg->arg[0];
-  arg->ptr_argv = reg->arg[1];
-
-  if (proc_event_exec(proc)) {
-    XBT_DEBUG("Ignore an exec event");
-
-  } else if (proc_entering(proc)) {
-    proc_inside(proc);
-    if (strace_option)
-      print_execve_syscall_pre(proc, sysarg);
-
-  } else {
-    proc_outside(proc);
-    if (strace_option)
-      print_execve_syscall_post(proc, sysarg);
-
-    int i;
-    for (i = 0; i < MAX_FD; ++i) {
-      if (proc->fd_list[i] != NULL) {
-	// XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
-	if (proc->fd_list[i]->flags == FD_CLOEXEC)
-	  XBT_WARN("FD_CLOEXEC not handled");
-	//process_close_call(proc, i);
-      }
-    }
-    XBT_DEBUG("execve retour");
-  }
-}
-
-/** @brief handles exit syscall at the entrance and the exit */
-int syscall_exit(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
-{
-  if (proc_entering(proc)) {
-    proc_inside(proc);
-    ptrace_detach_process(pid);
-    return PROCESS_DEAD;
-  } else {
-    THROW_IMPOSSIBLE;
   }
 }
