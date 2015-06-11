@@ -1,9 +1,12 @@
 OBJS = args_trace.o communication.o cputimer.o data_utils.o \
 print_syscall.o process_descriptor.o ptrace_utils.o simterpose.o \
- sockets.o syscall_process.o sys_accept.o sys_bind.o sys_brk.o sys_clone.o sys_close.o \
+ sockets.o syscall_process.o \
+ sys_accept.o sys_bind.o sys_brk.o sys_clone.o sys_close.o \
  sys_connect.o sys_create.o sys_dup2.o sys_execve.o sys_exit.o \
-sys_fcntl.o sys_getpeername.o sys_getsockopt.o sys_listen.o sys_open.o sys_pipe.o sys_pool.o sys_read.o sys_recvfrom.o sys_recvmsg.o sys_select.o \
-sys_sendmsg.o sys_sendto.o sys_setsockopt.o sys_shutdown.o sys_socket.o sys_write.o sys_network.o sys_process.o \
+ sys_fcntl.o sys_getpeername.o sys_getsockopt.o sys_listen.o \
+ sys_open.o sys_pipe.o sys_pool.o sys_read.o sys_recvfrom.o \
+ sys_recvmsg.o sys_select.o sys_sendmsg.o sys_sendto.o \
+ sys_setsockopt.o sys_shutdown.o sys_socket.o sys_write.o \
  xbt_log_strace.o
 
 CFLAGS = -Wall -Werror -g -I/opt/Simgrid/include/ 
@@ -55,8 +58,6 @@ sys_setsockopt.o: sys_setsockopt.c sys_setsockopt.h
 sys_shutdown.o: sys_shutdown.c sys_shutdown.h
 sys_socket.o: sys_socket.c sys_socket.h
 sys_write.o: sys_write.c sys_write.h
-sys_network.o: sys_network.c sys_network.h
-sys_process.o: sys_process.c sys_process.h
 
 #################################################
 

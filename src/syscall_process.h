@@ -19,7 +19,6 @@
 #include "simterpose.h"
 #include "syscall_data.h"
 
-#include "sys_process.h"
 /* Memory-related */
 #include "sys_close.h"
 #include "sys_create.h"
