@@ -1,66 +1,79 @@
-OBJS = args_trace.o communication.o cputimer.o data_utils.o \
-print_syscall.o process_descriptor.o ptrace_utils.o simterpose.o \
- sockets.o syscall_process.o \
- sys_accept.o sys_bind.o sys_brk.o sys_clone.o sys_close.o \
- sys_connect.o sys_create.o sys_dup2.o sys_execve.o sys_exit.o \
- sys_fcntl.o sys_getpeername.o sys_getsockopt.o sys_listen.o \
- sys_open.o sys_pipe.o sys_pool.o sys_read.o sys_recvfrom.o \
- sys_recvmsg.o sys_select.o sys_sendmsg.o sys_sendto.o \
- sys_setsockopt.o sys_shutdown.o sys_socket.o sys_write.o \
- xbt_log_strace.o
+SIM_DIR=/opt/Simgrid
+INC=include
+OBJ=../object
 
-CFLAGS = -Wall -Werror -g -I/opt/Simgrid/include/ 
+OBJS = $(OBJ)/args_trace.o $(OBJ)/communication.o $(OBJ)/cputimer.o \
+ $(OBJ)/data_utils.o $(OBJ)/print_syscall.o $(OBJ)/process_descriptor.o \
+ $(OBJ)/ptrace_utils.o $(OBJ)/simterpose.o $(OBJ)/sockets.o \
+ $(OBJ)/syscall_process.o \
+ $(OBJ)/sys_accept.o $(OBJ)/sys_bind.o $(OBJ)/sys_brk.o $(OBJ)/sys_clone.o \
+ $(OBJ)/sys_close.o $(OBJ)/sys_connect.o $(OBJ)/sys_create.o $(OBJ)/sys_dup2.o \
+ $(OBJ)/sys_execve.o $(OBJ)/sys_exit.o $(OBJ)/sys_fcntl.o $(OBJ)/sys_getpeername.o \
+ $(OBJ)/sys_getsockopt.o $(OBJ)/sys_listen.o $(OBJ)/sys_open.o $(OBJ)/sys_pipe.o \
+ $(OBJ)/sys_pool.o $(OBJ)/sys_read.o $(OBJ)/sys_recvfrom.o $(OBJ)/sys_recvmsg.o \
+ $(OBJ)/sys_select.o $(OBJ)/sys_sendmsg.o $(OBJ)/sys_sendto.o \
+ $(OBJ)/sys_setsockopt.o $(OBJ)/sys_shutdown.o $(OBJ)/sys_socket.o \
+ $(OBJ)/sys_write.o \
+ $(OBJ)/xbt_log_strace.o
+
+CFLAGS = -Wall -Werror -g -I$(SIM_DIR)/include/ -I$(INC)
 CFLAGS += -fno-common -Wunused -Wmissing-prototypes -Wmissing-declarations -Wpointer-arith -Wchar-subscripts -Wcomment
 CFLAGS += -Wformat -Wwrite-strings -Wno-unused-function -Wno-unused-parameter -Wno-strict-aliasing -Wno-format-nonliteral
 
 CC=gcc
 
-LDFLAGS= -L/opt/Simgrid/lib/ -lsimgrid -lm
+LDFLAGS= -L$(SIM_DIR)/lib/ -lsimgrid -lm
 
-all : simterpose
+all : dir simterpose
+
+dir:
+	@mkdir -p $(OBJ)
 
 simterpose: $(OBJS)
-	$(CC) $^ -o $@ $(LDFLAGS)
+	$(CC) -o ../$@ $^ $(LDFLAGS)
 
-simterpose.o: simterpose.c simterpose.h
-args_trace.o: args_trace.c args_trace.h
-ptrace_utils.o: ptrace_utils.c ptrace_utils.h
-process_descriptor.o: process_descriptor.c process_descriptor.h
-syscall_process.o: syscall_process.c syscall_process.h
-data_utils.o : data_utils.c data_utils.h
-print_syscall.o: print_syscall.c print_syscall.h
-sockets.o: sockets.c sockets.h
-communication.o: communication.c communication.h
-sys_accept.o: sys_accept.c sys_accept.h
-sys_bind.o: sys_bind.c sys_bind.h
-sys_brk.o: sys_brk.c sys_brk.h
-sys_clone.o: sys_clone.c sys_clone.h
-sys_close.o: sys_close.c sys_close.h
-sys_connect.o: sys_connect.c sys_connect.h
-sys_create.o: sys_create.c sys_create.h
-sys_dup2.o: sys_dup2.c sys_dup2.h
-sys_execve.o: sys_execve.c sys_execve.h
-sys_exit.o: sys_exit.c sys_exit.h
-sys_fcntl.o: sys_fcntl.c sys_fcntl.h
-sys_getpeername.o: sys_getpeername.c sys_getpeername.h
-sys_getsockopt.o: sys_getsockopt.c sys_getsockopt.h
-sys_listen.o: sys_listen.c sys_listen.h
-sys_open.o: sys_open.c sys_open.h
-sys_pipe.o: sys_pipe.c sys_pipe.h
-sys_pool.o: sys_pool.c sys_pool.h
-sys_read.o: sys_read.c sys_read.h
-sys_recvfrom.o: sys_recvfrom.c sys_recvfrom.h
-sys_recvmsg.o: sys_recvmsg.c sys_recvmsg.h
-sys_select.o: sys_select.c sys_select.h
-sys_sendmsg.o: sys_sendmsg.c sys_sendmsg.h
-sys_sendto.o: sys_sendto.c sys_sendto.h
-sys_setsockopt.o: sys_setsockopt.c sys_setsockopt.h
-sys_shutdown.o: sys_shutdown.c sys_shutdown.h
-sys_socket.o: sys_socket.c sys_socket.h
-sys_write.o: sys_write.c sys_write.h
+$(OBJ)/%.o: %.c
+	$(CC)  -o $@ -c $< $(CFLAGS)
+
+# $(OBJ)/simterpose.o: simterpose.c $(INC)/simterpose.h
+# $(OBJ)/args_trace.o: args_trace.c $(INC)/args_trace.h
+# $(OBJ)/ptrace_utils.o: ptrace_utils.c $(INC)/ptrace_utils.h
+# $(OBJ)/process_descriptor.o: process_descriptor.c $(INC)/process_descriptor.h
+# $(OBJ)/syscall_process.o: syscall_process.c $(INC)/syscall_process.h
+# $(OBJ)/data_utils.o : data_utils.c $(INC)/data_utils.h
+# $(OBJ)/print_syscall.o: print_syscall.c $(INC)/print_syscall.h
+# $(OBJ)/sockets.o: sockets.c $(INC)/sockets.h
+# $(OBJ)/communication.o: communication.c $(INC)/communication.h
+# $(OBJ)/sys_accept.o: sys_accept.c $(INC)/sys_accept.h
+# $(OBJ)/sys_bind.o: sys_bind.c $(INC)/sys_bind.h
+# $(OBJ)/sys_brk.o: sys_brk.c $(INC)/sys_brk.h
+# $(OBJ)/sys_clone.o: sys_clone.c $(INC)/sys_clone.h
+# $(OBJ)/sys_close.o: sys_close.c $(INC)/sys_close.h
+# $(OBJ)/sys_connect.o: sys_connect.c $(INC)/sys_connect.h
+# sys_create.o: sys_create.c $(INC)/sys_create.h
+# sys_dup2.o: sys_dup2.c $(INC)/sys_dup2.h
+# sys_execve.o: sys_execve.c $(INC)/sys_execve.h
+# sys_exit.o: sys_exit.c $(INC)/sys_exit.h
+# sys_fcntl.o: sys_fcntl.c $(INC)/sys_fcntl.h
+# sys_getpeername.o: sys_getpeername.c $(INC)/sys_getpeername.h
+# sys_getsockopt.o: sys_getsockopt.c $(INC)/sys_getsockopt.h
+# sys_listen.o: sys_listen.c $(INC)/sys_listen.h
+# sys_open.o: sys_open.c $(INC)/sys_open.h
+# sys_pipe.o: sys_pipe.c $(INC)/sys_pipe.h
+# sys_pool.o: sys_pool.c $(INC)/sys_pool.h
+# sys_read.o: sys_read.c $(INC)/sys_read.h
+# sys_recvfrom.o: sys_recvfrom.c $(INC)/sys_recvfrom.h
+# sys_recvmsg.o: sys_recvmsg.c $(INC)/sys_recvmsg.h
+# sys_select.o: sys_select.c $(INC)/sys_select.h
+# sys_sendmsg.o: sys_sendmsg.c $(INC)/sys_sendmsg.h
+# sys_sendto.o: sys_sendto.c $(INC)/sys_sendto.h
+# sys_setsockopt.o: sys_setsockopt.c $(INC)/sys_setsockopt.h
+# sys_shutdown.o: sys_shutdown.c $(INC)/sys_shutdown.h
+# sys_socket.o: sys_socket.c $(INC)/sys_socket.h
+# sys_write.o: sys_write.c $(INC)/sys_write.h
 
 #################################################
 
 clean:
-	rm -rf simterpose *.o *~
+	rm -rf simterpose $(OBJ)/*.o *~
 

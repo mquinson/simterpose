@@ -14,6 +14,13 @@ cat > deploy_temp.xml <<EOF
 </platform>
 EOF
 
-sudo LD_LIBRARY_PATH=/opt/Simgrid/lib/ ../src/simterpose -s platform.xml deploy_temp.xml
+# Allow to use another folder thant /opt/Simgrid to execute
+sim_dir=$1
+
+# Allow to run under valgrind or gdb easily
+export VALGRIND_OPTS="--verbose --trace-children=no --child-silent-after-fork=yes"
+runner=$2
+
+sudo LD_LIBRARY_PATH=$sim_dir/lib/ $runner ../simterpose -s platform.xml deploy_temp.xml
 
 rm deploy_temp.xml
