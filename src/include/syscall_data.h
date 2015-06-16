@@ -45,11 +45,11 @@ typedef send_arg_s *send_arg_t;
 
 
 typedef struct recvmsg_arg_s {
-  int sockfd;
-  int ret;
+  unsigned long sockfd;
+  unsigned long ret;
   int len;
   void *data;
-  int flags;
+  unsigned long flags;
   struct msghdr msg;
 } recvmsg_arg_s, sendmsg_arg_s;
 
@@ -59,8 +59,8 @@ typedef recvmsg_arg_s *recvmsg_arg_t;
 
 typedef struct select_arg_s {
   int fd_state;
-  int maxfd;
-  int ret;
+  unsigned long maxfd;
+  unsigned long ret;
   fd_set fd_read;
   fd_set fd_write;
   fd_set fd_except;
@@ -71,10 +71,10 @@ typedef select_arg_s *select_arg_t;
 
 
 typedef struct poll_arg_s {
-  int nbfd;
+  unsigned long nbfd;
   struct pollfd *fd_list;
-  double timeout;
-  int ret;
+  unsigned long timeout;
+  unsigned long ret;
 } poll_arg_s;
 
 typedef poll_arg_s *poll_arg_t;
@@ -82,7 +82,7 @@ typedef poll_arg_s *poll_arg_t;
 
 typedef struct pipe_arg_s {
   int *filedes;
-  int ret;
+  unsigned long ret;
 } pipe_arg_s;
 
 typedef pipe_arg_s *pipe_arg_t;
@@ -90,11 +90,11 @@ typedef pipe_arg_s *pipe_arg_t;
 
 
 typedef struct sendto_arg_s {
-  int sockfd;
-  int ret;
-  int len;
+  unsigned long sockfd;
+  unsigned long ret;
+  unsigned long len;
   void *data;
-  int flags;
+  unsigned long flags;
   int addrlen;
   void *dest;                   //address in processus of data
   int is_addr;                  //indicate if struct sockadrr is null or not
@@ -110,8 +110,8 @@ typedef recvfrom_arg_s *recvfrom_arg_t;
 
 
 typedef struct connect_bind_arg_s {
-  int sockfd;
-  int ret;
+  unsigned long sockfd;
+  unsigned long ret;
   union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
@@ -125,8 +125,8 @@ typedef bind_arg_s *bind_arg_t;
 
 
 typedef struct accept_arg_s {
-  int sockfd;
-  int ret;
+  unsigned long sockfd;
+  unsigned long ret;
   union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
@@ -149,20 +149,20 @@ typedef struct socket_arg_s {
 typedef socket_arg_s *socket_arg_t;
 
 typedef struct listen_arg_s {
-  int sockfd;
-  int backlog;
-  int ret;
+  unsigned long sockfd;
+  unsigned long backlog;
+  unsigned long ret;
 } listen_arg_s;
 
 typedef listen_arg_s *listen_arg_t;
 
 typedef struct getsockopt_arg_s {
-  int sockfd;
-  int level;
-  int optname;
+  unsigned long sockfd;
+  unsigned long level;
+  unsigned long optname;
   void *optval;
   socklen_t optlen;
-  int ret;
+  unsigned long ret;
   void *dest;
   void *dest_optlen;
 } getsockopt_arg_s, setsockopt_arg_s;
@@ -172,10 +172,10 @@ typedef setsockopt_arg_s *setsockopt_arg_t;
 
 
 typedef struct fcntl_arg_s {
-  int fd;
-  int cmd;
+  unsigned long fd;
+  unsigned long cmd;
   union{
-    int cmd_arg;
+    unsigned long cmd_arg;
     struct f_owner_ex * owner;
     struct flock * lock;
   } arg;
@@ -186,9 +186,9 @@ typedef struct fcntl_arg_s *fcntl_arg_t;
 
 
 typedef struct write_arg_s {
-  int fd;
-  int ret;
-  int count;
+  unsigned long fd;
+  unsigned long ret;
+  unsigned long count;
   void *data;
   void *dest;
 } write_arg_s, read_arg_s;
@@ -241,7 +241,7 @@ typedef clockgettime_arg_s *clockgettime_arg_t;
 
 
 typedef struct clone_arg_s {
-  int ret;
+  unsigned long ret;
   unsigned long clone_flags;
   unsigned long newsp;
   void *parent_tid;
@@ -257,10 +257,10 @@ typedef struct execve_arg_s {
 typedef execve_arg_s *execve_arg_t;
 
 typedef struct open_arg_s {
-  int ret;
-  long ptr_filename;
-  int flags;
-  int mode;
+  unsigned long ret;
+  unsigned long ptr_filename;
+  unsigned long flags;
+  unsigned long mode;
 } open_arg_s;
 typedef open_arg_s *open_arg_t;
 

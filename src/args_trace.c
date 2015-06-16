@@ -23,11 +23,11 @@ void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg
 {
   connect_arg_t arg = &(sysarg->connect);
 
-  arg->ret = (int) reg->ret;
+  arg->ret = reg->ret;
   if (arg->ret == -EINPROGRESS) /* EINPROGRESS        115      Operation now in progress */
     arg->ret = 0;
 
-  arg->sockfd = (int) reg->arg[0];
+  arg->sockfd = reg->arg[0];
   int domain = get_domain_socket(proc, arg->sockfd);
   pid_t child = proc->pid;
   arg->addrlen = (socklen_t) reg->arg[2];
@@ -45,7 +45,7 @@ void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
 {
   accept_arg_t arg = &(sysarg->accept);
   arg->ret = reg->ret;
-  arg->sockfd = (int) reg->arg[0];
+  arg->sockfd = reg->arg[0];
   XBT_DEBUG("Socket for accepting %lu", reg->arg[0]);
 
   int domain = get_domain_socket(proc, arg->sockfd);
@@ -68,9 +68,9 @@ void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
 {
   listen_arg_t arg = &(sysarg->listen);
 
-  arg->sockfd = (int) reg->arg[0];
-  arg->backlog = (int) reg->arg[1];
-  arg->ret = (int) reg->ret;
+  arg->sockfd = reg->arg[0];
+  arg->backlog = reg->arg[1];
+  arg->ret = reg->ret;
 }
 
 /** @brief retrieve the arguments of select syscall */
@@ -80,7 +80,7 @@ void get_args_select(process_descriptor_t * proc, reg_s * r, syscall_arg_u * sys
   pid_t child = proc->pid;
 
   arg->fd_state = 0;
-  arg->maxfd = (int) r->arg[0];
+  arg->maxfd = r->arg[0];
 
   if (r->arg[1] != 0) {
     ptrace_cpy(child, &arg->fd_read, (void *) r->arg[1], sizeof(fd_set), "select");
@@ -107,19 +107,19 @@ void get_args_select(process_descriptor_t * proc, reg_s * r, syscall_arg_u * sys
   } else
     arg->timeout = -1;
 
-  arg->ret = (int) r->ret;
+  arg->ret = r->ret;
 }
 
 /** @brief retrieve the arguments of setsockopt syscall */
 void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
-  arg->ret = (int) reg->ret;
-  arg->sockfd = (int) reg->arg[0];
-  arg->level = (int) reg->arg[1];
-  arg->optname = (int) reg->arg[2];
+  arg->ret = reg->ret;
+  arg->sockfd = reg->arg[0];
+  arg->level = reg->arg[1];
+  arg->optname = reg->arg[2];
   arg->dest = (void *) reg->arg[3];
-  arg->optlen = reg->arg[4];
+  arg->optlen = reg->arg[4]; /* TODO unsigned long -> unsigned int weird */
 
 #ifndef address_translation
   arg->optval = xbt_new0(char, arg->optlen);
@@ -131,10 +131,10 @@ void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
 void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
-  arg->ret = (int) reg->ret;
-  arg->sockfd = (int) reg->arg[0];
-  arg->level = (int) reg->arg[1];
-  arg->optname = (int) reg->arg[2];
+  arg->ret = reg->ret;
+  arg->sockfd = reg->arg[0];
+  arg->level = reg->arg[1];
+  arg->optname = reg->arg[2];
   arg->dest = (void *) reg->arg[3];
   arg->dest_optlen = (void *) reg->arg[4];
 
@@ -182,9 +182,9 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
   recvfrom_arg_t arg = &(sysarg->recvfrom);
 
   arg->ret = reg->ret;
-  arg->sockfd = (int) reg->arg[0];
-  arg->len = (int) reg->arg[2];
-  arg->flags = (int) reg->arg[3];
+  arg->sockfd = reg->arg[0];
+  arg->len = reg->arg[2];
+  arg->flags = reg->arg[3];
 
   int domain = get_domain_socket(proc, arg->sockfd);
   pid_t child = proc->pid;
@@ -214,8 +214,8 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   recvmsg_arg_t arg = &(sysarg->recvmsg);
   pid_t pid = proc->pid;
 
-  arg->sockfd = (int) reg->arg[0];
-  arg->flags = (int) reg->arg[2];
+  arg->sockfd = reg->arg[0];
+  arg->flags = reg->arg[2];
   ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
 
   arg->len = 0;
@@ -233,9 +233,9 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   sendmsg_arg_t arg = &(sysarg->sendmsg);
   pid_t pid = proc->pid;
 
-  arg->sockfd = (int) reg->arg[0];
-  arg->flags = (int) reg->arg[2];
-  arg->ret = (int) reg->ret;
+  arg->sockfd = reg->arg[0];
+  arg->flags = reg->arg[2];
+  arg->ret = reg->ret;
   ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");
 #ifndef address_translation
   arg->len = 0;
@@ -285,8 +285,8 @@ void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
 void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
-  arg->fd = (int) reg->arg[0];
-  arg->cmd = (int) reg->arg[1];
+  arg->fd = reg->arg[0];
+  arg->cmd = reg->arg[1];
  
   if ((arg->cmd == F_DUPFD) || (arg->cmd == F_DUPFD_CLOEXEC)
       || (arg->cmd == F_SETFD) || (arg->cmd == F_SETFL)
@@ -297,7 +297,7 @@ void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
   if ((arg->cmd == F_SETSIG) || (arg->cmd == F_SETLEASE)
       || (arg->cmd == F_NOTIFY)
       || (arg->cmd == F_SETPIPE_SZ))
-    arg->arg.cmd_arg = (int) reg->arg[2];
+    arg->arg.cmd_arg = reg->arg[2];
   if ((arg->cmd == F_GETOWN_EX) || (arg->cmd == F_SETOWN_EX))
     arg->arg.owner = (struct f_owner_ex *) reg->arg[2];
 #endif
@@ -306,6 +306,22 @@ void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
     arg->arg.lock = (struct flock *) reg->arg[2];
   
   arg->ret = (int) reg->ret;
+}
+
+/** @brief retrieve the arguments of open syscall */
+void get_args_open(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
+{
+  open_arg_t arg = &(sysarg->open);
+  arg->ret = reg->ret;
+  arg->ptr_filename = reg->arg[0];
+  arg->flags = reg->arg[1];
+  arg->mode = reg->arg[2]; 
+  
+  XBT_INFO("on get args open %d\n", proc->pid);
+  XBT_INFO("Valeur de retrour on open %lu on reg %lu \n", arg->ret, reg->ret);
+  XBT_INFO("Valeur de ptr on open %lu on reg %lu \n", arg->ptr_filename, reg->arg[0]);
+  XBT_INFO("Valeur de flags on open %lu on reg %lu \n", arg->flags, reg->arg[1]);
+  XBT_INFO("Valeur de mode on open %lu on reg %lu \n", arg->mode, reg->arg[2]);
 }
 
 /** @brief retrieve the arguments of read syscall */

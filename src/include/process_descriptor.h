@@ -76,6 +76,7 @@ typedef struct {
   stream_t *stream;
   pipe_t *pipe;
   int flags;
+  int mode;
   int refcount;                   // reference counting
   int lock;
   off_t begin;

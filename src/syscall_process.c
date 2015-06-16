@@ -71,6 +71,10 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_open:
+      XBT_INFO("On open\n");
+      XBT_INFO("Valeur des registres dans l'AS:\n");
+      XBT_INFO("Valeur de retour %lu \n", arg.ret);
+      XBT_INFO("Valeur des arg %lu %lu %lu %lu %lu %lu \n", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
       syscall_open(&arg, sysarg, proc);
       break;
 
@@ -83,6 +87,10 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_write:
+      XBT_INFO("On write\n");
+      XBT_INFO("Valeur des registres dans l'AS:\n");
+      XBT_INFO("Valeur de retour %lu \n", arg.ret);
+      XBT_INFO("Valeur des arg %lu %lu %lu %lu %lu %lu \n", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
       if ((ret = syscall_write(&arg, sysarg, proc)))
 	return ret;
       break;
@@ -204,19 +212,19 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
   sendto_arg_t arg = &(sysarg->sendto);
   if (socket_registered(proc, arg->sockfd) != -1) {
     if (!socket_netlink(proc, arg->sockfd)) {
-      XBT_DEBUG("%d This is not a netlink socket", arg->sockfd);
+      XBT_DEBUG("%lu This is not a netlink socket", arg->sockfd);
       //   compute_computation_time(proc);   // cree la computation task
       struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
       is->ref_nb++;
       s->ref_nb++;
 
-      XBT_DEBUG("%d->%d", arg->sockfd, arg->ret);
-      XBT_DEBUG("Sending data(%d) on socket %d", arg->ret, s->fd.fd);
+      XBT_DEBUG("%lu->%lu", arg->sockfd, arg->ret);
+      XBT_DEBUG("Sending data(%lu) on socket %d", arg->ret, s->fd.fd);
       handle_new_send(is, sysarg);
 
       msg_task_t task = create_send_communication_task(proc, is, arg->ret, proc->host, s->fd.proc->host);
-      XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
+      XBT_DEBUG("hosts: %s send to %s (size: %lu)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
 		arg->ret);
 
 

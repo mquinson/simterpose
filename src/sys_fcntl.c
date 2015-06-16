@@ -48,6 +48,11 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
   fcntl_arg_t arg = &(sysarg->fcntl);
 
+  if (arg->ret == -1){
+    XBT_WARN("Error on fcntl syscall exit");
+    exit(-1);
+  }
+    
   file_desc->refcount = 0; /* TODO: Is it usefull ?*/
 
   switch (arg->cmd) {
