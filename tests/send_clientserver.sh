@@ -31,7 +31,7 @@ sim_dir=$1
 export VALGRIND_OPTS="--verbose --trace-children=no --child-silent-after-fork=yes"
 runner=$2
 
-sudo LD_LIBRARY_PATH=$sim_dir/lib/ $runner ../simterpose -s platform.xml deploy_temp.xml
+sudo LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$sim_dir/lib/ $runner ../simterpose -s platform.xml deploy_temp.xml
 #--log=simterpose.:debug #--log=simix_synchro.:debug  --log=msg.:debug #--log=root.fmt:"'%l: [%c/%p]: %m%n'" #--log=simix.:debug
 
 ret=$?
