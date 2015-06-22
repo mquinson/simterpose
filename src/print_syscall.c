@@ -7,7 +7,7 @@
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include <stdio.h>
-#include </usr/include/linux/sched.h>   /* For clone flags */
+#include <linux/sched.h>   /* For clone flags */
 
 #include <xbt.h>
 
