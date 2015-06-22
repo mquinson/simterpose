@@ -76,4 +76,3 @@ $(OBJ)/%.o: %.c
 
 clean:
 	rm -rf simterpose $(OBJ)/*.o *~
-
