@@ -40,7 +40,9 @@ simterpose-pthread.log: ../simterpose pthread.sh
 diff-pthread: strace-pthread.log simterpose-pthread.log
 	$(DIFF) $(DIFFFLAGS) simterpose-pthread.log strace-pthread.log
 
-.PHONY: diff-send diff-msg diff-pthread
+logs: strace-pthread.log simterpose-msg_client.log strace-msg_server.log strace-send_client.log strace-send_server.log
+
+.PHONY: diff-send diff-msg diff-pthread logs
 
 clean:
 	rm -f *~ strace-*.log simterpose-*.log
