@@ -1,0 +1,85 @@
+add_executable(simterpose
+  args_trace.c
+  communication.c
+  cputimer.c
+  data_utils.c
+  print_syscall.c
+  process_descriptor.c
+  ptrace_utils.c
+  simterpose.c
+  sockets.c
+  sys_accept.c
+  sys_bind.c
+  sys_brk.c
+  syscall_process.c
+  sys_clone.c
+  sys_close.c
+  sys_connect.c
+  sys_create.c
+  sys_dup2.c
+  sys_execve.c
+  sys_exit.c
+  sys_fcntl.c
+  sys_getpeername.c
+  sys_getsockopt.c
+  sys_listen.c
+  sys_open.c
+  sys_pipe.c
+  sys_pool.c
+  sys_read.c
+  sys_recvfrom.c
+  sys_recvmsg.c
+  sys_select.c
+  sys_sendmsg.c
+  sys_sendto.c
+  sys_setsockopt.c
+  sys_shutdown.c
+  sys_socket.c
+  sys_write.c
+  xbt_log_strace.c
+  include/args_trace.h
+  include/communication.h
+  include/cputimer.h
+  include/data_utils.h
+  include/print_syscall.h
+  include/process_descriptor.h
+  include/ptrace_utils.h
+  include/simterpose.h
+  include/sockets.h
+  include/sys_accept.h
+  include/sys_bind.h
+  include/sys_brk.h
+  include/syscall_data.h
+  include/syscall_process.h
+  include/sys_clone.h
+  include/sys_close.h
+  include/sys_connect.h
+  include/sys_create.h
+  include/sysdep.h
+  include/sys_dup2.h
+  include/sys_execve.h
+  include/sys_exit.h
+  include/sys_fcntl.h
+  include/sys_getpeername.h
+  include/sys_getsockopt.h
+  include/sys_listen.h
+  include/sys_open.h
+  include/sys_pipe.h
+  include/sys_pool.h
+  include/sys_read.h
+  include/sys_recvfrom.h
+  include/sys_recvmsg.h
+  include/sys_select.h
+  include/sys_sendmsg.h
+  include/sys_sendto.h
+  include/sys_setsockopt.h
+  include/sys_shutdown.h
+  include/sys_socket.h
+  include/sys_write.h
+)
+target_link_libraries(simterpose
+  ${CMAKE_THREAD_LIBS_INIT} ${SIMGRID_LIBRARIES} ${M_LIB})
+set_target_properties(simterpose
+  PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src"
+)
