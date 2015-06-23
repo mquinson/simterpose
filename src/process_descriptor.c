@@ -12,6 +12,19 @@
 #include "simterpose.h"
 #include "sockets.h"
 
+static inline
+void register_file_descriptor(process_descriptor_t* process, int fd, int type)
+{
+  fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
+  file_desc->refcount = 0;
+  file_desc->type = type;
+  file_desc->proc = process;
+  file_desc->fd = fd;
+  file_desc->flags = 0;
+  process->fd_list[fd] = file_desc;
+  file_desc->refcount++;
+}
+
 /** @brief create and initialize a new process descriptor */
 process_descriptor_t *process_descriptor_new(const char *name, const char *argv0, pid_t pid)
 {
@@ -26,32 +39,10 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
     result->fd_list[i] = NULL;
 
   // Initialize stdin, stdout, stderr
-  fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
-  file_desc->refcount = 0;
-  file_desc->type = FD_STDIN;
-  file_desc->proc = result;
-  file_desc->fd = 0;
-  file_desc->flags = 0;
-  result->fd_list[0] = file_desc;
-  file_desc->refcount++;
-
-  file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
-  file_desc->refcount = 0;
-  file_desc->type = FD_STDOUT;
-  file_desc->proc = result;
-  file_desc->fd = 1;
-  file_desc->flags = 0;
-  result->fd_list[1] = file_desc;
-  file_desc->refcount++;
-
-  file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
-  file_desc->refcount = 0;
-  file_desc->type = FD_STDERR;
-  file_desc->proc = result;
-  file_desc->fd = 2;
-  file_desc->flags = 0;
-  result->fd_list[2] = file_desc;
-  file_desc->refcount++;
+  register_file_descriptor(result, 0, FD_STDIN);
+  register_file_descriptor(result, 1, FD_STDOUT);
+  register_file_descriptor(result, 2, FD_STDERR);
+  // TODO, handler other FDs
 
   result->host = MSG_get_host_by_name(result->name);
 
