@@ -58,10 +58,10 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     get_args_write(proc, reg, sysarg);
 
     write_arg_t arg = &(sysarg->write);
-    
+
     fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
-    XBT_INFO("On syscall_write pointer value of arg %p \n arg->fd = %lu \n return value = %lu \n", arg, arg->fd, arg->ret);
-    XBT_INFO("value of pointer via proc->fd_list %p, via file_desc %p \n", proc->fd_list[arg->fd], file_desc);
+    XBT_DEBUG("On syscall_write pointer value of arg %p \n arg->fd = %lu \n return value = %lu", arg, arg->fd, arg->ret);
+    XBT_DEBUG("value of pointer via proc->fd_list %p, via file_desc %p \n", proc->fd_list[arg->fd], file_desc);
     file_desc->refcount++;
 
     if (file_desc != NULL && file_desc->type == FD_PIPE) {

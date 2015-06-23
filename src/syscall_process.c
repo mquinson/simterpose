@@ -71,10 +71,10 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_open:
-      XBT_INFO("On open\n");
-      XBT_INFO("Valeur des registres dans l'AS:\n");
-      XBT_INFO("Valeur de retour %lu \n", arg.ret);
-      XBT_INFO("Valeur des arg %lu %lu %lu %lu %lu %lu \n", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
+      XBT_DEBUG("On open");
+      XBT_DEBUG("Valeur des registres dans l'AS:");
+      XBT_DEBUG("Valeur de retour %lu", arg.ret);
+      XBT_DEBUG("Valeur des arg %lu %lu %lu %lu %lu %lu", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
       syscall_open(&arg, sysarg, proc);
       break;
 
@@ -87,10 +87,10 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_write:
-      XBT_INFO("On write\n");
-      XBT_INFO("Valeur des registres dans l'AS:\n");
-      XBT_INFO("Valeur de retour %lu \n", arg.ret);
-      XBT_INFO("Valeur des arg %lu %lu %lu %lu %lu %lu \n", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
+      XBT_DEBUG("On write");
+      XBT_DEBUG("Valeur des registres dans l'AS:");
+      XBT_DEBUG("Valeur de retour %lu", arg.ret);
+      XBT_DEBUG("Valeur des arg %lu %lu %lu %lu %lu %lu", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
       if ((ret = syscall_write(&arg, sysarg, proc)))
 	return ret;
       break;
@@ -109,7 +109,7 @@ int process_handle(process_descriptor_t * proc)
     case SYS_select:
       syscall_select(&arg, sysarg, proc);
       break;
- 
+
     case SYS_pipe:
       syscall_pipe(&arg, sysarg, proc);
 
@@ -229,7 +229,7 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
 
 
       MSG_task_set_bytes_amount(task, arg->ret);
-      MSG_task_set_data(task, arg->data); 
+      MSG_task_set_data(task, arg->data);
 
       send_task(s->fd.proc->host, task);
 

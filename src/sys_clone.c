@@ -20,7 +20,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 static int clone_number = 0;
 
 /** @brief handles clone syscall at the entrance ant the exit
- *  At the exit of the syscall, we can be either in the parent or the clone. 
+ *  At the exit of the syscall, we can be either in the parent or the clone.
  * If we are in the clone we actually create a new MSG process which inherits the file descriptors from the parent.
  */
 void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
@@ -41,15 +41,15 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 
 
       int pid_clone = ptrace_get_pid_clone(proc->pid);
-      XBT_INFO("clone returning in parent, ret = %d, pid_clone = %d", ret, pid_clone);
+      XBT_DEBUG("clone returning in parent, ret = %d, pid_clone = %d", ret, pid_clone);
 
 
     }
   } else if (proc_event_exec(proc)) {
-    XBT_INFO("In child of clone");
+    XBT_DEBUG("In child of clone");
 
     int pid_clone = ptrace_get_pid_clone(proc->pid);
-    XBT_INFO("clone returning in child, ret = %d, pid_clone = %d", ret, pid_clone);
+    XBT_DEBUG("clone returning in child, ret = %d, pid_clone = %d", ret, pid_clone);
     proc_outside(proc);
 
     get_args_clone(proc, reg, sysarg);

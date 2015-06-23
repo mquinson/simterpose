@@ -30,7 +30,7 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
     file_desc->refcount++;
 
     // We create the stream object for semaphores
-    XBT_INFO("stream initialization by accept syscall");
+    XBT_DEBUG("stream initialization by accept syscall");
     stream_t *stream = xbt_malloc0(sizeof(stream_t));
     stream->sem_client = MSG_sem_init(0);
     stream->sem_server = MSG_sem_init(0);
