@@ -21,7 +21,7 @@ void syscall_getpeername(reg_s * reg, syscall_arg_u * sysarg, process_descriptor
     syscall_getpeername_pre(reg, sysarg, proc);
   else
     proc_outside(proc);
-    
+
 }
 
 /** @brief handles getpeername syscall at the entrance */
@@ -43,22 +43,22 @@ void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
       struct sockaddr_in in;
       socklen_t size = 0;
       if (!comm_getpeername(is, &in, &size)) {
-	if (size < arg->len)
-	  arg->len = size;
-	arg->in = in;
-	arg->ret = 0;
+        if (size < arg->len)
+          arg->len = size;
+        arg->in = in;
+        arg->ret = 0;
       } else
-	arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
+        arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
 
       ptrace_neutralize_syscall(pid);
       proc_outside(proc);
       ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
       if (arg->ret == 0) {
-	ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
-	ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
+        ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
+        ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
       }
       if (strace_option)
-	print_getpeername_syscall(proc, sysarg);
+        print_getpeername_syscall(proc, sysarg);
     }
   }
 }

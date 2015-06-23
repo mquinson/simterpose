@@ -209,7 +209,7 @@ int simterpose_process_runner(int argc, char *argv[])
   }
   // We are still in simterpose, so we are the thread that is the representative of the external process
   MSG_process_set_data(MSG_process_self(),
-		       process_descriptor_new(MSG_host_get_name(MSG_host_self()), argv[0], tracked_pid));
+    process_descriptor_new(MSG_host_get_name(MSG_host_self()), argv[0], tracked_pid));
 
   // Wait for the traced to start
   int res = waitpid(tracked_pid, &status, __WALL);
@@ -219,10 +219,10 @@ int simterpose_process_runner(int argc, char *argv[])
   // Trace the child and all upcoming granchilds
   increment_nb_setoptions();
   if (ptrace(PTRACE_SETOPTIONS, tracked_pid, NULL,
-	     PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE | PTRACE_O_TRACEEXEC |
-	     PTRACE_O_TRACESYSGOOD)
+    PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE | PTRACE_O_TRACEEXEC |
+    PTRACE_O_TRACESYSGOOD)
       == -1) {
-	xbt_die("Error in setoptions, bailing out now. (%s)",strerror(errno));
+    xbt_die("Error in setoptions, bailing out now. (%s)",strerror(errno));
   }
 
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());

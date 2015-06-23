@@ -111,21 +111,21 @@ int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
       struct in_addr in;
 
       if (sai->sin_addr.s_addr == inet_addr("127.0.0.1")) {
-	in.s_addr = inet_addr("127.0.0.1");
-	device = PORT_LOCAL;
-	host = proc->host;
+        in.s_addr = inet_addr("127.0.0.1");
+        device = PORT_LOCAL;
+        host = proc->host;
       } else {
-	in.s_addr = get_ip_of_host(proc->host);
-	device = PORT_REMOTE;
-	host = get_host_by_ip(sai->sin_addr.s_addr);
-	if (host == NULL) {
-	  arg->ret = -ECONNREFUSED;       /* ECONNREFUSED       111 Connection refused */
-	  ptrace_neutralize_syscall(pid);
-	  proc_outside(proc);
-	  connect_arg_t arg = &(sysarg->connect);
-	  ptrace_restore_syscall(pid, SYS_connect, arg->ret);
-	  return 0;
-	}
+        in.s_addr = get_ip_of_host(proc->host);
+        device = PORT_REMOTE;
+        host = get_host_by_ip(sai->sin_addr.s_addr);
+        if (host == NULL) {
+          arg->ret = -ECONNREFUSED;       /* ECONNREFUSED       111 Connection refused */
+          ptrace_neutralize_syscall(pid);
+          proc_outside(proc);
+          connect_arg_t arg = &(sysarg->connect);
+          ptrace_restore_syscall(pid, SYS_connect, arg->ret);
+          return 0;
+        }
       }
 
       //We ask for a connection on the socket
@@ -133,21 +133,21 @@ int process_connect_in_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
       //if the process is waiting for connection
       if (acc_proc) {
-	//Now attribute ip and port to the socket.
-	int port = get_random_port(proc->host);
+        //Now attribute ip and port to the socket.
+        int port = get_random_port(proc->host);
 
-	XBT_DEBUG("New socket %s:%d", inet_ntoa(in), port);
-	set_localaddr_port_socket(proc, arg->sockfd, inet_ntoa(in), port);
-	register_port(proc->host, port);
-	XBT_DEBUG("Free port found on host %s (%s:%d)", MSG_host_get_name(proc->host), inet_ntoa(in), port);
-      } else {
-	XBT_DEBUG("No peer found");
-	arg->ret = -ECONNREFUSED; /* ECONNREFUSED 111 Connection refused */
-	ptrace_neutralize_syscall(pid);
-	proc_outside(proc);
-	connect_arg_t arg = &(sysarg->connect);
-	ptrace_restore_syscall(pid, SYS_connect, arg->ret);
-	return 0;
+        XBT_DEBUG("New socket %s:%d", inet_ntoa(in), port);
+        set_localaddr_port_socket(proc, arg->sockfd, inet_ntoa(in), port);
+        register_port(proc->host, port);
+        XBT_DEBUG("Free port found on host %s (%s:%d)", MSG_host_get_name(proc->host), inet_ntoa(in), port);
+            } else {
+        XBT_DEBUG("No peer found");
+        arg->ret = -ECONNREFUSED; /* ECONNREFUSED 111 Connection refused */
+        ptrace_neutralize_syscall(pid);
+        proc_outside(proc);
+        connect_arg_t arg = &(sysarg->connect);
+        ptrace_restore_syscall(pid, SYS_connect, arg->ret);
+        return 0;
       }
 #ifndef address_translation
       //Now we try to see if the socket is blocking of not

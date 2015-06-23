@@ -20,7 +20,7 @@ void syscall_getsockopt(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_
     syscall_getsockopt_pre(reg, sysarg, proc);
   else
     syscall_getsockopt_post(reg, sysarg, proc);
-      
+
 }
 
 /** @brief handles getsockopt syscall at the entrance if in full mediation */

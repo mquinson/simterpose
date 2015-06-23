@@ -194,22 +194,22 @@ void cputimer_get(int tid, long long int *times, xbt_cpu_timer_t timer)
       /* For nested attributes, na follows */
       na = (struct nlattr *) NLA_DATA(na);
       while (len2 < aggr_len) {
-	switch (na->nla_type) {
-	case TASKSTATS_TYPE_PID:
-	  break;
-	case TASKSTATS_TYPE_STATS:
-	  /* here we collect info */
-	  stats = (struct taskstats *) NLA_DATA(na);
-	  //times[0] = (long long int)stats->ac_etime;
-	  times[1] = (long long int) stats->ac_utime;   /* User CPU time [usec] */
-	  times[2] = (long long int) stats->ac_stime;   /* SYstem CPU time [usec] */
-	  break;
-	default:
-	  XBT_ERROR("Unknown nested" " nla_type %d\n", na->nla_type);
-	  break;
-	}
-	len2 += NLA_ALIGN(na->nla_len);
-	na = (struct nlattr *) ((char *) na + len2);
+        switch (na->nla_type) {
+        case TASKSTATS_TYPE_PID:
+          break;
+        case TASKSTATS_TYPE_STATS:
+          /* here we collect info */
+          stats = (struct taskstats *) NLA_DATA(na);
+          //times[0] = (long long int)stats->ac_etime;
+          times[1] = (long long int) stats->ac_utime;   /* User CPU time [usec] */
+          times[2] = (long long int) stats->ac_stime;   /* SYstem CPU time [usec] */
+          break;
+        default:
+          XBT_ERROR("Unknown nested" " nla_type %d\n", na->nla_type);
+          break;
+        }
+        len2 += NLA_ALIGN(na->nla_len);
+        na = (struct nlattr *) ((char *) na + len2);
       }
       break;
     default:

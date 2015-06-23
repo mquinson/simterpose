@@ -25,7 +25,7 @@ int syscall_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descr
   else
     ret = syscall_sendto_post(pid, reg, sysarg, proc);
   if (ret)
-    return ret;			
+    return ret;
 
   return 0;
 }

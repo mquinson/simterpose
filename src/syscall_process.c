@@ -63,7 +63,7 @@ int process_handle(process_descriptor_t * proc)
     ptrace_get_register(pid, &arg);
     int ret;
     XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig,
-	      arg.ret, proc->in_syscall);
+      arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_creat:
@@ -140,7 +140,7 @@ int process_handle(process_descriptor_t * proc)
     case SYS_sendto:
       ret = syscall_sendto(pid, &arg, sysarg, proc);
       if (ret)
-	return ret;
+        return ret;
       break;
 
     case SYS_recvfrom:
@@ -149,7 +149,7 @@ int process_handle(process_descriptor_t * proc)
 
     case SYS_sendmsg:
       if ((ret = syscall_sendmsg(pid, &arg, sysarg, proc)))
-	return ret;
+        return ret;
       break;
 
     case SYS_recvmsg:
@@ -225,7 +225,7 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
 
       msg_task_t task = create_send_communication_task(proc, is, arg->ret, proc->host, s->fd.proc->host);
       XBT_DEBUG("hosts: %s send to %s (size: %lu)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
-		arg->ret);
+        arg->ret);
 
 
       MSG_task_set_bytes_amount(task, arg->ret);
@@ -253,35 +253,35 @@ void process_close_call(process_descriptor_t * proc, int fd)
       socket_close(proc, fd);
     else {
       if (file_desc->type == FD_PIPE) {
-	pipe_t *pipe = file_desc->pipe;
-	xbt_assert(pipe != NULL);
+        pipe_t *pipe = file_desc->pipe;
+        xbt_assert(pipe != NULL);
 
-	unsigned int cpt_in;
-	pipe_end_t end_in;
-	xbt_dynar_t read_end = pipe->read_end;
-	xbt_dynar_foreach(read_end, cpt_in, end_in) {
-	  if (end_in->fd == fd && end_in->proc->pid == proc->pid) {
-	    xbt_dynar_remove_at(read_end, cpt_in, NULL);
-	    cpt_in--;
-	  }
-	}
+        unsigned int cpt_in;
+        pipe_end_t end_in;
+        xbt_dynar_t read_end = pipe->read_end;
+        xbt_dynar_foreach(read_end, cpt_in, end_in) {
+          if (end_in->fd == fd && end_in->proc->pid == proc->pid) {
+            xbt_dynar_remove_at(read_end, cpt_in, NULL);
+            cpt_in--;
+          }
+        }
 
-	unsigned int cpt_out;
-	pipe_end_t end_out;
-	xbt_dynar_t write_end = pipe->write_end;
-	xbt_dynar_foreach(write_end, cpt_out, end_out) {
-	  if (end_out->fd == fd && end_out->proc->pid == proc->pid) {
-	    xbt_dynar_remove_at(write_end, cpt_out, NULL);
-	    cpt_out--;
-	  }
-	}
+        unsigned int cpt_out;
+        pipe_end_t end_out;
+        xbt_dynar_t write_end = pipe->write_end;
+        xbt_dynar_foreach(write_end, cpt_out, end_out) {
+          if (end_out->fd == fd && end_out->proc->pid == proc->pid) {
+            xbt_dynar_remove_at(write_end, cpt_out, NULL);
+            cpt_out--;
+          }
+        }
 
-	// if both sides are closed we can free the pipe
-	if (xbt_dynar_is_empty(read_end) && xbt_dynar_is_empty(write_end)) {
-	  xbt_dynar_free(&read_end);
-	  xbt_dynar_free(&write_end);
-	  free(pipe);
-	}
+        // if both sides are closed we can free the pipe
+        if (xbt_dynar_is_empty(read_end) && xbt_dynar_is_empty(write_end)) {
+          xbt_dynar_free(&read_end);
+          xbt_dynar_free(&write_end);
+          free(pipe);
+        }
 
       }
     }

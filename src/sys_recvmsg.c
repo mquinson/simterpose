@@ -43,39 +43,39 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
 
     if (socket_registered(proc, arg->sockfd) != -1) {
       if (!socket_netlink(proc, arg->sockfd)) {
-	const char *mailbox;
-	if (MSG_process_self() == file_desc->stream->client)
-	  mailbox = file_desc->stream->to_client;
-	else if (MSG_process_self() == file_desc->stream->server)
-	  mailbox = file_desc->stream->to_server;
-	else
-	  THROW_IMPOSSIBLE;
+        const char *mailbox;
+        if (MSG_process_self() == file_desc->stream->client)
+          mailbox = file_desc->stream->to_client;
+        else if (MSG_process_self() == file_desc->stream->server)
+          mailbox = file_desc->stream->to_server;
+        else
+          THROW_IMPOSSIBLE;
 
-	msg_task_t task = NULL;
-	msg_error_t err = MSG_task_receive(&task, mailbox);
+        msg_task_t task = NULL;
+        msg_error_t err = MSG_task_receive(&task, mailbox);
 
-	arg->ret = (int) MSG_task_get_bytes_amount(task);
-	arg->data = MSG_task_get_data(task);
+        arg->ret = (int) MSG_task_get_bytes_amount(task);
+        arg->data = MSG_task_get_data(task);
 
-	if (err != MSG_OK) {
-	  struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-	  int sock_status = socket_get_state(is);
+        if (err != MSG_OK) {
+          struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+          int sock_status = socket_get_state(is);
 #ifdef address_translation
-	  if (sock_status & SOCKET_CLOSED)
-	    sys_build_recvmsg(proc, &(proc->sysarg));
+          if (sock_status & SOCKET_CLOSED)
+            sys_build_recvmsg(proc, &(proc->sysarg));
 #else
-	  if (sock_status & SOCKET_CLOSED)
-	    sysarg->recvmsg.ret = 0;
-	  ptrace_neutralize_syscall(pid);
-	  proc_outside(proc);
-	  sys_build_recvmsg(proc, &(proc->sysarg));
-	} else {
-	  ptrace_neutralize_syscall(pid);
-	  proc_outside(proc);
-	  sys_build_recvmsg(proc, &(proc->sysarg));
+          if (sock_status & SOCKET_CLOSED)
+            sysarg->recvmsg.ret = 0;
+          ptrace_neutralize_syscall(pid);
+          proc_outside(proc);
+          sys_build_recvmsg(proc, &(proc->sysarg));
+        } else {
+          ptrace_neutralize_syscall(pid);
+          proc_outside(proc);
+          sys_build_recvmsg(proc, &(proc->sysarg));
 #endif
-	}
-	MSG_task_destroy(task);
+        }
+        MSG_task_destroy(task);
       }
     }
     file_desc->refcount--;

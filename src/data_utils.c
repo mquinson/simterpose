@@ -403,8 +403,8 @@ void benchmark_matrix_product(float *msec_per_flop)
   for (j_result = 0; j_result < matrixSize; ++j_result) {
     for (i_result = 0; i_result < matrixSize; ++i_result) {
       for (i = 0; i < matrixSize; ++i) {
-	matrix_result[j_result][i_result] =
-	  matrix_result[i_result][j_result] + matrix1[i_result][i] * matrix2[i][j_result];
+        matrix_result[j_result][i_result] =
+          matrix_result[i_result][j_result] + matrix1[i_result][i] * matrix2[i][j_result];
       }
     }
   }
@@ -466,12 +466,12 @@ void init_host_list()
     int found = 1;
     while (found) {
       TRY {
-	xbt_dynar_search(ip_list, &temp_ip);
-	++temp_ip;
+        xbt_dynar_search(ip_list, &temp_ip);
+        ++temp_ip;
       }
       CATCH(e) {
-	xbt_ex_free(e);
-	found = 0;
+        xbt_ex_free(e);
+        found = 0;
       }
     }
     struct in_addr in = { temp_ip };

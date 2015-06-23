@@ -32,40 +32,40 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     if (socket_registered(proc, reg->arg[0]) != -1) {
       const char *mailbox;
       if (MSG_process_self() == file_desc->stream->client)
-	mailbox = file_desc->stream->to_client;
+        mailbox = file_desc->stream->to_client;
       else if (MSG_process_self() == file_desc->stream->server)
-	mailbox = file_desc->stream->to_server;
+        mailbox = file_desc->stream->to_server;
       else
-	THROW_IMPOSSIBLE;
+        THROW_IMPOSSIBLE;
 
       msg_task_t task = NULL;
       msg_error_t err = MSG_task_receive(&task, mailbox);
-			
+
       arg->ret = (int) MSG_task_get_bytes_amount(task);
       arg->data = MSG_task_get_data(task);
 
       if (err != MSG_OK) {
-	struct infos_socket *is = get_infos_socket(proc, arg->fd);
-	int sock_status = socket_get_state(is);
+        struct infos_socket *is = get_infos_socket(proc, arg->fd);
+        int sock_status = socket_get_state(is);
 #ifdef address_translation
-	if (sock_status & SOCKET_CLOSED)
-	  process_read_out_call(proc);
+        if (sock_status & SOCKET_CLOSED)
+          process_read_out_call(proc);
 #else
-	if (sock_status & SOCKET_CLOSED)
-	  sysarg->read.ret = 0;
-	ptrace_neutralize_syscall(proc->pid);
-	proc_outside(proc);
-	process_read_out_call(proc);
+        if (sock_status & SOCKET_CLOSED)
+          sysarg->read.ret = 0;
+        ptrace_neutralize_syscall(proc->pid);
+        proc_outside(proc);
+        process_read_out_call(proc);
       } else {
-	ptrace_neutralize_syscall(proc->pid);
-	proc_outside(proc);
-	process_read_out_call(proc);
+        ptrace_neutralize_syscall(proc->pid);
+        proc_outside(proc);
+        process_read_out_call(proc);
 #endif
       }
       MSG_task_destroy(task);
     } else if (file_desc != NULL && file_desc->type == FD_PIPE) {
       if (strace_option)
-	print_read_syscall(proc, sysarg);
+        print_read_syscall(proc, sysarg);
       fprintf(stderr, "[%d] read pre, pipe \n", proc->pid);
       pipe_t *pipe = file_desc->pipe;
       if (pipe == NULL)

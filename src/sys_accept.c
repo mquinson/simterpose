@@ -84,7 +84,6 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
     file_desc->refcount--;
     file_desc = NULL;
 
-
   } else { // **** Exit syscall ****
 
     proc_outside(proc);

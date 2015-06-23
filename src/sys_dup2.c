@@ -49,10 +49,10 @@ void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     pipe_end_t end_in;
     xbt_dynar_foreach(read_end, cpt_in, end_in) {
       if (end_in->fd == oldfd && end_in->proc == proc) {
-	pipe_end_t dup_end = xbt_malloc0(sizeof(pipe_end_s));
-	dup_end->fd = newfd;
-	dup_end->proc = end_in->proc;
-	xbt_dynar_push(read_end, &dup_end);
+        pipe_end_t dup_end = xbt_malloc0(sizeof(pipe_end_s));
+        dup_end->fd = newfd;
+        dup_end->proc = end_in->proc;
+        xbt_dynar_push(read_end, &dup_end);
       }
     }
 
@@ -62,10 +62,10 @@ void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     pipe_end_t end_out;
     xbt_dynar_foreach(write_end, cpt_out, end_out) {
       if (end_out->fd == oldfd && end_out->proc == proc) {
-	pipe_end_t dup_end = xbt_malloc0(sizeof(pipe_end_s));
-	dup_end->fd = newfd;
-	dup_end->proc = end_out->proc;
-	xbt_dynar_push(write_end, &dup_end);
+        pipe_end_t dup_end = xbt_malloc0(sizeof(pipe_end_s));
+        dup_end->fd = newfd;
+        dup_end->proc = end_out->proc;
+        xbt_dynar_push(write_end, &dup_end);
       }
     }
   }

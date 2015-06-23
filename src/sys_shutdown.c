@@ -21,7 +21,7 @@ void syscall_shutdown(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t 
     syscall_shutdown_pre(reg, sysarg, proc);
   else
     syscall_shutdown_post(reg, sysarg, proc);
-      
+
 }
 
 /** @brief handles shutdown syscall at the entrace if in full mediation

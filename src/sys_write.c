@@ -35,14 +35,14 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     if (socket_registered(proc, sysarg->write.fd) != -1) {
       process_descriptor_t remote_proc;
       if (process_send_call(proc, sysarg, &remote_proc)) {
-	ptrace_neutralize_syscall(proc->pid);
+        ptrace_neutralize_syscall(proc->pid);
 
-	write_arg_t arg = &(sysarg->write);
-	ptrace_restore_syscall(proc->pid, SYS_write, arg->ret);
-	if (strace_option)
-	  print_write_syscall(proc, sysarg);
-	proc_outside(proc);
-	return PROCESS_TASK_FOUND;
+        write_arg_t arg = &(sysarg->write);
+        ptrace_restore_syscall(proc->pid, SYS_write, arg->ret);
+        if (strace_option)
+          print_write_syscall(proc, sysarg);
+        proc_outside(proc);
+        return PROCESS_TASK_FOUND;
       }
     } else {
       // TODO: if the socket is not registered, for now we do nothing
@@ -66,10 +66,10 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
 
     if (file_desc != NULL && file_desc->type == FD_PIPE) {
       if (strace_option)
-	print_write_syscall(proc, sysarg);
+        print_write_syscall(proc, sysarg);
       pipe_t *pipe = file_desc->pipe;
       if (pipe == NULL)
-	THROW_IMPOSSIBLE;
+        THROW_IMPOSSIBLE;
 
       pipe_end_t end_in = NULL;
       xbt_dynar_get_cpy(pipe->read_end, 0, &end_in);
@@ -84,7 +84,7 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
       double amount = arg->ret;
       msg_task_t task = MSG_task_create(buff, 0, amount, arg->data);
       XBT_WARN("hosts: %s send to %s in pipe %d (size: %lu)", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
-	       end_in->fd, arg->ret);
+        end_in->fd, arg->ret);
       MSG_task_send(task, buff);
     } else if (strace_option)
       print_write_syscall(proc, sysarg);
@@ -95,9 +95,9 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
 #ifdef address_translation
     if ((int) reg->ret > 0) {
       if (socket_registered(proc, sysarg->write.fd) != -1) {
-	process_descriptor_t remote_proc;
-	if (process_send_call(proc, sysarg, &remote_proc))
-	  return PROCESS_TASK_FOUND;
+        process_descriptor_t remote_proc;
+      if (process_send_call(proc, sysarg, &remote_proc))
+        return PROCESS_TASK_FOUND;
       }
     }
 #endif

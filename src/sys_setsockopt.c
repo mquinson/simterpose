@@ -20,7 +20,7 @@ void syscall_setsockopt(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_
     syscall_setsockopt_pre(reg, sysarg, proc);
   else
     syscall_setsockopt_post(reg, sysarg, proc);
-      
+
 }
 
 /** @brief handles setsockopt syscall at the entrance if in full mediation */

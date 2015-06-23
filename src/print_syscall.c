@@ -1072,7 +1072,7 @@ void print_getpeername_syscall(process_descriptor_t * proc, syscall_arg_u * sysa
   //  fprintf(proc->strace_out,"[%d] getpeername (%d, ", pid, arg->sockfd);
   fprintf(proc->strace_out, "getpeername (%d, ", arg->sockfd);
   fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", arg->in.sin_port,
-	  inet_ntoa(arg->in.sin_addr));
+    inet_ntoa(arg->in.sin_addr));
   fprintf(proc->strace_out, "%d ) = %d\n", arg->len, arg->ret);
 }
 

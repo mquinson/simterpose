@@ -61,15 +61,15 @@ void syscall_select_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_
     int sock_status = socket_get_state(is);
     if (FD_ISSET(i, &(fd_rd))) {
       if ((sock_status & SOCKET_READ_OK) || (sock_status & SOCKET_CLOSED) || (sock_status & SOCKET_SHUT))
-	++match;
+        ++match;
       else
-	FD_CLR(i, &(fd_rd));
+        FD_CLR(i, &(fd_rd));
     }
     if (FD_ISSET(i, &(fd_wr))) {
       if ((sock_status & SOCKET_WR_NBLK) && !(sock_status & SOCKET_CLOSED) && !(sock_status & SOCKET_SHUT))
-	++match;
+        ++match;
       else
-	FD_CLR(i, &(fd_wr));
+        FD_CLR(i, &(fd_wr));
     }
     if (FD_ISSET(i, &(fd_ex))) {
       XBT_WARN("Select does not handle exception states for now");
