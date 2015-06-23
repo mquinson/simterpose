@@ -38,7 +38,7 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
   recvmsg_arg_t arg = &(sysarg->recvmsg);
 
   if (reg->ret > 0) {
-    fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->sockfd);
     file_desc->refcount++;
 
     if (socket_registered(proc, arg->sockfd) != -1) {

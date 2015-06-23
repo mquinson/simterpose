@@ -17,7 +17,7 @@ void syscall_creat(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     proc_inside(proc);
   else
     syscall_creat_post(reg, sysarg, proc);
-    
+
 }
 
 /** @brief handles creat syscall at the exit*/
@@ -30,7 +30,7 @@ void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_
     file_desc->fd = (int) reg->ret;
     file_desc->proc = proc;
     file_desc->type = FD_CLASSIC;
-    proc->fd_list[(int) reg->ret] = file_desc;
+    process_descriptor_set_fd(proc, (int) reg->ret, file_desc);
     file_desc->refcount++;
   }
 }

@@ -63,7 +63,7 @@ static struct infos_socket *confirm_register_socket(process_descriptor_t * proc,
 
   struct infos_socket *is = xbt_malloc0(sizeof(struct infos_socket));
 
-  proc->fd_list[sockfd] = (fd_descriptor_t *) is;
+  process_descriptor_set_fd(proc, sockfd, (fd_descriptor_t *) is);
   is->ref_nb = 0;
   is->fd.type = FD_SOCKET;
   is->fd.fd = sockfd;
@@ -148,14 +148,15 @@ void socket_close(process_descriptor_t * proc, int fd)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
   if (is != NULL) {
-    proc->fd_list[fd]->refcount--;
+    // There is probably something wrong here:
+    process_descriptor_get_fd(proc, fd)->refcount--;
     is->ref_nb--;
     if (socket_network(proc, fd))
       comm_close(is);
     else {
       free(is);
     }
-    proc->fd_list[fd] = NULL;
+    process_descriptor_set_fd(proc, fd, NULL);
   }
 }
 
@@ -163,7 +164,7 @@ void socket_close(process_descriptor_t * proc, int fd)
 struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
 {
   XBT_DEBUG("Registering socket %d for process %d", sockfd, proc->pid);
-  if (proc->fd_list[sockfd] != NULL) {
+  if (process_descriptor_get_fd(proc, sockfd) != NULL) {
     xbt_die("Inconsistency found in model. Socket already exist");
   }
   return confirm_register_socket(proc, sockfd, domain, protocol);
@@ -298,7 +299,7 @@ int socket_registered(process_descriptor_t * proc, int fd)
 struct infos_socket *get_infos_socket(process_descriptor_t * proc, int fd)
 {
   // XBT_DEBUG("Info socket %d %d", proc->pid, fd);
-  fd_descriptor_t *file_desc = proc->fd_list[fd];
+  fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, fd);
 
   if (file_desc == NULL || file_desc->type != FD_SOCKET)
     return NULL;
@@ -371,7 +372,7 @@ int close_all_communication(process_descriptor_t * proc)
   int i = 0;
   int result = 0;
   for (i = 0; i < MAX_FD; ++i) {
-    fd_descriptor_t *file_desc = proc->fd_list[i];
+    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, i);
     if (file_desc != NULL && file_desc->type == FD_SOCKET) {
       recv_information *recv = comm_get_own_recv((struct infos_socket *) file_desc);
 

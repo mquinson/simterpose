@@ -61,19 +61,21 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     // do NOT affect the parent unless CLONE_FILES is set
     int i;
     for (i = 0; i < MAX_FD; ++i) {
-      clone->fd_list[i] = xbt_malloc0(sizeof(fd_descriptor_t));
-      clone->fd_list[i]->proc = clone;
-      clone->fd_list[i]->refcount = 0;
-      if (proc->fd_list[i] != NULL) {
-        clone->fd_list[i]->fd = proc->fd_list[i]->fd;
-        clone->fd_list[i]->flags = proc->fd_list[i]->flags;
-        clone->fd_list[i]->pipe = proc->fd_list[i]->pipe;
-        clone->fd_list[i]->stream = proc->fd_list[i]->stream;
-        clone->fd_list[i]->type = proc->fd_list[i]->type;
+      fd_descriptor_t* clone_desc = xbt_malloc0(sizeof(fd_descriptor_t));
+      process_descriptor_set_fd(clone, i, clone_desc);
+      fd_descriptor_t* file_desc = process_descriptor_get_fd(proc, i);
+      clone_desc->proc = clone;
+      clone_desc->refcount = 0;
+      if (file_desc != NULL) {
+        clone_desc->fd = file_desc->fd;
+        clone_desc->flags = file_desc->flags;
+        clone_desc->pipe = file_desc->pipe;
+        clone_desc->stream = file_desc->stream;
+        clone_desc->type = file_desc->type;
       }
       // deal with pipes
-      if (clone->fd_list[i]->type == FD_PIPE) {
-        pipe_t *pipe = clone->fd_list[i]->pipe;
+      if (clone_desc->type == FD_PIPE) {
+        pipe_t *pipe = clone_desc->pipe;
         xbt_assert(pipe != NULL);
 
         // copy all the fds in the read end of the pipe

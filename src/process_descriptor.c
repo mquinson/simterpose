@@ -21,7 +21,7 @@ void register_file_descriptor(process_descriptor_t* process, int fd, int type)
   file_desc->proc = process;
   file_desc->fd = fd;
   file_desc->flags = 0;
-  process->fd_list[fd] = file_desc;
+  process_descriptor_set_fd(process, fd, file_desc);
   file_desc->refcount++;
 }
 
@@ -71,9 +71,11 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
   //We don't free each fd because application do this before us. TODO: check that
   int i;
   for (i = 0; i < MAX_FD; ++i) {
-    if (proc->fd_list[i]) {
-      proc->fd_list[i]->refcount--;
-      free(proc->fd_list[i]);
+    fd_descriptor_t* file_dsc = process_descriptor_get_fd(proc, i);
+    if (file_dsc) {
+      // There is probably something wrong here:
+      file_dsc->refcount--;
+      free(file_dsc);
     }
   }
   if (strace_option && proc->strace_out) {

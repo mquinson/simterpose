@@ -99,6 +99,16 @@ struct process_descriptor {
   int curcol;
 };
 
+static fd_descriptor_t* process_descriptor_get_fd(process_descriptor_t* proc, int fd)
+{
+  return proc->fd_list[fd];
+}
+
+static void process_descriptor_set_fd(process_descriptor_t* proc, int fd, fd_descriptor_t* file_desc)
+{
+  proc->fd_list[fd] = file_desc;
+}
+
 #define getevent(status) (( (status) >> 16) & 0xffff)
 static int proc_event_exec(process_descriptor_t *proc) {
   return WIFSTOPPED(proc->status) &&  ( getevent(proc->status) == PTRACE_EVENT_EXEC );

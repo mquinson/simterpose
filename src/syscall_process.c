@@ -246,7 +246,7 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
 /** @brief helper function to close a file descriptor */
 void process_close_call(process_descriptor_t * proc, int fd)
 {
-  fd_descriptor_t *file_desc = proc->fd_list[fd];
+  fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, fd);
   if (file_desc != NULL) {
     file_desc->refcount++;
     if (file_desc->type == FD_SOCKET)

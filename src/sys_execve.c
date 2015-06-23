@@ -36,9 +36,9 @@ void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
 
     int i;
     for (i = 0; i < MAX_FD; ++i) {
-      if (proc->fd_list[i] != NULL) {
-	// XBT_WARN("fd n° %d; proc->fd_list[i]->flags = %d\n ", i, proc->fd_list[i]->flags);
-	if (proc->fd_list[i]->flags == FD_CLOEXEC)
+      if (process_descriptor_get_fd(proc, i) != NULL) {
+	// XBT_WARN("fd n° %d; process_descriptor_get_fd(proc, i)->flags = %d\n ", i, process_descriptor_get_fd(proc, i)->flags);
+	if (process_descriptor_get_fd(proc, i)->flags == FD_CLOEXEC)
 	  XBT_WARN("FD_CLOEXEC not handled");
 	//process_close_call(proc, i);
       }

@@ -30,11 +30,11 @@ void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
   unsigned int oldfd = (int) reg->arg[0];
   unsigned int newfd = (int) reg->arg[1];
 
-  fd_descriptor_t *file_desc = proc->fd_list[oldfd];
+  fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, oldfd);
   file_desc->refcount++;
-  proc->fd_list[newfd]->refcount--;
+  process_descriptor_get_fd(proc, newfd)->refcount--;
   process_close_call(proc, newfd);
-  proc->fd_list[newfd] = file_desc;
+  process_descriptor_set_fd(proc, newfd, file_desc);
   file_desc->refcount++;
 
   if (strace_option)

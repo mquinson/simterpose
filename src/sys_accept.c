@@ -26,7 +26,7 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
     get_args_accept(proc, reg, sysarg);
 
     accept_arg_t arg = &(sysarg->accept);
-    fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->sockfd);
     file_desc->refcount++;
 
     // We create the stream object for semaphores
@@ -98,7 +98,7 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
     // Never called by full mediation
     get_args_accept(proc, reg, sysarg);
     accept_arg_t arg = &(sysarg->accept);
-    fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->sockfd);
     file_desc->refcount++;
 
     XBT_DEBUG("accept_post: trying to take server semaphore ...");

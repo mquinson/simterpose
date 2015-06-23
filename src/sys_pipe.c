@@ -21,7 +21,7 @@ void syscall_pipe(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     syscall_pipe_post(reg, sysarg, proc);
 
 }
- 
+
 /** @brief handles pipe syscall at the entrance
     Create a SimTerpose pipe and the corresponding file descriptors */
 void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
@@ -62,7 +62,7 @@ void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     file_desc->proc = proc;
     file_desc->type = FD_PIPE;
     file_desc->pipe = pipe;
-    proc->fd_list[p0] = file_desc;
+    process_descriptor_set_fd(proc, p0, file_desc);
     file_desc->refcount++;
 
     file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
@@ -71,7 +71,7 @@ void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     file_desc->proc = proc;
     file_desc->type = FD_PIPE;
     file_desc->pipe = pipe;
-    proc->fd_list[p1] = file_desc;
+    process_descriptor_set_fd(proc, p1, file_desc);
     file_desc->refcount++;
 
     if (strace_option)
