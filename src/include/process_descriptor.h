@@ -101,11 +101,15 @@ struct process_descriptor {
 
 static fd_descriptor_t* process_descriptor_get_fd(process_descriptor_t* proc, int fd)
 {
-  return proc->fd_list[fd];
+  if (fd >= MAX_FD)
+    return NULL;
+  else
+    return proc->fd_list[fd];
 }
 
 static void process_descriptor_set_fd(process_descriptor_t* proc, int fd, fd_descriptor_t* file_desc)
 {
+  xbt_assert(fd < MAX_FD, "We don't handle this FD");
   proc->fd_list[fd] = file_desc;
 }
 
