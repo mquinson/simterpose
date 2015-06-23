@@ -249,8 +249,8 @@ int main_loop(int argc, char *argv[])
 {
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
 
-  int proc_next_state;
-  while (proc_next_state != PROCESS_DEAD) {
+  int proc_next_state = PROCESS_CONTINUE;
+  do {
     XBT_DEBUG("Starting treatment (pid = %d)", proc->pid);
 
     // wait for the process to be created before trying to resume it
@@ -262,6 +262,6 @@ int main_loop(int argc, char *argv[])
     proc_next_state = process_handle(proc);
 
     XBT_DEBUG("End of treatment, status = %s", state_names[proc_next_state]);
-  }
+  } while (proc_next_state != PROCESS_DEAD);
   return 0;
 }
