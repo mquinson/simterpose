@@ -99,17 +99,17 @@ int main(int argc, char *argv[])
     while ((c = getopt(argc, argv, "s+p:")) != EOF) {
       switch (c) {
       case 's':
-	strace_option = 1;
-	break;
+        strace_option = 1;
+        break;
       case 'p':
-	flop_option = 1;
-	msec_per_flop = 1000000 / str_to_double(optarg);
-	XBT_INFO("Setting reference power to %s flop/s", optarg);
-	break;
+        flop_option = 1;
+        msec_per_flop = 1000000 / str_to_double(optarg);
+        XBT_INFO("Setting reference power to %s flop/s", optarg);
+        break;
 
       default:
-	usage(argv[0], 0);
-	break;
+        usage(argv[0], 0);
+        break;
       }
     }
   }
@@ -174,11 +174,11 @@ int simterpose_process_runner(int argc, char *argv[])
       void *process;
       unsigned int cpt;
       xbt_dynar_foreach(MSG_processes_as_dynar(), cpt, process) {
-	process_descriptor_t * p=(process_descriptor_t *)MSG_process_get_data(process);
-	if (!p)
-	  continue;
-	fclose( p->strace_out );
-	p->strace_out = NULL;
+        process_descriptor_t * p=(process_descriptor_t *)MSG_process_get_data(process);
+        if (!p)
+          continue;
+        fclose( p->strace_out );
+        p->strace_out = NULL;
       }
     }
 
