@@ -61,9 +61,12 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     // do NOT affect the parent unless CLONE_FILES is set
     int i;
     for (i = 0; i < MAX_FD; ++i) {
+      fd_descriptor_t* file_desc = process_descriptor_get_fd(proc, i);
+      if (!file_desc)
+        continue;
+
       fd_descriptor_t* clone_desc = xbt_malloc0(sizeof(fd_descriptor_t));
       process_descriptor_set_fd(clone, i, clone_desc);
-      fd_descriptor_t* file_desc = process_descriptor_get_fd(proc, i);
       clone_desc->proc = clone;
       clone_desc->refcount = 0;
       if (file_desc != NULL) {
