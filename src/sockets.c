@@ -369,22 +369,25 @@ void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
 /** @brief close all the communications */
 int close_all_communication(process_descriptor_t * proc)
 {
-  int i = 0;
   int result = 0;
-  for (i = 0; i < MAX_FD; ++i) {
-    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, i);
+
+  xbt_dict_cursor_t cursor = NULL;
+  char *key;
+  fd_descriptor_t* file_desc;
+  xbt_dict_foreach(proc->fd_map, cursor, key, file_desc) {
+    int i = *(int*) key;
     if (file_desc != NULL && file_desc->type == FD_SOCKET) {
       recv_information *recv = comm_get_own_recv((struct infos_socket *) file_desc);
 
       if (!recv)
-	continue;
+        continue;
 
       xbt_fifo_t tl = recv->recv_task;
       task_comm_info *tci;
       while (xbt_fifo_size(tl)) {
-	tci = (task_comm_info *) xbt_fifo_shift(tl);
-	MSG_task_destroy(tci->task);
-	free(tci);
+        tci = (task_comm_info *) xbt_fifo_shift(tl);
+        MSG_task_destroy(tci->task);
+        free(tci);
       }
 
       xbt_fifo_t dl = recv->data_fifo;
@@ -394,11 +397,11 @@ int close_all_communication(process_descriptor_t * proc)
       int *ds;
 #endif
       while (xbt_fifo_size(dl)) {
-	ds = xbt_fifo_shift(dl);
+        ds = xbt_fifo_shift(dl);
 #ifndef address_translation
-	free(((data_send_s *) ds)->data);
+        free(((data_send_s *) ds)->data);
 #endif
-	free(ds);
+        free(ds);
       }
       socket_close(proc, i);
     }

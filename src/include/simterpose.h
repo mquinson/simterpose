@@ -20,7 +20,6 @@ extern int strace_option; // whether we should display strace-like outputs
 
 #include "process_descriptor.h"
 
-#define MAX_FD 2048
 #define MAX_PID 32768
 
 #define PORT_BIND       0x1
@@ -31,7 +30,7 @@ typedef struct simterpose_host simterpose_host_t;
 typedef struct port_desc port_desc_t;
 typedef struct translate_desc translate_desc_t;
 
-//For num syscall see 
+//For num syscall see
 //file:///usr/share/gdb/syscalls/amd64-linux.xml
 
 struct port_desc {

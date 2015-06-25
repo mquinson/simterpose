@@ -59,9 +59,11 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 
     // the clone inherits the fd_list but subsequent actions on fd
     // do NOT affect the parent unless CLONE_FILES is set
-    int i;
-    for (i = 0; i < MAX_FD; ++i) {
-      fd_descriptor_t* file_desc = process_descriptor_get_fd(proc, i);
+    xbt_dict_cursor_t cursor = NULL;
+    char *key;
+    fd_descriptor_t* file_desc;
+    xbt_dict_foreach(proc->fd_map, cursor, key, file_desc) {
+      int i = *(int*) key;
       if (!file_desc)
         continue;
 

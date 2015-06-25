@@ -26,7 +26,7 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     XBT_DEBUG(" read_pre");
     get_args_read(proc, reg, sysarg);
     read_arg_t arg = &(sysarg->read);
-    fd_descriptor_t *file_desc = proc->fd_list[arg->fd];
+    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->fd);
     file_desc->refcount++;
 
     if (socket_registered(proc, reg->arg[0]) != -1) {

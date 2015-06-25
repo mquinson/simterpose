@@ -286,7 +286,7 @@ void process_close_call(process_descriptor_t * proc, int fd)
       }
     }
     file_desc->refcount--;
-    proc->fd_list[fd] = NULL;
+    process_descriptor_set_fd(proc, fd, NULL);
   }
 }
 

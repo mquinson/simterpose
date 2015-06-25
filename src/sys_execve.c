@@ -34,15 +34,13 @@ void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
     if (strace_option)
       print_execve_syscall_post(proc, sysarg);
 
-    int i;
-    for (i = 0; i < MAX_FD; ++i) {
-      if (process_descriptor_get_fd(proc, i) != NULL) {
-	// XBT_WARN("fd n° %d; process_descriptor_get_fd(proc, i)->flags = %d\n ", i, process_descriptor_get_fd(proc, i)->flags);
-	if (process_descriptor_get_fd(proc, i)->flags == FD_CLOEXEC)
-	  XBT_WARN("FD_CLOEXEC not handled");
-	//process_close_call(proc, i);
-      }
-    }
+    xbt_dict_cursor_t cursor = NULL;
+    char *key;
+    fd_descriptor_t* file_desc;
+    xbt_dict_foreach(proc->fd_map, cursor, key, file_desc)
+      if (file_desc->flags == FD_CLOEXEC)
+        XBT_WARN("FD_CLOEXEC not handled");
+
     XBT_DEBUG("execve retour");
   }
 }

@@ -5,6 +5,9 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "sys_fcntl.h"
 
 #include "args_trace.h"
@@ -52,26 +55,28 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
     XBT_WARN("Error on fcntl syscall exit");
     exit(-1);
   }
-    
+
   file_desc->refcount = 0; /* TODO: Is it usefull ?*/
+
+  fd_descriptor_t* arg_fdesc = process_descriptor_get_fd(proc, arg->fd);
 
   switch (arg->cmd) {
 
-  case F_DUPFD: 
+  case F_DUPFD:
 #ifndef address_translation
     /* TODO: full mediation */
     /* Find the lowest free fd and realize the syscall*/
     /*arg->ret =*/ /*fd find*/
 #endif
-    file_desc->type = proc->fd_list[arg->fd]->type;
+    file_desc->type = arg_fdesc->type;
     file_desc->proc = proc;
     file_desc->fd = arg->ret;
-    file_desc->stream = proc->fd_list[arg->fd]->stream;
-    file_desc->pipe = proc->fd_list[arg->fd]->pipe;
-    file_desc->flags = proc->fd_list[arg->fd]->flags;
+    file_desc->stream = arg_fdesc->stream;
+    file_desc->pipe = arg_fdesc->pipe;
+    file_desc->flags = arg_fdesc->flags;
     file_desc->refcount = 1; /* To check or 0 and then ++ */
 
-    proc->fd_list[arg->ret] = file_desc;
+    process_descriptor_set_fd(proc, arg->ret, file_desc);
     break;
 
   case F_DUPFD_CLOEXEC:
@@ -80,20 +85,20 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
     /* Find the lowest free fd and realize the syscall don't forget to add the O_CLOEXEC flag*/
     /*arg->ret =*/ /*fd find*/
 #endif
-    file_desc->type = proc->fd_list[arg->fd]->type;
+    file_desc->type = arg_fdesc->type;
     file_desc->proc = proc;
     file_desc->fd = arg->ret;
-    file_desc->stream = proc->fd_list[arg->fd]->stream;
-    file_desc->pipe = proc->fd_list[arg->fd]->pipe;
-    file_desc->flags = proc->fd_list[arg->fd]->flags | O_CLOEXEC;
+    file_desc->stream = arg_fdesc->stream;
+    file_desc->pipe = arg_fdesc->pipe;
+    file_desc->flags = arg_fdesc->flags | O_CLOEXEC;
     file_desc->refcount = 1; /* To check or 0 and then ++ */
 
-    proc->fd_list[arg->ret] = file_desc;
+    process_descriptor_set_fd(proc, arg->ret, file_desc);
     break;
 
   case F_GETFD:
 #ifndef address_translation
-    arg->ret = proc->fd_list[arg->fd]->flags;
+    arg->ret = arg_fdesc->flags;
 #endif
     break;
 
@@ -103,16 +108,16 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
     /* Change the flags in the memory of the file*/
     arg->ret = 0;
 #endif
-    proc->fd_list[arg->fd]->flags = arg->arg.cmd_arg;    
+    arg_fdesc->flags = arg->arg.cmd_arg;
     break;
 
   case F_GETFL:
-#ifndef address_translation 
+#ifndef address_translation
     arg->ret = socket_get_flags(proc, arg->fd, arg->arg->cmd_arg);
-    
+
     /* TODO: */
     /* If the fd is not a socket: */
-    /* arg->ret = proc->fd_list[arg->fd]->flags; */
+    /* arg->ret = process_descriptor_get_fd(proc, arg->fd)->flags; */
 #endif
     break;
 
@@ -128,7 +133,7 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
     /* TODO: */
     /* If the fd is not a socket: */
-    /* proc->fd_list[arg->fd]->flags = arg->arg; */
+    /* process_descriptor_get_fd(proc, arg->fd)->flags = arg->arg; */
     break;
 
   case F_SETLK:
@@ -144,25 +149,26 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
     else
       arg->ret = 0;
 #endif
-    
+
     if (arg->ret == 0){
-    proc->fd_list[arg->fd]->lock = 1;
-    proc->fd_list[arg->fd]->proc_locker = arg->arg.lock->l_pid;
+
+    arg_fdesc->lock = 1;
+    arg_fdesc->proc_locker = arg->arg.lock->l_pid;
 
     off_t begin = arg->arg.lock->l_start + arg->arg.lock->l_whence;
     off_t len = arg->arg.lock->l_len;
     if (len > 0){
-    proc->fd_list[arg->fd]->begin = begin;
-    proc->fd_list[arg->fd]->end = begin + len - 1;
+    arg_fdesc->begin = begin;
+    arg_fdesc->end = begin + len - 1;
   }
     if  (len < 0){
-    proc->fd_list[arg->fd]->begin = begin + len;
-    proc->fd_list[arg->fd]->end = begin - 1;
+    arg_fdesc->begin = begin + len;
+    arg_fdesc->end = begin - 1;
   }
     if (len == 0){
-    proc->fd_list[arg->fd]->begin = begin + len;
-    proc->fd_list[arg->fd]->end = begin - 1;
-  }      
+    arg_fdesc->begin = begin + len;
+    arg_fdesc->end = begin - 1;
+  }
   }
     break;
 
@@ -179,32 +185,32 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
     else
       arg->ret = 0;
 #endif
-    
+
     if (arg->ret == 0){
-    proc->fd_list[arg->fd]->lock = 1;
-    proc->fd_list[arg->fd]->proc_locker = arg->arg.lock->l_pid;
+    arg_fdesc->lock = 1;
+    arg_fdesc->proc_locker = arg->arg.lock->l_pid;
 
     off_t begin = arg->arg.lock->l_start + arg->arg.lock->l_whence;
     off_t len = arg->arg.lock->l_len;
     if (len > 0){
-    proc->fd_list[arg->fd]->begin = begin;
-    proc->fd_list[arg->fd]->end = begin + len - 1;
+    arg_fdesc->begin = begin;
+    arg_fdesc->end = begin + len - 1;
   }
     if  (len < 0){
-    proc->fd_list[arg->fd]->begin = begin + len;
-    proc->fd_list[arg->fd]->end = begin - 1;
+    arg_fdesc->begin = begin + len;
+    arg_fdesc->end = begin - 1;
   }
     if (len == 0){
-    proc->fd_list[arg->fd]->begin = begin + len;
-    proc->fd_list[arg->fd]->end = begin - 1;
-  }      
+    arg_fdesc->begin = begin + len;
+    arg_fdesc->end = begin - 1;
+  }
   }
     break;
 
   case F_GETLK:
     XBT_WARN("F_GETLK unhandled");
     break;
-      
+
   case F_GETOWN:
     XBT_WARN("F_GETOWN unhandled");
     break;
@@ -245,10 +251,10 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
   case F_GETPIPE_SZ:
     XBT_WARN("F_GETPIPE_SZ unhandled");
     break;
- 
+
   case F_SETPIPE_SZ:
     XBT_WARN("F_SETPIPE_SZ unhandled");
-    break; 
+    break;
 #endif
 
   default:

@@ -37,8 +37,6 @@
 #define FD_SOCKET               0x08
 #define FD_PIPE                 0x10
 
-#define MAX_FD 2048
-
 #include <stdio.h>
 #include <sys/types.h>
 
@@ -88,7 +86,7 @@ struct process_descriptor {
   pid_t pid;
   char *name;
   msg_host_t host;
-  fd_descriptor_t **fd_list;
+  xbt_dict_t /*<int,fd_descriptor_t>*/ fd_map;
   int status;
 
   int in_syscall:1; // whether we are inside or outside of the syscall
@@ -101,16 +99,15 @@ struct process_descriptor {
 
 static fd_descriptor_t* process_descriptor_get_fd(process_descriptor_t* proc, int fd)
 {
-  if (fd >= MAX_FD)
-    return NULL;
-  else
-    return proc->fd_list[fd];
+  return xbt_dict_get_or_null_ext(proc->fd_map, (const char*) &fd, sizeof(fd));
 }
 
 static void process_descriptor_set_fd(process_descriptor_t* proc, int fd, fd_descriptor_t* file_desc)
 {
-  xbt_assert(fd < MAX_FD, "We don't handle this FD");
-  proc->fd_list[fd] = file_desc;
+  if (file_desc)
+    xbt_dict_set_ext(proc->fd_map, (const char*) &fd, sizeof(fd), file_desc, NULL);
+  else if (xbt_dict_get_or_null_ext(proc->fd_map, (const char*) &fd, sizeof(fd)))
+    xbt_dict_remove_ext(proc->fd_map, (const char*) &fd, sizeof(fd));
 }
 
 #define getevent(status) (( (status) >> 16) & 0xffff)

@@ -30,13 +30,9 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
 {
   process_descriptor_t *result = xbt_malloc0(sizeof(process_descriptor_t));
   result->name = xbt_strdup(name);
-  result->fd_list = xbt_new0(fd_descriptor_t *, MAX_FD);
+  result->fd_map = xbt_dict_new();
   result->pid = pid;
   result->in_syscall = 0;
-
-  int i;
-  for (i = 0; i < MAX_FD; ++i)
-    result->fd_list[i] = NULL;
 
   // Initialize stdin, stdout, stderr
   register_file_descriptor(result, 0, FD_STDIN);
@@ -69,19 +65,19 @@ static void process_descriptor_destroy(process_descriptor_t * proc)
 {
   free(proc->name);
   //We don't free each fd because application do this before us. TODO: check that
-  int i;
-  for (i = 0; i < MAX_FD; ++i) {
-    fd_descriptor_t* file_dsc = process_descriptor_get_fd(proc, i);
-    if (file_dsc) {
-      // There is probably something wrong here:
-      file_dsc->refcount--;
-      free(file_dsc);
-    }
+
+  xbt_dict_cursor_t cursor = NULL;
+  char *key;
+  fd_descriptor_t* file_dsc;
+  xbt_dict_foreach(proc->fd_map, cursor, key, file_dsc) {
+    file_dsc->refcount--;
+    free(file_dsc);
   }
+  xbt_dict_free(&proc->fd_map);
+
   if (strace_option && proc->strace_out) {
     fclose(proc->strace_out);
   }
-  free(proc->fd_list);
   free(proc);
 }
 

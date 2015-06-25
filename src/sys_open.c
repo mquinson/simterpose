@@ -34,7 +34,7 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
       file_desc->type = FD_CLASSIC;
       file_desc->flags = arg->flags;
       file_desc->mode = arg->mode;
-      proc->fd_list[(int) reg->ret] = file_desc;
+      process_descriptor_set_fd(proc, reg->ret, file_desc);
       file_desc->refcount++;
     }
     // TODO handle flags

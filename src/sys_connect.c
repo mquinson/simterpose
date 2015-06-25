@@ -83,7 +83,7 @@ void syscall_connect_post(reg_s * reg, syscall_arg_u * sysarg, process_descripto
   if (strace_option)
     print_connect_syscall(proc, sysarg);
 
-  fd_descriptor_t *file_desc = proc->fd_list[arg->sockfd];
+  fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->sockfd);
   file_desc->refcount++;
 
   XBT_DEBUG("connect_post: trying to release server semaphore ...");
