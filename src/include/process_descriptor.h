@@ -29,7 +29,7 @@
 #define PROC_IN_TIMEOUT         1
 #define PROC_TIMEOUT_EXPIRE     2
 
-
+// Do we really want a bitfield here?
 #define FD_STDIN                0x00
 #define FD_STDOUT               0x01
 #define FD_STDERR               0x02

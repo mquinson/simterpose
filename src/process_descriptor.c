@@ -7,6 +7,9 @@
 
 #include <stdlib.h>
 
+#include <sys/types.h>
+#include <dirent.h>
+
 #include <simgrid/msg.h>
 #include "process_descriptor.h"
 #include "simterpose.h"
@@ -34,11 +37,37 @@ process_descriptor_t *process_descriptor_new(const char *name, const char *argv0
   result->pid = pid;
   result->in_syscall = 0;
 
-  // Initialize stdin, stdout, stderr
-  register_file_descriptor(result, 0, FD_STDIN);
-  register_file_descriptor(result, 1, FD_STDOUT);
-  register_file_descriptor(result, 2, FD_STDERR);
-  // TODO, handler other FDs
+  // Initialize file descriptors:
+  DIR * dir = opendir("/proc/self/fd");
+  int dir_fd = dirfd(dir);
+  struct dirent* entry;
+  while((entry = readdir(dir))) {
+    if (!entry)
+      break;
+    if (entry->d_name[0] < '0' || entry->d_name[0] > '9')
+      continue;
+    int fd = atoi(entry->d_name);
+    if (fd == dir_fd)
+      continue;
+    int type;
+    switch(fd) {
+    case STDIN_FILENO:
+      type = FD_STDIN;
+      break;
+    case STDOUT_FILENO:
+      type = FD_STDOUT;
+      break;
+    case STDERR_FILENO:
+      type = FD_STDERR;
+      break;
+    default:
+      // ?
+      type = FD_CLASSIC;
+      break;
+    }
+    register_file_descriptor(result, fd, type);
+  }
+  closedir(dir);
 
   result->host = MSG_get_host_by_name(result->name);
 
