@@ -48,26 +48,23 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   XBT_DEBUG("process fcntl");
 
-  fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
   fcntl_arg_t arg = &(sysarg->fcntl);
 
   if (arg->ret == -1){
     XBT_WARN("Error on fcntl syscall exit");
     exit(-1);
   }
-
-  file_desc->refcount = 0; /* TODO: Is it usefull ?*/
-
   fd_descriptor_t* arg_fdesc = process_descriptor_get_fd(proc, arg->fd);
 
   switch (arg->cmd) {
 
-  case F_DUPFD:
+  case F_DUPFD: {
 #ifndef address_translation
     /* TODO: full mediation */
     /* Find the lowest free fd and realize the syscall*/
     /*arg->ret =*/ /*fd find*/
 #endif
+    fd_descriptor_t* file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->type = arg_fdesc->type;
     file_desc->proc = proc;
     file_desc->fd = arg->ret;
@@ -75,16 +72,16 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
     file_desc->pipe = arg_fdesc->pipe;
     file_desc->flags = arg_fdesc->flags;
     file_desc->refcount = 1; /* To check or 0 and then ++ */
-
     process_descriptor_set_fd(proc, arg->ret, file_desc);
-    break;
+    break; }
 
-  case F_DUPFD_CLOEXEC:
+  case F_DUPFD_CLOEXEC: {
 #ifndef address_translation
     /* TODO: full mediation */
     /* Find the lowest free fd and realize the syscall don't forget to add the O_CLOEXEC flag*/
     /*arg->ret =*/ /*fd find*/
 #endif
+    fd_descriptor_t* file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->type = arg_fdesc->type;
     file_desc->proc = proc;
     file_desc->fd = arg->ret;
@@ -92,9 +89,8 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
     file_desc->pipe = arg_fdesc->pipe;
     file_desc->flags = arg_fdesc->flags | O_CLOEXEC;
     file_desc->refcount = 1; /* To check or 0 and then ++ */
-
     process_descriptor_set_fd(proc, arg->ret, file_desc);
-    break;
+    break; }
 
   case F_GETFD:
 #ifndef address_translation
