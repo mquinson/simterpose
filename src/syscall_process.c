@@ -10,9 +10,8 @@
 #include <simgrid/msg.h>
 
 #include <arpa/inet.h>
-#include <asm-generic/errno.h>
-#include <asm-generic/errno-base.h>
-#include <asm-generic/socket.h>
+#include <errno.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
