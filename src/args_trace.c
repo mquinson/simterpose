@@ -119,7 +119,7 @@ void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
   arg->level = reg->arg[1];
   arg->optname = reg->arg[2];
   arg->dest = (void *) reg->arg[3];
-  arg->optlen = reg->arg[4]; /* TODO unsigned long -> unsigned int weird */
+  arg->optlen = (unsigned int) reg->arg[4];
 
 #ifndef address_translation
   arg->optval = xbt_new0(char, arg->optlen);

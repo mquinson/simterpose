@@ -283,7 +283,7 @@ void ptrace_rewind_syscalls(const pid_t pid)
 }
 
 /** @brief retrieve the pid of the clone process */
-unsigned long ptrace_get_pid_clone(const pid_t pid)
+int ptrace_get_pid_clone(const pid_t pid)
 {
   unsigned long new_pid;
   increment_nb_geteventmsg();
