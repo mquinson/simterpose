@@ -256,21 +256,28 @@ int socket_get_local_port(process_descriptor_t * proc, int fd)
 
   int res = 0;
 
-  if (protocol == 1) {          // case IPPROTO_ICMP -> protocol unknown -> test TCP
+  switch(protocol) {
+  case IPPROTO_ICMP:
     res = get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, LOCAL);
     if (res == -1) {            // not tcp -> test UDP
       res = get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, LOCAL);
       if (res == -1)            // not udp -> test RAW
-	res = get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
+        res = get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
     }
-  }
-
-  if (protocol == 6 || protocol == 0)   // case IPPROTO_TCP ou IPPROTO_IP
+    break;
+  case IPPROTO_TCP:
+  case IPPROTO_IP:
     res = get_addr_port(TCP_PROTOCOL, num_socket, &addr_port, LOCAL);
-  if (protocol == 17)           // case IPPROTO_UDP
+    break;
+  case IPPROTO_UDP:
     res = get_addr_port(UDP_PROTOCOL, num_socket, &addr_port, LOCAL);
-  if (protocol == 255)          // case IPPROTO_RAW
+    break;
+  case IPPROTO_RAW:
     res = get_addr_port(RAW_PROTOCOL, num_socket, &addr_port, LOCAL);
+    break;
+  default:
+    return 0;
+  }
 
   return ntohs(addr_port.sin_port);
 }
