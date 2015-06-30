@@ -12,7 +12,7 @@ runner=$2
 LD_LIBRARY_PATH=$sim_dir/lib/
 export LD_LIBRARY_PATH
 
-sudo $runner ../simterpose -s platform.xml allpairs.xml \
+sudo $runner ../src/simterpose -s platform.xml allpairs.xml \
   --log=simterpose.:debug --log=simix_synchro.:debug \
   --log=msg.:debug --log=simix.:debug
 #--log=root.fmt:"'%l: [%c/%p]: %m%n'"  # --log=root.fmt:"'[%P on %h]: %m%n'"

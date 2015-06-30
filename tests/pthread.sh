@@ -17,4 +17,4 @@ runner=$2
 LD_LIBRARY_PATH=$sim_dir/lib/
 export LD_LIBRARY_PATH
 
-sudo $runner ../simterpose -s platform.xml pthread.xml
+sudo $runner ../src/simterpose -s platform.xml pthread.xml
