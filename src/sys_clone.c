@@ -117,7 +117,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
       }
     }
 
-    unsigned long flags = arg->clone_flags;
+    int flags = arg->clone_flags;
 
     //if (flags & CLONE_VM) // Nothing to do: we don't care if they share the memory
     //if (flags & CLONE_FS) // Nothing to do: we don't care if they share the file system

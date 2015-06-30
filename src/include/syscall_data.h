@@ -242,7 +242,7 @@ typedef clockgettime_arg_s *clockgettime_arg_t;
 
 typedef struct clone_arg_s {
   unsigned long ret;
-  unsigned long clone_flags;
+  int clone_flags;
   unsigned long newsp;
   void *parent_tid;
   void *child_tid;
