@@ -22,7 +22,7 @@ void syscall_socket(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
     proc_outside(proc);
 
     socket_arg_t arg = &sysarg->socket;
-    arg->ret = reg->ret;
+    arg->ret = (int) reg->ret;
     arg->domain = (int) reg->arg[0];
     arg->type = (int) reg->arg[1];
     arg->protocol = (int) reg->arg[2];

@@ -25,7 +25,7 @@ void syscall_close(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     if(strace_option) {
       stprintf(proc,"close(%d)",fd);
       stprintf_tabto(proc);
-      stprintf(proc,"= %ld",reg->ret);
+      stprintf(proc,"= %lu",reg->ret);
       stprintf_eol(proc);
     }
   }

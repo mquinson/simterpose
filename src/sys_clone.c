@@ -27,7 +27,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
 
   // We must distinguish from syscall-stops (in ancestor/caller) and PTRACE_EVENT (in new process).
 
-  int ret = reg->ret;
+  int ret = (int) reg->ret;
 
   unsigned int signal = WSTOPSIG(proc->status);
   if (signal & (SIGTRAP | 0x80)) { // Regular syscall-stop

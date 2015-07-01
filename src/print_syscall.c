@@ -220,7 +220,7 @@ void print_accept_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   }
 
   fprintf(proc->strace_out, "%d", arg->addrlen);
-  fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 
 /** @brief print a strace-like log of connect syscall */
@@ -245,7 +245,7 @@ void print_connect_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
   }
   fprintf(proc->strace_out, "%d", arg->addrlen);
-  fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 
 /** @brief print a strace-like log of bind syscall */
@@ -269,7 +269,7 @@ void print_bind_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
   }
   fprintf(proc->strace_out, "%d", arg->addrlen);
-  fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 
 /** @brief print a strace-like log of socket syscall */
@@ -498,7 +498,7 @@ void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
 
   fprintf(proc->strace_out, "%d ) = ", arg->optlen);
 
-  fprintf(proc->strace_out, "%lu\n", arg->ret);
+  fprintf(proc->strace_out, "%d\n", arg->ret);
 }
 
 /** @brief print a strace-like log of setsockopt syscall */
@@ -599,7 +599,7 @@ void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
 
   fprintf(proc->strace_out, "%d ) = ", arg->optlen);
 
-  fprintf(proc->strace_out, "%lu\n", arg->ret);
+  fprintf(proc->strace_out, "%d\n", arg->ret);
 }
 
 /** @brief print a strace-like log of listen syscall */
@@ -611,7 +611,7 @@ void print_listen_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   //  fprintf(proc->strace_out,"[%d] listen(", pid);
   fprintf(proc->strace_out, "%d, ", arg->sockfd);
   fprintf(proc->strace_out, "%lu ", arg->backlog);
-  fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 
 /** @brief helper function to print the flags of send syscalls */
@@ -797,7 +797,7 @@ void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   fprintf(proc->strace_out, "%d", arg->addrlen);
 
-  fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 
 /** @brief print a strace-like log of recvmsg syscall */
@@ -817,7 +817,7 @@ void print_recvmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   } else
     fprintf(proc->strace_out, "0 ");
 
-  fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 
 /** @brief print a strace-like log of sendmsg syscall */
@@ -853,7 +853,7 @@ void print_sendmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   } else
     fprintf(proc->strace_out, "0 ");
 
-  fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 
 /** @brief helper function to print the events flags of poll syscall */
@@ -926,7 +926,7 @@ void print_poll_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   else
     fprintf(proc->strace_out, "NULL");
   fprintf(proc->strace_out, " ]");
-  fprintf(proc->strace_out, "%lu) = %lu\n", arg->timeout, arg->ret);
+  fprintf(proc->strace_out, "%lu) = %d\n", arg->timeout, arg->ret);
 }
 
 /** @brief helper function to print the fd of select syscall */
@@ -965,7 +965,7 @@ void print_select_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     fprintf(proc->strace_out, "NULL");
   fprintf(proc->strace_out, ", ");
 
-  fprintf(proc->strace_out, "%lf) = %lu\n", arg->timeout, arg->ret);
+  fprintf(proc->strace_out, "%lf) = %d\n", arg->timeout, arg->ret);
 }
 
 /** @brief print a strace-like log of fcntl syscall */
@@ -1026,7 +1026,7 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 void print_read_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
-  fprintf(proc->strace_out, "[%d] read(%lu, \"...\", %lu) = %lu\n", proc->pid, arg->fd, arg->count, arg->ret);
+  fprintf(proc->strace_out, "[%d] read(%lu, \"...\", %lu) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
   //fprintf(proc->strace_out, "read(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
@@ -1034,7 +1034,7 @@ void print_read_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   write_arg_t arg = &(sysarg->read);
-  fprintf(proc->strace_out, "[%d] write(%lu, \"...\", %lu) = %lu\n", proc->pid, arg->fd, arg->count, arg->ret);
+  fprintf(proc->strace_out, "[%d] write(%lu, \"...\", %lu) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
   //fprintf(proc->strace_out, "write(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
 }
 
@@ -1153,7 +1153,7 @@ void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(proc->strace_out, "clone(child_stack=%ld, flags=", arg->newsp);
 
   print_flags_clone(proc, (long int) arg->clone_flags);
-  fprintf(proc->strace_out, "child_tidptr=0x%lx) = %lu \n", (long int) arg->child_tid, arg->ret);
+  fprintf(proc->strace_out, "child_tidptr=0x%lx) = %d \n", (long int) arg->child_tid, arg->ret);
 }
 
 /** @brief helper function to retrieve the information of execve syscall */
@@ -1248,7 +1248,7 @@ void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     print_flags(proc, -arg->ret, errno_values);
     fprintf(proc->strace_out," (%s)\n", strerror(-(arg->ret)));
   } else {
-    fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+    fprintf(proc->strace_out, ") = %d\n", arg->ret);
   }
 }
 

@@ -23,7 +23,7 @@ void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg
 {
   connect_arg_t arg = &(sysarg->connect);
 
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   if (arg->ret == -EINPROGRESS) /* EINPROGRESS        115      Operation now in progress */
     arg->ret = 0;
 
@@ -44,7 +44,7 @@ void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg
 void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   accept_arg_t arg = &(sysarg->accept);
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg[0];
   XBT_DEBUG("Socket for accepting %lu", reg->arg[0]);
 
@@ -70,51 +70,51 @@ void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
 
   arg->sockfd = (int) reg->arg[0];
   arg->backlog = reg->arg[1];
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
 }
 
 /** @brief retrieve the arguments of select syscall */
-void get_args_select(process_descriptor_t * proc, reg_s * r, syscall_arg_u * sysarg)
+void get_args_select(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   select_arg_t arg = &(sysarg->select);
   pid_t child = proc->pid;
 
   arg->fd_state = 0;
-  arg->maxfd = r->arg[0];
+  arg->maxfd = reg->arg[0];
 
-  if (r->arg[1] != 0) {
-    ptrace_cpy(child, &arg->fd_read, (void *) r->arg[1], sizeof(fd_set), "select");
+  if (reg->arg[1] != 0) {
+    ptrace_cpy(child, &arg->fd_read, (void *) reg->arg[1], sizeof(fd_set), "select");
     arg->fd_state = arg->fd_state | SELECT_FDRD_SET;
   } else
     FD_ZERO(&arg->fd_read);
 
-  if (r->arg[2] != 0) {
-    ptrace_cpy(child, &arg->fd_write, (void *) r->arg[2], sizeof(fd_set), "select");
+  if (reg->arg[2] != 0) {
+    ptrace_cpy(child, &arg->fd_write, (void *) reg->arg[2], sizeof(fd_set), "select");
     arg->fd_state = arg->fd_state | SELECT_FDWR_SET;
   } else
     FD_ZERO(&arg->fd_write);
 
-  if (r->arg[3] != 0) {
-    ptrace_cpy(child, &arg->fd_except, (void *) r->arg[3], sizeof(fd_set), "select");
+  if (reg->arg[3] != 0) {
+    ptrace_cpy(child, &arg->fd_except, (void *) reg->arg[3], sizeof(fd_set), "select");
     arg->fd_state = arg->fd_state | SELECT_FDEX_SET;
   } else
     FD_ZERO(&arg->fd_except);
 
-  if (r->arg[4] != 0) {
+  if (reg->arg[4] != 0) {
     struct timeval t;
-    ptrace_cpy(child, &t, (void *) r->arg[4], sizeof(struct timeval), "select");
+    ptrace_cpy(child, &t, (void *) reg->arg[4], sizeof(struct timeval), "select");
     arg->timeout = t.tv_sec + 0.000001 * t.tv_usec;
   } else
     arg->timeout = -1;
 
-  arg->ret = r->ret;
+  arg->ret = (int) reg->ret;
 }
 
 /** @brief retrieve the arguments of setsockopt syscall */
 void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg[0];
   arg->level = reg->arg[1];
   arg->optname = reg->arg[2];
@@ -131,7 +131,7 @@ void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
 void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg[0];
   arg->level = reg->arg[1];
   arg->optname = reg->arg[2];
@@ -147,7 +147,7 @@ void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   sendto_arg_t arg = &(sysarg->sendto);
   pid_t pid = proc->pid;
 
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
 
   arg->sockfd = (int) reg->arg[0];
   arg->len = (int) reg->arg[2];
@@ -181,7 +181,7 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
 
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg[0];
   arg->len = reg->arg[2];
   arg->flags = reg->arg[3];
@@ -235,7 +235,7 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 
   arg->sockfd = (int) reg->arg[0];
   arg->flags = reg->arg[2];
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");
 #ifndef address_translation
   arg->len = 0;
@@ -258,7 +258,7 @@ void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
   poll_arg_t arg = &(sysarg->poll);
   pid_t child = proc->pid;
 
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
 
   void *src = (void *) reg->arg[0];
   arg->nbfd = reg->arg[1];
@@ -276,7 +276,7 @@ void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
 void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   pipe_arg_t arg = &(sysarg->pipe);
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->filedes = xbt_new0(int, 2);
   ptrace_cpy(proc->pid, arg->filedes, (void *) reg->arg[0], 2 * sizeof(int), "pipe");
 }
@@ -312,7 +312,7 @@ void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 void get_args_open(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   open_arg_t arg = &(sysarg->open);
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->ptr_filename = reg->arg[0];
   arg->flags = reg->arg[1];
   arg->mode = reg->arg[2];
@@ -332,7 +332,7 @@ void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
 #ifndef address_translation
   arg->dest = (void *) reg->arg[1];
 #endif
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->count = reg->arg[2];
 }
 
@@ -342,7 +342,7 @@ void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
   write_arg_t arg = &(sysarg->read);
   arg->fd = reg->arg[0];
   arg->dest = (void *) reg->arg[1];
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->count = reg->arg[2];
 #ifndef address_translation
   pid_t pid = proc->pid;
@@ -359,7 +359,7 @@ void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   clone_arg_t arg = &(sysarg->clone);
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->clone_flags = (int) reg->arg[0];
   arg->newsp = reg->arg[1];
   arg->parent_tid = (void *) reg->arg[2];

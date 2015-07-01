@@ -80,7 +80,7 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
 
       arg->ret = (int) MSG_task_get_bytes_amount(task);
       arg->data = MSG_task_get_data(task);
-      XBT_WARN("hosts: %s received from pipe %lu (size: %lu)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
+      XBT_WARN("hosts: %s received from pipe %lu (size: %d)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
 
       MSG_task_destroy(task);
     }

@@ -17,7 +17,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 /** @brief handles execve syscall at the entrance and the exit */
 void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
   execve_arg_t arg = &(sysarg->execve);
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
   arg->ptr_filename = reg->arg[0];
   arg->ptr_argv = reg->arg[1];
 

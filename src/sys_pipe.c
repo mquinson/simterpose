@@ -75,9 +75,9 @@ void syscall_pipe_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
     file_desc->refcount++;
 
     if (strace_option)
-      fprintf(stderr, "[%d] pipe([%d,%d]) = %lu \n", proc->pid, p0, p1, arg->ret);
+      fprintf(stderr, "[%d] pipe([%d,%d]) = %d \n", proc->pid, p0, p1, arg->ret);
   } else {
     if (strace_option)
-      fprintf(stderr, "[%d] pipe = %lu \n", proc->pid, arg->ret);
+      fprintf(stderr, "[%d] pipe = %d \n", proc->pid, arg->ret);
   }
 }

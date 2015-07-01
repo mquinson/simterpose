@@ -38,7 +38,7 @@ void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t
   file_desc->refcount++;
 
   if (strace_option)
-    fprintf(stderr, "[%d] dup2(%d, %d) = %ld \n", proc->pid, oldfd, newfd, reg->ret);
+    fprintf(stderr, "[%d] dup2(%d, %d) = %lu \n", proc->pid, oldfd, newfd, reg->ret);
 
   if (file_desc->type == FD_PIPE) {
     pipe_t *pipe = file_desc->pipe;

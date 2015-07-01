@@ -46,7 +46,7 @@ typedef send_arg_s *send_arg_t;
 
 typedef struct recvmsg_arg_s {
   int sockfd;
-  unsigned long ret;
+  int ret;
   int len;
   void *data;
   unsigned long flags;
@@ -60,7 +60,7 @@ typedef recvmsg_arg_s *recvmsg_arg_t;
 typedef struct select_arg_s {
   int fd_state;
   unsigned long maxfd;
-  unsigned long ret;
+  int ret;
   fd_set fd_read;
   fd_set fd_write;
   fd_set fd_except;
@@ -74,7 +74,7 @@ typedef struct poll_arg_s {
   unsigned long nbfd;
   struct pollfd *fd_list;
   unsigned long timeout;
-  unsigned long ret;
+  int ret;
 } poll_arg_s;
 
 typedef poll_arg_s *poll_arg_t;
@@ -82,7 +82,7 @@ typedef poll_arg_s *poll_arg_t;
 
 typedef struct pipe_arg_s {
   int *filedes;
-  unsigned long ret;
+  int ret;
 } pipe_arg_s;
 
 typedef pipe_arg_s *pipe_arg_t;
@@ -91,7 +91,7 @@ typedef pipe_arg_s *pipe_arg_t;
 
 typedef struct sendto_arg_s {
   int sockfd;
-  unsigned long ret;
+  int ret;
   unsigned long len;
   void *data;
   unsigned long flags;
@@ -111,7 +111,7 @@ typedef recvfrom_arg_s *recvfrom_arg_t;
 
 typedef struct connect_bind_arg_s {
   int sockfd;
-  unsigned long ret;
+  int ret;
   union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
@@ -126,7 +126,7 @@ typedef bind_arg_s *bind_arg_t;
 
 typedef struct accept_arg_s {
   int sockfd;
-  unsigned long ret;
+  int ret;
   union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
@@ -151,7 +151,7 @@ typedef socket_arg_s *socket_arg_t;
 typedef struct listen_arg_s {
   int sockfd;
   unsigned long backlog;
-  unsigned long ret;
+  int ret;
 } listen_arg_s;
 
 typedef listen_arg_s *listen_arg_t;
@@ -162,7 +162,7 @@ typedef struct getsockopt_arg_s {
   unsigned long optname;
   void *optval;
   socklen_t optlen;
-  unsigned long ret;
+  int ret;
   void *dest;
   void *dest_optlen;
 } getsockopt_arg_s, setsockopt_arg_s;
@@ -187,7 +187,7 @@ typedef struct fcntl_arg_s *fcntl_arg_t;
 
 typedef struct write_arg_s {
   unsigned long fd;
-  unsigned long ret;
+  int ret;
   unsigned long count;
   void *data;
   void *dest;
@@ -241,7 +241,7 @@ typedef clockgettime_arg_s *clockgettime_arg_t;
 
 
 typedef struct clone_arg_s {
-  unsigned long ret;
+  int ret;
   int clone_flags;
   unsigned long newsp;
   void *parent_tid;
@@ -257,7 +257,7 @@ typedef struct execve_arg_s {
 typedef execve_arg_s *execve_arg_t;
 
 typedef struct open_arg_s {
-  unsigned long ret;
+  int ret;
   unsigned long ptr_filename;
   unsigned long flags;
   unsigned long mode;

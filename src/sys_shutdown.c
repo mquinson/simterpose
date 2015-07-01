@@ -37,7 +37,7 @@ void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descripto
   shutdown_arg_t arg = &(sysarg->shutdown);
   arg->fd = reg->arg[0];
   arg->how = reg->arg[1];
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
 
   ptrace_neutralize_syscall(proc->pid);
   arg->ret = 0;
@@ -56,7 +56,7 @@ void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descript
   shutdown_arg_t arg = &(sysarg->shutdown);
   arg->fd = reg->arg[0];
   arg->how = reg->arg[1];
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
 
   struct infos_socket *is = get_infos_socket(proc, arg->fd);
   if (is == NULL) {

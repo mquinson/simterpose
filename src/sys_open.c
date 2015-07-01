@@ -41,6 +41,6 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     if (strace_option)
       print_open_syscall(proc, sysarg);
 
-    XBT_DEBUG("An open syscall was made for the fd %lu via reg %lu\n Value of flags %lu \n", arg->ret, reg->ret, arg->flags);
+  /*   XBT_DEBUG("An open syscall was made for the fd %d via reg %lu\n Value of flags %lu \n", arg->ret, reg->ret, arg->flags); */
   }
 }

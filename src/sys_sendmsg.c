@@ -53,7 +53,7 @@ int syscall_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_desc
     if (strace_option)
       print_sendmsg_syscall(proc, sysarg);
 #ifdef address_translation
-    if (reg->ret > 0) {
+    if ((long) reg->ret > 0) {
       process_descriptor_t remote_proc;
       if (process_send_call(proc, sysarg, &remote_proc)) {
 	return PROCESS_TASK_FOUND;
