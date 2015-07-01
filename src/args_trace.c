@@ -181,7 +181,7 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
 {
   recvfrom_arg_t arg = &(sysarg->recvfrom);
 
-  arg->ret = (int) reg->ret;
+  arg->ret = (ssize_t) reg->ret;
   arg->sockfd = (int) reg->arg[0];
   arg->len = reg->arg[2];
   arg->flags = (int) reg->arg[3];
@@ -235,7 +235,7 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 
   arg->sockfd = (int) reg->arg[0];
   arg->flags = (int) reg->arg[2];
-  arg->ret = (int) reg->ret;
+  arg->ret = (ssize_t) reg->ret;
   ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");
 #ifndef address_translation
   arg->len = 0;

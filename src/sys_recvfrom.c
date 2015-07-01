@@ -67,7 +67,7 @@ void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
         msg_task_t task = NULL;
         msg_error_t err = MSG_task_receive(&task, mailbox);
 
-        arg->ret = (int) MSG_task_get_bytes_amount(task);
+        arg->ret = (ssize_t) MSG_task_get_bytes_amount(task);
         arg->data = MSG_task_get_data(task);
 
         if (err != MSG_OK) {

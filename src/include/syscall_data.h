@@ -35,7 +35,7 @@
 
 typedef struct recv_arg_s {
   int sockfd;
-  int ret;
+  ssize_t ret;
   size_t len;
   int flags;
 } recv_arg_s, send_arg_s;
@@ -46,7 +46,7 @@ typedef send_arg_s *send_arg_t;
 
 typedef struct recvmsg_arg_s {
   int sockfd;
-  int ret;
+  ssize_t ret;
   int len;
   void *data;
   int flags;
@@ -91,7 +91,7 @@ typedef pipe_arg_s *pipe_arg_t;
 
 typedef struct sendto_arg_s {
   int sockfd;
-  int ret;
+  ssize_t ret;
   unsigned long len;
   void *data;
   int flags;
