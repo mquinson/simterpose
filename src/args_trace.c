@@ -184,7 +184,7 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
   arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg[0];
   arg->len = reg->arg[2];
-  arg->flags = reg->arg[3];
+  arg->flags = (int) reg->arg[3];
 
   int domain = get_domain_socket(proc, arg->sockfd);
   pid_t child = proc->pid;
@@ -215,7 +215,7 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   pid_t pid = proc->pid;
 
   arg->sockfd = (int) reg->arg[0];
-  arg->flags = reg->arg[2];
+  arg->flags = (int) reg->arg[2];
   ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
 
   arg->len = 0;
@@ -234,7 +234,7 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   pid_t pid = proc->pid;
 
   arg->sockfd = (int) reg->arg[0];
-  arg->flags = reg->arg[2];
+  arg->flags = (int) reg->arg[2];
   arg->ret = (int) reg->ret;
   ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");
 #ifndef address_translation
@@ -314,14 +314,14 @@ void get_args_open(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
   open_arg_t arg = &(sysarg->open);
   arg->ret = (int) reg->ret;
   arg->ptr_filename = reg->arg[0];
-  arg->flags = reg->arg[1];
+  arg->flags = (int) reg->arg[1];
   arg->mode = reg->arg[2];
 
-  XBT_DEBUG("on get args open %d", proc->pid);
-  XBT_DEBUG("Valeur de retrour on open %lu on reg %lu", arg->ret, reg->ret);
-  XBT_DEBUG("Valeur de ptr on open %lu on reg %lu", arg->ptr_filename, reg->arg[0]);
-  XBT_DEBUG("Valeur de flags on open %lu on reg %lu", arg->flags, reg->arg[1]);
-  XBT_DEBUG("Valeur de mode on open %lu on reg %lu", arg->mode, reg->arg[2]);
+  /* XBT_DEBUG("on get args open %d", proc->pid); */
+  /* XBT_DEBUG("Valeur de retrour on open %lu on reg %lu", arg->ret, reg->ret); */
+  /* XBT_DEBUG("Valeur de ptr on open %lu on reg %lu", arg->ptr_filename, reg->arg[0]); */
+  /* XBT_DEBUG("Valeur de flags on open %d on reg %lu", arg->flags, reg->arg[1]); */
+  /* XBT_DEBUG("Valeur de mode on open %lu on reg %lu", arg->mode, reg->arg[2]); */
 }
 
 /** @brief retrieve the arguments of read syscall */

@@ -49,7 +49,7 @@ typedef struct recvmsg_arg_s {
   int ret;
   int len;
   void *data;
-  unsigned long flags;
+  int flags;
   struct msghdr msg;
 } recvmsg_arg_s, sendmsg_arg_s;
 
@@ -94,7 +94,7 @@ typedef struct sendto_arg_s {
   int ret;
   unsigned long len;
   void *data;
-  unsigned long flags;
+  int flags;
   int addrlen;
   void *dest;                   //address in processus of data
   int is_addr;                  //indicate if struct sockadrr is null or not
@@ -259,7 +259,7 @@ typedef execve_arg_s *execve_arg_t;
 typedef struct open_arg_s {
   int ret;
   unsigned long ptr_filename;
-  unsigned long flags;
+  int flags;
   unsigned long mode;
 } open_arg_s;
 typedef open_arg_s *open_arg_t;

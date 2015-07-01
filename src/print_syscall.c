@@ -740,7 +740,7 @@ void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   fprintf(proc->strace_out, "%d", arg->addrlen);
 
-  fprintf(proc->strace_out, ") = %lu\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 
 /** @brief print a strace-like log of recvfrom syscall */
