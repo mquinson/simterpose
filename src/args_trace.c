@@ -27,7 +27,7 @@ void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg
   if (arg->ret == -EINPROGRESS) /* EINPROGRESS        115      Operation now in progress */
     arg->ret = 0;
 
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   int domain = get_domain_socket(proc, arg->sockfd);
   pid_t child = proc->pid;
   arg->addrlen = (socklen_t) reg->arg[2];
@@ -45,7 +45,7 @@ void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
 {
   accept_arg_t arg = &(sysarg->accept);
   arg->ret = reg->ret;
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   XBT_DEBUG("Socket for accepting %lu", reg->arg[0]);
 
   int domain = get_domain_socket(proc, arg->sockfd);
@@ -68,7 +68,7 @@ void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
 {
   listen_arg_t arg = &(sysarg->listen);
 
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   arg->backlog = reg->arg[1];
   arg->ret = reg->ret;
 }
@@ -115,7 +115,7 @@ void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
 {
   setsockopt_arg_t arg = &(sysarg->setsockopt);
   arg->ret = reg->ret;
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   arg->level = reg->arg[1];
   arg->optname = reg->arg[2];
   arg->dest = (void *) reg->arg[3];
@@ -132,7 +132,7 @@ void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
 {
   getsockopt_arg_t arg = &(sysarg->getsockopt);
   arg->ret = reg->ret;
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   arg->level = reg->arg[1];
   arg->optname = reg->arg[2];
   arg->dest = (void *) reg->arg[3];
@@ -182,7 +182,7 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
   recvfrom_arg_t arg = &(sysarg->recvfrom);
 
   arg->ret = reg->ret;
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   arg->len = reg->arg[2];
   arg->flags = reg->arg[3];
 
@@ -214,7 +214,7 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   recvmsg_arg_t arg = &(sysarg->recvmsg);
   pid_t pid = proc->pid;
 
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   arg->flags = reg->arg[2];
   ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
 
@@ -233,7 +233,7 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   sendmsg_arg_t arg = &(sysarg->sendmsg);
   pid_t pid = proc->pid;
 
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   arg->flags = reg->arg[2];
   arg->ret = reg->ret;
   ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");

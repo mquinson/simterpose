@@ -45,7 +45,7 @@ typedef send_arg_s *send_arg_t;
 
 
 typedef struct recvmsg_arg_s {
-  unsigned long sockfd;
+  int sockfd;
   unsigned long ret;
   int len;
   void *data;
@@ -90,7 +90,7 @@ typedef pipe_arg_s *pipe_arg_t;
 
 
 typedef struct sendto_arg_s {
-  unsigned long sockfd;
+  int sockfd;
   unsigned long ret;
   unsigned long len;
   void *data;
@@ -110,7 +110,7 @@ typedef recvfrom_arg_s *recvfrom_arg_t;
 
 
 typedef struct connect_bind_arg_s {
-  unsigned long sockfd;
+  int sockfd;
   unsigned long ret;
   union {
     struct sockaddr_in sai;
@@ -125,7 +125,7 @@ typedef bind_arg_s *bind_arg_t;
 
 
 typedef struct accept_arg_s {
-  unsigned long sockfd;
+  int sockfd;
   unsigned long ret;
   union {
     struct sockaddr_in sai;
@@ -149,7 +149,7 @@ typedef struct socket_arg_s {
 typedef socket_arg_s *socket_arg_t;
 
 typedef struct listen_arg_s {
-  unsigned long sockfd;
+  int sockfd;
   unsigned long backlog;
   unsigned long ret;
 } listen_arg_s;
@@ -157,7 +157,7 @@ typedef struct listen_arg_s {
 typedef listen_arg_s *listen_arg_t;
 
 typedef struct getsockopt_arg_s {
-  unsigned long sockfd;
+  int sockfd;
   unsigned long level;
   unsigned long optname;
   void *optval;

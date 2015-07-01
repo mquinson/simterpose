@@ -32,7 +32,7 @@ void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descri
   pid_t pid = proc->pid;
 
   arg->ret = reg->ret;
-  arg->sockfd = reg->arg[0];
+  arg->sockfd = (int) reg->arg[0];
   arg->sockaddr_dest = (void *) reg->arg[1];
   arg->len_dest = (void *) reg->arg[2];
   ptrace_cpy(proc->pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");

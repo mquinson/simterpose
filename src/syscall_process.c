@@ -211,14 +211,14 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
   sendto_arg_t arg = &(sysarg->sendto);
   if (socket_registered(proc, arg->sockfd) != -1) {
     if (!socket_netlink(proc, arg->sockfd)) {
-      XBT_DEBUG("%lu This is not a netlink socket", arg->sockfd);
+      XBT_DEBUG("%d This is not a netlink socket", arg->sockfd);
       //   compute_computation_time(proc);   // cree la computation task
       struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
       struct infos_socket *s = comm_get_peer(is);
       is->ref_nb++;
       s->ref_nb++;
 
-      XBT_DEBUG("%lu->%lu", arg->sockfd, arg->ret);
+      XBT_DEBUG("%d->%lu", arg->sockfd, arg->ret);
       XBT_DEBUG("Sending data(%lu) on socket %d", arg->ret, s->fd.fd);
       handle_new_send(is, sysarg);
 
