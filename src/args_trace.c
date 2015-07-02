@@ -147,17 +147,14 @@ void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   sendto_arg_t arg = &(sysarg->sendto);
   pid_t pid = proc->pid;
 
-  /* arg->ret = (int) reg->ret; */
-  arg->ret = reg->ret;
+  arg->ret = (int) reg->ret;
 
   arg->sockfd = (int) reg->arg[0];
-  arg->len = reg->arg[2];
-  /* arg->len = (size_t) reg->arg[2]; */
+  arg->len = (size_t) reg->arg[2];
   arg->flags = (int) reg->arg[3];
 
   int domain = get_domain_socket(proc, arg->sockfd);
-  if ( reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
-    /* if ((int) reg->arg[4] != 0) { */
+  if ( (int) reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     arg->is_addr = 1;
     if (domain == 2)            // PF_INET
       ptrace_cpy(pid, &arg->sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
@@ -173,10 +170,9 @@ void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   ptrace_cpy(pid, arg->data, (void *) reg->arg[1], arg->len, "sendto");
 #endif
 
-  if ( reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
-    /* if ( (int) reg->arg[4] != 0) {  */
-    arg->addrlen = reg->arg[5];
-    /* arg->addrlen = (socklen_t) reg->arg[5]; */
+     if ( (int) reg->arg[4] != 0) {   // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
+
+    arg->addrlen = (socklen_t) reg->arg[5];
   } else
     arg->addrlen = 0;
 }
@@ -188,14 +184,12 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
 
   arg->ret = (ssize_t) reg->ret;
   arg->sockfd = (int) reg->arg[0];
-  arg->len = reg->arg[2];
-  /* arg->len = (size_t) reg->arg[2]; */
+  arg->len = (size_t) reg->arg[2];
   arg->flags = (int) reg->arg[3];
 
   int domain = get_domain_socket(proc, arg->sockfd);
   pid_t child = proc->pid;
-  if ( reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
-      /* if ( (int) reg->arg[4] != 0) {  */
+  if ( (int) reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     arg->is_addr = 1;
     if (domain == 2)            // PF_INET
       ptrace_cpy(child, &arg->sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
@@ -209,8 +203,7 @@ void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u *
   arg->dest = (void *) reg->arg[1];
 
   socklen_t len = 0;
-  if (reg->arg[4] != 0) {         // syscall "recv" doesn't exist on x86_64, it's recvfrom with struct sockaddr=NULL and addrlen=0
-      /* if ( (int) reg->arg[4] != 0) {   */
+  if ( (int) reg->arg[4] != 0) {         // syscall "recv" doesn't exist on x86_64, it's recvfrom with struct sockaddr=NULL and addrlen=0
     ptrace_cpy(child, &len, (void *) reg->arg[5], sizeof(socklen_t), "recvfrom");
   }
   arg->addrlen = len;
@@ -530,8 +523,7 @@ void sys_translate_sendto_in(process_descriptor_t * proc, syscall_arg_u * sysarg
   reg_s reg;
   ptrace_get_register(pid, &reg);
 
-  if ( reg.arg[4] == 0)
-  /* if ( (int) reg.arg[4] == 0) */
+  if ( (int) reg.arg[4] == 0)
     return;
 
   struct in_addr in = { arg->sai.sin_addr.s_addr };
@@ -584,8 +576,7 @@ void sys_translate_recvfrom_in(process_descriptor_t * proc, syscall_arg_u * sysa
   reg_s reg;
   ptrace_get_register(pid, &reg);
 
-  if ( reg.arg[4] == 0)
-  /* if ( (int) reg.arg[4] == 0) */
+  if ( (int) reg.arg[4] == 0)
     return;
 
   struct sockaddr_in temp = arg->sai;
@@ -612,8 +603,7 @@ void sys_translate_recvfrom_out(process_descriptor_t * proc, syscall_arg_u * sys
   reg_s reg;
   ptrace_get_register(pid, &reg);
 
-    if ( reg.arg[4] == 0)
-  /* if ( (int) reg.arg[4] == 0) */
+  if ( (int) reg.arg[4] == 0)
     return;
 
   translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));

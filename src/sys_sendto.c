@@ -59,8 +59,8 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
     return PROCESS_TASK_FOUND;
   }
 #else
-  if (socket_registered(proc, reg->arg[0]) != -1) {
-    if (socket_network(proc, reg->arg[0]))
+  if (socket_registered(proc, (int) reg->arg[0]) != -1) {
+    if (socket_network(proc, (int) reg->arg[0]))
       sys_translate_sendto_in(proc, sysarg);
   }
 #endif
@@ -83,8 +83,8 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
   if (strace_option)
     print_sendto_syscall(proc, sysarg);
 #ifdef address_translation
-  if (socket_registered(proc, reg->arg[0]) != -1) {
-    if (socket_network(proc, reg->arg[0])) {
+  if (socket_registered(proc, (int) reg->arg[0]) != -1) {
+    if (socket_network(proc, (int) reg->arg[0])) {
       sys_translate_sendto_out(proc, sysarg);
     }
   }

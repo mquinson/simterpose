@@ -41,8 +41,8 @@ void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
   get_args_recvfrom(proc, reg, sysarg);
 
 #ifdef address_translation
-  if (socket_registered(proc, reg->arg[0]) != -1) {
-    if (socket_network(proc, reg->arg[0])) {
+  if (socket_registered(proc, (int) reg->arg[0]) != -1) {
+    if (socket_network(proc, (int) reg->arg[0])) {
       sys_translate_recvfrom_out(proc, sysarg);
     }
   }
@@ -50,7 +50,7 @@ void syscall_recvfrom_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
 
   recvfrom_arg_t arg = &(sysarg->recvfrom);
 
-  if (reg->ret > 0) {
+  if ( (int) reg->ret > 0) {
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->sockfd);
     file_desc->refcount++;
 
