@@ -661,14 +661,14 @@ void print_recv_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(proc->strace_out, "recv(");
 
   fprintf(proc->strace_out, "%d, ", arg->sockfd);
-  fprintf(proc->strace_out, "%lu ", arg->len);
+  fprintf(proc->strace_out, "%d ", (int) arg->len);
 
   if (arg->flags > 0) {
     print_flags_recv(proc, arg->flags);
   } else
     fprintf(proc->strace_out, "0, ");
 
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
 }
 
 /** @brief print a strace-like log of send syscall */
@@ -679,14 +679,14 @@ void print_send_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(proc->strace_out, "send( ");
 
   fprintf(proc->strace_out, "%d, ", arg->sockfd);
-  fprintf(proc->strace_out, "%lu ", arg->len);
+  fprintf(proc->strace_out, "%d ", (int) arg->len);
 
   if (arg->flags > 0) {
     print_flags_send(proc, arg->flags);
   } else
     fprintf(proc->strace_out, "0, ");
 
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
 }
 
 
@@ -703,14 +703,14 @@ void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   if (arg->len < 200) {
     memcpy(buff, arg->data, arg->len);
     buff[arg->ret] = '\0';
-    fprintf(proc->strace_out, "%d, \"%s\" , %d, ", arg->sockfd, buff, arg->len);
+    fprintf(proc->strace_out, "%d, \"%s\" , %d, ", arg->sockfd, buff, (int) arg->len);
   } else {
     memcpy(buff, arg->data, 200);
     buff[199] = '\0';
-    fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", arg->sockfd, buff, arg->len);
+    fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", arg->sockfd, buff, (int) arg->len);
   }
 #else
-  fprintf(proc->strace_out, "%d, \"...\" , %d, ", arg->sockfd, arg->len);
+  fprintf(proc->strace_out, "%d, \"...\" , %d, ", arg->sockfd, (int) arg->len);
 #endif
   if (arg->flags > 0) {
     print_flags_send(proc, arg->flags);
@@ -740,7 +740,7 @@ void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   fprintf(proc->strace_out, "%d", arg->addrlen);
 
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n",  (int) arg->ret);
 }
 
 /** @brief print a strace-like log of recvfrom syscall */
@@ -757,11 +757,11 @@ void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     if (arg->ret <= 500) {
       memcpy(buff, arg->data, arg->ret);
       buff[arg->ret] = '\0';
-      fprintf(proc->strace_out, "%d, \"%s\" , %d, ", arg->sockfd, buff, arg->len);
+      fprintf(proc->strace_out, "%d, \"%s\" , %d, ", arg->sockfd, buff, (int) arg->len);
     } else {
       memcpy(buff, arg->data, 500);
       buff[499] = '\0';
-      fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", arg->sockfd, buff, arg->len);
+      fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", arg->sockfd, buff, (int) arg->len);
     }
 
     if (arg->flags > 0) {
@@ -769,9 +769,9 @@ void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     } else
       fprintf(proc->strace_out, "0, ");
   } else
-    fprintf(proc->strace_out, "%d, \"\" , %d, ", arg->sockfd, arg->len);
+    fprintf(proc->strace_out, "%d, \"\" , %d, ", arg->sockfd, (int) arg->len);
 #else
-  fprintf(proc->strace_out, "%d, \"...\" , %d, ", arg->sockfd, arg->len);
+  fprintf(proc->strace_out, "%d, \"...\" , %d, ", arg->sockfd, (int) arg->len);
 #endif
 
   if (domain == 2) {            // PF_INET
@@ -797,7 +797,7 @@ void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   fprintf(proc->strace_out, "%d", arg->addrlen);
 
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
 }
 
 /** @brief print a strace-like log of recvmsg syscall */
@@ -817,7 +817,7 @@ void print_recvmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   } else
     fprintf(proc->strace_out, "0 ");
 
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
 }
 
 /** @brief print a strace-like log of sendmsg syscall */
@@ -853,7 +853,7 @@ void print_sendmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   } else
     fprintf(proc->strace_out, "0 ");
 
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
 }
 
 /** @brief helper function to print the events flags of poll syscall */
@@ -946,8 +946,7 @@ static void disp_selectfd(process_descriptor_t * proc, fd_set * fd)
 void print_select_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   select_arg_t arg = &(sysarg->select);
-  // fprintf(proc->strace_out,"[%d] select(%d,", pid, arg->maxfd);
-  fprintf(proc->strace_out, "select(%lu,", arg->maxfd);
+  fprintf(proc->strace_out, "select(%d,", arg->maxfd);
 
   if (arg->fd_state & SELECT_FDRD_SET)
     disp_selectfd(proc, &arg->fd_read);
@@ -1194,7 +1193,7 @@ void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysar
   }
   ptr_argv = arg->ptr_argv;
   int first = 1;
-  for (; ptr_argv; ptr_argv += sizeof(unsigned long)) {
+  for (; ptr_argv; ptr_argv += sizeof(long)) {
     ptr_filename = ptr_argv;
     /* Indirect through ptr since we have char *argv[] */
     ptr_filename = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr_filename, 0);

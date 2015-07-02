@@ -47,7 +47,7 @@ typedef send_arg_s *send_arg_t;
 typedef struct recvmsg_arg_s {
   int sockfd;
   ssize_t ret;
-  int len;
+  size_t len;
   void *data;
   int flags;
   struct msghdr msg;
@@ -59,7 +59,7 @@ typedef recvmsg_arg_s *recvmsg_arg_t;
 
 typedef struct select_arg_s {
   int fd_state;
-  unsigned long maxfd;
+  int maxfd;
   int ret;
   fd_set fd_read;
   fd_set fd_write;
@@ -92,7 +92,7 @@ typedef pipe_arg_s *pipe_arg_t;
 typedef struct sendto_arg_s {
   int sockfd;
   ssize_t ret;
-  unsigned long len;
+  size_t len;
   void *data;
   int flags;
   int addrlen;

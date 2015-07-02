@@ -80,27 +80,27 @@ void get_args_select(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   pid_t child = proc->pid;
 
   arg->fd_state = 0;
-  arg->maxfd = reg->arg[0];
+  arg->maxfd = (int) reg->arg[0];
 
-  if (reg->arg[1] != 0) {
+  if ( (int) reg->arg[1] != 0) {
     ptrace_cpy(child, &arg->fd_read, (void *) reg->arg[1], sizeof(fd_set), "select");
     arg->fd_state = arg->fd_state | SELECT_FDRD_SET;
   } else
     FD_ZERO(&arg->fd_read);
 
-  if (reg->arg[2] != 0) {
+  if ( (int) reg->arg[2] != 0) {
     ptrace_cpy(child, &arg->fd_write, (void *) reg->arg[2], sizeof(fd_set), "select");
     arg->fd_state = arg->fd_state | SELECT_FDWR_SET;
   } else
     FD_ZERO(&arg->fd_write);
 
-  if (reg->arg[3] != 0) {
+  if ( (int) reg->arg[3] != 0) {
     ptrace_cpy(child, &arg->fd_except, (void *) reg->arg[3], sizeof(fd_set), "select");
     arg->fd_state = arg->fd_state | SELECT_FDEX_SET;
   } else
     FD_ZERO(&arg->fd_except);
 
-  if (reg->arg[4] != 0) {
+  if ( (int) reg->arg[4] != 0) {
     struct timeval t;
     ptrace_cpy(child, &t, (void *) reg->arg[4], sizeof(struct timeval), "select");
     arg->timeout = t.tv_sec + 0.000001 * t.tv_usec;
