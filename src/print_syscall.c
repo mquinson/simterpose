@@ -428,7 +428,7 @@ void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
       fprintf(proc->strace_out, "IP_RECVOPTS, ");
       break;
     default:
-      fprintf(proc->strace_out, "OPTION UNKNOWN (%lu), ", arg->optname);
+      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", arg->optname);
       break;
     }
     break;
@@ -481,7 +481,7 @@ void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
       fprintf(proc->strace_out, "SO_REUSEPORT, ");
       break;
     default:
-      fprintf(proc->strace_out, "OPTION UNKNOWN (%lu), ", arg->optname);
+      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", arg->optname);
       break;
     }
     break;
@@ -492,7 +492,7 @@ void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
     fprintf(proc->strace_out, "SOL_ICMPV6, ");
     break;
   default:
-    fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%lu), ", arg->level);
+    fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d), ", arg->level);
     break;
   }
 
@@ -529,7 +529,7 @@ void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
       fprintf(proc->strace_out, "IP_RECVOPTS, ");
       break;
     default:
-      fprintf(proc->strace_out, "OPTION UNKNOWN (%lu), ", arg->optname);
+      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", arg->optname);
       break;
     }
     break;
@@ -582,7 +582,7 @@ void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
       fprintf(proc->strace_out, "SO_REUSEPORT, ");
       break;
     default:
-      fprintf(proc->strace_out, "OPTION UNKNOWN (%lu), ", arg->optname);
+      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", arg->optname);
       break;
     }
     break;
@@ -593,7 +593,7 @@ void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
     fprintf(proc->strace_out, "SOL_ICMPV6, ");
     break;
   default:
-    fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%lu), ", arg->level);
+    fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d), ", arg->level);
     break;
   }
 
@@ -610,7 +610,7 @@ void print_listen_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   fprintf(proc->strace_out, "listen(");
   //  fprintf(proc->strace_out,"[%d] listen(", pid);
   fprintf(proc->strace_out, "%d, ", arg->sockfd);
-  fprintf(proc->strace_out, "%lu ", arg->backlog);
+  fprintf(proc->strace_out, "%d ", arg->backlog);
   fprintf(proc->strace_out, ") = %d\n", arg->ret);
 }
 

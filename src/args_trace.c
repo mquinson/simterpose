@@ -69,7 +69,7 @@ void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   listen_arg_t arg = &(sysarg->listen);
 
   arg->sockfd = (int) reg->arg[0];
-  arg->backlog = reg->arg[1];
+  arg->backlog = (int) reg->arg[1];
   arg->ret = (int) reg->ret;
 }
 
@@ -116,10 +116,10 @@ void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
   setsockopt_arg_t arg = &(sysarg->setsockopt);
   arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg[0];
-  arg->level = reg->arg[1];
-  arg->optname = reg->arg[2];
-  arg->dest = (void *) reg->arg[3];
-  arg->optlen = (unsigned int) reg->arg[4];
+  arg->level = (int) reg->arg[1];
+  arg->optname = (int) reg->arg[2];
+  arg->optval = (void *) reg->arg[3];
+  arg->optlen = (socklen_t) reg->arg[4];
 
 #ifndef address_translation
   arg->optval = xbt_new0(char, arg->optlen);
@@ -133,10 +133,10 @@ void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u
   getsockopt_arg_t arg = &(sysarg->getsockopt);
   arg->ret = (int) reg->ret;
   arg->sockfd = (int) reg->arg[0];
-  arg->level = reg->arg[1];
-  arg->optname = reg->arg[2];
-  arg->dest = (void *) reg->arg[3];
-  arg->dest_optlen = (void *) reg->arg[4];
+  arg->level = (int) reg->arg[1];
+  arg->optname = (int) reg->arg[2];
+  arg->optval = (void *) reg->arg[3];
+  arg->optlen = (socklen_t) reg->arg[4];
 
   ptrace_cpy(proc->pid, &arg->optlen, (void *) reg->arg[4], sizeof(socklen_t), "getsockopt");
 }

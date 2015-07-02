@@ -35,9 +35,9 @@
 
 typedef struct recv_arg_s {
   int sockfd;
-  ssize_t ret;
   size_t len;
   int flags;
+  ssize_t ret;
 } recv_arg_s, send_arg_s;
 
 typedef recv_arg_s *recv_arg_t;
@@ -46,11 +46,11 @@ typedef send_arg_s *send_arg_t;
 
 typedef struct recvmsg_arg_s {
   int sockfd;
-  ssize_t ret;
   size_t len;
   void *data;
   int flags;
   struct msghdr msg;
+  ssize_t ret;
 } recvmsg_arg_s, sendmsg_arg_s;
 
 typedef sendmsg_arg_s *sendmsg_arg_t;
@@ -111,13 +111,13 @@ typedef recvfrom_arg_s *recvfrom_arg_t;
 
 typedef struct connect_bind_arg_s {
   int sockfd;
-  int ret;
   union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
     struct sockaddr_nl snl;
   };
   socklen_t addrlen;
+  int ret;
 } connect_arg_s, bind_arg_s;
 
 typedef connect_arg_s *connect_arg_t;
@@ -126,7 +126,6 @@ typedef bind_arg_s *bind_arg_t;
 
 typedef struct accept_arg_s {
   int sockfd;
-  int ret;
   union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
@@ -135,22 +134,23 @@ typedef struct accept_arg_s {
   socklen_t addrlen;
   void *addr_dest;
   void *len_dest;
+  int ret;
 } accept_arg_s;
 
 typedef accept_arg_s *accept_arg_t;
 
 typedef struct socket_arg_s {
-  int ret;
   int domain;
   int type;
   int protocol;
+  int ret;
 } socket_arg_s;
 
 typedef socket_arg_s *socket_arg_t;
 
 typedef struct listen_arg_s {
   int sockfd;
-  unsigned long backlog;
+  int backlog;
   int ret;
 } listen_arg_s;
 
@@ -158,13 +158,13 @@ typedef listen_arg_s *listen_arg_t;
 
 typedef struct getsockopt_arg_s {
   int sockfd;
-  unsigned long level;
-  unsigned long optname;
+  int level;
+  int optname;
   void *optval;
   socklen_t optlen;
-  int ret;
   void *dest;
   void *dest_optlen;
+  int ret;
 } getsockopt_arg_s, setsockopt_arg_s;
 
 typedef getsockopt_arg_s *getsockopt_arg_t;
