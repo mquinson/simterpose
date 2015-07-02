@@ -172,10 +172,10 @@ typedef setsockopt_arg_s *setsockopt_arg_t;
 
 
 typedef struct fcntl_arg_s {
-  unsigned long fd;
-  unsigned long cmd;
+  int fd;
+  int cmd;
   union{
-    unsigned long cmd_arg;
+    long cmd_arg;
     struct f_owner_ex * owner;
     struct flock * lock;
   } arg;
@@ -186,11 +186,11 @@ typedef struct fcntl_arg_s *fcntl_arg_t;
 
 
 typedef struct write_arg_s {
-  unsigned long fd;
-  int ret;
-  unsigned long count;
+  int fd;
   void *data;
-  void *dest;
+  size_t count;
+  void *dest; /* TODO weird what is this?*/
+  ssize_t ret;
 } write_arg_s, read_arg_s;
 
 typedef write_arg_s *write_arg_t;
@@ -209,8 +209,8 @@ typedef shutdown_arg_s *shutdown_arg_t;
 typedef struct getpeername_arg_s {
   int sockfd;
   struct sockaddr_in in;
-  void *sockaddr_dest;
   socklen_t len;
+  void *sockaddr_dest;
   void *len_dest;
   int ret;
 } getpeername_arg_s;
@@ -219,6 +219,7 @@ typedef getpeername_arg_s *getpeername_arg_t;
 
 
 typedef struct time_arg_s {
+  time_t t;
   time_t ret;
 } time_arg_s;
 
@@ -226,33 +227,37 @@ typedef time_arg_s *time_arg_t;
 
 
 typedef struct gettimeofday_arg_s {
-  int ret;
   struct timeval *tv;
   struct timezone *tz;
-} gettimeofday_arg_s;
+  int ret;
+} gettimeofday_arg_s, settimeofday_arg_s;
 typedef gettimeofday_arg_s *gettimeofday_arg_t;
-
+typedef settimeofday_arg_s *settimeofday_arg_t;
 
 typedef struct clockgettime_arg_s {
-  int ret;
+  clockid_t clk_id;
   struct timespec *tp;
+  int ret;
 } clockgettime_arg_s;
 typedef clockgettime_arg_s *clockgettime_arg_t;
 
 
-typedef struct clone_arg_s {
-  int ret;
-  int clone_flags;
+typedef struct clone_arg_s { /* TODO missing argument*/
   unsigned long newsp;
   void *parent_tid;
   void *child_tid;
+  int flags;
+  int ret;
 } clone_arg_s;
 typedef clone_arg_s *clone_arg_t;
 
 typedef struct execve_arg_s {
+  long filename;
+  long argv;
+  /* char *filename; */
+  /* char **argv; */
+  /* char **envp; */
   int ret;
-  long ptr_filename;
-  long ptr_argv;
 } execve_arg_s;
 typedef execve_arg_s *execve_arg_t;
 

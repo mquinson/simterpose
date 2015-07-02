@@ -41,7 +41,7 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
       msg_task_t task = NULL;
       msg_error_t err = MSG_task_receive(&task, mailbox);
 
-      arg->ret = (int) MSG_task_get_bytes_amount(task);
+      arg->ret = (ssize_t) MSG_task_get_bytes_amount(task);
       arg->data = MSG_task_get_data(task);
 
       if (err != MSG_OK) {
@@ -71,16 +71,16 @@ void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
       if (pipe == NULL)
 	THROW_IMPOSSIBLE;
 
-      XBT_WARN("host %s trying to receive from pipe %lu", MSG_host_get_name(proc->host), arg->fd);
+      XBT_WARN("host %s trying to receive from pipe %d", MSG_host_get_name(proc->host), arg->fd);
       char buff[256];
-      sprintf(buff, "%lu", arg->fd);
+      sprintf(buff, "%d", arg->fd);
 
       msg_task_t task = NULL;
       MSG_task_receive(&task, buff);
 
       arg->ret = (int) MSG_task_get_bytes_amount(task);
       arg->data = MSG_task_get_data(task);
-      XBT_WARN("hosts: %s received from pipe %lu (size: %d)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
+      XBT_WARN("hosts: %s received from pipe %d (size: %zd)", MSG_host_get_name(proc->host), arg->fd, arg->ret);
 
       MSG_task_destroy(task);
     }

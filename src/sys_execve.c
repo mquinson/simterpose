@@ -18,8 +18,8 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
   execve_arg_t arg = &(sysarg->execve);
   arg->ret = (int) reg->ret;
-  arg->ptr_filename = reg->arg[0];
-  arg->ptr_argv = reg->arg[1];
+  arg->filename = reg->arg[0];
+  arg->argv = reg->arg[1];
 
   if (proc_event_exec(proc)) {
     XBT_DEBUG("Ignore an exec event");

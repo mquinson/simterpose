@@ -37,7 +37,9 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
   get_args_recvmsg(proc, reg, sysarg);
   recvmsg_arg_t arg = &(sysarg->recvmsg);
 
-  if (reg->ret > 0) {
+  /* if ( (int) reg->ret > 0) { */
+  printf("I'm here reg->ret vaut %lu %d %li\n", reg->ret, (int) reg->ret, (long) reg->ret);
+  if ( reg->ret > 0) {
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->sockfd);
     file_desc->refcount++;
 

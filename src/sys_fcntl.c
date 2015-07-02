@@ -104,7 +104,7 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
     /* Change the flags in the memory of the file*/
     arg->ret = 0;
 #endif
-    arg_fdesc->flags = arg->arg.cmd_arg;
+    arg_fdesc->flags = (int) arg->arg.cmd_arg;
     break;
 
   case F_GETFL:

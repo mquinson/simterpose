@@ -60,8 +60,8 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     write_arg_t arg = &(sysarg->write);
 
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->fd);
-    XBT_DEBUG("On syscall_write pointer value of arg %p \n arg->fd = %lu \n return value = %d", arg, arg->fd, arg->ret);
-    XBT_DEBUG("value of pointer via file_desc %p \n", file_desc);
+    /* XBT_DEBUG("On syscall_write pointer value of arg %p \n arg->fd = %d \n return value = %d", arg, arg->fd, arg->ret); */
+    /* XBT_DEBUG("value of pointer via file_desc %p \n", file_desc); */
     file_desc->refcount++;
 
     if (file_desc != NULL && file_desc->type == FD_PIPE) {
@@ -78,12 +78,12 @@ int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
       sprintf(buff, "%d", end_in->fd);
       msg_host_t receiver = end_in->proc->host;
 
-      XBT_WARN("host %s trying to send to %s in pipe %d (size: %d). Buff = %s", MSG_host_get_name(proc->host),
+      XBT_WARN("host %s trying to send to %s in pipe %d (size: %zd). Buff = %s", MSG_host_get_name(proc->host),
 	       MSG_host_get_name(receiver), end_in->fd, arg->ret, buff);
 
       double amount = arg->ret;
       msg_task_t task = MSG_task_create(buff, 0, amount, arg->data);
-      XBT_WARN("hosts: %s send to %s in pipe %d (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
+      XBT_WARN("hosts: %s send to %s in pipe %d (size: %zd)", MSG_host_get_name(proc->host), MSG_host_get_name(receiver),
         end_in->fd, arg->ret);
       MSG_task_send(task, buff);
     } else if (strace_option)

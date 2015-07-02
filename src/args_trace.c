@@ -286,13 +286,13 @@ void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
 void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
-  arg->fd = reg->arg[0];
-  arg->cmd = reg->arg[1];
+  arg->fd = (int) reg->arg[0];
+  arg->cmd = (int) reg->arg[1];
 
   if ((arg->cmd == F_DUPFD) || (arg->cmd == F_DUPFD_CLOEXEC)
       || (arg->cmd == F_SETFD) || (arg->cmd == F_SETFL)
       || (arg->cmd == F_SETOWN))
-    arg->arg.cmd_arg = (int) reg->arg[2];
+    arg->arg.cmd_arg = (long) reg->arg[2];
 
 #ifdef __USE_GNU
   if ((arg->cmd == F_SETSIG) || (arg->cmd == F_SETLEASE)
@@ -329,22 +329,25 @@ void get_args_open(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
 void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
-  arg->fd = reg->arg[0];
+  arg->fd = (int) reg->arg[0];
 #ifndef address_translation
   arg->dest = (void *) reg->arg[1];
 #endif
-  arg->ret = (int) reg->ret;
-  arg->count = reg->arg[2];
+  arg->data = (void*) reg->arg[1];
+  arg->ret = (ssize_t) reg->ret;
+  arg->count = (size_t) reg->arg[2];
 }
 
 /** @brief retrieve the arguments of write syscall */
 void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   write_arg_t arg = &(sysarg->read);
-  arg->fd = reg->arg[0];
+  arg->fd = (int) reg->arg[0];
   arg->dest = (void *) reg->arg[1];
-  arg->ret = (int) reg->ret;
-  arg->count = reg->arg[2];
+  /* TODO: check this*/
+  /* arg->data = (void *) reg->arg[1]; */
+  arg->ret = (ssize_t) reg->ret;
+  arg->count = (size_t) reg->arg[2];
 #ifndef address_translation
   pid_t pid = proc->pid;
   if (socket_registered(proc, arg->fd)) {
@@ -357,11 +360,12 @@ void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 }
 
 /** @brief retrieve the arguments of clone syscall */
+/* TODO: Bad allocation of parameters*/
 void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
   clone_arg_t arg = &(sysarg->clone);
   arg->ret = (int) reg->ret;
-  arg->clone_flags = (int) reg->arg[0];
+  arg->flags = (int) reg->arg[0];
   arg->newsp = reg->arg[1];
   arg->parent_tid = (void *) reg->arg[2];
   arg->child_tid = (void *) reg->arg[3];

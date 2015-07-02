@@ -35,8 +35,8 @@ void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descripto
 #ifndef address_translation
   XBT_DEBUG(" shutdown_pre");
   shutdown_arg_t arg = &(sysarg->shutdown);
-  arg->fd = reg->arg[0];
-  arg->how = reg->arg[1];
+  arg->fd = (int) reg->arg[0];
+  arg->how = (int) reg->arg[1];
   arg->ret = (int) reg->ret;
 
   ptrace_neutralize_syscall(proc->pid);
@@ -54,8 +54,8 @@ void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descript
   XBT_DEBUG(" shutdown_post");
   proc_outside(proc);
   shutdown_arg_t arg = &(sysarg->shutdown);
-  arg->fd = reg->arg[0];
-  arg->how = reg->arg[1];
+  arg->fd = (int) reg->arg[0];
+  arg->how = (int) reg->arg[1];
   arg->ret = (int) reg->ret;
 
   struct infos_socket *is = get_infos_socket(proc, arg->fd);

@@ -971,7 +971,7 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   fcntl_arg_t arg = &(sysarg->fcntl);
   //  fprintf(proc->strace_out,"[%d] fcntl( %d, ", pid, arg->fd);
-  fprintf(proc->strace_out, "fcntl(%lu, ", arg->fd);
+  fprintf(proc->strace_out, "fcntl(%d, ", arg->fd);
   switch (arg->cmd) {
   case F_DUPFD:
     fprintf(proc->strace_out, "F_DUPFD");
@@ -990,7 +990,7 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     if (arg->arg.cmd_arg)
       fprintf(proc->strace_out, ", FD_CLOEXEC");
     else
-      fprintf(proc->strace_out, ", %lu", arg->arg.cmd_arg);
+      fprintf(proc->strace_out, ", %li", arg->arg.cmd_arg);
     break;
 
   case F_GETFL:
@@ -1024,16 +1024,14 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 void print_read_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   read_arg_t arg = &(sysarg->read);
-  fprintf(proc->strace_out, "[%d] read(%lu, \"...\", %lu) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
-  //fprintf(proc->strace_out, "read(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
+  fprintf(proc->strace_out, "[%d] read(%d, \"...\", %zu) = %zd\n", proc->pid, arg->fd, arg->count, arg->ret);
 }
 
 /** @brief print a strace-like log of write syscall */
 void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   write_arg_t arg = &(sysarg->read);
-  fprintf(proc->strace_out, "[%d] write(%lu, \"...\", %lu) = %d\n", proc->pid, arg->fd, arg->count, arg->ret);
-  //fprintf(proc->strace_out, "write(%d, \"...\", %d) = %d\n", arg->fd, arg->count, arg->ret);
+  fprintf(proc->strace_out, "[%d] write(%d, \"...\", %zu) = %zd\n", proc->pid, arg->fd, arg->count, arg->ret);
 }
 
 /** @brief helper function to print options of shutdown syscall */
@@ -1150,7 +1148,7 @@ void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   clone_arg_t arg = &(sysarg->clone);
   fprintf(proc->strace_out, "clone(child_stack=%ld, flags=", arg->newsp);
 
-  print_flags_clone(proc, (long int) arg->clone_flags);
+  print_flags_clone(proc, (long int) arg->flags);
   fprintf(proc->strace_out, "child_tidptr=0x%lx) = %d \n", (long int) arg->child_tid, arg->ret);
 }
 
@@ -1182,27 +1180,27 @@ void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysar
   execve_arg_t arg = &(sysarg->execve);
   pid_t pid = proc->pid;
   char bufstr[4096];
-  long ptr_filename, ptr_argv;
+  long filename, argv;
 
-  ptr_filename = arg->ptr_filename;
+  filename = arg->filename;
   fprintf(proc->strace_out, "execve(");
-  if (ptr_filename) {
-    get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
+  if (filename) {
+    get_string(pid, filename, bufstr, sizeof(bufstr));
     fprintf(proc->strace_out, "\"%s\", [", bufstr);
   }
-  ptr_argv = arg->ptr_argv;
+  argv = arg->argv;
   int first = 1;
-  for (; ptr_argv; ptr_argv += sizeof(long)) {
-    ptr_filename = ptr_argv;
+  for (; argv; argv += sizeof(long)) {
+    filename = argv;
     /* Indirect through ptr since we have char *argv[] */
-    ptr_filename = ptrace(PTRACE_PEEKTEXT, pid, (void *) ptr_filename, 0);
+    filename = ptrace(PTRACE_PEEKTEXT, pid, (void *) filename, 0);
 
-    if (!ptr_filename) {
+    if (!filename) {
       fprintf(proc->strace_out, "]");
       break;
     }
 
-    get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
+    get_string(pid, filename, bufstr, sizeof(bufstr));
     if (first) {
       fprintf(proc->strace_out, "\"%s\"", bufstr);
       first = 0;
