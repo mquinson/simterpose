@@ -218,13 +218,13 @@ int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, proce
       is->ref_nb++;
       s->ref_nb++;
 
-      XBT_DEBUG("%d->%d", arg->sockfd, arg->ret);
-      XBT_DEBUG("Sending data(%d) on socket %d", arg->ret, s->fd.fd);
+      XBT_DEBUG("%d->%d", arg->sockfd, (int) arg->ret);
+      XBT_DEBUG("Sending data(%d) on socket %d", (int) arg->ret, s->fd.fd);
       handle_new_send(is, sysarg);
 
       msg_task_t task = create_send_communication_task(proc, is, arg->ret, proc->host, s->fd.proc->host);
       XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
-        arg->ret);
+		(int) arg->ret);
 
 
       MSG_task_set_bytes_amount(task, arg->ret);

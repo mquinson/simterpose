@@ -738,7 +738,7 @@ void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
   }
 
-  fprintf(proc->strace_out, "%d", arg->addrlen);
+  fprintf(proc->strace_out, "%u", arg->addrlen);
 
   fprintf(proc->strace_out, ") = %d\n",  (int) arg->ret);
 }
@@ -754,7 +754,7 @@ void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 #ifndef address_translation
   if (arg->ret) {
     char buff[500];
-    if (arg->ret <= 500) {
+    if ( arg->ret <= 500) {
       memcpy(buff, arg->data, arg->ret);
       buff[arg->ret] = '\0';
       fprintf(proc->strace_out, "%d, \"%s\" , %d, ", arg->sockfd, buff, (int) arg->len);
@@ -795,7 +795,7 @@ void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
   }
 
-  fprintf(proc->strace_out, "%d", arg->addrlen);
+  fprintf(proc->strace_out, "%u", arg->addrlen);
 
   fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
 }
@@ -894,7 +894,7 @@ static void get_revents_poll(process_descriptor_t * proc, short revents)
 }
 
 /** @brief helper function to print the fd, events and revents of poll syscall */
-static void disp_pollfd(process_descriptor_t * proc, struct pollfd *fds, int nfds)
+static void disp_pollfd(process_descriptor_t * proc, struct pollfd *fds, nfds_t nfds)
 {
   int i;
   for (i = 0; i < nfds - 1; i++) {
@@ -920,13 +920,12 @@ void print_poll_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
   poll_arg_t arg = &(sysarg->poll);
 
   fprintf(proc->strace_out, "poll([");
-  // fprintf(proc->strace_out,"[%d] poll([",pid);
   if (arg->fd_list != NULL)
-    disp_pollfd(proc, arg->fd_list, arg->nbfd);
+    disp_pollfd(proc, arg->fd_list, arg->nfds);
   else
     fprintf(proc->strace_out, "NULL");
   fprintf(proc->strace_out, " ]");
-  fprintf(proc->strace_out, "%lu) = %d\n", arg->timeout, arg->ret);
+  fprintf(proc->strace_out, "%d) = %d\n", arg->timeout, arg->ret);
 }
 
 /** @brief helper function to print the fd of select syscall */

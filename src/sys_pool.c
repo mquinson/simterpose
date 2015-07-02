@@ -43,7 +43,7 @@ void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t 
       xbt_dynar_t backup = xbt_dynar_new(sizeof(int), NULL);*/
 
   // for (i = 0; i < arg->nbfd; ++i) {
-  if (arg->nbfd > 1)
+  if (arg->nfds > 1)
     XBT_WARN("Poll only handles one fd\n");
 
   struct pollfd *temp = &(arg->fd_list[0]);

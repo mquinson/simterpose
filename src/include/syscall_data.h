@@ -58,22 +58,22 @@ typedef recvmsg_arg_s *recvmsg_arg_t;
 
 
 typedef struct select_arg_s {
-  int fd_state;
   int maxfd;
-  int ret;
   fd_set fd_read;
   fd_set fd_write;
   fd_set fd_except;
   double timeout;
+  int fd_state;
+  int ret;
 } select_arg_s;
 
 typedef select_arg_s *select_arg_t;
 
 
 typedef struct poll_arg_s {
-  unsigned long nbfd;
   struct pollfd *fd_list;
-  unsigned long timeout;
+  nfds_t nfds;
+  int timeout;
   int ret;
 } poll_arg_s;
 
@@ -91,18 +91,18 @@ typedef pipe_arg_s *pipe_arg_t;
 
 typedef struct sendto_arg_s {
   int sockfd;
-  ssize_t ret;
-  size_t len;
   void *data;
+  size_t len;
   int flags;
-  int addrlen;
+  socklen_t addrlen;
   void *dest;                   //address in processus of data
   int is_addr;                  //indicate if struct sockadrr is null or not
-  union {
+ union {
     struct sockaddr_in sai;
     struct sockaddr_un sau;
     struct sockaddr_nl snl;
   };
+  ssize_t ret;
 } sendto_arg_s, recvfrom_arg_s;
 
 typedef sendto_arg_s *sendto_arg_t;
