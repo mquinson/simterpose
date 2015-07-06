@@ -652,44 +652,6 @@ static void print_flags_recv(process_descriptor_t * proc, int flags)
   fprintf(proc->strace_out, ", ");
 }
 
-
-/** @brief print a strace-like log of recv syscall */
-void print_recv_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  recv_arg_t arg = &(sysarg->recv);
-  // fprintf(proc->strace_out,"[%d] recv(", pid);
-  fprintf(proc->strace_out, "recv(");
-
-  fprintf(proc->strace_out, "%d, ", arg->sockfd);
-  fprintf(proc->strace_out, "%d ", (int) arg->len);
-
-  if (arg->flags > 0) {
-    print_flags_recv(proc, arg->flags);
-  } else
-    fprintf(proc->strace_out, "0, ");
-
-  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
-}
-
-/** @brief print a strace-like log of send syscall */
-void print_send_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  recv_arg_t arg = &(sysarg->send);
-  // fprintf(proc->strace_out,"[%d] send( ", pid);
-  fprintf(proc->strace_out, "send( ");
-
-  fprintf(proc->strace_out, "%d, ", arg->sockfd);
-  fprintf(proc->strace_out, "%d ", (int) arg->len);
-
-  if (arg->flags > 0) {
-    print_flags_send(proc, arg->flags);
-  } else
-    fprintf(proc->strace_out, "0, ");
-
-  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
-}
-
-
 /** @brief print a strace-like log of sendto syscall */
 void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
