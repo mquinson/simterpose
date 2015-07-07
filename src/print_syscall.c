@@ -1140,18 +1140,19 @@ static int get_string(int pid, long ptr, char *buf, int size)
 void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
 
-  execve_arg_t arg = &(sysarg->execve);
   pid_t pid = proc->pid;
   char bufstr[4096];
   long filename, argv;
+  reg_s reg;
 
-  filename = arg->filename;
+  filename = reg.arg[0];
   fprintf(proc->strace_out, "execve(");
   if (filename) {
     get_string(pid, filename, bufstr, sizeof(bufstr));
     fprintf(proc->strace_out, "\"%s\", [", bufstr);
   }
-  argv = arg->argv;
+  
+  argv = reg.arg[1];
   int first = 1;
   for (; argv; argv += sizeof(long)) {
     filename = argv;
@@ -1177,8 +1178,9 @@ void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysar
 /** @brief print the return of execve syscall */
 void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  execve_arg_t arg = &(sysarg->execve);
-  fprintf(proc->strace_out, "%d\n", arg->ret);
+  reg_s reg;  
+  ptrace_get_register(proc->pid, &reg);
+  fprintf(proc->strace_out, "%d\n", (int) reg.ret);
 }
 
 /** @brief print open syscall */
