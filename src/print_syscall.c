@@ -1038,18 +1038,21 @@ void print_getpeername_syscall(process_descriptor_t * proc, syscall_arg_u * sysa
 /** @brief print a strace-like log of time syscall */
 void print_time_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  time_arg_t arg = &(sysarg->time);
+  reg_s reg;
+  ptrace_get_register(proc->pid, &reg);
+
   //fprintf(proc->strace_out,"[%d] time = %ld\n", pid, arg->ret);
-  fprintf(proc->strace_out, "time = %ld\n", arg->ret);
+  fprintf(proc->strace_out, "time = %lu\n", reg.ret);
 }
 
 /** @brief print a strace-like log of gettimeofday syscall */
 void print_gettimeofday_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  //gettimeofday_arg_t arg = &(sysarg->gettimeofday);
-  //  fprintf(proc->strace_out,"[%d] gettimeofday, tv = %ld\n", pid, arg->tv);
-  //fprintf(proc->strace_out, "gettimeofday, tv = %ld\n", arg->tv);
-  THROW_UNIMPLEMENTED;
+  reg_s reg;
+  ptrace_get_register(proc->pid, &reg);
+  /* TODO */
+  /* fprintf(proc->strace_out, "gettimeofday, tv = %lu\n", reg.arg[0]->tv_sec); */
+
 }
 
 /** @brief helper function to print the flags of clone syscall */

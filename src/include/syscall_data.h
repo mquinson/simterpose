@@ -206,31 +206,6 @@ typedef struct getpeername_arg_s {
 
 typedef getpeername_arg_s *getpeername_arg_t;
 
-
-typedef struct time_arg_s {
-  time_t t;
-  time_t ret;
-} time_arg_s;
-
-typedef time_arg_s *time_arg_t;
-
-
-typedef struct gettimeofday_arg_s {
-  struct timeval *tv;
-  struct timezone *tz;
-  int ret;
-} gettimeofday_arg_s, settimeofday_arg_s;
-typedef gettimeofday_arg_s *gettimeofday_arg_t;
-typedef settimeofday_arg_s *settimeofday_arg_t;
-
-typedef struct clockgettime_arg_s {
-  clockid_t clk_id;
-  struct timespec *tp;
-  int ret;
-} clockgettime_arg_s;
-typedef clockgettime_arg_s *clockgettime_arg_t;
-
-
 typedef struct clone_arg_s { /* TODO missing argument*/
   unsigned long newsp;
   void *parent_tid;
@@ -239,16 +214,6 @@ typedef struct clone_arg_s { /* TODO missing argument*/
   int ret;
 } clone_arg_s;
 typedef clone_arg_s *clone_arg_t;
-
-/* typedef struct execve_arg_s { */
-/*   long filename; */
-/*   long argv; */
-/*   /\* char *filename; *\/ */
-/*   /\* char **argv; *\/ */
-/*   /\* char **envp; *\/ */
-/*   int ret; */
-/* } execve_arg_s; */
-/* typedef execve_arg_s *execve_arg_t; */
 
 typedef union {
   connect_arg_s connect;
@@ -270,11 +235,7 @@ typedef union {
   write_arg_s write;
   shutdown_arg_s shutdown;
   getpeername_arg_s getpeername;
-  time_arg_s time;
-  gettimeofday_arg_s gettimeofday;
-  clockgettime_arg_s clockgettime;
   clone_arg_s clone;
-  /* execve_arg_s execve; */
 } syscall_arg_u;
 
 
