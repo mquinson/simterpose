@@ -309,22 +309,6 @@ void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
   arg->ret = (int) reg->ret;
 }
 
-/** @brief retrieve the arguments of open syscall */
-void get_args_open(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  open_arg_t arg = &(sysarg->open);
-  arg->ret = (int) reg->ret;
-  arg->ptr_filename = reg->arg[0];
-  arg->flags = (int) reg->arg[1];
-  arg->mode = reg->arg[2];
-
-  /* XBT_DEBUG("on get args open %d", proc->pid); */
-  /* XBT_DEBUG("Valeur de retrour on open %lu on reg %lu", arg->ret, reg->ret); */
-  /* XBT_DEBUG("Valeur de ptr on open %lu on reg %lu", arg->ptr_filename, reg->arg[0]); */
-  /* XBT_DEBUG("Valeur de flags on open %d on reg %lu", arg->flags, reg->arg[1]); */
-  /* XBT_DEBUG("Valeur de mode on open %lu on reg %lu", arg->mode, reg->arg[2]); */
-}
-
 /** @brief retrieve the arguments of read syscall */
 void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {

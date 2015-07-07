@@ -22,18 +22,14 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
   } else {
     proc_outside(proc);
 
-    get_args_open(proc, reg, sysarg);
-
-    open_arg_t arg = &(sysarg->open);
-
-    if (arg->ret >= 0) {
+    if (((int) reg->ret) >= 0) {
       fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
       file_desc->refcount = 0;
-      file_desc->fd = arg->ret;
+      file_desc->fd = (int) reg->ret;
       file_desc->proc = proc;
       file_desc->type = FD_CLASSIC;
-      file_desc->flags = arg->flags;
-      file_desc->mode = arg->mode;
+      file_desc->flags = (int) reg->arg[1];
+      file_desc->mode = reg->arg[2];
       process_descriptor_set_fd(proc, reg->ret, file_desc);
       file_desc->refcount++;
     }

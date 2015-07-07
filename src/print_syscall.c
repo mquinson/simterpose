@@ -12,6 +12,7 @@
 #include <xbt.h>
 
 #include "print_syscall.h"
+#include "ptrace_utils.h"
 #include "sockets.h"
 #include "simterpose.h"
 #include "sysdep.h"
@@ -1183,30 +1184,31 @@ void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysa
 /** @brief print open syscall */
 void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  open_arg_t arg = &(sysarg->open);
   pid_t pid = proc->pid;
   char bufstr[4096];
   long ptr_filename;
-
-  ptr_filename = arg->ptr_filename;
+  reg_s reg;
+  
+  ptrace_get_register(proc->pid, &reg);
+  ptr_filename = reg.arg[0];
   fprintf(proc->strace_out, "open(");
   if (ptr_filename) {
     get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
     fprintf(proc->strace_out, "\"%s\"", bufstr);
   }
-  if (arg->flags) {
+  if ((int) reg.arg[1]){
     fprintf(proc->strace_out,", ");
-    print_flags(proc, arg->flags, flags_open);
+    print_flags(proc, (int) reg.arg[1] , flags_open);
   }
-  if (arg->ret < 0) {
+  if ((int) reg.ret){
     char errbuff[1024];
-    strerror_r(-arg->ret, errbuff, 1024);
+    strerror_r(-((int) reg.ret), errbuff, 1024);
     // The manpage says that the open syscall returns -1 while it returns -errno. Obey the manpage, at least in appearance
     fprintf(proc->strace_out, ") = -1 ");
-    print_flags(proc, -arg->ret, errno_values);
-    fprintf(proc->strace_out," (%s)\n", strerror(-(arg->ret)));
+    print_flags(proc, -((int) reg.ret), errno_values);
+    fprintf(proc->strace_out," (%s)\n", strerror(-((int) reg.ret)));
   } else {
-    fprintf(proc->strace_out, ") = %d\n", arg->ret);
+    fprintf(proc->strace_out, ") = %d\n", (int) reg.ret);
   }
 }
 

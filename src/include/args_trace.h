@@ -40,8 +40,6 @@ void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
 
 void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_open(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
-
 void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
 
 void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
