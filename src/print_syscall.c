@@ -1036,20 +1036,15 @@ void print_getpeername_syscall(process_descriptor_t * proc, syscall_arg_u * sysa
 }
 
 /** @brief print a strace-like log of time syscall */
-void print_time_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_time_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  reg_s reg;
-  ptrace_get_register(proc->pid, &reg);
-
   //fprintf(proc->strace_out,"[%d] time = %ld\n", pid, arg->ret);
-  fprintf(proc->strace_out, "time = %lu\n", reg.ret);
+  fprintf(proc->strace_out, "time = %lu\n", reg->ret);
 }
 
 /** @brief print a strace-like log of gettimeofday syscall */
-void print_gettimeofday_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_gettimeofday_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  reg_s reg;
-  ptrace_get_register(proc->pid, &reg);
   /* TODO */
   /* fprintf(proc->strace_out, "gettimeofday, tv = %lu\n", reg.arg[0]->tv_sec); */
 
@@ -1140,22 +1135,21 @@ static int get_string(int pid, long ptr, char *buf, int size)
 }
 
 /** @brief print a strace-like log of execve syscall, without the return */
-void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
 
   pid_t pid = proc->pid;
   char bufstr[4096];
   long filename, argv;
-  reg_s reg;
 
-  filename = reg.arg[0];
+  filename = reg->arg[0];
   fprintf(proc->strace_out, "execve(");
   if (filename) {
     get_string(pid, filename, bufstr, sizeof(bufstr));
     fprintf(proc->strace_out, "\"%s\", [", bufstr);
   }
   
-  argv = reg.arg[1];
+  argv = reg->arg[1];
   int first = 1;
   for (; argv; argv += sizeof(long)) {
     filename = argv;
@@ -1179,41 +1173,37 @@ void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysar
 }
 
 /** @brief print the return of execve syscall */
-void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_execve_syscall_post(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  reg_s reg;  
-  ptrace_get_register(proc->pid, &reg);
-  fprintf(proc->strace_out, "%d\n", (int) reg.ret);
+  fprintf(proc->strace_out, "%d\n", (int) reg->ret);
 }
 
 /** @brief print open syscall */
-void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_open_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
   pid_t pid = proc->pid;
   char bufstr[4096];
   long ptr_filename;
-  reg_s reg;
-  
-  ptrace_get_register(proc->pid, &reg);
-  ptr_filename = reg.arg[0];
+
+  ptr_filename = reg->arg[0];
   fprintf(proc->strace_out, "open(");
   if (ptr_filename) {
     get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
     fprintf(proc->strace_out, "\"%s\"", bufstr);
   }
-  if ((int) reg.arg[1]){
+  if ((int) reg->arg[1]){
     fprintf(proc->strace_out,", ");
-    print_flags(proc, (int) reg.arg[1] , flags_open);
+    print_flags(proc, (int) reg->arg[1] , flags_open);
   }
-  if ((int) reg.ret){
+  if ((int) reg->ret){
     char errbuff[1024];
-    strerror_r(-((int) reg.ret), errbuff, 1024);
+    strerror_r(-((int) reg->ret), errbuff, 1024);
     // The manpage says that the open syscall returns -1 while it returns -errno. Obey the manpage, at least in appearance
     fprintf(proc->strace_out, ") = -1 ");
-    print_flags(proc, -((int) reg.ret), errno_values);
-    fprintf(proc->strace_out," (%s)\n", strerror(-((int) reg.ret)));
+    print_flags(proc, -((int) reg->ret), errno_values);
+    fprintf(proc->strace_out," (%s)\n", strerror(-((int) reg->ret)));
   } else {
-    fprintf(proc->strace_out, ") = %d\n", (int) reg.ret);
+    fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
   }
 }
 

@@ -35,7 +35,7 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     }
     // TODO handle flags
     if (strace_option)
-      print_open_syscall(proc, sysarg);
+      print_open_syscall(reg, proc, sysarg);
 
   /*   XBT_DEBUG("An open syscall was made for the fd %d via reg %lu\n Value of flags %lu \n", arg->ret, reg->ret, arg->flags); */
   }

@@ -23,12 +23,12 @@ void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
   } else if (proc_entering(proc)) {
     proc_inside(proc);
     if (strace_option)
-      print_execve_syscall_pre(proc, sysarg);
+      print_execve_syscall_pre(reg, proc, sysarg);
 
   } else {
     proc_outside(proc);
     if (strace_option)
-      print_execve_syscall_post(proc, sysarg);
+      print_execve_syscall_post(reg, proc, sysarg);
 
     xbt_dict_cursor_t cursor = NULL;
     char *key;

@@ -15,6 +15,7 @@
 
 #include "syscall_data.h"
 #include "process_descriptor.h"
+#include "ptrace_utils.h"
 
 // The XBT log appender that we use to write our logs to the corresponding files.
 xbt_log_appender_t xbt_log_appender_strace_new(void);
@@ -55,17 +56,17 @@ void print_shutdown_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
 void print_getpeername_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_time_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_time_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_gettimeofday_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_gettimeofday_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
 
 void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_execve_syscall_pre(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_execve_syscall_post(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_execve_syscall_post(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_open_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_open_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
 
 void stprintf(process_descriptor_t * proc, const char*fmt, ...);
 void stprintf_tabto(process_descriptor_t * proc);
