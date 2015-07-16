@@ -54,7 +54,7 @@ void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
 void print_shutdown_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_getpeername_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_getpeername_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_time_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
 

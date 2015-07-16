@@ -1025,14 +1025,14 @@ void print_shutdown_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
 
 /** @brief print a strace-like log of getpeername syscall */
-void print_getpeername_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_getpeername_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  getpeername_arg_t arg = &(sysarg->getpeername);
-  //  fprintf(proc->strace_out,"[%d] getpeername (%d, ", pid, arg->sockfd);
-  fprintf(proc->strace_out, "getpeername (%d, ", arg->sockfd);
-  fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", arg->in.sin_port,
-    inet_ntoa(arg->in.sin_addr));
-  fprintf(proc->strace_out, "%d ) = %d\n", arg->len, arg->ret);
+/* TODO */
+/* fprintf(proc->strace_out, "getpeername (%d, ", (int) reg->arg[0]); */
+/*  struct sockaddr *sock = (struct sockaddr *) reg->arg[1];  */
+/*  fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", sock.sin_port, */
+/* 	 inet_ntoa((sock.sin_addr))); */
+/*   fprintf(proc->strace_out, "%u ) = %d\n", (socklen_t *) reg->arg[2],  (int) reg->ret); */
 }
 
 /** @brief print a strace-like log of time syscall */

@@ -160,7 +160,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_getpeername:
-      syscall_getpeername(&arg, sysarg, proc);
+      syscall_getpeername(&arg, proc);
       break;
 
     case SYS_getsockopt:

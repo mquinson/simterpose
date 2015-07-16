@@ -6,7 +6,7 @@
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include "sys_getpeername.h"
-
+/* #include <netinet/in.h> */
 #include "args_trace.h"
 #include "data_utils.h"
 #include "print_syscall.h"
@@ -15,52 +15,51 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles getpeername syscall at the entrance at the exit */
-void syscall_getpeername(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+void syscall_getpeername(reg_s * reg, process_descriptor_t * proc){
 
   if (proc_entering(proc))
-    syscall_getpeername_pre(reg, sysarg, proc);
+    syscall_getpeername_pre(reg, proc);
   else
     proc_outside(proc);
 
 }
 
 /** @brief handles getpeername syscall at the entrance */
-void syscall_getpeername_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_getpeername_pre(reg_s * reg, process_descriptor_t * proc)
 {
   proc_inside(proc);
-  getpeername_arg_t arg = &(sysarg->getpeername);
   pid_t pid = proc->pid;
 
-  arg->ret = (int) reg->ret;
-  arg->sockfd = (int) reg->arg[0];
-  /* arg->in = (sockaddr_in *) reg->arg[1]; */
-  arg->sockaddr_dest = (void *) reg->arg[1];
-  /* arg->len = (socklen_t *) reg->arg[2]; */
-  arg->len_dest = (void *) reg->arg[2];
-  ptrace_cpy(proc->pid, &(arg->len), arg->len_dest, sizeof(socklen_t), "getpeername");
+  socklen_t len = (socklen_t ) reg->arg[2];
+  
+  /* TODO */
+  ptrace_cpy(proc->pid, &(len), &len, sizeof(socklen_t), "getpeername");
 
-  if (socket_registered(proc, arg->sockfd)) {
-    if (socket_network(proc, arg->sockfd)) {
-      struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-      struct sockaddr_in in;
+ if (socket_registered(proc, (int) reg->arg[0])) {
+    if (socket_network(proc, (int) reg->arg[0])) {
+      struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);
+      struct sockaddr * in;
       socklen_t size = 0;
-      if (!comm_getpeername(is, &in, &size)) {
-        if (size < arg->len)
-          arg->len = size;
-        arg->in = in;
-        arg->ret = 0;
+     
+      if (!comm_getpeername(is, in, &size)) {
+        if (size < len)
+          reg->arg[2] = size;
+        reg->arg[1] = (long) in;
+        reg->ret = 0;
       } else
-        arg->ret = -ENOTCONN;   /* ENOTCONN 107 End point not connected */
+        reg->ret = -ENOTCONN; 
+      ptrace(PTRACE_SETREGS, pid, NULL, &reg);
 
       ptrace_neutralize_syscall(pid);
       proc_outside(proc);
-      ptrace_restore_syscall(pid, SYS_getpeername, arg->ret);
-      if (arg->ret == 0) {
-        ptrace_poke(pid, arg->len_dest, &(arg->len), sizeof(socklen_t));
-        ptrace_poke(pid, arg->sockaddr_dest, &(arg->in), sizeof(struct sockaddr_in));
-      }
+      ptrace_restore_syscall(pid, SYS_getpeername, (int) reg->ret);
+	if ( (int) reg->ret == 0) {
+	  /* TODO */
+	ptrace_poke(pid, &len , &len, sizeof(socklen_t));
+        ptrace_poke(pid, (void *) reg->arg[1], (struct sockaddr *) reg->arg[1], sizeof(struct sockaddr));
+      }      
       if (strace_option)
-        print_getpeername_syscall(proc, sysarg);
+	print_getpeername_syscall(reg, proc);
     }
-  }
+ }
 }

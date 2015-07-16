@@ -261,7 +261,33 @@ process_descriptor_t *comm_accept_connect(struct infos_socket *is, struct sockad
 
 
 /** @brief retrieve sockaddr_in for getpeername syscall */
-int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t * sock)
+/* int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t * sock) */
+/* { */
+/*   comm_t comm = is->comm; */
+/*   if (comm == NULL) */
+/*     return -1; */
+
+/*   struct infos_socket *peer = comm_get_peer(is); */
+
+/*   if (!peer) { */
+/*     struct in_addr in2 = { comm->remote_ip }; */
+/*     XBT_DEBUG("%s:%d", inet_ntoa(in2), comm->remote_port); */
+
+/*     in->sin_addr.s_addr = comm->remote_ip; */
+/*     in->sin_port = comm->remote_port; */
+/*     in->sin_family = AF_INET; */
+/*     *sock = sizeof(struct sockaddr_in); */
+/*     return 0; */
+/*   } */
+
+/*   in->sin_addr.s_addr = peer->ip_local; */
+/*   in->sin_port = peer->port_local; */
+/*   in->sin_family = AF_INET; */
+/*   *sock = sizeof(struct sockaddr_in); */
+/*   return 0; */
+/* } */
+
+int comm_getpeername(struct infos_socket *is, struct sockaddr *in, socklen_t * sock)
 {
   comm_t comm = is->comm;
   if (comm == NULL)
@@ -273,16 +299,16 @@ int comm_getpeername(struct infos_socket *is, struct sockaddr_in *in, socklen_t 
     struct in_addr in2 = { comm->remote_ip };
     XBT_DEBUG("%s:%d", inet_ntoa(in2), comm->remote_port);
 
-    in->sin_addr.s_addr = comm->remote_ip;
-    in->sin_port = comm->remote_port;
-    in->sin_family = AF_INET;
+    /* in->sin_addr.s_addr = comm->remote_ip; */
+    /* in->sin_port = comm->remote_port; */
+    in->sa_family = AF_INET;
     *sock = sizeof(struct sockaddr_in);
     return 0;
   }
 
-  in->sin_addr.s_addr = peer->ip_local;
-  in->sin_port = peer->port_local;
-  in->sin_family = AF_INET;
+  /* in->sin_addr.s_addr = peer->ip_local; */
+  /* in->sin_port = peer->port_local; */
+  in->sa_family = AF_INET;
   *sock = sizeof(struct sockaddr_in);
   return 0;
 }

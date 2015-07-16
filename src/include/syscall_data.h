@@ -194,18 +194,6 @@ typedef struct shutdown_arg_s {
 
 typedef shutdown_arg_s *shutdown_arg_t;
 
-
-typedef struct getpeername_arg_s {
-  int sockfd;
-  struct sockaddr_in in;
-  socklen_t len;
-  void *sockaddr_dest;
-  void *len_dest;
-  int ret;
-} getpeername_arg_s;
-
-typedef getpeername_arg_s *getpeername_arg_t;
-
 typedef struct clone_arg_s { /* TODO missing argument*/
   unsigned long newsp;
   void *parent_tid;
@@ -234,7 +222,6 @@ typedef union {
   read_arg_s read;
   write_arg_s write;
   shutdown_arg_s shutdown;
-  getpeername_arg_s getpeername;
   clone_arg_s clone;
 } syscall_arg_u;
 
