@@ -263,15 +263,6 @@ void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
     arg->fd_list = NULL;
 }
 
-/** @brief retrieve the arguments of pipe syscall */
-void get_args_pipe(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  pipe_arg_t arg = &(sysarg->pipe);
-  arg->ret = (int) reg->ret;
-  arg->filedes = xbt_new0(int, 2);
-  ptrace_cpy(proc->pid, arg->filedes, (void *) reg->arg[0], 2 * sizeof(int), "pipe");
-}
-
 /** @brief retrieve the arguments of fcntl syscall */
 void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {

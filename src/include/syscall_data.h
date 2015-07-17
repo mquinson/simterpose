@@ -68,16 +68,6 @@ typedef struct poll_arg_s {
 
 typedef poll_arg_s *poll_arg_t;
 
-
-typedef struct pipe_arg_s {
-  int *filedes;
-  int ret;
-} pipe_arg_s;
-
-typedef pipe_arg_s *pipe_arg_t;
-
-
-
 typedef struct sendto_arg_s {
   int sockfd;
   void *data;
@@ -207,7 +197,6 @@ typedef union {
   recvmsg_arg_s recvmsg;
   sendmsg_arg_s sendmsg;
   poll_arg_s poll;
-  pipe_arg_s pipe;
   select_arg_s select;
   fcntl_arg_s fcntl;
   read_arg_s read;
