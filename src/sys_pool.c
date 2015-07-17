@@ -16,25 +16,32 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles poll syscall at the entrance and the exit */
-void syscall_poll(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
-
+void syscall_poll(reg_s * reg, process_descriptor_t * proc){
   if (proc_entering(proc))
-    syscall_poll_pre(reg, sysarg, proc);
+    syscall_poll_pre(reg, proc);
   else
-    syscall_poll_post(reg, sysarg, proc);
-
+    syscall_poll_post(reg, proc);
 }
 
 /** @brief handles poll syscall at the entrance */
 // TODO: doesn't work. We do irecv on each file descriptor and then a waitany
-void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_poll_pre(reg_s * reg, process_descriptor_t * proc)
 {
   proc_inside(proc);
-  get_args_poll(proc, reg, sysarg);
+  
+  pid_t child = proc->pid;
+  void *src = (void *) reg->arg[0];
+  nfds_t nfds = (nfds_t) reg->arg[1];
+  int timeout = ((int) reg->arg[2]) / 1000. ;     //the timeout is in millisecond 
+  struct pollfd *fd_list = xbt_new0(struct pollfd, nfds);
+  
+  if (src != 0) {
+        ptrace_cpy(child, fd_list, src, nfds * sizeof(struct pollfd), "poll");
+  } else
+    fd_list = NULL;
+    
   if (strace_option)
-    print_poll_syscall(proc, sysarg);
-
-  poll_arg_t arg = (poll_arg_t) & (proc->sysarg.poll);
+    print_poll_syscall(reg, proc, fd_list, timeout);
 
   //  XBT_WARN("Poll: Timeout not handled\n");
 
@@ -43,10 +50,10 @@ void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t 
       xbt_dynar_t backup = xbt_dynar_new(sizeof(int), NULL);*/
 
   // for (i = 0; i < arg->nbfd; ++i) {
-  if (arg->nfds > 1)
+  if (nfds > 1)
     XBT_WARN("Poll only handles one fd\n");
 
-  struct pollfd *temp = &(arg->fd_list[0]);
+  struct pollfd *temp = &(fd_list[0]);
   msg_comm_t comm;
   struct infos_socket *is = get_infos_socket(proc, temp->fd);
 
@@ -72,30 +79,47 @@ void syscall_poll_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t 
   //  int nb = MSG_comm_waitany(comms);
   //  msg_comm_t comm = xbt_dynar_get_ptr(comms, nb);
   //  int j = xbt_dynar_get_as(comms, nb, int);
-  msg_error_t err = MSG_comm_wait(comm, arg->timeout);
+  msg_error_t err = MSG_comm_wait(comm, timeout);
   if (err == MSG_OK) {
     //  struct pollfd *temp = &(arg->fd_list[j]);
     temp->revents = temp->revents | POLLIN;
 
     XBT_DEBUG("Result for poll\n");
-    sys_build_poll(proc, &(proc->sysarg), 1);
+    ptrace_restore_syscall(proc->pid, SYS_poll, 1);
+    reg->ret = 1;
+    if (reg->arg[0] != 0)
+      ptrace_poke(proc->pid, (void *) reg->arg[0], fd_list, sizeof(struct pollfd) * nfds);
     if (strace_option)
-      print_poll_syscall(proc, &(proc->sysarg));
-    free(proc->sysarg.poll.fd_list);
+      print_poll_syscall(reg, proc, fd_list, timeout);
+    free(fd_list);
   } else if (err == MSG_TIMEOUT) {
     XBT_DEBUG("Time out on poll\n");
-    sys_build_poll(proc, &(proc->sysarg), 0);
+     ptrace_restore_syscall(proc->pid, SYS_poll, 0);
+    reg->ret = 0;
+    if (reg->arg[0] != 0)
+      ptrace_poke(proc->pid, (void *) reg->arg[0], fd_list, sizeof(struct pollfd) * nfds);
     if (strace_option)
-      print_poll_syscall(proc, &(proc->sysarg));
-    free(proc->sysarg.poll.fd_list);
+      print_poll_syscall(reg, proc, fd_list, timeout);
+    free(fd_list);
   }
 }
 
 /** @brief prints poll syscall at the exit */
-void syscall_poll_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_poll_post(reg_s * reg, process_descriptor_t * proc)
 {
   proc_outside(proc);
-  get_args_poll(proc, reg, sysarg);
+  pid_t child = proc->pid;
+  void *src = (void *) reg->arg[0];
+  nfds_t nfds = (nfds_t) reg->arg[1];
+  int timeout = ((int) reg->arg[2]) / 1000;     //the timeout is in millisecond
+  struct pollfd * fd_list = xbt_new0(struct pollfd, nfds);
+
+  if (src != 0) {
+    ptrace_cpy(child, fd_list, src, nfds * sizeof(struct pollfd), "poll");
+
+  } else
+    fd_list = NULL;
+  
   if (strace_option)
-    print_poll_syscall(proc, sysarg);
+    print_poll_syscall(reg, proc, fd_list, timeout);
 }

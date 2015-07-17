@@ -32,8 +32,6 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 
 void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_poll(process_descriptor_t * proc, reg_s * arg, syscall_arg_u * sysarg);
-
 void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
 
 void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
@@ -43,8 +41,6 @@ void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
 void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int match);
 
 void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg);
-
-void sys_build_poll(process_descriptor_t * proc, syscall_arg_u * sysarg, int match);
 
 void sys_translate_accept_out(process_descriptor_t * proc, syscall_arg_u * sysarg);
 

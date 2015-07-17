@@ -58,16 +58,6 @@ typedef struct select_arg_s {
 
 typedef select_arg_s *select_arg_t;
 
-
-typedef struct poll_arg_s {
-  struct pollfd *fd_list;
-  nfds_t nfds;
-  int timeout;
-  int ret;
-} poll_arg_s;
-
-typedef poll_arg_s *poll_arg_t;
-
 typedef struct sendto_arg_s {
   int sockfd;
   void *data;
@@ -181,7 +171,6 @@ typedef union {
   recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;
   sendmsg_arg_s sendmsg;
-  poll_arg_s poll;
   select_arg_s select;
   read_arg_s read;
   write_arg_s write;

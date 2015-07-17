@@ -243,26 +243,6 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 #endif
 }
 
-/** @brief retrieve the arguments of poll syscall */
-void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  poll_arg_t arg = &(sysarg->poll);
-  pid_t child = proc->pid;
-
-  arg->ret = (int) reg->ret;
-
-  void *src = (void *) reg->arg[0];
-  arg->nfds = (nfds_t) reg->arg[1];
-  arg->timeout = ((int) reg->arg[2]) / 1000.;     //the timeout is in millisecond
-
-  if (src != 0) {
-    arg->fd_list = xbt_new0(struct pollfd, arg->nfds);
-    ptrace_cpy(child, arg->fd_list, src, arg->nfds * sizeof(struct pollfd), "poll");
-
-  } else
-    arg->fd_list = NULL;
-}
-
 /** @brief retrieve the arguments of read syscall */
 void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -358,23 +338,6 @@ void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
   }
   free(arg->data);
 }
-
-/** @brief put the arguments we want in the registers of poll syscall */
-void sys_build_poll(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
-{
-  pid_t pid = proc->pid;
-  ptrace_restore_syscall(pid, SYS_poll, match);
-  reg_s r;
-  ptrace_get_register(pid, &r);
-
-  poll_arg_t arg = &(sysarg->poll);
-  arg->ret = match;
-
-  if (r.arg[0] != 0) {
-    ptrace_poke(pid, (void *) r.arg[0], arg->fd_list, sizeof(struct pollfd) * arg->nfds);
-  }
-}
-
 
 /** @brief translate the port and address of the exiting accept syscall
  *

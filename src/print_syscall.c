@@ -877,17 +877,15 @@ static void disp_pollfd(process_descriptor_t * proc, struct pollfd *fds, nfds_t 
 }
 
 /** @brief print a strace-like log of poll syscall */
-void print_poll_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_poll_syscall(reg_s * reg, process_descriptor_t * proc, struct pollfd *fd_list, int timeout)
 {
-  poll_arg_t arg = &(sysarg->poll);
-
   fprintf(proc->strace_out, "poll([");
-  if (arg->fd_list != NULL)
-    disp_pollfd(proc, arg->fd_list, arg->nfds);
+  if (fd_list != NULL)
+    disp_pollfd(proc, fd_list, (nfds_t) reg->arg[1]);
   else
     fprintf(proc->strace_out, "NULL");
   fprintf(proc->strace_out, " ]");
-  fprintf(proc->strace_out, "%d) = %d\n", arg->timeout, arg->ret);
+  fprintf(proc->strace_out, "%d) = %d\n",  timeout ,(int) reg->ret);
 }
 
 /** @brief helper function to print the fd of select syscall */
