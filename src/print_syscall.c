@@ -604,15 +604,14 @@ void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
 }
 
 /** @brief print a strace-like log of listen syscall */
-void print_listen_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_listen_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  listen_arg_t arg = &(sysarg->listen);
+  /* listen_arg_t arg = &(sysarg->listen); */
 
   fprintf(proc->strace_out, "listen(");
-  //  fprintf(proc->strace_out,"[%d] listen(", pid);
-  fprintf(proc->strace_out, "%d, ", arg->sockfd);
-  fprintf(proc->strace_out, "%d ", arg->backlog);
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
+  fprintf(proc->strace_out, "%d ", (int) reg->arg[1]);
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
 
 /** @brief helper function to print the flags of send syscalls */

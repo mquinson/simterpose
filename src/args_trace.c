@@ -63,16 +63,6 @@ void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   arg->len_dest = (void *) reg->arg[2];
 }
 
-/** @brief retrieve the arguments of listen syscall */
-void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  listen_arg_t arg = &(sysarg->listen);
-
-  arg->sockfd = (int) reg->arg[0];
-  arg->backlog = (int) reg->arg[1];
-  arg->ret = (int) reg->ret;
-}
-
 /** @brief retrieve the arguments of select syscall */
 void get_args_select(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {

@@ -15,24 +15,22 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles listen syscall at the entrance and the exit */
-void syscall_listen(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_listen(reg_s * reg, process_descriptor_t * proc)
 {
   if (proc_entering(proc)) {
 
     proc_inside(proc);
-#ifndef address_translation
-    get_args_listen(proc, reg, sysarg);
-    process_listen_call(proc, sysarg);
+#ifndef address_translation    
+    process_listen_call(reg, proc);
     if (strace_option)
-      print_listen_syscall(proc, sysarg);
+      print_listen_syscall(reg, proc);
 #endif
   } else {
     proc_outside(proc);
 #ifdef address_translation
-    get_args_listen(proc, reg, sysarg);
-    process_listen_call(proc, sysarg);
+    process_listen_call(reg, proc);
     if (strace_option)
-      print_listen_syscall(proc, sysarg);
+      print_listen_syscall(reg, proc);
 #else
     THROW_IMPOSSIBLE;
 #endif
@@ -46,19 +44,18 @@ void syscall_listen(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
  * go to syscall_listen_post afterwards.
  *
  */
-void process_listen_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void process_listen_call(reg_s * reg, process_descriptor_t * proc)
 {
-  listen_arg_t arg = &(sysarg->listen);
-  struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+  int sockfd = (int) reg->arg[0];
+  struct infos_socket *is = get_infos_socket(proc, sockfd);
   comm_t comm = comm_new(is);
   comm_set_listen(comm);
 
 #ifndef address_translation
   pid_t pid = proc->pid;
-  arg->ret = 0;
+  reg->ret = 0;
   ptrace_neutralize_syscall(pid);
-  arg = &(sysarg->listen);
-  ptrace_restore_syscall(pid, SYS_listen, arg->ret);
+  ptrace_restore_syscall(pid, SYS_listen, (int) reg->ret);
   proc_outside(proc);
 #endif
 }

@@ -129,7 +129,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_listen:
-      syscall_listen(&arg, sysarg, proc);
+      syscall_listen(&arg, proc);
       break;
 
     case SYS_accept:

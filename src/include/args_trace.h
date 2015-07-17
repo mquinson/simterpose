@@ -18,8 +18,6 @@ void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg
 
 void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * arg);
 
-void get_args_listen(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
-
 void get_args_select(process_descriptor_t * proc, reg_s * r, syscall_arg_u * sysarg);
 
 void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);

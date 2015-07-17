@@ -137,14 +137,6 @@ typedef struct socket_arg_s {
 
 typedef socket_arg_s *socket_arg_t;
 
-typedef struct listen_arg_s {
-  int sockfd;
-  int backlog;
-  int ret;
-} listen_arg_s;
-
-typedef listen_arg_s *listen_arg_t;
-
 typedef struct getsockopt_arg_s {
   int sockfd;
   int level;
@@ -210,7 +202,6 @@ typedef union {
   socket_arg_s socket;
   getsockopt_arg_s getsockopt;
   setsockopt_arg_s setsockopt;
-  listen_arg_s listen;
   sendto_arg_s sendto;
   recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;

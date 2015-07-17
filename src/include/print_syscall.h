@@ -32,7 +32,7 @@ void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
 
 void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_listen_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_listen_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
