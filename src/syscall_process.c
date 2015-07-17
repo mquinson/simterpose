@@ -98,7 +98,7 @@ int process_handle(process_descriptor_t * proc)
       syscall_dup2(&arg, sysarg, proc);
 
     case SYS_fcntl:
-      syscall_fcntl(&arg, sysarg, proc);
+      syscall_fcntl(&arg, proc);
       break;
 
     case SYS_poll:

@@ -18,83 +18,101 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles fcntl syscall at the entrance and the exit */
-void syscall_fcntl(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_fcntl(reg_s * reg, process_descriptor_t * proc)
 {
   if (proc_entering(proc)) {
     proc_inside(proc);
     XBT_DEBUG("fcntl pre");
 #ifndef address_translation
-    get_args_fcntl(proc, reg, sysarg);
-    process_fcntl_call(proc, sysarg);
+    process_fcntl_call(reg, proc);
+    
     if (strace_option)
-      print_fcntl_syscall(proc, sysarg);
+      print_fcntl_syscall(reg, proc);
     sleep(4);
 #endif
   } else {
     proc_outside(proc);
     XBT_DEBUG("fcntl post");
-    get_args_fcntl(proc, reg, sysarg);
     if (strace_option)
-      print_fcntl_syscall(proc, sysarg);
+      print_fcntl_syscall(reg, proc);
 #ifdef address_translation
-    process_fcntl_call(proc, sysarg);
+    process_fcntl_call(reg, proc);
 #endif
   }
 }
 
 /** @brief helper function to handle fcntl syscall */
 // TODO: handles the other flags
-void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
 {
   XBT_DEBUG("process fcntl");
 
-  fcntl_arg_t arg = &(sysarg->fcntl);
-
-  if (arg->ret == -1){
+  /* Retrieve the command and its arguments */
+  int cmd = (int) reg->arg[1];
+  long cmd_arg;
+  struct f_owner_ex * owner;
+  struct flock * lock;
+  
+     if ((cmd == F_DUPFD) || (cmd == F_DUPFD_CLOEXEC)
+      || (cmd == F_SETFD) || (cmd == F_SETFL)
+      || (cmd == F_SETOWN))
+    cmd_arg = (long) reg->arg[2];
+#ifdef __USE_GNU
+  if ((cmd == F_SETSIG) || (cmd == F_SETLEASE)
+      || (cmd == F_NOTIFY)
+      || (cmd == F_SETPIPE_SZ))
+    cmd_arg = (long) reg->arg[2];
+  if ((cmd == F_GETOWN_EX) || (cmd == F_SETOWN_EX))
+    owner = (struct f_owner_ex *) reg->arg[2];
+#endif
+  if ((cmd == F_GETLK) || (cmd == F_SETLK) || (cmd == F_SETLKW))
+    lock = (struct flock *) reg->arg[2];
+  
+  if ((int) reg->ret == -1){
     XBT_WARN("Error on fcntl syscall exit");
     exit(-1);
   }
-  fd_descriptor_t* arg_fdesc = process_descriptor_get_fd(proc, arg->fd);
+  fd_descriptor_t* arg_fdesc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
 
-  switch (arg->cmd) {
+   switch (cmd) {
 
   case F_DUPFD: {
 #ifndef address_translation
     /* TODO: full mediation */
     /* Find the lowest free fd and realize the syscall*/
-    /*arg->ret =*/ /*fd find*/
+    /*reg->ret =*/ /*fd find*/
 #endif
     fd_descriptor_t* file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->type = arg_fdesc->type;
     file_desc->proc = proc;
-    file_desc->fd = arg->ret;
+    file_desc->fd = (int) reg->ret;
     file_desc->stream = arg_fdesc->stream;
     file_desc->pipe = arg_fdesc->pipe;
     file_desc->flags = arg_fdesc->flags;
     file_desc->refcount = 1; /* To check or 0 and then ++ */
-    process_descriptor_set_fd(proc, arg->ret, file_desc);
+    process_descriptor_set_fd(proc, (int) reg->ret, file_desc);
     break; }
 
   case F_DUPFD_CLOEXEC: {
 #ifndef address_translation
     /* TODO: full mediation */
     /* Find the lowest free fd and realize the syscall don't forget to add the O_CLOEXEC flag*/
-    /*arg->ret =*/ /*fd find*/
+    /*reg->ret =*/ /*fd find*/
 #endif
     fd_descriptor_t* file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->type = arg_fdesc->type;
     file_desc->proc = proc;
-    file_desc->fd = arg->ret;
+    file_desc->fd = (int) reg->ret;
     file_desc->stream = arg_fdesc->stream;
     file_desc->pipe = arg_fdesc->pipe;
     file_desc->flags = arg_fdesc->flags | O_CLOEXEC;
     file_desc->refcount = 1; /* To check or 0 and then ++ */
-    process_descriptor_set_fd(proc, arg->ret, file_desc);
+    process_descriptor_set_fd(proc, (int) reg->ret, file_desc);
     break; }
 
   case F_GETFD:
 #ifndef address_translation
-    arg->ret = arg_fdesc->flags;
+    reg->ret = arg_fdesc->flags;
 #endif
     break;
 
@@ -102,18 +120,18 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 #ifndef address_translation
     /* TODO */
     /* Change the flags in the memory of the file*/
-    arg->ret = 0;
+    reg->ret = 0;
 #endif
-    arg_fdesc->flags = (int) arg->arg.cmd_arg;
+    arg_fdesc->flags = (int) cmd_arg;
     break;
 
   case F_GETFL:
 #ifndef address_translation
-    arg->ret = socket_get_flags(proc, arg->fd, arg->arg->cmd_arg);
+    reg->ret = socket_get_flags(proc, (int) reg->arg[0], cmd_arg);
 
     /* TODO: */
     /* If the fd is not a socket: */
-    /* arg->ret = process_descriptor_get_fd(proc, arg->fd)->flags; */
+    /* reg->ret = process_descriptor_get_fd(proc, (int) reg->arg[0])->flags; */
 #endif
     break;
 
@@ -122,37 +140,38 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 #ifndef address_translation
     /* TODO: */
     /* Change manually the state and mode flags in memory of the file */
-    arg->ret = 0;
+    reg->ret = 0;
 #endif
 
-    socket_set_flags(proc, arg->fd,arg->arg.cmd_arg);
+    socket_set_flags(proc, (int) reg->arg[0],cmd_arg);
 
     /* TODO: */
     /* If the fd is not a socket: */
-    /* process_descriptor_get_fd(proc, arg->fd)->flags = arg->arg; */
+    /* This suggestion is not possible now because we delete arg structure */
+    /* process_descriptor_get_fd(proc, (int) reg->arg[0])->flags = arg->arg; */
     break;
 
   case F_SETLK:
 #ifndef address_translation
-    int lock;
+    int lock_bit;
     /* TODO */
     /* Realize the syscall */
     /* lock = 0 ou 1 */
-    if (!lock){
-    arg->ret = -1;
+    if (!lock_bit){
+    reg->ret = -1;
     /*Put errno to the right value*/
   }
     else
-      arg->ret = 0;
+      reg->ret = 0;
 #endif
 
-    if (arg->ret == 0){
+    if (reg->ret == 0){
 
     arg_fdesc->lock = 1;
-    arg_fdesc->proc_locker = arg->arg.lock->l_pid;
+    arg_fdesc->proc_locker = lock->l_pid;
 
-    off_t begin = arg->arg.lock->l_start + arg->arg.lock->l_whence;
-    off_t len = arg->arg.lock->l_len;
+    off_t begin = lock->l_start + lock->l_whence;
+    off_t len = lock->l_len;
     if (len > 0){
     arg_fdesc->begin = begin;
     arg_fdesc->end = begin + len - 1;
@@ -170,24 +189,24 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   case F_SETLKW:
     #ifndef address_translation
-    int lock;
+    int lock_bit;
     /* TODO */
     /* Realize the syscall */
     /* lock = 0 ou 1 */
-    if (!lock){
-    arg->ret = -1;
+    if (!lock_bit){
+    reg->ret = -1;
     /*Put errno to the right value*/
   }
     else
-      arg->ret = 0;
+      reg->ret = 0;
 #endif
 
-    if (arg->ret == 0){
+    if (reg->ret == 0){
     arg_fdesc->lock = 1;
-    arg_fdesc->proc_locker = arg->arg.lock->l_pid;
+    arg_fdesc->proc_locker = lock->l_pid;
 
-    off_t begin = arg->arg.lock->l_start + arg->arg.lock->l_whence;
-    off_t len = arg->arg.lock->l_len;
+    off_t begin = lock->l_start + lock->l_whence;
+    off_t len = lock->l_len;
     if (len > 0){
     arg_fdesc->begin = begin;
     arg_fdesc->end = begin + len - 1;
@@ -259,7 +278,7 @@ void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
   }
 #ifndef address_translation
     ptrace_neutralize_syscall(proc->pid);
-    ptrace_restore_syscall(proc->pid, SYS_fcntl, arg->ret);
+    ptrace_restore_syscall(proc->pid, SYS_fcntl, reg->ret);
     proc_outside(proc);
 #endif
 

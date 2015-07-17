@@ -141,21 +141,6 @@ typedef struct getsockopt_arg_s {
 typedef getsockopt_arg_s *getsockopt_arg_t;
 typedef setsockopt_arg_s *setsockopt_arg_t;
 
-
-typedef struct fcntl_arg_s {
-  int fd;
-  int cmd;
-  union{
-    long cmd_arg;
-    struct f_owner_ex * owner;
-    struct flock * lock;
-  } arg;
-  int ret;
-} fcntl_arg_s;
-
-typedef struct fcntl_arg_s *fcntl_arg_t;
-
-
 typedef struct write_arg_s {
   int fd;
   void *data;
@@ -198,7 +183,6 @@ typedef union {
   sendmsg_arg_s sendmsg;
   poll_arg_s poll;
   select_arg_s select;
-  fcntl_arg_s fcntl;
   read_arg_s read;
   write_arg_s write;
   shutdown_arg_s shutdown;

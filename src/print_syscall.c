@@ -929,12 +929,11 @@ void print_select_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 }
 
 /** @brief print a strace-like log of fcntl syscall */
-void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_fcntl_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  fcntl_arg_t arg = &(sysarg->fcntl);
   //  fprintf(proc->strace_out,"[%d] fcntl( %d, ", pid, arg->fd);
-  fprintf(proc->strace_out, "fcntl(%d, ", arg->fd);
-  switch (arg->cmd) {
+  fprintf(proc->strace_out, "fcntl(%d, ", (int) reg->arg[0]);
+  switch ((int) reg->arg[1]) {
   case F_DUPFD:
     fprintf(proc->strace_out, "F_DUPFD");
     break;
@@ -949,10 +948,10 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   case F_SETFD:
     fprintf(proc->strace_out, "F_SETFD");
-    if (arg->arg.cmd_arg)
+    if ((long) reg->arg[2]) /* cmd argument */
       fprintf(proc->strace_out, ", FD_CLOEXEC");
     else
-      fprintf(proc->strace_out, ", %li", arg->arg.cmd_arg);
+      fprintf(proc->strace_out, ", %li", (long) reg->arg[2]);
     break;
 
   case F_GETFL:
@@ -979,7 +978,7 @@ void print_fcntl_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     fprintf(proc->strace_out, "Unknown command");
     break;
   }
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
 
 /** @brief print a strace-like log of read syscall */

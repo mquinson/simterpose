@@ -9,5 +9,5 @@
 #include "ptrace_utils.h"
 #include "syscall_data.h"
 
-void syscall_fcntl(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-void process_fcntl_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void syscall_fcntl(reg_s * reg, process_descriptor_t * proc);
+void process_fcntl_call(reg_s * reg, process_descriptor_t * proc);

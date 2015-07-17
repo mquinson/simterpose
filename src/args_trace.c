@@ -263,33 +263,6 @@ void get_args_poll(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sys
     arg->fd_list = NULL;
 }
 
-/** @brief retrieve the arguments of fcntl syscall */
-void get_args_fcntl(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  fcntl_arg_t arg = &(sysarg->fcntl);
-  arg->fd = (int) reg->arg[0];
-  arg->cmd = (int) reg->arg[1];
-
-  if ((arg->cmd == F_DUPFD) || (arg->cmd == F_DUPFD_CLOEXEC)
-      || (arg->cmd == F_SETFD) || (arg->cmd == F_SETFL)
-      || (arg->cmd == F_SETOWN))
-    arg->arg.cmd_arg = (long) reg->arg[2];
-
-#ifdef __USE_GNU
-  if ((arg->cmd == F_SETSIG) || (arg->cmd == F_SETLEASE)
-      || (arg->cmd == F_NOTIFY)
-      || (arg->cmd == F_SETPIPE_SZ))
-    arg->arg.cmd_arg = reg->arg[2];
-  if ((arg->cmd == F_GETOWN_EX) || (arg->cmd == F_SETOWN_EX))
-    arg->arg.owner = (struct f_owner_ex *) reg->arg[2];
-#endif
-
-  if ((arg->cmd == F_GETLK) || (arg->cmd == F_SETLK) || (arg->cmd == F_SETLKW))
-    arg->arg.lock = (struct flock *) reg->arg[2];
-
-  arg->ret = (int) reg->ret;
-}
-
 /** @brief retrieve the arguments of read syscall */
 void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
