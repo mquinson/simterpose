@@ -100,37 +100,6 @@ void get_args_select(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   arg->ret = (int) reg->ret;
 }
 
-/** @brief retrieve the arguments of setsockopt syscall */
-void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  setsockopt_arg_t arg = &(sysarg->setsockopt);
-  arg->ret = (int) reg->ret;
-  arg->sockfd = (int) reg->arg[0];
-  arg->level = (int) reg->arg[1];
-  arg->optname = (int) reg->arg[2];
-  arg->optval = (void *) reg->arg[3];
-  arg->optlen = (socklen_t) reg->arg[4];
-
-#ifndef address_translation
-  arg->optval = xbt_new0(char, arg->optlen);
-  ptrace_cpy(proc->pid, arg->optval, (void *) arg->dest, arg->optlen, "setsockopt");
-#endif
-}
-
-/** @brief retrieve the arguments of getsockopt syscall */
-void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  getsockopt_arg_t arg = &(sysarg->getsockopt);
-  arg->ret = (int) reg->ret;
-  arg->sockfd = (int) reg->arg[0];
-  arg->level = (int) reg->arg[1];
-  arg->optname = (int) reg->arg[2];
-  arg->optval = (void *) reg->arg[3];
-  arg->optlen = (socklen_t) reg->arg[4];
-
-  ptrace_cpy(proc->pid, &arg->optlen, (void *) reg->arg[4], sizeof(socklen_t), "getsockopt");
-}
-
 /** @brief retrieve the arguments of sendto syscall */
 void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {

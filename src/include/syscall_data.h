@@ -117,20 +117,6 @@ typedef struct socket_arg_s {
 
 typedef socket_arg_s *socket_arg_t;
 
-typedef struct getsockopt_arg_s {
-  int sockfd;
-  int level;
-  int optname;
-  void *optval;
-  socklen_t optlen;
-  void *dest;
-  void *dest_optlen;
-  int ret;
-} getsockopt_arg_s, setsockopt_arg_s;
-
-typedef getsockopt_arg_s *getsockopt_arg_t;
-typedef setsockopt_arg_s *setsockopt_arg_t;
-
 typedef struct write_arg_s {
   int fd;
   void *data;
@@ -156,8 +142,6 @@ typedef union {
   bind_arg_s bind;
   accept_arg_s accept;
   socket_arg_s socket;
-  getsockopt_arg_s getsockopt;
-  setsockopt_arg_s setsockopt;
   sendto_arg_s sendto;
   recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;

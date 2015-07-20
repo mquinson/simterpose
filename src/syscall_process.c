@@ -164,11 +164,11 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_getsockopt:
-      syscall_getsockopt(&arg, sysarg, proc);
+      syscall_getsockopt(&arg, proc);
       break;
 
     case SYS_setsockopt:
-      syscall_setsockopt(&arg, sysarg, proc);
+      syscall_setsockopt(&arg, proc);
       break;
 
     case SYS_clone:

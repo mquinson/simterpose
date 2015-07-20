@@ -402,17 +402,17 @@ void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 }
 
 /** @brief print a strace-like log of getsockopt syscall */
-void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_getsockopt_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  getsockopt_arg_t arg = &(sysarg->getsockopt);
   // fprintf(proc->strace_out,"[%d] getsockopt(", pid);
   fprintf(proc->strace_out, "getsockopt(");
-  fprintf(proc->strace_out, "%d, ", arg->sockfd);
+  fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 
-  switch (arg->level) {
+  /* switch (arg->level) { */
+  switch ((int) reg->arg[1]) {
   case 0:
     fprintf(proc->strace_out, "SOL_IP, ");
-    switch (arg->optname) {
+    switch ((int) reg->arg[2]) {
     case 1:
       fprintf(proc->strace_out, "IP_TOS, ");
       break;
@@ -429,13 +429,13 @@ void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
       fprintf(proc->strace_out, "IP_RECVOPTS, ");
       break;
     default:
-      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", arg->optname);
+      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", (int) reg->arg[2]);
       break;
     }
     break;
   case 1:
     fprintf(proc->strace_out, "SOL_SOCKET, ");
-    switch (arg->optname) {
+    switch ((int) reg->arg[2]) {
     case 1:
       fprintf(proc->strace_out, "SO_DEBUG, ");
       break;
@@ -482,7 +482,7 @@ void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
       fprintf(proc->strace_out, "SO_REUSEPORT, ");
       break;
     default:
-      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", arg->optname);
+      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", (int) reg->arg[2]);
       break;
     }
     break;
@@ -493,27 +493,26 @@ void print_getsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
     fprintf(proc->strace_out, "SOL_ICMPV6, ");
     break;
   default:
-    fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d), ", arg->level);
+    fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d), ", (int) reg->arg[1]);
     break;
   }
 
-  fprintf(proc->strace_out, "%d ) = ", arg->optlen);
+  fprintf(proc->strace_out, "%d ) = ", (socklen_t) reg->arg[4]);
 
-  fprintf(proc->strace_out, "%d\n", arg->ret);
+  fprintf(proc->strace_out, "%d\n", (int) reg->ret);
 }
 
 /** @brief print a strace-like log of setsockopt syscall */
-void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_setsockopt_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  getsockopt_arg_t arg = &(sysarg->setsockopt);
   // fprintf(proc->strace_out,"[%d] setsockopt(", pid);
   fprintf(proc->strace_out, "setsockopt(");
-  fprintf(proc->strace_out, "%d, ", arg->sockfd);
+  fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 
-  switch (arg->level) {
+  switch ((int) reg->arg[1]) {
   case 0:
     fprintf(proc->strace_out, "SOL_IP, ");
-    switch (arg->optname) {
+    switch ((int) reg->arg[2]) {
     case 1:
       fprintf(proc->strace_out, "IP_TOS, ");
       break;
@@ -530,13 +529,13 @@ void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
       fprintf(proc->strace_out, "IP_RECVOPTS, ");
       break;
     default:
-      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", arg->optname);
+      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", (int) reg->arg[2]);
       break;
     }
     break;
   case 1:
     fprintf(proc->strace_out, "SOL_SOCKET, ");
-    switch (arg->optname) {
+    switch ((int) reg->arg[2]) {
     case 1:
       fprintf(proc->strace_out, "SO_DEBUG, ");
       break;
@@ -583,7 +582,7 @@ void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
       fprintf(proc->strace_out, "SO_REUSEPORT, ");
       break;
     default:
-      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", arg->optname);
+      fprintf(proc->strace_out, "OPTION UNKNOWN (%d), ", (int) reg->arg[2]);
       break;
     }
     break;
@@ -594,13 +593,13 @@ void print_setsockopt_syscall(process_descriptor_t * proc, syscall_arg_u * sysar
     fprintf(proc->strace_out, "SOL_ICMPV6, ");
     break;
   default:
-    fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d), ", arg->level);
+    fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d), ", (int) reg->arg[1]);
     break;
   }
 
-  fprintf(proc->strace_out, "%d ) = ", arg->optlen);
+  fprintf(proc->strace_out, "%d ) = ", (socklen_t) reg->arg[4]);
 
-  fprintf(proc->strace_out, "%d\n", arg->ret);
+  fprintf(proc->strace_out, "%d\n", (int) reg->ret);
 }
 
 /** @brief print a strace-like log of listen syscall */

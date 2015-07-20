@@ -20,10 +20,6 @@ void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * a
 
 void get_args_select(process_descriptor_t * proc, reg_s * r, syscall_arg_u * sysarg);
 
-void get_args_setsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
-
-void get_args_getsockopt(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
-
 void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
 
 void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
