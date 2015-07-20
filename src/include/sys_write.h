@@ -9,4 +9,4 @@
 #include "syscall_data.h"
 #include "process_descriptor.h"
 
-int syscall_write(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+int syscall_write(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);

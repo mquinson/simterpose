@@ -82,7 +82,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_read:
-      syscall_read(&arg, sysarg, proc);
+      syscall_read(&arg, proc);
       break;
 
     case SYS_write:
@@ -90,7 +90,7 @@ int process_handle(process_descriptor_t * proc)
       XBT_DEBUG("Valeur des registres dans l'AS:");
       XBT_DEBUG("Valeur de retour %lu", arg.ret);
       XBT_DEBUG("Valeur des arg %lu %lu %lu %lu %lu %lu", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
-      if ((ret = syscall_write(&arg, sysarg, proc)))
+      if ((ret = syscall_write(&arg, proc, sysarg)))
 	return ret;
       break;
 

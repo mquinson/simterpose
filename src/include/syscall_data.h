@@ -95,17 +95,6 @@ typedef struct accept_arg_s {
 
 typedef accept_arg_s *accept_arg_t;
 
-typedef struct write_arg_s {
-  int fd;
-  void *data;
-  size_t count;
-  void *dest; /* TODO weird what is this?*/
-  ssize_t ret;
-} write_arg_s, read_arg_s;
-
-typedef write_arg_s *write_arg_t;
-typedef read_arg_s *read_arg_t;
-
 typedef struct clone_arg_s { /* TODO missing argument*/
   unsigned long newsp;
   void *parent_tid;
@@ -123,8 +112,6 @@ typedef union {
   recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;
   sendmsg_arg_s sendmsg;
-  read_arg_s read;
-  write_arg_s write;
   clone_arg_s clone;
 } syscall_arg_u;
 

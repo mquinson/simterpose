@@ -9,5 +9,5 @@
 #include "ptrace_utils.h"
 #include "syscall_data.h"
 
-void syscall_read(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-void process_read_out_call(process_descriptor_t * proc);
+void syscall_read(reg_s * reg, process_descriptor_t * proc);
+void process_read_out_call(reg_s * reg, process_descriptor_t * proc);

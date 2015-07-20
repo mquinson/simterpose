@@ -984,17 +984,15 @@ void print_fcntl_syscall(reg_s * reg, process_descriptor_t * proc)
 }
 
 /** @brief print a strace-like log of read syscall */
-void print_read_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_read_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  read_arg_t arg = &(sysarg->read);
-  fprintf(proc->strace_out, "[%d] read(%d, \"...\", %zu) = %zd\n", proc->pid, arg->fd, arg->count, arg->ret);
+  fprintf(proc->strace_out, "[%d] read(%d, \"...\", %zu) = %zd\n", proc->pid, (int) reg->arg[0] , (size_t) reg->arg[2], (ssize_t) reg->ret);
 }
 
 /** @brief print a strace-like log of write syscall */
-void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_write_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  write_arg_t arg = &(sysarg->read);
-  fprintf(proc->strace_out, "[%d] write(%d, \"...\", %zu) = %zd\n", proc->pid, arg->fd, arg->count, arg->ret);
+  fprintf(proc->strace_out, "[%d] write(%d, \"...\", %zu) = %zd\n", proc->pid, (int) reg->arg[0] , (size_t) reg->arg[2], (ssize_t) reg->ret);
 }
 
 /** @brief helper function to print options of shutdown syscall */

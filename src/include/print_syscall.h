@@ -48,9 +48,9 @@ void print_select_syscall(reg_s * reg, process_descriptor_t * proc, int fd_state
 
 void print_fcntl_syscall(reg_s * reg, process_descriptor_t * proc);
 
-void print_read_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_read_syscall(reg_s * reg, process_descriptor_t * proc);
 
-void print_write_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_write_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_shutdown_syscall(reg_s * reg, process_descriptor_t * proc);
 

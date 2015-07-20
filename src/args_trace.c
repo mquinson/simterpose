@@ -175,40 +175,6 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 #endif
 }
 
-/** @brief retrieve the arguments of read syscall */
-void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  read_arg_t arg = &(sysarg->read);
-  arg->fd = (int) reg->arg[0];
-#ifndef address_translation
-  arg->dest = (void *) reg->arg[1];
-#endif
-  arg->data = (void*) reg->arg[1];
-  arg->ret = (ssize_t) reg->ret;
-  arg->count = (size_t) reg->arg[2];
-}
-
-/** @brief retrieve the arguments of write syscall */
-void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  write_arg_t arg = &(sysarg->read);
-  arg->fd = (int) reg->arg[0];
-  arg->dest = (void *) reg->arg[1];
-  /* TODO: check this*/
-  /* arg->data = (void *) reg->arg[1]; */
-  arg->ret = (ssize_t) reg->ret;
-  arg->count = (size_t) reg->arg[2];
-#ifndef address_translation
-  pid_t pid = proc->pid;
-  if (socket_registered(proc, arg->fd)) {
-    if (socket_network(proc, arg->fd)) {
-      arg->data = xbt_new0(char, arg->count);
-      ptrace_cpy(pid, arg->data, (void *) reg->arg[1], arg->count, "write");
-    }
-  }
-#endif
-}
-
 /** @brief retrieve the arguments of clone syscall */
 /* TODO: Bad allocation of parameters*/
 void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)

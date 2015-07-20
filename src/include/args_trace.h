@@ -26,10 +26,6 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 
 void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
 
-void get_args_read(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
-
-void get_args_write(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
-
 void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
 
 void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg);
