@@ -1010,13 +1010,11 @@ static void print_shutdown_option(process_descriptor_t * proc, int how)
 }
 
 /** @brief print a strace-like log of shutdown syscall */
-void print_shutdown_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_shutdown_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  shutdown_arg_t arg = &(sysarg->shutdown);
-  //  fprintf(proc->strace_out,"[%d] shutdown (%d, ", pid, arg->fd);
-  fprintf(proc->strace_out, "shutdown (%d, ", arg->fd);
-  print_shutdown_option(proc, arg->how);
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, "shutdown (%d, ", (int) reg->arg[0]);
+  print_shutdown_option(proc, (int) reg->arg[1]);
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
 
 

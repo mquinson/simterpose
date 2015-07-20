@@ -9,6 +9,6 @@
 #include "syscall_data.h"
 #include "process_descriptor.h"
 
-void syscall_shutdown(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_shutdown(reg_s * reg, process_descriptor_t * proc);
+void syscall_shutdown_pre(reg_s * reg, process_descriptor_t * proc);
+void syscall_shutdown_post(reg_s * reg, process_descriptor_t * proc);

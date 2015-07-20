@@ -15,12 +15,12 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles shutdown syscall at the entrance at the exit */
-void syscall_shutdown(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+void syscall_shutdown(reg_s * reg, process_descriptor_t * proc){
 
   if (proc_entering(proc))
-    syscall_shutdown_pre(reg, sysarg, proc);
+    syscall_shutdown_pre(reg, proc);
   else
-    syscall_shutdown_post(reg, sysarg, proc);
+    syscall_shutdown_post(reg, proc);
 
 }
 
@@ -29,42 +29,34 @@ void syscall_shutdown(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t 
  * In case of full mediation, we neutralize the real syscall and don't
  * go to syscall_shutdown_post afterwards.
  */
-void syscall_shutdown_pre(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_shutdown_pre(reg_s * reg, process_descriptor_t * proc)
 {
   proc_inside(proc);
 #ifndef address_translation
   XBT_DEBUG(" shutdown_pre");
-  shutdown_arg_t arg = &(sysarg->shutdown);
-  arg->fd = (int) reg->arg[0];
-  arg->how = (int) reg->arg[1];
-  arg->ret = (int) reg->ret;
 
   ptrace_neutralize_syscall(proc->pid);
-  arg->ret = 0;
-  ptrace_restore_syscall(proc->pid, SYS_shutdown, arg->ret);
+  reg->ret = 0;
+  ptrace_restore_syscall(proc->pid, SYS_shutdown, (int) reg->ret);
   proc_outside(proc);
   if (strace_option)
-    print_shutdown_syscall(proc, sysarg);
+    print_shutdown_syscall(reg, proc);
 #endif
 }
 
 /** @brief handles shutdown syscall at the exit in case of address translation */
-void syscall_shutdown_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_shutdown_post(reg_s * reg, process_descriptor_t * proc)
 {
   XBT_DEBUG(" shutdown_post");
   proc_outside(proc);
-  shutdown_arg_t arg = &(sysarg->shutdown);
-  arg->fd = (int) reg->arg[0];
-  arg->how = (int) reg->arg[1];
-  arg->ret = (int) reg->ret;
 
-  struct infos_socket *is = get_infos_socket(proc, arg->fd);
+  struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);
   if (is == NULL) {
-    arg->ret = -EBADF;
+    reg->ret = -EBADF;
     return;
   }
   comm_shutdown(is);
 
   if (strace_option)
-    print_shutdown_syscall(proc, sysarg);
+    print_shutdown_syscall(reg, proc);
 }

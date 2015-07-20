@@ -156,7 +156,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_shutdown:
-      syscall_shutdown(&arg, sysarg, proc);
+      syscall_shutdown(&arg, proc);
       break;
 
     case SYS_getpeername:
