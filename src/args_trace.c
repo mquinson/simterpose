@@ -63,43 +63,6 @@ void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * s
   arg->len_dest = (void *) reg->arg[2];
 }
 
-/** @brief retrieve the arguments of select syscall */
-void get_args_select(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  select_arg_t arg = &(sysarg->select);
-  pid_t child = proc->pid;
-
-  arg->fd_state = 0;
-  arg->maxfd = (int) reg->arg[0];
-
-  if ( (int) reg->arg[1] != 0) {
-    ptrace_cpy(child, &arg->fd_read, (void *) reg->arg[1], sizeof(fd_set), "select");
-    arg->fd_state = arg->fd_state | SELECT_FDRD_SET;
-  } else
-    FD_ZERO(&arg->fd_read);
-
-  if ( (int) reg->arg[2] != 0) {
-    ptrace_cpy(child, &arg->fd_write, (void *) reg->arg[2], sizeof(fd_set), "select");
-    arg->fd_state = arg->fd_state | SELECT_FDWR_SET;
-  } else
-    FD_ZERO(&arg->fd_write);
-
-  if ( (int) reg->arg[3] != 0) {
-    ptrace_cpy(child, &arg->fd_except, (void *) reg->arg[3], sizeof(fd_set), "select");
-    arg->fd_state = arg->fd_state | SELECT_FDEX_SET;
-  } else
-    FD_ZERO(&arg->fd_except);
-
-  if ( (int) reg->arg[4] != 0) {
-    struct timeval t;
-    ptrace_cpy(child, &t, (void *) reg->arg[4], sizeof(struct timeval), "select");
-    arg->timeout = t.tv_sec + 0.000001 * t.tv_usec;
-  } else
-    arg->timeout = -1;
-
-  arg->ret = (int) reg->ret;
-}
-
 /** @brief retrieve the arguments of sendto syscall */
 void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -256,28 +219,6 @@ void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sy
   arg->newsp = reg->arg[1];
   arg->parent_tid = (void *) reg->arg[2];
   arg->child_tid = (void *) reg->arg[3];
-}
-
-/** @brief put the arguments we want in the registers of select syscall */
-void sys_build_select(process_descriptor_t * proc, syscall_arg_u * sysarg, int match)
-{
-  //TODO use unified union syscall_arg_u
-  pid_t pid = proc->pid;
-  ptrace_restore_syscall(pid, SYS_select, match);
-  reg_s r;
-  ptrace_get_register(pid, &r);
-
-  select_arg_t arg = &(sysarg->select);
-
-  if (arg->fd_state & SELECT_FDRD_SET) {
-    ptrace_poke(pid, (void *) r.arg[1], &(arg->fd_read), sizeof(fd_set));
-  }
-  if (arg->fd_state & SELECT_FDWR_SET) {
-    ptrace_poke(pid, (void *) r.arg[2], &(arg->fd_write), sizeof(fd_set));
-  }
-  if (arg->fd_state & SELECT_FDEX_SET) {
-    ptrace_poke(pid, (void *) r.arg[3], &(arg->fd_except), sizeof(fd_set));
-  }
 }
 
 /** @brief put the message received in the registers of recvmsg syscall */

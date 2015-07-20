@@ -900,28 +900,34 @@ static void disp_selectfd(process_descriptor_t * proc, fd_set * fd)
 }
 
 /** @brief print a strace-like log of select syscall */
-void print_select_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_select_syscall(reg_s * reg, process_descriptor_t * proc, int fd_state)
 {
-  select_arg_t arg = &(sysarg->select);
-  fprintf(proc->strace_out, "select(%d,", arg->maxfd);
+  fprintf(proc->strace_out, "select(%d,", (int) reg->arg[0]);
 
-  if (arg->fd_state & SELECT_FDRD_SET)
-    disp_selectfd(proc, &arg->fd_read);
+  fd_set fd_read, fd_write, fd_exec;
+ 
+  ptrace_cpy(proc->pid, &fd_read, (void *) reg->arg[1], sizeof(fd_set), "select");
+  ptrace_cpy(proc->pid, &fd_write, (void *) reg->arg[2], sizeof(fd_set), "select");
+  ptrace_cpy(proc->pid, &fd_exec, (void *) reg->arg[3], sizeof(fd_set), "select");
+
+  if (fd_state & SELECT_FDRD_SET)
+    disp_selectfd(proc, &fd_read);
   else
     fprintf(proc->strace_out, "NULL");
   fprintf(proc->strace_out, ", ");
-  if (arg->fd_state & SELECT_FDWR_SET)
-    disp_selectfd(proc, &arg->fd_write);
+  if (fd_state & SELECT_FDWR_SET)
+    disp_selectfd(proc, &fd_write);
   else
     fprintf(proc->strace_out, "NULL");
   fprintf(proc->strace_out, ", ");
-  if (arg->fd_state & SELECT_FDEX_SET)
-    disp_selectfd(proc, &arg->fd_except);
+  if (fd_state & SELECT_FDEX_SET)
+    disp_selectfd(proc, &fd_exec);
   else
     fprintf(proc->strace_out, "NULL");
   fprintf(proc->strace_out, ", ");
 
-  fprintf(proc->strace_out, "%lf) = %d\n", arg->timeout, arg->ret);
+  struct timeval * time = (struct timeval *) reg->arg[4];
+  fprintf(proc->strace_out, "%lu, %ld) = %d\n", time->tv_sec, time->tv_usec, (int) reg->ret);
 }
 
 /** @brief print a strace-like log of fcntl syscall */

@@ -45,19 +45,6 @@ typedef struct recvmsg_arg_s {
 typedef sendmsg_arg_s *sendmsg_arg_t;
 typedef recvmsg_arg_s *recvmsg_arg_t;
 
-
-typedef struct select_arg_s {
-  int maxfd;
-  fd_set fd_read;
-  fd_set fd_write;
-  fd_set fd_except;
-  double timeout;
-  int fd_state;
-  int ret;
-} select_arg_s;
-
-typedef select_arg_s *select_arg_t;
-
 typedef struct sendto_arg_s {
   int sockfd;
   void *data;
@@ -136,7 +123,6 @@ typedef union {
   recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;
   sendmsg_arg_s sendmsg;
-  select_arg_s select;
   read_arg_s read;
   write_arg_s write;
   clone_arg_s clone;

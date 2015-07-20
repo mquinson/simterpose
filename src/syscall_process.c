@@ -106,7 +106,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_select:
-      syscall_select(&arg, sysarg, proc);
+      syscall_select(&arg, proc);
       break;
 
     case SYS_pipe:
