@@ -1,11 +1,11 @@
-/* sys_pool -- Handles pool syscall */
+/* sys_poll -- Handles poll syscall */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "sys_pool.h"
+#include "sys_poll.h"
 
 #include "args_trace.h"
 #include "print_syscall.h"

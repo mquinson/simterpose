@@ -1,4 +1,4 @@
-/* sys_pool -- Handlers pool syscall */
+/* sys_poll -- Handlers poll syscall */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 

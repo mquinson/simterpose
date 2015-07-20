@@ -25,7 +25,7 @@ add_executable(simterpose
   sys_listen.c
   sys_open.c
   sys_pipe.c
-  sys_pool.c
+  sys_poll.c
   sys_read.c
   sys_recvfrom.c
   sys_recvmsg.c
@@ -65,7 +65,7 @@ add_executable(simterpose
   include/sys_listen.h
   include/sys_open.h
   include/sys_pipe.h
-  include/sys_pool.h
+  include/sys_poll.h
   include/sys_read.h
   include/sys_recvfrom.h
   include/sys_recvmsg.h
