@@ -274,13 +274,11 @@ void print_bind_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 }
 
 /** @brief print a strace-like log of socket syscall */
-void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_socket_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  socket_arg_t arg = &(sysarg->socket);
-
   // fprintf(proc->strace_out,"[%d] socket(",pid);
   fprintf(proc->strace_out, "socket(");
-  switch (arg->domain) {
+  switch ((int) reg->arg[0]) {
   case 0:
     fprintf(proc->strace_out, "PF_UNSPEC, ");
     break;
@@ -289,7 +287,8 @@ void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
     break;
   case 2:
     fprintf(proc->strace_out, "PF_INET, ");
-    switch (arg->type) {
+    /* switch (arg->type) { */
+    switch ((int) reg->arg[1]) {
     case 1:
       fprintf(proc->strace_out, "SOCK_STREAM, ");
       break;
@@ -312,10 +311,10 @@ void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
       fprintf(proc->strace_out, "SOCK_PACKET, ");
       break;
     default:
-      fprintf(proc->strace_out, "TYPE UNKNOWN (%d), ", arg->type);
+      fprintf(proc->strace_out, "TYPE UNKNOWN (%d), ", (int) reg->arg[1]);
       break;
     }
-    switch (arg->protocol) {
+    switch ((int) reg->arg[2]) {
     case 0:
       fprintf(proc->strace_out, "IPPROTO_IP");
       break;
@@ -341,13 +340,13 @@ void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
       fprintf(proc->strace_out, "IPPROTO_RAW");
       break;
     default:
-      fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d)", arg->protocol);
+      fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d)", (int) reg->arg[2]);
       break;
     }
     break;
   case 16:
     fprintf(proc->strace_out, "PF_NETLINK, ");
-    switch (arg->type) {
+    switch ((int) reg->arg[1]) {
     case 1:
       fprintf(proc->strace_out, "SOCK_STREAM, ");
       break;
@@ -370,10 +369,10 @@ void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
       fprintf(proc->strace_out, "SOCK_PACKET, ");
       break;
     default:
-      fprintf(proc->strace_out, "TYPE UNKNOWN (%d), ", arg->type);
+      fprintf(proc->strace_out, "TYPE UNKNOWN (%d), ", (int) reg->arg[1]);
       break;
     }
-    switch (arg->protocol) {
+    switch ((int) reg->arg[2]) {
     case 0:
       fprintf(proc->strace_out, "NETLINK_ROUTE");
       break;
@@ -390,15 +389,15 @@ void print_socket_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
       fprintf(proc->strace_out, "NETLINK_INET_DIAG");
       break;
     default:
-      fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d)", arg->protocol);
+      fprintf(proc->strace_out, "PROTOCOL UNKNOWN (%d)", (int) reg->arg[2]);
       break;
     }
     break;
   default:
-    fprintf(proc->strace_out, "DOMAIN UNKNOWN (%d), ", arg->domain);
+    fprintf(proc->strace_out, "DOMAIN UNKNOWN (%d), ", (int) reg->arg[0]);
     break;
   }
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
 
 /** @brief print a strace-like log of getsockopt syscall */

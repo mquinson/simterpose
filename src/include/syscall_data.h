@@ -108,15 +108,6 @@ typedef struct accept_arg_s {
 
 typedef accept_arg_s *accept_arg_t;
 
-typedef struct socket_arg_s {
-  int domain;
-  int type;
-  int protocol;
-  int ret;
-} socket_arg_s;
-
-typedef socket_arg_s *socket_arg_t;
-
 typedef struct write_arg_s {
   int fd;
   void *data;
@@ -141,7 +132,6 @@ typedef union {
   connect_arg_s connect;
   bind_arg_s bind;
   accept_arg_s accept;
-  socket_arg_s socket;
   sendto_arg_s sendto;
   recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;

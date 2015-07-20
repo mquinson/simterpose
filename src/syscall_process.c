@@ -117,7 +117,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_socket:
-      syscall_socket(&arg, sysarg, proc);
+      syscall_socket(&arg, proc);
       break;
 
     case SYS_connect:
