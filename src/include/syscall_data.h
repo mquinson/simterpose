@@ -64,21 +64,6 @@ typedef struct sendto_arg_s {
 typedef sendto_arg_s *sendto_arg_t;
 typedef recvfrom_arg_s *recvfrom_arg_t;
 
-typedef struct accept_arg_s {
-  int sockfd;
-  union {
-    struct sockaddr_in sai;
-    struct sockaddr_un sau;
-    struct sockaddr_nl snl;
-  };
-  socklen_t addrlen;
-  void *addr_dest;
-  void *len_dest;
-  int ret;
-} accept_arg_s;
-
-typedef accept_arg_s *accept_arg_t;
-
 typedef struct clone_arg_s { /* TODO missing argument*/
   unsigned long newsp;
   void *parent_tid;
@@ -89,7 +74,6 @@ typedef struct clone_arg_s { /* TODO missing argument*/
 typedef clone_arg_s *clone_arg_t;
 
 typedef union {
-  accept_arg_s accept;
   sendto_arg_s sendto;
   recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;

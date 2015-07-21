@@ -18,29 +18,6 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 
-/** @brief retrieve the arguments of accept syscall */
-void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  accept_arg_t arg = &(sysarg->accept);
-  arg->ret = (int) reg->ret;
-  arg->sockfd = (int) reg->arg[0];
-  XBT_DEBUG("Socket for accepting %lu", reg->arg[0]);
-
-  int domain = get_domain_socket(proc, arg->sockfd);
-  pid_t child = proc->pid;
-  if (domain == 2)              // PF_INET
-    ptrace_cpy(child, &arg->sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
-  if (domain == 1)              // PF_UINX
-    ptrace_cpy(child, &arg->sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
-  if (domain == 16)             // PF_NETLINK
-    ptrace_cpy(child, &arg->snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
-
-  ptrace_cpy(child, &arg->addrlen, (void *) reg->arg[2], sizeof(socklen_t), "accept");
-
-  arg->addr_dest = (void *) reg->arg[1];
-  arg->len_dest = (void *) reg->arg[2];
-}
-
 /** @brief retrieve the arguments of sendto syscall */
 void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -191,36 +168,6 @@ void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
 
   }
   free(arg->data);
-}
-
-/** @brief translate the port and address of the exiting accept syscall
- *
- * We take the arguments in the registers, which correspond to the
- * real local address and port we obtained. We translate them into
- * global simulated ones and put the result back in the registers, so
- * that the application gets wronged.
- */
-void sys_translate_accept_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  accept_arg_t arg = &(sysarg->accept);
-  pid_t pid = proc->pid;
-
-  reg_s reg;
-  ptrace_get_register(pid, &reg);
-  int port = ntohs(arg->sai.sin_port);
-  struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
-
-  comm_get_ip_port_accept(is, &(arg->sai));
-  msg_host_t host;
-  if (arg->sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
-    host = proc->host;
-  else
-    host = get_host_by_ip(arg->sai.sin_addr.s_addr);
-
-  set_real_port(host, ntohs(arg->sai.sin_port), port);
-  add_new_translation(port, ntohs(arg->sai.sin_port), arg->sai.sin_addr.s_addr);
-
-  ptrace_poke(pid, (void *) reg.arg[1], &(arg->sai), sizeof(struct sockaddr_in));
 }
 
 /** @brief translate the port and address of the entering sendto syscall

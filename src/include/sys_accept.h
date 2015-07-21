@@ -9,5 +9,6 @@
 #include "syscall_data.h"
 #include "process_descriptor.h"
 
-void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void syscall_accept(reg_s * reg, process_descriptor_t * proc);
+void process_accept_out_call(reg_s * reg, process_descriptor_t * proc);
+void sys_translate_accept_out(reg_s * reg, process_descriptor_t * proc);

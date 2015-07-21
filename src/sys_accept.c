@@ -7,7 +7,6 @@
 
 #include "sys_accept.h"
 
-#include "args_trace.h"
 #include "data_utils.h"
 #include "print_syscall.h"
 #include "simterpose.h"
@@ -18,15 +17,24 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 /** @brief handles accept syscall at the entrance
  *
  * We use semaphores to synchronize client and server during a connection. */
-void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_accept(reg_s * reg, process_descriptor_t * proc)
 {
+  int sockfd = (int) reg->arg[0];
+  void * addr = (void *) reg->arg[1];
+  void * addrlen = (void *) reg->arg[2];
+  int ret = (int) reg->ret;
+  struct sockaddr_in sai;
+  struct sockaddr_un sau;
+  struct sockaddr_nl snl;
+  
+  int domain = get_domain_socket(proc, sockfd);
+  pid_t pid = proc->pid;
+    
   if (proc_entering(proc)) {
     XBT_DEBUG("syscall_accept_pre");
     proc_inside(proc);
-    get_args_accept(proc, reg, sysarg);
-
-    accept_arg_t arg = &(sysarg->accept);
-    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->sockfd);
+      
+    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, sockfd);
     file_desc->refcount++;
 
     // We create the stream object for semaphores
@@ -37,6 +45,17 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
     stream->server = MSG_process_self();
     stream->to_server = MSG_host_get_name(MSG_host_self());
 
+    XBT_DEBUG("Socket for accepting %lu", reg->arg[0]);
+
+  if (domain == 2)              // PF_INET
+    ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
+  if (domain == 1)              // PF_UINX
+    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
+  if (domain == 16)             // PF_NETLINK
+    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
+
+  ptrace_cpy(pid, &addrlen, (void *) reg->arg[2], sizeof(socklen_t), "accept");
+
     file_desc->stream = stream;
     XBT_DEBUG("accept_in: trying to take server semaphore ...");
     MSG_sem_acquire(file_desc->stream->sem_server);
@@ -45,15 +64,15 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
     XBT_DEBUG("accept_in: client semaphore released !");
 
     //We try to find here if there's a connection to accept
-    if (comm_has_connect_waiting(get_infos_socket(proc, arg->sockfd))) {
+    if (comm_has_connect_waiting(get_infos_socket(proc, sockfd))) {
       struct sockaddr_in in;
 
 #ifdef address_translation
-      process_descriptor_t *conn_proc = comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
-      arg->sai = in;
+      process_descriptor_t *conn_proc = comm_accept_connect(get_infos_socket(proc, sockfd), &in);
+      sai = in;
       ptrace_resume_process(conn_proc->pid);
 #else
-      comm_accept_connect(get_infos_socket(proc, arg->sockfd), &in);
+      comm_accept_connect(get_infos_socket(proc, sockfd), &in);
       arg->sai = in;
 #endif
 
@@ -62,19 +81,18 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
       //Now we rebuild the syscall.
       int new_fd = ptrace_record_socket(pid);
 
-      arg->ret = new_fd;
+      reg->ret = new_fd;
       ptrace_neutralize_syscall(pid);
       proc_outside(proc);
+      
+      ptrace_restore_syscall(pid, SYS_accept, reg->ret);
 
-      accept_arg_t arg = &(sysarg->accept);
-      ptrace_restore_syscall(pid, SYS_accept, arg->ret);
+      ptrace_poke(pid, addr, &sai, sizeof(struct sockaddr_in));
 
-      ptrace_poke(pid, arg->addr_dest, &(arg->sai), sizeof(struct sockaddr_in));
-
-      process_accept_out_call(proc, sysarg);
+      process_accept_out_call(reg, proc);
 
       if (strace_option)
-	print_accept_syscall(proc, sysarg);
+	print_accept_syscall(reg, proc);
 
       XBT_DEBUG("accept_in: did the accept_out, before I go on I'm trying to take server semaphore ...");
       MSG_sem_acquire(file_desc->stream->sem_server);
@@ -87,18 +105,15 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
   } else { // **** Exit syscall ****
 
     proc_outside(proc);
-    get_args_accept(proc, reg, sysarg);
 #ifdef address_translation
-    process_accept_out_call(proc, sysarg);
+    process_accept_out_call(reg, proc);
 #endif
 
     if (strace_option)
-      print_accept_syscall(proc, sysarg);
+      print_accept_syscall(reg, proc);
 
     // Never called by full mediation
-    get_args_accept(proc, reg, sysarg);
-    accept_arg_t arg = &(sysarg->accept);
-    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, arg->sockfd);
+    fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, sockfd);
     file_desc->refcount++;
 
     XBT_DEBUG("accept_post: trying to take server semaphore ...");
@@ -114,24 +129,23 @@ void syscall_accept(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
  *
  * We use semaphores to synchronize client and server during a connection.
  */
-void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void process_accept_out_call(reg_s * reg, process_descriptor_t * proc)
 {
   XBT_DEBUG(" CONNEXION: process_accept_out_call");
-  accept_arg_t arg = &(sysarg->accept);
 
-  if (arg->ret >= 0) {
-    int domain = get_domain_socket(proc, arg->sockfd);
-    int protocol = get_protocol_socket(proc, arg->sockfd);
+  if ((int) reg->ret >= 0) {
+    int domain = get_domain_socket(proc, (int) reg->arg[0]);
+    int protocol = get_protocol_socket(proc, (int) reg->arg[0]);
 
-    struct infos_socket *is = register_socket(proc, arg->ret, domain, protocol);
+    struct infos_socket *is = register_socket(proc, (int) reg->ret, domain, protocol);
 
 #ifdef address_translation
-    sys_translate_accept_out(proc, sysarg);
+    sys_translate_accept_out(reg, proc);
 #endif
 
-    comm_join_on_accept(is, proc, arg->sockfd);
+    comm_join_on_accept(is, proc, (int) reg->arg[0]);
 
-    struct infos_socket *s = get_infos_socket(proc, arg->sockfd);
+    struct infos_socket *s = get_infos_socket(proc, (int) reg->arg[0]);
     register_port(proc->host, s->port_local);
 
     struct in_addr in;
@@ -145,11 +159,41 @@ void process_accept_out_call(process_descriptor_t * proc, syscall_arg_u * sysarg
     } else
       in.s_addr = s->ip_local;
 
-    set_localaddr_port_socket(proc, arg->ret, inet_ntoa(in), s->port_local);
+    set_localaddr_port_socket(proc, (int) reg->ret, inet_ntoa(in), s->port_local);
 
     fd_descriptor_t *file_desc_is = (fd_descriptor_t *) is;
     fd_descriptor_t *file_desc_s = (fd_descriptor_t *) s;
     // we need to give the stream to the new socket
     file_desc_is->stream = file_desc_s->stream;
   }
+}
+
+/** @brief translate the port and address of the exiting accept syscall
+ *
+ * We take the arguments in the registers, which correspond to the
+ * real local address and port we obtained. We translate them into
+ * global simulated ones and put the result back in the registers, so
+ * that the application gets wronged.
+ */
+void sys_translate_accept_out(reg_s * reg, process_descriptor_t * proc)
+{
+  pid_t pid = proc->pid;
+
+  struct sockaddr_in sai;
+  ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+  
+  int port = ntohs(sai.sin_port);
+  struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);
+
+  comm_get_ip_port_accept(is, &sai);
+  msg_host_t host;
+  if (sai.sin_addr.s_addr == inet_addr("127.0.0.1"))
+    host = proc->host;
+  else
+    host = get_host_by_ip(sai.sin_addr.s_addr);
+
+  set_real_port(host, ntohs(sai.sin_port), port);
+  add_new_translation(port, ntohs(sai.sin_port), sai.sin_addr.s_addr);
+
+  ptrace_poke(pid, (void *) reg->arg[1], &sai, sizeof(struct sockaddr_in));
 }
