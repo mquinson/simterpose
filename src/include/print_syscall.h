@@ -36,7 +36,7 @@ void print_listen_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_recvfrom_syscall(reg_s *reg, process_descriptor_t * proc);
 
 void print_recvmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 

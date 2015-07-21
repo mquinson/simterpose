@@ -62,7 +62,6 @@ typedef struct sendto_arg_s {
 } sendto_arg_s, recvfrom_arg_s;
 
 typedef sendto_arg_s *sendto_arg_t;
-typedef recvfrom_arg_s *recvfrom_arg_t;
 
 typedef struct clone_arg_s { /* TODO missing argument*/
   unsigned long newsp;
@@ -75,7 +74,6 @@ typedef clone_arg_s *clone_arg_t;
 
 typedef union {
   sendto_arg_s sendto;
-  recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;
   sendmsg_arg_s sendmsg;
   clone_arg_s clone;
