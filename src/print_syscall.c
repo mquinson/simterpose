@@ -225,28 +225,33 @@ void print_accept_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 }
 
 /** @brief print a strace-like log of connect syscall */
-void print_connect_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_connect_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  connect_arg_t arg = &(sysarg->connect);
-
-  int domain = get_domain_socket(proc, arg->sockfd);
-
+  pid_t pid = proc->pid; 
+  int domain = get_domain_socket(proc, (int) reg->arg[0]);
+  struct sockaddr_in sai; 
+  struct sockaddr_un sau;
+  struct sockaddr_nl snl;
+  
   // fprintf(proc->strace_out,"[%d] connect(", pid);
   fprintf(proc->strace_out, "connect(");
-  fprintf(proc->strace_out, "%d, ", arg->sockfd);
+  fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 
   if (domain == 2) {
-    fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(arg->sai.sin_port),
-	    inet_ntoa(arg->sai.sin_addr));
+    ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai.sin_port),
+	    inet_ntoa(sai.sin_addr));
   } else if (domain == 1) {     //PF_UNIX
-    fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", arg->sau.sun_path);
+     ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau.sun_path);
   } else if (domain == 16) {    //PF_NETLINK
-    fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", arg->snl.nl_pid, arg->snl.nl_groups);
+     ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl.nl_pid, snl.nl_groups);
   } else {
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
   }
-  fprintf(proc->strace_out, "%d", arg->addrlen);
-  fprintf(proc->strace_out, ") = %d\n", arg->ret);
+  fprintf(proc->strace_out, "%d", (socklen_t) reg->arg[2]);
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
 
 /** @brief print a strace-like log of bind syscall */

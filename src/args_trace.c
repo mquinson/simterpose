@@ -18,28 +18,6 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 
-/** @brief retrieve the arguments of bind and connect syscalls */
-void get_args_bind_connect(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  connect_arg_t arg = &(sysarg->connect);
-
-  arg->ret = (int) reg->ret;
-  if (arg->ret == -EINPROGRESS) /* EINPROGRESS        115      Operation now in progress */
-    arg->ret = 0;
-
-  arg->sockfd = (int) reg->arg[0];
-  int domain = get_domain_socket(proc, arg->sockfd);
-  pid_t child = proc->pid;
-  arg->addrlen = (socklen_t) reg->arg[2];
-  const char *sysname = "bind ou connect";
-  if (domain == 2)              // PF_INET
-    ptrace_cpy(child, &arg->sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), sysname);
-  if (domain == 1)              // PF_UNIX
-    ptrace_cpy(child, &arg->sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), sysname);
-  if (domain == 16)             // PF_NETLINK
-    ptrace_cpy(child, &arg->sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), sysname);
-}
-
 /** @brief retrieve the arguments of accept syscall */
 void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -242,50 +220,6 @@ void sys_translate_accept_out(process_descriptor_t * proc, syscall_arg_u * sysar
   set_real_port(host, ntohs(arg->sai.sin_port), port);
   add_new_translation(port, ntohs(arg->sai.sin_port), arg->sai.sin_addr.s_addr);
 
-  ptrace_poke(pid, (void *) reg.arg[1], &(arg->sai), sizeof(struct sockaddr_in));
-}
-
-/** @brief translate the port and address of the entering connect syscall
- *
- * We take the arguments in the registers, which correspond to global
- * simulated address and port. We translate them to real local ones,
- * and put the result back in the registers to actually get the
- * connect syscall performed by the kernel.
- */
-void sys_translate_connect_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  connect_arg_t arg = &(sysarg->connect);
-  pid_t pid = proc->pid;
-
-  reg_s reg;
-  ptrace_get_register(pid, &reg);
-
-  arg->sai.sin_port = htons(get_real_port(proc, arg->sai.sin_addr.s_addr, ntohs(arg->sai.sin_port)));
-  arg->sai.sin_addr.s_addr = inet_addr("127.0.0.1");
-  XBT_DEBUG("Try to connect on 127.0.0.1:%d", arg->sai.sin_port);
-  ptrace_poke(pid, (void *) reg.arg[1], &(arg->sai), sizeof(struct sockaddr_in));
-}
-
-/** @brief translate the port and address of the exiting connect syscall
- *
- * We take the arguments in the registers, which correspond to the real
- * local address and port we established the connection on. We translate
- * them into global simulated ones and put the result back in the registers,
- * so that the application gets wronged.
- */
-void sys_translate_connect_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  connect_arg_t arg = &(sysarg->connect);
-  pid_t pid = proc->pid;
-
-  reg_s reg;
-  ptrace_get_register(pid, &reg);
-
-  translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));
-  arg->sai.sin_port = htons(td->port_num);
-  arg->sai.sin_addr.s_addr = td->ip;
-
-  XBT_DEBUG("Restore %s:%d", inet_ntoa(arg->sai.sin_addr), td->port_num);
   ptrace_poke(pid, (void *) reg.arg[1], &(arg->sai), sizeof(struct sockaddr_in));
 }
 
