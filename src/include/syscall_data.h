@@ -77,8 +77,6 @@ typedef struct connect_bind_arg_s {
 } connect_arg_s, bind_arg_s;
 
 typedef connect_arg_s *connect_arg_t;
-typedef bind_arg_s *bind_arg_t;
-
 
 typedef struct accept_arg_s {
   int sockfd;
@@ -106,7 +104,6 @@ typedef clone_arg_s *clone_arg_t;
 
 typedef union {
   connect_arg_s connect;
-  bind_arg_s bind;
   accept_arg_s accept;
   sendto_arg_s sendto;
   recvfrom_arg_s recvfrom;

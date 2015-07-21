@@ -24,7 +24,7 @@ void print_accept_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
 void print_connect_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_bind_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_bind_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_socket_syscall(reg_s * reg, process_descriptor_t * proc);
 
