@@ -13,7 +13,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 
 /** @brief handles exit syscall at the entrance and the exit */
-int syscall_exit(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+int syscall_exit(pid_t pid, reg_s * reg, process_descriptor_t * proc)
 {
   if (proc_entering(proc)) {
     proc_inside(proc);

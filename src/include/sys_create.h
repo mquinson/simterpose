@@ -9,5 +9,5 @@
 #include "ptrace_utils.h"
 #include "syscall_data.h"
 
-void syscall_creat(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_creat(reg_s * reg, process_descriptor_t * proc);
+void syscall_creat_post(reg_s * reg, process_descriptor_t * proc);

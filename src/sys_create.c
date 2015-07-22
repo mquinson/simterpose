@@ -11,17 +11,17 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles creat syscall at the entrance and the exit
     Create a file descriptor */
-void syscall_creat(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+void syscall_creat(reg_s * reg, process_descriptor_t * proc){
 
   if (proc_entering(proc))
     proc_inside(proc);
   else
-    syscall_creat_post(reg, sysarg, proc);
+    syscall_creat_post(reg, proc);
 
 }
 
 /** @brief handles creat syscall at the exit*/
-void syscall_creat_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_creat_post(reg_s * reg, process_descriptor_t * proc)
 {
   proc_outside(proc);
   if ((int) reg->ret >= 0) {

@@ -1047,14 +1047,14 @@ void print_getpeername_syscall(reg_s * reg, process_descriptor_t * proc)
 }
 
 /** @brief print a strace-like log of time syscall */
-void print_time_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_time_syscall(reg_s * reg, process_descriptor_t * proc)
 {
   //fprintf(proc->strace_out,"[%d] time = %ld\n", pid, arg->ret);
   fprintf(proc->strace_out, "time = %lu\n", reg->ret);
 }
 
 /** @brief print a strace-like log of gettimeofday syscall */
-void print_gettimeofday_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_gettimeofday_syscall(reg_s * reg, process_descriptor_t * proc)
 {
   /* TODO */
   /* fprintf(proc->strace_out, "gettimeofday, tv = %lu\n", reg.arg[0]->tv_sec); */
@@ -1144,7 +1144,7 @@ static int get_string(int pid, long ptr, char *buf, int size)
 }
 
 /** @brief print a strace-like log of execve syscall, without the return */
-void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc)
 {
 
   pid_t pid = proc->pid;
@@ -1182,13 +1182,13 @@ void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc, syscall_
 }
 
 /** @brief print the return of execve syscall */
-void print_execve_syscall_post(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_execve_syscall_post(reg_s * reg, process_descriptor_t * proc)
 {
   fprintf(proc->strace_out, "%d\n", (int) reg->ret);
 }
 
 /** @brief print open syscall */
-void print_open_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_open_syscall(reg_s * reg, process_descriptor_t * proc)
 {
   pid_t pid = proc->pid;
   char bufstr[4096];

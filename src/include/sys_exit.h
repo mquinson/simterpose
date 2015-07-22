@@ -9,4 +9,4 @@
 #include "syscall_data.h"
 #include "process_descriptor.h"
 
-int syscall_exit(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+int syscall_exit(pid_t pid, reg_s * reg, process_descriptor_t * proc);

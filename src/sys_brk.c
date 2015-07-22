@@ -13,7 +13,7 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles brk syscall at the entrance and the exit */
-void syscall_brk(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+void syscall_brk(reg_s * reg, process_descriptor_t * proc) {
   if (proc_entering(proc)) {
     proc_inside(proc);
   } else {

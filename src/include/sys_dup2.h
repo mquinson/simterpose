@@ -9,5 +9,5 @@
 #include "syscall_data.h"
 #include "process_descriptor.h"
 
-void syscall_dup2(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+void syscall_dup2(reg_s * reg, process_descriptor_t * proc);
+void syscall_dup2_post(reg_s * reg, process_descriptor_t * proc);

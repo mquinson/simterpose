@@ -15,7 +15,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles open syscall at the entrance and the exit
     Open a new file descriptor */
-void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_open(reg_s * reg, process_descriptor_t * proc)
 {
   if (proc_entering(proc)) {
     proc_inside(proc);
@@ -35,7 +35,7 @@ void syscall_open(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * pr
     }
     // TODO handle flags
     if (strace_option)
-      print_open_syscall(reg, proc, sysarg);
+      print_open_syscall(reg, proc);
 
   /*   XBT_DEBUG("An open syscall was made for the fd %d via reg %lu\n Value of flags %lu \n", arg->ret, reg->ret, arg->flags); */
   }

@@ -13,18 +13,18 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles dup2 syscall at the entrance and the exit */
-void syscall_dup2(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc){
+void syscall_dup2(reg_s * reg, process_descriptor_t * proc){
 
   if (proc_entering(proc))
     proc_inside(proc);
   else
-    syscall_dup2_post(reg, sysarg, proc);
+    syscall_dup2_post(reg, proc);
 
 }
 
 /** @brief handles dup2 at the exit
     Update the table of file descriptors, and also the pipe objects if needed */
-void syscall_dup2_post(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_dup2_post(reg_s * reg, process_descriptor_t * proc)
 {
   proc_outside(proc);
   unsigned int oldfd = (int) reg->arg[0];

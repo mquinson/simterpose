@@ -15,7 +15,7 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles execve syscall at the entrance and the exit */
-void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+void syscall_execve(reg_s * reg, process_descriptor_t * proc) {
 
   if (proc_event_exec(proc)) {
     XBT_DEBUG("Ignore an exec event");
@@ -23,12 +23,12 @@ void syscall_execve(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * 
   } else if (proc_entering(proc)) {
     proc_inside(proc);
     if (strace_option)
-      print_execve_syscall_pre(reg, proc, sysarg);
+      print_execve_syscall_pre(reg, proc);
 
   } else {
     proc_outside(proc);
     if (strace_option)
-      print_execve_syscall_post(reg, proc, sysarg);
+      print_execve_syscall_post(reg, proc);
 
     xbt_dict_cursor_t cursor = NULL;
     char *key;

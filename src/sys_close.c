@@ -14,7 +14,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles close syscall at the entrance and the exit
     Close a file descriptor */
-void syscall_close(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc)
+void syscall_close(reg_s * reg, process_descriptor_t * proc)
 {
   if (proc_entering(proc)) {
     proc_inside(proc);

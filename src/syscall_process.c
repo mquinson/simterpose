@@ -66,7 +66,7 @@ int process_handle(process_descriptor_t * proc)
 
     switch (arg.reg_orig) {
     case SYS_creat:
-      syscall_creat(&arg, sysarg, proc);
+      syscall_creat(&arg, proc);
       break;
 
     case SYS_open:
@@ -74,11 +74,11 @@ int process_handle(process_descriptor_t * proc)
       XBT_DEBUG("Valeur des registres dans l'AS:");
       XBT_DEBUG("Valeur de retour %lu", arg.ret);
       XBT_DEBUG("Valeur des arg %lu %lu %lu %lu %lu %lu", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
-      syscall_open(&arg, sysarg, proc);
+      syscall_open(&arg, proc);
       break;
 
     case SYS_close:
-      syscall_close(&arg, sysarg, proc);
+      syscall_close(&arg, proc);
       break;
 
     case SYS_read:
@@ -95,7 +95,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_dup2:
-      syscall_dup2(&arg, sysarg, proc);
+      syscall_dup2(&arg, proc);
 
     case SYS_fcntl:
       syscall_fcntl(&arg, proc);
@@ -113,7 +113,7 @@ int process_handle(process_descriptor_t * proc)
       syscall_pipe(&arg, proc);
 
     case SYS_brk:
-      syscall_brk(&arg,sysarg, proc);
+      syscall_brk(&arg, proc);
       break;
 
     case SYS_socket:
@@ -176,17 +176,17 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_execve:
-      syscall_execve(&arg, sysarg, proc);
+      syscall_execve(&arg, proc);
       break;
 
     case SYS_exit:
       XBT_DEBUG("exit(%ld) called", arg.arg[0]);
-      return syscall_exit(pid, &arg, sysarg, proc);
+      return syscall_exit(pid, &arg, proc);
       break;
 
     case SYS_exit_group:
       XBT_DEBUG("exit_group(%ld) called", arg.arg[0]);
-      return syscall_exit(pid, &arg, sysarg, proc);
+      return syscall_exit(pid, &arg, proc);
       break;
 
     default:
