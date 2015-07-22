@@ -1114,14 +1114,12 @@ static void print_flags_clone(process_descriptor_t * proc, int flags)
 }
 
 /** @brief print a strace-like log of clone syscall */
-void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_clone_syscall(reg_s * reg, process_descriptor_t * proc)
 {
+  fprintf(proc->strace_out, "clone(child_stack=%ld, flags=", reg->arg[1]);
 
-  clone_arg_t arg = &(sysarg->clone);
-  fprintf(proc->strace_out, "clone(child_stack=%ld, flags=", arg->newsp);
-
-  print_flags_clone(proc, (long int) arg->flags);
-  fprintf(proc->strace_out, "child_tidptr=0x%lx) = %d \n", (long int) arg->child_tid, arg->ret);
+  print_flags_clone(proc, reg->arg[0]);
+  fprintf(proc->strace_out, "child_tidptr=0x%lx) = %d \n", (long int) reg->arg[3], (int) reg->ret);
 }
 
 /** @brief helper function to retrieve the information of execve syscall */

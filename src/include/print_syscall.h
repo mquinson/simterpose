@@ -60,7 +60,7 @@ void print_time_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u 
 
 void print_gettimeofday_syscall(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void print_clone_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_clone_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
 

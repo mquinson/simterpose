@@ -130,18 +130,6 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 #endif
 }
 
-/** @brief retrieve the arguments of clone syscall */
-/* TODO: Bad allocation of parameters*/
-void get_args_clone(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  clone_arg_t arg = &(sysarg->clone);
-  arg->ret = (int) reg->ret;
-  arg->flags = (int) reg->arg[0];
-  arg->newsp = reg->arg[1];
-  arg->parent_tid = (void *) reg->arg[2];
-  arg->child_tid = (void *) reg->arg[3];
-}
-
 /** @brief put the message received in the registers of recvmsg syscall */
 void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {

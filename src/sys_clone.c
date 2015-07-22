@@ -11,7 +11,7 @@
 
 #include "sys_clone.h"
 
-#include "args_trace.h"
+#include "data_utils.h"
 #include "print_syscall.h"
 #include "simterpose.h"
 
@@ -23,7 +23,7 @@ static int clone_number = 0;
  *  At the exit of the syscall, we can be either in the parent or the clone.
  * If we are in the clone we actually create a new MSG process which inherits the file descriptors from the parent.
  */
-void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc) {
+void syscall_clone(reg_s * reg, process_descriptor_t * proc) {
 
   // We must distinguish from syscall-stops (in ancestor/caller) and PTRACE_EVENT (in new process).
 
@@ -51,9 +51,6 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     int pid_clone = ptrace_get_pid_clone(proc->pid);
     XBT_DEBUG("clone returning in child, ret = %d, pid_clone = %d", ret, pid_clone);
     proc_outside(proc);
-
-    get_args_clone(proc, reg, sysarg);
-    clone_arg_t arg = &(sysarg->clone);
 
     process_descriptor_t *clone = process_descriptor_new(proc->name, bprintf("cloned_%d",pid_clone), pid_clone);
 
@@ -117,7 +114,7 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
       }
     }
 
-    int flags = arg->flags;
+    int flags = (int) reg->arg[0];
 
     //if (flags & CLONE_VM) // Nothing to do: we don't care if they share the memory
     //if (flags & CLONE_FS) // Nothing to do: we don't care if they share the file system
@@ -160,11 +157,11 @@ void syscall_clone(reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * p
     if (flags & CLONE_CHILD_SETTID)
       XBT_WARN("CLONE_CHILD_SETTID unhandled");
 
-    arg->ret = clone->pid;
-    ptrace_restore_syscall(proc->pid, SYS_clone, arg->ret);
+    reg->ret = clone->pid;
+    ptrace_restore_syscall(proc->pid, SYS_clone, (int) reg->ret);
 
     if (strace_option)
-      print_clone_syscall(proc, sysarg);
+      print_clone_syscall(reg, proc);
 
     char name[256];
     sprintf(name, "clone #%d of %s", ++clone_number, MSG_process_get_name(MSG_process_self()));

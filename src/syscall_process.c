@@ -172,7 +172,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_clone:
-      syscall_clone(&arg, sysarg, proc);
+      syscall_clone(&arg, proc);
       break;
 
     case SYS_execve:
