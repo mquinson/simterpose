@@ -152,7 +152,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_recvmsg:
-      syscall_recvmsg(pid, &arg, proc);
+      syscall_recvmsg(pid, &arg, sysarg, proc);
       break;
 
     case SYS_shutdown:

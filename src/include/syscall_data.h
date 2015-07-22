@@ -43,7 +43,7 @@ typedef struct recvmsg_arg_s {
 } recvmsg_arg_s, sendmsg_arg_s;
 
 typedef sendmsg_arg_s *sendmsg_arg_t;
-/* typedef recvmsg_arg_s *recvmsg_arg_t; */
+typedef recvmsg_arg_s *recvmsg_arg_t;
 
 typedef struct sendto_arg_s {
   int sockfd;
@@ -74,7 +74,7 @@ typedef clone_arg_s *clone_arg_t;
 
 typedef union {
   sendto_arg_s sendto;
-  /* recvmsg_arg_s recvmsg; */
+  recvmsg_arg_s recvmsg;
   sendmsg_arg_s sendmsg;
   clone_arg_s clone;
 } syscall_arg_u;

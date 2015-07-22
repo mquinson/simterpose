@@ -802,32 +802,29 @@ void print_recvfrom_syscall(reg_s * reg, process_descriptor_t * proc)
 }
 
 /** @brief print a strace-like log of recvmsg syscall */
-void print_recvmsg_syscall(reg_s * reg, process_descriptor_t * proc)
+void print_recvmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  /* recvmsg_arg_t arg = &(sysarg->sendmsg); */
+  recvmsg_arg_t arg = &(sysarg->sendmsg);
 
-  struct msghdr msg;
-  ptrace_cpy(proc->pid, &msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");
-  
   //  fprintf(proc->strace_out,"[%d] recvmsg(", pid);
   fprintf(proc->strace_out, "recvmsg(");
-  fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
+  fprintf(proc->strace_out, "%d, ", arg->sockfd);
 
-  fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ", (int ) msg.msg_namelen,
-	  (int) msg.msg_iovlen, (int) msg.msg_controllen, msg.msg_flags);
+  fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ", (int) arg->msg.msg_namelen,
+	  (int) arg->msg.msg_iovlen, (int) arg->msg.msg_controllen, arg->msg.msg_flags);
 
-  if ((int) reg->arg[2] > 0) {
-    print_flags_recv(proc, (int) reg->arg[2]);
+  if (arg->flags > 0) {
+    print_flags_recv(proc, arg->flags);
   } else
     fprintf(proc->strace_out, "0 ");
 
-  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
 }
 
 /** @brief print a strace-like log of sendmsg syscall */
 void print_sendmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  sendmsg_arg_t arg = &(sysarg->sendmsg);
+  recvmsg_arg_t arg = &(sysarg->sendmsg);
 
   //  fprintf(proc->strace_out,"[%d] sendmsg(", pid);
   fprintf(proc->strace_out, "sendmsg(");
