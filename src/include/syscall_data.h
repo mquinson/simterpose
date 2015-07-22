@@ -59,13 +59,11 @@ typedef struct sendto_arg_s {
     struct sockaddr_nl snl;
   };
   ssize_t ret;
-} sendto_arg_s, recvfrom_arg_s;
+} recvfrom_arg_s;
 
-typedef sendto_arg_s *sendto_arg_t;
 typedef recvfrom_arg_s *recvfrom_arg_t;
 
 typedef union {
-  sendto_arg_s sendto;
   recvfrom_arg_s recvfrom;
   recvmsg_arg_s recvmsg;
   sendmsg_arg_s sendmsg;

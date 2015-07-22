@@ -137,7 +137,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_sendto:
-      ret = syscall_sendto(pid, &arg, sysarg, proc);
+      ret = syscall_sendto(pid, &arg, proc);
       if (ret)
         return ret;
       break;

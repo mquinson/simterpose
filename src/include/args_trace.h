@@ -14,10 +14,6 @@
 #include "ptrace_utils.h"
 #include "process_descriptor.h"
 
-/* void get_args_accept(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * arg); */
-
-void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
-
 void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
 
 void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
@@ -26,9 +22,6 @@ void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 
 void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
-void sys_translate_sendto_in(process_descriptor_t * proc, syscall_arg_u * sysarg);
-
-void sys_translate_sendto_out(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
 void sys_translate_recvfrom_in(process_descriptor_t * proc, syscall_arg_u * arg);
 

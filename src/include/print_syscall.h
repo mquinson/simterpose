@@ -34,7 +34,7 @@ void print_setsockopt_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_listen_syscall(reg_s * reg, process_descriptor_t * proc);
 
-void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_sendto_syscall(reg_s * reg, process_descriptor_t * proc, void * data, int is_addr, socklen_t addrlen, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl);
 
 void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
 

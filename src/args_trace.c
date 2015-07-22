@@ -18,42 +18,6 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 
-/** @brief retrieve the arguments of sendto syscall */
-void get_args_sendto(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  sendto_arg_t arg = &(sysarg->sendto);
-  pid_t pid = proc->pid;
-
-  arg->ret = (int) reg->ret;
-
-  arg->sockfd = (int) reg->arg[0];
-  arg->len = (size_t) reg->arg[2];
-  arg->flags = (int) reg->arg[3];
-
-  int domain = get_domain_socket(proc, arg->sockfd);
-  if ( (int) reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
-    arg->is_addr = 1;
-    if (domain == 2)            // PF_INET
-      ptrace_cpy(pid, &arg->sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
-    if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, &arg->sau, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
-    if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, &arg->snl, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
-  } else
-    arg->is_addr = 0;
-
-#ifndef address_translation
-  arg->data = xbt_new0(char, arg->len);
-  ptrace_cpy(pid, arg->data, (void *) reg->arg[1], arg->len, "sendto");
-#endif
-
-     if ( (int) reg->arg[4] != 0) {   // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
-
-    arg->addrlen = (socklen_t) reg->arg[5];
-  } else
-    arg->addrlen = 0;
-}
-
 /** @brief retrieve the arguments of recvfrom syscall */
 void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
@@ -158,58 +122,7 @@ void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
   free(arg->data);
 }
 
-/** @brief translate the port and address of the entering sendto syscall
- *
- * We take the arguments in the registers, which correspond to the global
- * simulated address and port the application wants to send the message to.
- * We translate them to real local ones and put the result back in the
- * registers to actually get the sendto syscall performed by the kernel.
- */
-void sys_translate_sendto_in(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  sendto_arg_t arg = &(sysarg->sendto);
-  pid_t pid = proc->pid;
 
-  reg_s reg;
-  ptrace_get_register(pid, &reg);
-
-  if ( (int) reg.arg[4] == 0)
-    return;
-
-  struct in_addr in = { arg->sai.sin_addr.s_addr };
-  XBT_DEBUG("Translate address %s:%d", inet_ntoa(in), ntohs(arg->sai.sin_port));
-
-  struct sockaddr_in temp = arg->sai;
-  int port = get_real_port(proc, temp.sin_addr.s_addr, ntohs(temp.sin_port));
-  temp.sin_addr.s_addr = inet_addr("127.0.0.1");
-  temp.sin_port = htons(port);
-  ptrace_poke(pid, (void *) reg.arg[4], &temp, sizeof(struct sockaddr_in));
-  XBT_DEBUG("Using 127.0.0.1:%d", port);
-}
-
-/** @brief translate the port and address of the exiting sendto syscall
- *
- * We take the arguments in the registers, which correspond to the real
- * local address and port we sent the message to. We translate them into global
- * simulated ones and put the result back in the registers, so that the
- * application gets wronged.
- */
-void sys_translate_sendto_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
-{
-  sendto_arg_t arg = &(sysarg->sendto);
-  pid_t pid = proc->pid;
-
-  reg_s reg;
-  ptrace_get_register(pid, &reg);
-
-  if ( (int) reg.arg[4] == 0)
-    return;
-
-  translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));
-  arg->sai.sin_port = htons(td->port_num);
-  arg->sai.sin_addr.s_addr = td->ip;
-  ptrace_poke(pid, (void *) reg.arg[4], &(arg->sai), sizeof(struct sockaddr_in));
-}
 
 /** @brief translate the port and address of the entering recvfrom syscall
  *

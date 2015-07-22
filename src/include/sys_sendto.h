@@ -9,6 +9,9 @@
 #include "syscall_data.h"
 #include "process_descriptor.h"
 
-int syscall_sendto(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
-int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
+int syscall_sendto(pid_t pid, reg_s * reg, process_descriptor_t * proc);
+int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl);
+int syscall_sendto_post(pid_t pid, reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl);
+
+void sys_translate_sendto_in(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl);
+void sys_translate_sendto_out(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl);
