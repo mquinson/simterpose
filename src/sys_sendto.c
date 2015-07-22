@@ -47,7 +47,7 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_d
   XBT_DEBUG("sendto_pre");
   get_args_sendto(proc, reg, sysarg);
   process_descriptor_t remote_proc;
-  if (process_send_call(proc, sysarg, &remote_proc)) {
+  if (process_send_call(reg, proc, &remote_proc, sysarg->sendto->data)) {
     ptrace_neutralize_syscall(pid);
 
     sendto_arg_t arg = &(sysarg->sendto);
@@ -90,7 +90,7 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_
   }
   if ((int) reg->ret > 0) {
     process_descriptor_t remote_proc;
-    if (process_send_call(proc, sysarg, &remote_proc))
+    if (process_send_call(reg, proc, &remote_proc, sysarg->sendto.data))
       return PROCESS_TASK_FOUND;
   }
 #endif

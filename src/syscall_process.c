@@ -90,7 +90,7 @@ int process_handle(process_descriptor_t * proc)
       XBT_DEBUG("Valeur des registres dans l'AS:");
       XBT_DEBUG("Valeur de retour %lu", arg.ret);
       XBT_DEBUG("Valeur des arg %lu %lu %lu %lu %lu %lu", arg.arg[0], arg.arg[1], arg.arg[2], arg.arg[3], arg.arg[4], arg.arg[5]);
-      if ((ret = syscall_write(&arg, proc, sysarg)))
+      if ((ret = syscall_write(&arg, proc)))
 	return ret;
       break;
 
@@ -205,30 +205,29 @@ int process_handle(process_descriptor_t * proc)
 }
 
 /** @brief helper function to send task */
-int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc)
+int process_send_call(reg_s * reg, process_descriptor_t * proc, process_descriptor_t * remote_proc, void * data)
 {
   XBT_DEBUG("Entering process_send_call");
-  sendto_arg_t arg = &(sysarg->sendto);
-  if (socket_registered(proc, arg->sockfd) != -1) {
-    if (!socket_netlink(proc, arg->sockfd)) {
-      XBT_DEBUG("%d This is not a netlink socket", arg->sockfd);
+  if (socket_registered(proc, (int) reg->arg[0]) != -1) { 
+    if (!socket_netlink(proc, (int) reg->arg[0])) {
+      XBT_DEBUG("%d This is not a netlink socket", (int) reg->arg[0]);
       //   compute_computation_time(proc);   // cree la computation task
-      struct infos_socket *is = get_infos_socket(proc, arg->sockfd);
+      struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);
       struct infos_socket *s = comm_get_peer(is);
       is->ref_nb++;
       s->ref_nb++;
 
-      XBT_DEBUG("%d->%d", arg->sockfd, (int) arg->ret);
-      XBT_DEBUG("Sending data(%d) on socket %d", (int) arg->ret, s->fd.fd);
-      handle_new_send(is, sysarg);
+      XBT_DEBUG("%d->%d", (int) reg->arg[0], (int) reg->ret);
+      XBT_DEBUG("Sending data(%d) on socket %d", (int) reg->ret, s->fd.fd);
+      handle_new_send(reg, is, data);
 
-      msg_task_t task = create_send_communication_task(proc, is, arg->ret, proc->host, s->fd.proc->host);
+      msg_task_t task = create_send_communication_task(proc, is, (int) reg->ret, proc->host, s->fd.proc->host);
       XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
-		(int) arg->ret);
+		(int) reg->ret);
 
 
-      MSG_task_set_bytes_amount(task, arg->ret);
-      MSG_task_set_data(task, arg->data);
+      MSG_task_set_bytes_amount(task, (int) reg->ret);
+      MSG_task_set_data(task, data);
 
       send_task(s->fd.proc->host, task);
 

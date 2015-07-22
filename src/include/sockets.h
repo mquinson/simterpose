@@ -28,6 +28,7 @@ struct infos_socket;
 #include "syscall_data.h"
 #include "communication.h"
 #include "process_descriptor.h"
+#include "ptrace_utils.h"
 
 
 struct recv_information {
@@ -60,7 +61,7 @@ void delete_socket(struct infos_socket *is);
 
 void recv_information_destroy(recv_information * recv);
 
-void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg);
+void handle_new_send(reg_s * reg, struct infos_socket *is, void * data);
 
 int close_all_communication(process_descriptor_t * proc);
 

@@ -43,7 +43,6 @@ void syscall_setsockopt_pre(reg_s * reg, process_descriptor_t * proc)
   proc_outside(proc);
   if (strace_option)
     print_setsockopt_syscall(reg, proc);
-  free(sysarg->setsockopt.optval);
 #endif
 }
 

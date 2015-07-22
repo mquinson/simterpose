@@ -351,24 +351,24 @@ int socket_network(process_descriptor_t * proc, int fd)
 }
 
 /** @brief send syscall data by putting it in data_fifo */
-void handle_new_send(struct infos_socket *is, syscall_arg_u * sysarg)
+void handle_new_send(reg_s * reg, struct infos_socket *is, void * data)
 {
-  sendto_arg_t arg = &(sysarg->sendto);
+  /* sendto_arg_t arg = &(sysarg->sendto); */
   recv_information *recv = comm_get_peer_recv(is);
 
 #ifndef address_translation
   data_send_s *ds = xbt_malloc0(sizeof(data_send_s));
-  ds->data = arg->data;
-  ds->size = arg->len;
+  ds->data = data;
+  ds->size = (size_t) reg->arg[2];
 
   xbt_fifo_push(recv->data_fifo, ds);
 
-  arg->ret = arg->len;
+  reg->ret = reg->arg[2];
 #else
-  int *data = xbt_malloc(sizeof(int));
-  *data = arg->ret;
+  int *data_sock = xbt_malloc(sizeof(int));
+  *data_sock = reg->ret;
 
-  xbt_fifo_push(recv->data_fifo, data);
+  xbt_fifo_push(recv->data_fifo, data_sock);
 #endif
   //   XBT_DEBUG("New queue size %d", xbt_fifo_size(recv->data_fifo));
 }

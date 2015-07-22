@@ -64,7 +64,6 @@ void syscall_select_pre(reg_s * reg, process_descriptor_t * proc)
   XBT_WARN("Select: Timeout not handled\n");
 
   XBT_DEBUG("Entering process_select_call");
-  /* select_arg_t arg = &(proc->sysarg.select); */
   int i;
 
   int match = 0;

@@ -32,7 +32,7 @@ int syscall_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_desc
     XBT_DEBUG("sendmsg_pre");
     get_args_sendmsg(proc, reg, sysarg);
     process_descriptor_t remote_proc;
-    if (process_send_call(proc, sysarg, &remote_proc)) {
+    if (process_send_call(reg, proc, &remote_proc, sysarg->sendmsg->data)) {
       ptrace_neutralize_syscall(pid);
 
       sendmsg_arg_t arg = &(sysarg->sendmsg);
@@ -55,7 +55,7 @@ int syscall_sendmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_desc
 #ifdef address_translation
     if ((int) reg->ret > 0) {
       process_descriptor_t remote_proc;
-      if (process_send_call(proc, sysarg, &remote_proc)) {
+      if (process_send_call(reg, proc, &remote_proc, sysarg->sendmsg.data)) {
 	return PROCESS_TASK_FOUND;
       }
     }

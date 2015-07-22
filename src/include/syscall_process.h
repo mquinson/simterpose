@@ -57,7 +57,7 @@ extern const char *state_names[4];
 #define RECV_CLOSE              10
 
 int process_handle(process_descriptor_t * proc);
-int process_send_call(process_descriptor_t * proc, syscall_arg_u * sysarg, process_descriptor_t * remote_proc);
+int process_send_call(reg_s * reg, process_descriptor_t * proc, process_descriptor_t * remote_proc, void * data);
 void process_close_call(process_descriptor_t * proc, int fd);
 void syscall_default(pid_t pid, reg_s * reg, process_descriptor_t * proc);
 

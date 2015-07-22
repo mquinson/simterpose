@@ -23,7 +23,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
  *
  * At the exit, we send the MSG task in order to return control to the MSG process reading the message
  */
-int syscall_write(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
+int syscall_write(reg_s * reg, process_descriptor_t * proc)
 {
   int fd = (int) reg->arg[0];
   void * data = (void *) reg->arg[1];
@@ -49,7 +49,7 @@ int syscall_write(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysa
     // XBT_DEBUG("[%d] write_in", pid);
     if (socket_registered(proc, fd) != -1) {
       process_descriptor_t remote_proc;
-      if (process_send_call(proc, sysarg, &remote_proc)) {
+      if (process_send_call(reg, proc, &remote_proc, data)) {
         ptrace_neutralize_syscall(proc->pid);
 
         ptrace_restore_syscall(proc->pid, SYS_write, ret);
@@ -107,7 +107,7 @@ int syscall_write(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysa
     if ((int)ret > 0) {
       if (socket_registered(proc, fd) != -1) {
         process_descriptor_t remote_proc;
-      if (process_send_call(proc, sysarg, &remote_proc))
+	if (process_send_call(reg, proc, &remote_proc, data))
         return PROCESS_TASK_FOUND;
       }
     }
