@@ -719,86 +719,60 @@ void print_sendto_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 }
 
 /** @brief print a strace-like log of recvfrom syscall */
-void print_recvfrom_syscall(reg_s * reg, process_descriptor_t * proc)
+void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
-  pid_t pid = proc->pid;  
-  ssize_t ret = (ssize_t) reg->ret;
-  int sockfd = (int) reg->arg[0];
-  void * data = (void *) reg->arg[1];
-  size_t len = (size_t) reg->arg[2];
-  int flags = (int) reg->arg[3];
-  struct sockaddr * addr = (struct sockaddr *) reg->arg[4];
-  int is_addr;
-  socklen_t * addrlen = 0; /* = (socklen_t *) reg->arg[5] *//*TODO*/
-  struct sockaddr_in sai;
-  struct sockaddr_un sau;
-  struct sockaddr_nl snl;
-  int domain = get_domain_socket(proc, sockfd);
+  recvfrom_arg_t arg = &(sysarg->recvfrom);
+  int domain = get_domain_socket(proc, arg->sockfd);
 
-  if ( (int) reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
-    is_addr = 1;
-    if (domain == 2)            // PF_INET
-      ptrace_cpy(pid, &sai, addr, sizeof(struct sockaddr_in), "recvfrom");
-    if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, &sau, addr, sizeof(struct sockaddr_in), "recvfrom");
-    if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, &snl, addr, sizeof(struct sockaddr_in), "recvfrom");
-  } else
-    is_addr = 0;
-
-  if ( (int) reg->arg[4] != 0) {         // syscall "recv" doesn't exist on x86_64, it's recvfrom with struct sockaddr=NULL and addrlen=0
-    ptrace_cpy(pid, &addrlen, (void *) reg->arg[5], sizeof(socklen_t), "recvfrom");
-  }
-  
   // fprintf(proc->strace_out,"[%d] recvfrom(", pid);
   fprintf(proc->strace_out, "recvfrom(");
 #ifndef address_translation
-  if ((int) reg->ret) {
+  if (arg->ret) {
     char buff[500];
-    if ( (int) reg->ret <= 500) {
-      memcpy(buff, data, (int) reg->ret);
-      buff[(int) reg->ret] = '\0';
-      fprintf(proc->strace_out, "%d, \"%s\" , %d, ", sockfd, buff, len);
+    if ( arg->ret <= 500) {
+      memcpy(buff, arg->data, arg->ret);
+      buff[arg->ret] = '\0';
+      fprintf(proc->strace_out, "%d, \"%s\" , %d, ", arg->sockfd, buff, (int) arg->len);
     } else {
       memcpy(buff, arg->data, 500);
       buff[499] = '\0';
-      fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", sockfd, buff, len);
+      fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", arg->sockfd, buff, (int) arg->len);
     }
 
-    if (flags > 0) {
-      print_flags_send(proc, flags);
+    if (arg->flags > 0) {
+      print_flags_send(proc, arg->flags);
     } else
       fprintf(proc->strace_out, "0, ");
   } else
-    fprintf(proc->strace_out, "%d, \"\" , %d, ", sockfd, len);
+    fprintf(proc->strace_out, "%d, \"\" , %d, ", arg->sockfd, (int) arg->len);
 #else
-  fprintf(proc->strace_out, "%d, \"...\" , %d, ", sockfd, len);
+  fprintf(proc->strace_out, "%d, \"...\" , %d, ", arg->sockfd, (int) arg->len);
 #endif
 
   if (domain == 2) {            // PF_INET
-    if (is_addr) {
-      fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai.sin_port),
-	      inet_ntoa(sai.sin_addr));
+    if (arg->is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(arg->sai.sin_port),
+	      inet_ntoa(arg->sai.sin_addr));
     } else
       fprintf(proc->strace_out, "NULL, ");
   } else if (domain == 1) {     //PF_UNIX
-    if (is_addr) {
-      fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau.sun_path);
+    if (arg->is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", arg->sau.sun_path);
     } else
       fprintf(proc->strace_out, "NULL, ");
 
   } else if (domain == 16) {    //PF_NETLINK
-    if (is_addr) {
-      fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl.nl_pid, snl.nl_groups);
+    if (arg->is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", arg->snl.nl_pid, arg->snl.nl_groups);
     } else
       fprintf(proc->strace_out, "NULL, ");
   } else {
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
   }
 
-  fprintf(proc->strace_out, "%u", addrlen);
+  fprintf(proc->strace_out, "%u", arg->addrlen);
 
-  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
 }
 
 /** @brief print a strace-like log of recvmsg syscall */
