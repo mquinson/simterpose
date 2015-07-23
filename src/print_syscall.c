@@ -718,60 +718,60 @@ void print_sendto_syscall(reg_s * reg, process_descriptor_t * proc, void * data,
 }
 
 /** @brief print a strace-like log of recvfrom syscall */
-void print_recvfrom_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_recvfrom_syscall(reg_s * reg, process_descriptor_t * proc, void * data, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl, int is_addr, socklen_t addrlen)
 {
-  recvfrom_arg_t arg = &(sysarg->recvfrom);
-  int domain = get_domain_socket(proc, arg->sockfd);
+  size_t len = (size_t) reg->arg[2];
+  int domain = get_domain_socket(proc, (int) reg->arg[0]);
 
   // fprintf(proc->strace_out,"[%d] recvfrom(", pid);
   fprintf(proc->strace_out, "recvfrom(");
 #ifndef address_translation
-  if (arg->ret) {
+  if ((int) reg->ret) {
     char buff[500];
-    if ( arg->ret <= 500) {
-      memcpy(buff, arg->data, arg->ret);
-      buff[arg->ret] = '\0';
-      fprintf(proc->strace_out, "%d, \"%s\" , %d, ", arg->sockfd, buff, (int) arg->len);
+    if ( (int) reg->ret <= 500) {
+      memcpy(buff, data, (int) reg->ret);
+      buff[(int) reg->ret] = '\0';
+      fprintf(proc->strace_out, "%d, \"%s\" , %d, ", (int) reg->arg[0], buff, len);
     } else {
-      memcpy(buff, arg->data, 500);
+      memcpy(buff, data, 500);
       buff[499] = '\0';
-      fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", arg->sockfd, buff, (int) arg->len);
+      fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", (int) reg->arg[0], buff, (int) len);
     }
 
-    if (arg->flags > 0) {
-      print_flags_send(proc, arg->flags);
+    if ((int) reg->arg[3] > 0) {
+      print_flags_send(proc, (int) reg->arg[3]);
     } else
       fprintf(proc->strace_out, "0, ");
   } else
-    fprintf(proc->strace_out, "%d, \"\" , %d, ", arg->sockfd, (int) arg->len);
+    fprintf(proc->strace_out, "%d, \"\" , %d, ", (int) reg->arg[0], (int) len);
 #else
-  fprintf(proc->strace_out, "%d, \"...\" , %d, ", arg->sockfd, (int) arg->len);
+  fprintf(proc->strace_out, "%d, \"...\" , %d, ", (int) reg->arg[0], (int) len);
 #endif
 
   if (domain == 2) {            // PF_INET
-    if (arg->is_addr) {
-      fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(arg->sai.sin_port),
-	      inet_ntoa(arg->sai.sin_addr));
+    if (is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai->sin_port),
+	      inet_ntoa(sai->sin_addr));
     } else
       fprintf(proc->strace_out, "NULL, ");
   } else if (domain == 1) {     //PF_UNIX
-    if (arg->is_addr) {
-      fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", arg->sau.sun_path);
+    if (is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau->sun_path);
     } else
       fprintf(proc->strace_out, "NULL, ");
 
   } else if (domain == 16) {    //PF_NETLINK
-    if (arg->is_addr) {
-      fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", arg->snl.nl_pid, arg->snl.nl_groups);
+    if (is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl->nl_pid, snl->nl_groups);
     } else
       fprintf(proc->strace_out, "NULL, ");
   } else {
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
   }
 
-  fprintf(proc->strace_out, "%u", arg->addrlen);
+  fprintf(proc->strace_out, "%u", addrlen);
 
-  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
 
 /** @brief print a strace-like log of recvmsg syscall */

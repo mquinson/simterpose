@@ -18,38 +18,6 @@
 
 XBT_LOG_NEW_DEFAULT_SUBCATEGORY(ARGS_TRACE, simterpose, "args trace log");
 
-/** @brief retrieve the arguments of recvfrom syscall */
-void get_args_recvfrom(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  recvfrom_arg_t arg = &(sysarg->recvfrom);
-
-  arg->ret = (ssize_t) reg->ret;
-  arg->sockfd = (int) reg->arg[0];
-  arg->len = (size_t) reg->arg[2];
-  arg->flags = (int) reg->arg[3];
-
-  int domain = get_domain_socket(proc, arg->sockfd);
-  pid_t child = proc->pid;
-  if ( (int) reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
-    arg->is_addr = 1;
-    if (domain == 2)            // PF_INET
-      ptrace_cpy(child, &arg->sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
-    if (domain == 1)            // PF_UNIX
-      ptrace_cpy(child, &arg->sau, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
-    if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(child, &arg->snl, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
-  } else
-    arg->is_addr = 0;
-
-  arg->dest = (void *) reg->arg[1];
-
-  socklen_t len = 0;
-  if ( (int) reg->arg[4] != 0) {         // syscall "recv" doesn't exist on x86_64, it's recvfrom with struct sockaddr=NULL and addrlen=0
-    ptrace_cpy(child, &len, (void *) reg->arg[5], sizeof(socklen_t), "recvfrom");
-  }
-  arg->addrlen = len;
-}
-
 /** @brief retrieve the arguments of recvmsg syscall */
 void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
 {
