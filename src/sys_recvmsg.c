@@ -8,6 +8,7 @@
 #include "sys_recvmsg.h"
 
 #include "args_trace.h"
+#include "data_utils.h"
 #include "print_syscall.h"
 #include "simterpose.h"
 #include "sockets.h"
@@ -95,4 +96,33 @@ void syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
   get_args_recvmsg(proc, reg, sysarg);
   if (strace_option)
     print_recvmsg_syscall(proc, sysarg);
+}
+
+
+/** @brief put the message received in the registers of recvmsg syscall */
+void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  pid_t pid = proc->pid;
+  recvmsg_arg_t arg = &(sysarg->recvmsg);
+  ptrace_restore_syscall(pid, SYS_recvmsg, arg->ret);
+
+  int length = arg->ret;
+  int global_size = 0;
+  int i;
+  for (i = 0; i < arg->msg.msg_iovlen; ++i) {
+    if (length < 0)
+      break;
+
+    struct iovec temp;
+    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
+
+    if (length < temp.iov_len)
+      temp.iov_len = length;
+
+    ptrace_poke(pid, arg->msg.msg_iov + i * sizeof(struct iovec), &temp, sizeof(struct iovec));
+
+    ptrace_poke(pid, temp.iov_base, (char *) arg->data + global_size, temp.iov_len);
+
+  }
+  free(arg->data);
 }
