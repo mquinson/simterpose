@@ -795,39 +795,38 @@ void print_recvmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
 }
 
 /** @brief print a strace-like log of sendmsg syscall */
-void print_sendmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg)
+void print_sendmsg_syscall(reg_s * reg, process_descriptor_t * proc, int len, void * data, 
+  struct msghdr * msg)
 {
-  recvmsg_arg_t arg = &(sysarg->sendmsg);
-
   //  fprintf(proc->strace_out,"[%d] sendmsg(", pid);
   fprintf(proc->strace_out, "sendmsg(");
-  fprintf(proc->strace_out, "%d, ", arg->sockfd);
+  fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 #ifndef address_translation
   char buff[20];
-  if (arg->len < 20) {
-    memcpy(buff, arg->data, arg->len);
+  if (len < 20) {
+    memcpy(buff, data, len);
     fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, \"%s\", msg_controllen=%d, msg_flags=%d}, ",
-	    (int) arg->msg.msg_namelen, (int) arg->msg.msg_iovlen, buff, (int) arg->msg.msg_controllen,
-	    arg->msg.msg_flags);
+	    (int) msg->msg_namelen, (int) msg->msg_iovlen, buff, (int) msg->msg_controllen,
+	    msg->msg_flags);
   } else {
-    memcpy(buff, arg->data, 20);
+    memcpy(buff, data, 20);
     buff[19] = '\0';
 
     fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, \"%s...\", msg_controllen=%d, msg_flags=%d}, ",
-	    (int) arg->msg.msg_namelen, (int) arg->msg.msg_iovlen, buff, (int) arg->msg.msg_controllen,
-	    arg->msg.msg_flags);
+	    (int) msg->msg_namelen, (int) msg->msg_iovlen, buff, (int) msg->msg_controllen,
+	    msg->msg_flags);
   }
 #else
   fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, \"...\", msg_controllen=%d, msg_flags=%d}, ",
-	  (int) arg->msg.msg_namelen, (int) arg->msg.msg_iovlen, (int) arg->msg.msg_controllen, arg->msg.msg_flags);
+	  (int) msg->msg_namelen, (int) msg->msg_iovlen, (int) msg->msg_controllen, msg->msg_flags);
 #endif
 
-  if (arg->flags > 0) {
-    print_flags_recv(proc, arg->flags);
+  if ((int) reg->arg[2] > 0) {
+    print_flags_recv(proc, (int) reg->arg[2]);
   } else
     fprintf(proc->strace_out, "0 ");
 
-  fprintf(proc->strace_out, ") = %d\n", (int) arg->ret);
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
 
 /** @brief helper function to print the events flags of poll syscall */

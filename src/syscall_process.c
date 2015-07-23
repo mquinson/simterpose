@@ -147,7 +147,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_sendmsg:
-      if ((ret = syscall_sendmsg(pid, &arg, sysarg, proc)))
+      if ((ret = syscall_sendmsg( &arg, proc)))
         return ret;
       break;
 

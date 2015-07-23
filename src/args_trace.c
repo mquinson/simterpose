@@ -69,31 +69,6 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
   }
 }
 
-/** @brief retrieve the arguments of sendmsg syscall */
-void get_args_sendmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg)
-{
-  sendmsg_arg_t arg = &(sysarg->sendmsg);
-  pid_t pid = proc->pid;
-
-  arg->sockfd = (int) reg->arg[0];
-  arg->flags = (int) reg->arg[2];
-  arg->ret = (ssize_t) reg->ret;
-  ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");
-#ifndef address_translation
-  arg->len = 0;
-  arg->data = NULL;
-
-  int i;
-  for (i = 0; i < arg->msg.msg_iovlen; ++i) {
-    struct iovec temp;
-    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "sendmsg");
-    arg->data = realloc(arg->data, arg->len + temp.iov_len);
-    ptrace_cpy(pid, (char *) arg->data + arg->len, temp.iov_base, temp.iov_len, "sendmsg");
-    arg->len += temp.iov_len;
-  }
-#endif
-}
-
 /** @brief put the message received in the registers of recvmsg syscall */
 void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg)
 {
