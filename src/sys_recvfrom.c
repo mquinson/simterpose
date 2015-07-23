@@ -8,6 +8,7 @@
 #include "sys_recvfrom.h"
 
 #include "args_trace.h"
+#include "data_utils.h"
 #include "print_syscall.h"
 #include "simterpose.h"
 #include "sockets.h"
@@ -124,4 +125,30 @@ void process_recvfrom_out_call(process_descriptor_t * proc)
   ptrace_restore_syscall(pid, SYS_recvfrom, arg->ret);
   ptrace_poke(pid, (void *) arg->dest, arg->data, arg->ret);
   free(arg->data);
+}
+
+
+
+/** @brief translate the port and address of the exiting recvfrom syscall
+ *
+ * We take the arguments in the registers, which correspond to the real
+ * local address and port we received the message from. We translate them
+ * into global simulated ones and put the result back in the registers, so
+ * that the application gets wronged.
+ */
+void sys_translate_recvfrom_out(process_descriptor_t * proc, syscall_arg_u * sysarg)
+{
+  recvfrom_arg_t arg = &(sysarg->recvfrom);
+  pid_t pid = proc->pid;
+
+  reg_s reg;
+  ptrace_get_register(pid, &reg);
+
+  if ( (int) reg.arg[4] == 0)
+    return;
+
+  translate_desc_t *td = get_translation(ntohs(arg->sai.sin_port));
+  arg->sai.sin_port = htons(td->port_num);
+  arg->sai.sin_addr.s_addr = td->ip;
+  ptrace_poke(pid, (void *) reg.arg[4], &(arg->sai), sizeof(struct sockaddr_in));
 }

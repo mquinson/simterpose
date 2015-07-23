@@ -21,8 +21,4 @@ void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * 
 void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg);
 
 
-void sys_translate_recvfrom_in(process_descriptor_t * proc, syscall_arg_u * arg);
-
-void sys_translate_recvfrom_out(process_descriptor_t * proc, syscall_arg_u * sysarg);
-
 #endif
