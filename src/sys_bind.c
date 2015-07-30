@@ -7,10 +7,8 @@
 
 #include "sys_bind.h"
 
-#include "args_trace.h"
 #include "data_utils.h"
 #include "print_syscall.h"
-/* #include "simterpose.h" */
 #include "sockets.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);

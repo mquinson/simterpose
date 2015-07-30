@@ -12,7 +12,6 @@
 #include "ptrace_utils.h"
 #include "sockets.h"
 #include "syscall_data.h"
-#include "args_trace.h"
 #include "communication.h"
 #include "data_utils.h"
 #include "print_syscall.h"

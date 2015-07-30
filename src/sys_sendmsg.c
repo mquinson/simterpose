@@ -7,7 +7,6 @@
 
 #include "sys_sendmsg.h"
 
-#include "args_trace.h"
 #include "print_syscall.h"
 #include "simterpose.h"
 #include "syscall_process.h"

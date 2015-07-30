@@ -7,7 +7,6 @@
 
 #include "sys_setsockopt.h"
 
-#include "args_trace.h"
 #include "print_syscall.h"
 #include "simterpose.h"
 

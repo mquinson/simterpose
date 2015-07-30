@@ -7,7 +7,7 @@
 
 #include "sys_write.h"
 
-#include "args_trace.h"
+#include "data_utils.h"
 #include "print_syscall.h"
 #include "simterpose.h"
 #include "sockets.h"

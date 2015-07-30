@@ -6,8 +6,7 @@
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include "sys_getpeername.h"
-/* #include <netinet/in.h> */
-#include "args_trace.h"
+
 #include "data_utils.h"
 #include "print_syscall.h"
 #include "simterpose.h"

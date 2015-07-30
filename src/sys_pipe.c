@@ -7,7 +7,6 @@
 
 #include "sys_pipe.h"
 
-#include "args_trace.h"
 #include "simterpose.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
