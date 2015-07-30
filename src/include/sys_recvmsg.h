@@ -13,4 +13,4 @@ void syscall_recvmsg(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_des
 void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 void syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process_descriptor_t * proc);
 
-void sys_build_recvmsg(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg);
