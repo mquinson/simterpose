@@ -76,10 +76,15 @@ typedef struct {
   int flags;
   int mode;
   int refcount;                   // reference counting
-  int lock;
+  short lock;
+  short ltype;
   off_t begin;
   off_t end;
   pid_t proc_locker;
+  union {
+    pid_t sig_proc_id;
+    pid_t sig_group_id;
+  };
 } fd_descriptor_t;
 
 struct process_descriptor {

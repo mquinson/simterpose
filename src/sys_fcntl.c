@@ -95,8 +95,8 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
   case F_DUPFD_CLOEXEC: {
 #ifndef address_translation
     /* TODO: full mediation */
-    /* Find the lowest free fd and realize the syscall don't forget to add the O_CLOEXEC flag*/
-    /*reg->ret =*/ /*fd find*/
+    /* Find the lowest free fd and realize the syscall don't forget to add the O_CLOEXEC flag */
+    /*reg->ret =*/ /*fd find */
 #endif
     fd_descriptor_t* file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->type = arg_fdesc->type;
@@ -117,8 +117,8 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
 
   case F_SETFD:
 #ifndef address_translation
-    /* TODO */
-    /* Change the flags in the memory of the file*/
+    /* TODO : full mediation */
+    /* Change the flags in the memory of the file */
     reg->ret = 0;
 #endif
     arg_fdesc->flags = (int) cmd_arg;
@@ -128,7 +128,7 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
 #ifndef address_translation
     reg->ret = socket_get_flags(proc, (int) reg->arg[0], cmd_arg);
 
-    /* TODO: */
+    /* TODO: full mediation */
     /* If the fd is not a socket: */
     /* reg->ret = process_descriptor_get_fd(proc, (int) reg->arg[0])->flags; */
 #endif
@@ -137,14 +137,14 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
   case F_SETFL:
 
 #ifndef address_translation
-    /* TODO: */
+    /* TODO: full mediation */
     /* Change manually the state and mode flags in memory of the file */
     reg->ret = 0;
 #endif
 
     socket_set_flags(proc, (int) reg->arg[0],cmd_arg);
 
-    /* TODO: */
+    /* TODO: full mediaiton */
     /* If the fd is not a socket: */
     /* This suggestion is not possible now because we delete arg structure */
     /* process_descriptor_get_fd(proc, (int) reg->arg[0])->flags = arg->arg; */
@@ -153,7 +153,7 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
   case F_SETLK:
 #ifndef address_translation
     int lock_bit;
-    /* TODO */
+    /* TODO: full mediation */
     /* Realize the syscall */
     /* lock = 0 ou 1 */
     if (!lock_bit){
@@ -183,13 +183,14 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     arg_fdesc->begin = begin + len;
     arg_fdesc->end = begin - 1;
   }
+    arg_fdesc->ltype = lock->l_type;
   }
     break;
 
   case F_SETLKW:
-    #ifndef address_translation
+#ifndef address_translation
     int lock_bit;
-    /* TODO */
+    /* TODO: full mediation */
     /* Realize the syscall */
     /* lock = 0 ou 1 */
     if (!lock_bit){
@@ -218,56 +219,93 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     arg_fdesc->begin = begin + len;
     arg_fdesc->end = begin - 1;
   }
+    arg_fdesc->ltype = lock->l_type;
   }
     break;
 
   case F_GETLK:
-    XBT_WARN("F_GETLK unhandled");
+#ifndef address_trasnlation
+    /* TODO: full mediation */
+#endif
+    if (lock->l_type != F_UNLCK){
+      arg_fdesc->lock = 1;  
+      arg_fdesc->proc_locker = lock->l_pid;
+      
+      off_t begin = lock->l_start + lock->l_whence;
+      off_t len = lock->l_len;
+      if (len > 0){
+	arg_fdesc->begin = begin;
+	arg_fdesc->end = begin + len - 1;
+      }
+      if  (len < 0){
+	arg_fdesc->begin = begin + len;
+	arg_fdesc->end = begin - 1;
+      }
+      if (len == 0){
+	arg_fdesc->begin = begin + len;
+	arg_fdesc->end = begin - 1;
+      }
+      arg_fdesc->ltype = lock->l_type;
+    }
     break;
 
   case F_GETOWN:
-    XBT_WARN("F_GETOWN unhandled");
+#ifndef address_trasnlation
+    /* TODO: full mediation */
+#endif
+    if (reg->ret < 0)
+      arg_fdesc->sig_group_id = fabs(reg->ret);
+    else
+      arg_fdesc->sig_proc_id = reg->ret;
     break;
 
   case F_SETOWN:
-    XBT_WARN("F_SETOWN unhandled");
+#ifndef address_trasnlation
+    /* TODO: full mediation */
+#endif
+    if (reg->arg[2] < 0)
+      arg_fdesc->sig_group_id = fabs(reg->arg[2]);
+    else
+      arg_fdesc->sig_proc_id = reg->arg[2];
     break;
 
-#ifdef __USE_GNU
+
+#ifdef __USE_GNU 
+    /* TODO: Be careful these commands are not awailable on all systems */
   case F_GETSIG:
-    XBT_WARN("F_GETSIG unhandled");
+    XBT_WARN("F_GETSIG unhandled, you use __USE_GNU");
     break;
 
   case F_SETSIG:
-    XBT_WARN("F_SETSIG unhandled");
+    XBT_WARN("F_SETSIG unhandled, you use __USE_GNU");
     break;
 
   case F_GETOWN_EX:
-    XBT_WARN("F_GETOWN_EX unhandled");
+    XBT_WARN("F_GETOWN_EX unhandled, you use __USE_GNU");
     break;
 
   case F_SETOWN_EX:
-    XBT_WARN("F_SETOWN_EX unhandled");
+    XBT_WARN("F_SETOWN_EX unhandled, you use __USE_GNU");
     break;
 
   case F_GETLEASE:
-    XBT_WARN("F_GETLEASE unhandled");
+    XBT_WARN("F_GETLEASE unhandled, you use __USE_GNU");
     break;
 
   case F_SETLEASE:
-    XBT_WARN("F_SETLEASE unhandled");
+    XBT_WARN("F_SETLEASE unhandled, you use __USE_GNU");
     break;
 
   case F_NOTIFY:
-    XBT_WARN("F_NOTIFY unhandled");
+    XBT_WARN("F_NOTIFY unhandled, you use __USE_GNU");
     break;
 
   case F_GETPIPE_SZ:
-    XBT_WARN("F_GETPIPE_SZ unhandled");
+    XBT_WARN("F_GETPIPE_SZ unhandled, you use __USE_GNU");
     break;
 
   case F_SETPIPE_SZ:
-    XBT_WARN("F_SETPIPE_SZ unhandled");
+    XBT_WARN("F_SETPIPE_SZ unhandled, you use __USE_GNU");
     break;
 #endif
 

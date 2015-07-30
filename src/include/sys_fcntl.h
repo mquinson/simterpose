@@ -5,6 +5,8 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
+#include <math.h>
+
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
 #include "syscall_data.h"

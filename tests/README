@@ -3,8 +3,8 @@ provided scripts start the simulation with all the needed parameters.
 
  apps/                  The little applications used in tests
 
- send_clientserver.sh:  Client/server app using send / recv       (should works)
- msg_clientserver.sh    Client/server app using sendmsg / recvmsg (kinda works)
+ send_clientserver.sh:  Client/server app using send / recv       (works)
+ msg_clientserver.sh    Client/server app using sendmsg / recvmsg (works)
 
  allpairs.sh:           Simterpose test using allpair, but it's not working yet
  allpair/               Usecase of allpair
