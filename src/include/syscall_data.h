@@ -33,27 +33,4 @@
 #define SELECT_FDWR_SET 0x02
 #define SELECT_FDEX_SET 0x04
 
-typedef struct sendto_arg_s {
-  int sockfd;
-  void *data;
-  size_t len;
-  int flags;
-  socklen_t addrlen;
-  void *dest;                   //address in processus of data
-  int is_addr;                  //indicate if struct sockadrr is null or not
- union {
-    struct sockaddr_in sai;
-    struct sockaddr_un sau;
-    struct sockaddr_nl snl;
-  };
-  ssize_t ret;
-} recvfrom_arg_s;
-
-typedef recvfrom_arg_s *recvfrom_arg_t;
-
-typedef union {
-  recvfrom_arg_s recvfrom;
-} syscall_arg_u;
-
-
 #endif

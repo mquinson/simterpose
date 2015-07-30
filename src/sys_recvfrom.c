@@ -106,7 +106,7 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
             process_recvfrom_out_call(reg, proc, data, dest, sai, sau, snl, is_addr, addrlen);
 #else
           if (sock_status & SOCKET_CLOSED)
-            sysarg->recvfrom.ret = 0;
+	    reg->ret = 0;
           ptrace_neutralize_syscall(pid);
           proc_outside(proc);
           process_recvfrom_out_call(reg, proc, data, dest, sai, sau, snl, is_addr, addrlen);

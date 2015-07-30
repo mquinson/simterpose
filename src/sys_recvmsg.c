@@ -74,7 +74,7 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
             sys_build_recvmsg(reg, proc, data, msg);
 #else
           if (sock_status & SOCKET_CLOSED)
-            sysarg->recvmsg.ret = 0;
+	    reg->ret = 0;
           ptrace_neutralize_syscall(pid);
           proc_outside(proc);
           sys_build_recvmsg(reg, proc, data, msg);

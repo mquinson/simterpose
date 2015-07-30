@@ -353,7 +353,6 @@ int socket_network(process_descriptor_t * proc, int fd)
 /** @brief send syscall data by putting it in data_fifo */
 void handle_new_send(reg_s * reg, struct infos_socket *is, void * data)
 {
-  /* sendto_arg_t arg = &(sysarg->sendto); */
   recv_information *recv = comm_get_peer_recv(is);
 
 #ifndef address_translation

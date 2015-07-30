@@ -153,8 +153,7 @@ int process_connect_in_call(reg_s * reg, process_descriptor_t * proc)
           reg->ret = -ECONNREFUSED;       /* ECONNREFUSED       111 Connection refused */
           ptrace_neutralize_syscall(pid);
           proc_outside(proc);
-          /* connect_arg_t arg = &(sysarg->connect); */
-          ptrace_restore_syscall(pid, SYS_connect, (int) reg->ret);
+	  ptrace_restore_syscall(pid, SYS_connect, (int) reg->ret);
           return 0;
         }
       }

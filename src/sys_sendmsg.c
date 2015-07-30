@@ -27,7 +27,7 @@ int syscall_sendmsg(reg_s * reg, process_descriptor_t * proc)
 {
   void * data = NULL;
   pid_t pid = proc->pid;
-  struct msghdr * msg;
+  struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
   size_t len = 0; 
 
   ptrace_cpy(pid, msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");

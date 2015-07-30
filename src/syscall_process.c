@@ -55,7 +55,6 @@ XBT_LOG_NEW_DEFAULT_SUBCATEGORY(SYSCALL_PROCESS, simterpose, "Syscall process lo
 int process_handle(process_descriptor_t * proc)
 {
   reg_s arg;
-  syscall_arg_u *sysarg = &(proc->sysarg);
   pid_t pid = proc->pid;
   XBT_DEBUG("PROCESS HANDLE MSG");
   while (1) {

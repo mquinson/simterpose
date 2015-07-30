@@ -91,8 +91,6 @@ struct process_descriptor {
 
   int in_syscall:1; // whether we are inside or outside of the syscall
 
-  syscall_arg_u sysarg;
-
   FILE* strace_out; // (real) file descriptor to use to write the strace-like output when ran in --strace mode
   int curcol;
 };

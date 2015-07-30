@@ -619,8 +619,6 @@ void print_setsockopt_syscall(reg_s * reg, process_descriptor_t * proc)
 /** @brief print a strace-like log of listen syscall */
 void print_listen_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  /* listen_arg_t arg = &(sysarg->listen); */
-
   fprintf(proc->strace_out, "listen(");
   fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
   fprintf(proc->strace_out, "%d ", (int) reg->arg[1]);
