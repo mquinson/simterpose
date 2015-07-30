@@ -35,8 +35,25 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
   proc_inside(proc);
   //  XBT_DEBUG("[%d] recvmsg_in", pid);
   XBT_DEBUG("recvmsg_pre");
-  get_args_recvmsg(proc, reg, sysarg);
+  /* get_args_recvmsg(proc, reg, sysarg); */
   recvmsg_arg_t arg = &(sysarg->recvmsg);
+  arg->sockfd = (int) reg->arg[0];
+  arg->flags = (int) reg->arg[2];
+  ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
+
+  arg->len = 0;
+  int i;
+  for (i = 0; i < arg->msg.msg_iovlen; ++i) {
+    struct iovec temp;
+    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
+    arg->len += temp.iov_len;
+  }
+
+
+  
+
+  void * data;
+  /* recvmsg_arg_t arg = &(sysarg->recvmsg); */
 
   /* if ( (int) reg->ret > 0) { */
   /* printf("I'm here reg->ret vaut %lu %d %li\n", reg->ret, (int) reg->ret, (long) reg->ret); */
@@ -58,24 +75,24 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, process
         msg_error_t err = MSG_task_receive(&task, mailbox);
 
         reg->ret = (ssize_t) MSG_task_get_bytes_amount(task);
-        arg->data = MSG_task_get_data(task);
+        data = MSG_task_get_data(task);
 
         if (err != MSG_OK) {
           struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);
           int sock_status = socket_get_state(is);
 #ifdef address_translation
           if (sock_status & SOCKET_CLOSED)
-            sys_build_recvmsg(proc, &(proc->sysarg), (ssize_t) reg->ret);
+            sys_build_recvmsg(reg, proc, &(proc->sysarg), data);
 #else
           if (sock_status & SOCKET_CLOSED)
             sysarg->recvmsg.ret = 0;
           ptrace_neutralize_syscall(pid);
           proc_outside(proc);
-          sys_build_recvmsg(proc, &(proc->sysarg), (ssize_t) reg->ret);
+          sys_build_recvmsg(reg, proc, &(proc->sysarg), data);
         } else {
           ptrace_neutralize_syscall(pid);
           proc_outside(proc);
-          sys_build_recvmsg(proc, &(proc->sysarg), (ssize_t) reg->ret);
+          sys_build_recvmsg(reg, proc, &(proc->sysarg), data);
 #endif
         }
         MSG_task_destroy(task);
@@ -94,13 +111,28 @@ void syscall_recvmsg_post(pid_t pid, reg_s * reg, syscall_arg_u * sysarg, proces
   // XBT_DEBUG("[%d] recvmsg_out", pid);
   XBT_DEBUG("recvmsg_post");
   /* get_args_recvmsg(proc, reg, sysarg); */
+  recvmsg_arg_t arg = &(sysarg->recvmsg);
+  arg->sockfd = (int) reg->arg[0];
+  arg->flags = (int) reg->arg[2];
+  ptrace_cpy(pid, &arg->msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
+
+  arg->len = 0;
+  int i;
+  for (i = 0; i < arg->msg.msg_iovlen; ++i) {
+    struct iovec temp;
+    ptrace_cpy(pid, &temp, arg->msg.msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
+    arg->len += temp.iov_len;
+  }
+
+
+
   /* if (strace_option) */
   /*   print_recvmsg_syscall(proc, sysarg); */
 }
 
 
 /** @brief put the message received in the registers of recvmsg syscall */
-void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg)
+void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, syscall_arg_u * sysarg, void * data)
 {
   pid_t pid = proc->pid;
   recvmsg_arg_t arg = &(sysarg->recvmsg);
@@ -121,8 +153,8 @@ void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, syscall_arg_u *
 
     ptrace_poke(pid, arg->msg.msg_iov + i * sizeof(struct iovec), &temp, sizeof(struct iovec));
 
-    ptrace_poke(pid, temp.iov_base, (char *) arg->data + global_size, temp.iov_len);
+    ptrace_poke(pid, temp.iov_base, (char *) data + global_size, temp.iov_len);
 
   }
-  free(arg->data);
+  /* free(arg->data); */
 }

@@ -14,7 +14,7 @@
 #include "ptrace_utils.h"
 #include "process_descriptor.h"
 
-void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg);
+/* void get_args_recvmsg(process_descriptor_t * proc, reg_s * reg, syscall_arg_u * sysarg); */
 
 
 
