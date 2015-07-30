@@ -1,5 +1,4 @@
 add_executable(simterpose
-  args_trace.c
   communication.c
   cputimer.c
   data_utils.c
@@ -37,7 +36,6 @@ add_executable(simterpose
   sys_socket.c
   sys_write.c
   xbt_log_strace.c
-  include/args_trace.h
   include/communication.h
   include/cputimer.h
   include/data_utils.h
