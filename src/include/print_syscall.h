@@ -38,7 +38,7 @@ void print_sendto_syscall(reg_s * reg, process_descriptor_t * proc, void * data,
 
 void print_recvfrom_syscall(reg_s * reg, process_descriptor_t * proc, void * data, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl, int is_addr, socklen_t addrlen);
 
-void print_recvmsg_syscall(process_descriptor_t * proc, syscall_arg_u * sysarg);
+void print_recvmsg_syscall(reg_s * reg, process_descriptor_t * proc, struct msghdr * msg);
 
 void print_sendmsg_syscall(reg_s * reg, process_descriptor_t * proc, int len, void * data, 
   struct msghdr * msg);

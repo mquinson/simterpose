@@ -33,18 +33,6 @@
 #define SELECT_FDWR_SET 0x02
 #define SELECT_FDEX_SET 0x04
 
-typedef struct recvmsg_arg_s {
-  int sockfd;
-  size_t len;
-  void *data;
-  int flags;
-  struct msghdr msg;
-  ssize_t ret;
-} recvmsg_arg_s, sendmsg_arg_s;
-
-typedef sendmsg_arg_s *sendmsg_arg_t;
-typedef recvmsg_arg_s *recvmsg_arg_t;
-
 typedef struct sendto_arg_s {
   int sockfd;
   void *data;
@@ -65,8 +53,6 @@ typedef recvfrom_arg_s *recvfrom_arg_t;
 
 typedef union {
   recvfrom_arg_s recvfrom;
-  recvmsg_arg_s recvmsg;
-  sendmsg_arg_s sendmsg;
 } syscall_arg_u;
 
 
