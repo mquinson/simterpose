@@ -1,4 +1,4 @@
-foreach(app send_server send_client msg_client msg_server pthread fcntl)
+foreach(app send_server send_client msg_client msg_server pthread fcntl_big fcntl_little)
   add_executable(${app} ${app}.c)
   set_target_properties(${app}
     PROPERTIES

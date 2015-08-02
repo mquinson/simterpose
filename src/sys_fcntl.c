@@ -1,6 +1,7 @@
 /* sys_fcntl -- Handles fcntl syscall */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
+/* Author Louisa Bessad */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
@@ -50,11 +51,11 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
   int cmd = (int) reg->arg[1];
   long cmd_arg;
   struct f_owner_ex * owner;
-  struct flock * lock;
-  
-     if ((cmd == F_DUPFD) || (cmd == F_DUPFD_CLOEXEC)
+  struct flock * lock = xbt_malloc(sizeof(struct flock));
+
+  if ((cmd == F_DUPFD) || (cmd == F_DUPFD_CLOEXEC)
       || (cmd == F_SETFD) || (cmd == F_SETFL)
-      || (cmd == F_SETOWN))
+      || (cmd == F_SETOWN)) 
     cmd_arg = (long) reg->arg[2];
 #ifdef __USE_GNU
   if ((cmd == F_SETSIG) || (cmd == F_SETLEASE)
@@ -64,50 +65,64 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
   if ((cmd == F_GETOWN_EX) || (cmd == F_SETOWN_EX))
     owner = (struct f_owner_ex *) reg->arg[2];
 #endif
-  if ((cmd == F_GETLK) || (cmd == F_SETLK) || (cmd == F_SETLKW))
-    lock = (struct flock *) reg->arg[2];
-  
+  if ((cmd == F_GETLK) || (cmd == F_SETLK) || (cmd == F_SETLKW)){
+    ptrace_cpy(proc->pid, lock, (void *) reg->arg[2], sizeof(struct flock), "fcntl");
+  }
+
   if ((int) reg->ret == -1){
     XBT_WARN("Error on fcntl syscall exit");
     exit(-1);
   }
-  fd_descriptor_t* arg_fdesc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
 
-   switch (cmd) {
+  fd_descriptor_t * arg_fdesc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
+  fd_descriptor_t* file_desc_dup = xbt_malloc0(sizeof(fd_descriptor_t));
+  fd_descriptor_t* file_desc_dup_cloexec = xbt_malloc0(sizeof(fd_descriptor_t));
 
-  case F_DUPFD: {
+  switch (cmd) {
+
+  case F_DUPFD: 
 #ifndef address_translation
     /* TODO: full mediation */
     /* Find the lowest free fd and realize the syscall*/
     /*reg->ret =*/ /*fd find*/
 #endif
-    fd_descriptor_t* file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
-    file_desc->type = arg_fdesc->type;
-    file_desc->proc = proc;
-    file_desc->fd = (int) reg->ret;
-    file_desc->stream = arg_fdesc->stream;
-    file_desc->pipe = arg_fdesc->pipe;
-    file_desc->flags = arg_fdesc->flags;
-    file_desc->refcount = 1; /* To check or 0 and then ++ */
-    process_descriptor_set_fd(proc, (int) reg->ret, file_desc);
-    break; }
+    file_desc_dup->type = arg_fdesc->type;
+    file_desc_dup->proc = proc;
+    file_desc_dup->fd = (int) reg->ret;
+    file_desc_dup->stream = arg_fdesc->stream;
+    file_desc_dup->pipe = arg_fdesc->pipe;
+    if ((arg_fdesc->flags & O_CLOEXEC) == O_CLOEXEC){
+      file_desc_dup->flags = arg_fdesc->flags &~ O_CLOEXEC;
+      printf("O_CLOEXEC: flags fd_dup %d fd %d\n", file_desc_dup->flags, arg_fdesc->flags);
+    }
+    else if ((arg_fdesc->flags & FD_CLOEXEC) == FD_CLOEXEC){
+      file_desc_dup->flags = arg_fdesc->flags &~ FD_CLOEXEC;
+      printf("FD_CLOEXEC: flags fd_dup %d fd %d\n", file_desc_dup->flags, arg_fdesc->flags);
+    }
+    else{
+      file_desc_dup->flags = arg_fdesc->flags;
+      printf("NO CLOEXEC: flags fd_dup %d fd %d\n", file_desc_dup->flags, arg_fdesc->flags);
+    }
+    file_desc_dup->refcount = 1; /* To check or 0 and then ++ */
+    process_descriptor_set_fd(proc, (int) reg->ret, file_desc_dup);
+    break; 
 
-  case F_DUPFD_CLOEXEC: {
+  case F_DUPFD_CLOEXEC:
 #ifndef address_translation
     /* TODO: full mediation */
     /* Find the lowest free fd and realize the syscall don't forget to add the O_CLOEXEC flag */
     /*reg->ret =*/ /*fd find */
 #endif
-    fd_descriptor_t* file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
-    file_desc->type = arg_fdesc->type;
-    file_desc->proc = proc;
-    file_desc->fd = (int) reg->ret;
-    file_desc->stream = arg_fdesc->stream;
-    file_desc->pipe = arg_fdesc->pipe;
-    file_desc->flags = arg_fdesc->flags | O_CLOEXEC;
-    file_desc->refcount = 1; /* To check or 0 and then ++ */
-    process_descriptor_set_fd(proc, (int) reg->ret, file_desc);
-    break; }
+    file_desc_dup_cloexec->type = arg_fdesc->type;
+    file_desc_dup_cloexec->proc = proc;
+    file_desc_dup_cloexec->fd = (int) reg->ret;
+    file_desc_dup_cloexec->stream = arg_fdesc->stream;
+    file_desc_dup_cloexec->pipe = arg_fdesc->pipe;
+    file_desc_dup_cloexec->flags = arg_fdesc->flags | FD_CLOEXEC;
+    printf("DUPFD_CLOEXEC: flags fd_dup %d fd %d\n", file_desc_dup_cloexec->flags, arg_fdesc->flags);    
+    file_desc_dup_cloexec->refcount = 1; /* To check or 0 and then ++ */
+    process_descriptor_set_fd(proc, (int) reg->ret, file_desc_dup_cloexec);
+    break; 
 
   case F_GETFD:
 #ifndef address_translation
@@ -121,7 +136,11 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     /* Change the flags in the memory of the file */
     reg->ret = 0;
 #endif
-    arg_fdesc->flags = (int) cmd_arg;
+    /* printf("return value %d\n", (int) reg->ret); */
+    /* printf("Flags before %d \n", arg_fdesc->flags); */
+    arg_fdesc->flags |= (int) cmd_arg;
+    /* printf("flag %d\n", (int) cmd_arg); */
+    /* printf("Flags after %d \n", arg_fdesc->flags); */
     break;
 
   case F_GETFL:
@@ -132,6 +151,7 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     /* If the fd is not a socket: */
     /* reg->ret = process_descriptor_get_fd(proc, (int) reg->arg[0])->flags; */
 #endif
+    printf("syscall status flags %d\n", (int) reg->ret);
     break;
 
   case F_SETFL:
@@ -141,13 +161,10 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     /* Change manually the state and mode flags in memory of the file */
     reg->ret = 0;
 #endif
-
-    socket_set_flags(proc, (int) reg->arg[0],cmd_arg);
-
-    /* TODO: full mediaiton */
-    /* If the fd is not a socket: */
-    /* This suggestion is not possible now because we delete arg structure */
-    /* process_descriptor_get_fd(proc, (int) reg->arg[0])->flags = arg->arg; */
+    printf("return value %d\n", (int) reg->ret);
+    printf("Flags before %d \n", arg_fdesc->flags);
+    arg_fdesc->flags |= (int) cmd_arg;
+    printf("Flags after %d \n", arg_fdesc->flags);
     break;
 
   case F_SETLK:
@@ -157,34 +174,31 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     /* Realize the syscall */
     /* lock = 0 ou 1 */
     if (!lock_bit){
-    reg->ret = -1;
-    /*Put errno to the right value*/
-  }
+      reg->ret = -1;
+      /*Put errno to the right value*/
+    }
     else
       reg->ret = 0;
 #endif
-
     if (reg->ret == 0){
+      arg_fdesc->lock = 1;
 
-    arg_fdesc->lock = 1;
-    arg_fdesc->proc_locker = lock->l_pid;
-
-    off_t begin = lock->l_start + lock->l_whence;
-    off_t len = lock->l_len;
-    if (len > 0){
-    arg_fdesc->begin = begin;
-    arg_fdesc->end = begin + len - 1;
-  }
-    if  (len < 0){
-    arg_fdesc->begin = begin + len;
-    arg_fdesc->end = begin - 1;
-  }
-    if (len == 0){
-    arg_fdesc->begin = begin + len;
-    arg_fdesc->end = begin - 1;
-  }
-    arg_fdesc->ltype = lock->l_type;
-  }
+      arg_fdesc->proc_locker = lock->l_pid;
+      off_t begin = lock->l_start + lock->l_whence;
+      off_t len = lock->l_len;    if (len > 0){
+	arg_fdesc->begin = begin;
+	arg_fdesc->end = begin + len - 1;
+      }
+      if  (len < 0){
+	arg_fdesc->begin = begin + len;
+	arg_fdesc->end = begin - 1;
+      }
+      if (len == 0){
+	arg_fdesc->begin = begin + len;
+	arg_fdesc->end = begin - 1;
+      }
+      arg_fdesc->ltype = lock->l_type;
+    }
     break;
 
   case F_SETLKW:
@@ -194,33 +208,33 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     /* Realize the syscall */
     /* lock = 0 ou 1 */
     if (!lock_bit){
-    reg->ret = -1;
-    /*Put errno to the right value*/
-  }
+      reg->ret = -1;
+      /*Put errno to the right value*/
+    }
     else
       reg->ret = 0;
 #endif
 
     if (reg->ret == 0){
-    arg_fdesc->lock = 1;
-    arg_fdesc->proc_locker = lock->l_pid;
+      arg_fdesc->lock = 1;
+      arg_fdesc->proc_locker = lock->l_pid;
 
-    off_t begin = lock->l_start + lock->l_whence;
-    off_t len = lock->l_len;
-    if (len > 0){
-    arg_fdesc->begin = begin;
-    arg_fdesc->end = begin + len - 1;
-  }
-    if  (len < 0){
-    arg_fdesc->begin = begin + len;
-    arg_fdesc->end = begin - 1;
-  }
-    if (len == 0){
-    arg_fdesc->begin = begin + len;
-    arg_fdesc->end = begin - 1;
-  }
-    arg_fdesc->ltype = lock->l_type;
-  }
+      off_t begin = lock->l_start + lock->l_whence;
+      off_t len = lock->l_len;
+      if (len > 0){
+	arg_fdesc->begin = begin;
+	arg_fdesc->end = begin + len - 1;
+      }
+      if  (len < 0){
+	arg_fdesc->begin = begin + len;
+	arg_fdesc->end = begin - 1;
+      }
+      if (len == 0){
+	arg_fdesc->begin = begin + len;
+	arg_fdesc->end = begin - 1;
+      }
+      arg_fdesc->ltype = lock->l_type;
+    }
     break;
 
   case F_GETLK:
@@ -250,7 +264,7 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break;
 
   case F_GETOWN:
-#ifndef address_trasnlation
+#ifndef address_translation
     /* TODO: full mediation */
 #endif
     if (reg->ret < 0)
@@ -314,9 +328,9 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break;
   }
 #ifndef address_translation
-    ptrace_neutralize_syscall(proc->pid);
-    ptrace_restore_syscall(proc->pid, SYS_fcntl, reg->ret);
-    proc_outside(proc);
+  ptrace_neutralize_syscall(proc->pid);
+  ptrace_restore_syscall(proc->pid, SYS_fcntl, reg->ret);
+  proc_outside(proc);
 #endif
 
-  }
+}
