@@ -1,4 +1,5 @@
-/* fcntl syscall over little file */
+/* fcntl syscall test over little file */
+/* Some weird things occur with the two last series of test*/
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 /* Author Louisa Bessad */
@@ -42,14 +43,16 @@ int main()
   flags = fcntl(fd_dup, F_GETFD);
   printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd_dup);
   printf("----------------------------------------\n");
-  int status_flags;
 
-  /* status_flags =  fcntl(fd, F_GETFL); */
-  /* printf("F_GETFL: Value of status flags %d for fd %d\n", status_flags, fd); */
-  /* status_flags = fcntl(fd, F_SETFL, O_APPEND); */
-  /* printf("F_SETFL: Return value %d  for fd %d\n", status_flags, fd); */
-  /* status_flags =  fcntl(fd, F_GETFL); */
-  /* printf("F_GETFL: Value of status flags %d for fd %d\n", status_flags, fd); */
+  int status_flags;
+  status_flags =  fcntl(fd, F_GETFL);
+  printf("F_GETFL: Value of status flags %d for fd %d\n", status_flags, fd);
+  status_flags = fcntl(fd, F_SETFL, O_RDONLY);
+  printf("F_SETFL: Return value %d  for fd %d\n", status_flags, fd);
+  status_flags = fcntl(fd, F_SETFL, O_APPEND);
+  printf("F_SETFL: Return value %d  for fd %d\n", status_flags, fd);
+  status_flags =  fcntl(fd, F_GETFL);
+  printf("F_GETFL: Value of status flags %d for fd %d\n", status_flags, fd);
   printf("----------------------------------------\n");
 
   struct flock * lock = (struct flock *) malloc(sizeof(struct flock));
@@ -59,20 +62,24 @@ int main()
   lock->l_len = 15;
   lock->l_pid = getpid();
 
-  /* printf("valeur de pointeur de lock %p et pid %d\n", lock, lock->l_pid); */
-  /* int ret; */
-  /* ret = fcntl(fd, F_SETLK, lock);  */
-  /* printf("F_SETLK: Return value %d  for fd %d \n", ret, fd); */
-  /* /\* ret = fcntl(fd, F_GETLK, lock); *\/ */
-  /* printf("F_GETLK: Return value %d for fd %d \n", ret, fd); */
+  int ret;
+  ret = fcntl(fd, F_GETLK, lock);
+  printf("F_GETLK: Return value %d for fd %d \n", ret, fd);
+  lock->l_type = F_RDLCK;
+  ret = fcntl(fd, F_SETLK, lock);
+  printf("F_SETLK: Return value %d  for fd %d \n", ret, fd);
+  ret = fcntl(fd, F_GETLK, lock);
+  printf("F_GETLK: Return value %d for fd %d \n", ret, fd);
   free(lock);
 
   printf("----------------------------------------\n");
-  /* printf("valeur cmd %d\n", F_GETOWN); */
-  /* ret = fcntl(fd, F_GETOWN); */
-  /* printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd); */
-  /* ret = fcntl(fd, F_SETOWN, getpid()); */
-  /* printf("F_SETOWN: Return value %d for fd %d \n", ret, fd); */
+  printf("valeur cmd %d\n", F_GETOWN);
+  ret = fcntl(fd, F_GETOWN);
+  printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd);
+  ret = fcntl(fd, F_SETOWN, getpid());
+  printf("F_SETOWN: Return value %d for fd %d \n", ret, fd);
+  ret = fcntl(fd, F_GETOWN);
+  printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd);
 
   return 0;
 }
