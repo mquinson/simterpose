@@ -32,10 +32,9 @@ void syscall_open(reg_s * reg, process_descriptor_t * proc)
       process_descriptor_set_fd(proc, reg->ret, file_desc);
       file_desc->refcount++;
     }
-    // TODO handle flags
+    // TODO handle flags in full mediation
     if (strace_option)
       print_open_syscall(reg, proc);
 
-  /*   XBT_DEBUG("An open syscall was made for the fd %d via reg %lu\n Value of flags %lu \n", arg->ret, reg->ret, arg->flags); */
   }
 }
