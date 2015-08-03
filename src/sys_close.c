@@ -19,14 +19,16 @@ void syscall_close(reg_s * reg, process_descriptor_t * proc)
   if (proc_entering(proc)) {
     proc_inside(proc);
   } else {
-    proc_outside(proc);
-    int fd = reg->arg[0];
-    process_close_call(proc, fd);
-    if(strace_option) {
-      stprintf(proc,"close(%d)",fd);
-      stprintf_tabto(proc);
-      stprintf(proc,"= %lu",reg->ret);
-      stprintf_eol(proc);
+    if (reg->ret == 0){
+      proc_outside(proc);
+      int fd = reg->arg[0];
+      process_close_call(proc, fd);
+      if(strace_option) {
+	stprintf(proc,"close(%d)",fd);
+	stprintf_tabto(proc);
+	stprintf(proc,"= %lu",reg->ret);
+	stprintf_eol(proc);
+      }
     }
   }
 }
