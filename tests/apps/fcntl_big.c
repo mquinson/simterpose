@@ -8,7 +8,8 @@
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
 #include <stdlib.h>
-#include<stdio.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <time.h>
 #include <errno.h>
@@ -16,8 +17,9 @@
 int main()
 {
   int fd = open("apps/toto", O_RDWR);
-  
-  int flags;
+  printf("return open %d\n", fd);
+    
+    int flags;
   flags = fcntl(fd, F_GETFD);
   printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd);
   flags = fcntl(fd, F_SETFD, FD_CLOEXEC);
@@ -73,7 +75,6 @@ int main()
   free(lock);
 
   printf("----------------------------------------\n");
-  printf("valeur cmd %d\n", F_GETOWN);
   ret = fcntl(fd, F_GETOWN);
   printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd);
   ret = fcntl(fd, F_SETOWN, getpid());
@@ -81,5 +82,10 @@ int main()
   ret = fcntl(fd, F_GETOWN);
   printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd);
 
+  ret = close(fd);
+  printf("return close %d\n", ret);
+  ret = close(fd_dup);
+  printf("return close %d\n", ret);
+    
   return 0;
 }

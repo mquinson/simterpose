@@ -22,6 +22,7 @@
 #include "sys_close.h"
 #include "sys_create.h"
 #include "sys_fcntl.h"
+#include "sys_lseek.h"
 #include "sys_dup2.h"
 #include "sys_open.h"
 #include "sys_pipe.h"

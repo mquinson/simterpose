@@ -100,6 +100,10 @@ int process_handle(process_descriptor_t * proc)
       syscall_fcntl(&arg, proc);
       break;
 
+    case SYS_lseek:
+      syscall_lseek(&arg, proc);
+      break;
+
     case SYS_poll:
       syscall_poll(&arg, proc);
       break;

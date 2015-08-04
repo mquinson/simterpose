@@ -76,6 +76,8 @@ typedef struct {
   int flags;
   int mode;
   int refcount;                   // reference counting
+  /* Fields for the file when it is not used as a socket or as a pipe */
+  off_t offset;
   short lock;
   short ltype;
   off_t begin;

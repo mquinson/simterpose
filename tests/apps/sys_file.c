@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <time.h>
 #include <errno.h>
@@ -82,6 +83,10 @@ int main()
   printf("F_SETOWN: Return value %d for fd %d \n", ret, fd);
   ret = fcntl(fd, F_GETOWN);
   printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd);
+
+  printf("----------------------------------------\n");
+  ret = lseek(fd, 150, SEEK_CUR);
+  printf("return lseek %d \n", ret);
 
   ret = close(fd);
   printf("return close %d\n", ret);

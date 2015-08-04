@@ -42,7 +42,6 @@ void syscall_fcntl(reg_s * reg, process_descriptor_t * proc)
 }
 
 /** @brief helper function to handle fcntl syscall */
-// TODO: handles the other flags
 void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
 {
   XBT_DEBUG("process fcntl");

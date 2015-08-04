@@ -22,7 +22,8 @@ add_executable(simterpose
   sys_getpeername.c
   sys_getsockopt.c
   sys_listen.c
-  sys_open.c
+  sys_lseek.c
+  sys_open.c		
   sys_pipe.c
   sys_poll.c
   sys_read.c
@@ -61,6 +62,7 @@ add_executable(simterpose
   include/sys_getpeername.h
   include/sys_getsockopt.h
   include/sys_listen.h
+  include/sys_lseek.h
   include/sys_open.h
   include/sys_pipe.h
   include/sys_poll.h

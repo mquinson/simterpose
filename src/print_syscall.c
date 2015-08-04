@@ -992,6 +992,13 @@ void print_fcntl_syscall(reg_s * reg, process_descriptor_t * proc)
   fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
 
+/** @brief print a strace-like log of lseek syscall */
+void print_lseek_syscall(reg_s * reg, process_descriptor_t * proc){
+  fprintf(proc->strace_out, "lseek(%d, ", (int) reg->arg[0]);
+  fprintf(proc->strace_out, "%d, %d)", (int) reg->arg[1], (int) reg->arg[2]);
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
+}
+
 /** @brief print a strace-like log of read syscall */
 void print_read_syscall(reg_s * reg, process_descriptor_t * proc)
 {
