@@ -30,5 +30,8 @@ void syscall_close(reg_s * reg, process_descriptor_t * proc)
 	stprintf_eol(proc);
       }
     }
+    
+    if (strace_option)
+      fprintf(stderr, "[%d] close(%d) = %d \n", proc->pid, (int) reg->arg[0], (int) reg->ret);
   }
 }

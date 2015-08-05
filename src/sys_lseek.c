@@ -51,4 +51,7 @@ fd_descriptor_t * file_fd = process_descriptor_get_fd(proc, fd);
     file_fd->offset = ret_off;
   else
     XBT_WARN("Error on lseek");
+
+ if (strace_option)
+   fprintf(stderr, "[%d] lseek(%d, %jd, %d) = %jd \n", proc->pid, fd, (off_t) reg->arg[1], (int) reg->arg[2], ret_off);
 }

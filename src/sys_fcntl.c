@@ -23,21 +23,12 @@ void syscall_fcntl(reg_s * reg, process_descriptor_t * proc)
   if (proc_entering(proc)) {
     proc_inside(proc);
     XBT_DEBUG("fcntl pre");
-#ifndef address_translation
-    process_fcntl_call(reg, proc);
-    
-    if (strace_option)
-      print_fcntl_syscall(reg, proc);
-    sleep(4);
-#endif
   } else {
     proc_outside(proc);
     XBT_DEBUG("fcntl post");
     if (strace_option)
       print_fcntl_syscall(reg, proc);
-#ifdef address_translation
     process_fcntl_call(reg, proc);
-#endif
   }
 }
 
@@ -75,7 +66,7 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
 
   fd_descriptor_t * arg_fdesc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
   fd_descriptor_t* file_desc_dup = xbt_malloc0(sizeof(fd_descriptor_t));
-  fd_descriptor_t* file_desc_dup_cloexec = xbt_malloc0(sizeof(fd_descriptor_t));
+  fd_descriptor_t* file_desc_dup_cloexec = xbt_malloc0(sizeof(fd_descriptor_t)); 
 
   switch (cmd) {
 
@@ -230,9 +221,6 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break;
 
   case F_GETOWN:
-#ifndef address_translation
-    /* TODO: full mediation */
-#endif
     if (reg->ret < 0)
       arg_fdesc->sig_group_id = fabs(reg->ret);
     else
@@ -290,10 +278,7 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     XBT_WARN("Unknown fcntl flag or non declared on this architecture");
     break;
   }
-#ifndef address_translation
-    ptrace_neutralize_syscall(proc->pid);
-    ptrace_restore_syscall(proc->pid, SYS_fcntl, reg->ret);
-    proc_outside(proc);
-#endif
 
-  }
+  if (strace_option)
+   fprintf(stderr, "[%d] fcntl(%d, %d) = %d \n", proc->pid, (int) reg->arg[0], (int) reg->arg[1], (int) reg->ret);
+}

@@ -28,7 +28,8 @@ void syscall_open(reg_s * reg, process_descriptor_t * proc)
       file_desc->proc = proc;
       file_desc->type = FD_CLASSIC;
       file_desc->flags = (int) reg->arg[1];
-      file_desc->mode = (int) reg->arg[2];
+      if ((reg->arg[1] & O_CREAT) == O_CREAT)
+	file_desc->mode = (int) reg->arg[2];
       file_desc->offset = 0;
       file_desc->lock = 0;
       process_descriptor_set_fd(proc, reg->ret, file_desc);
@@ -38,8 +39,13 @@ void syscall_open(reg_s * reg, process_descriptor_t * proc)
 	file_desc->flags |= FD_CLOEXEC;
     }
 
-    if (strace_option)
-      print_open_syscall(reg, proc);
-
+    /* if (strace_option) */
+    /*   print_open_syscall(reg, proc); */
+    if (strace_option){
+      fprintf(stderr, "[%d] open(%d, %d", proc->pid, (int) reg->arg[0], (int) reg->arg[1]);
+      if ((reg->arg[1] & O_CREAT) == O_CREAT)
+	fprintf(stderr, ", %d", (int) reg->arg[2]);
+      fprintf(stderr, ") = %d\n", (int) reg->ret);
+    }
   }
 }

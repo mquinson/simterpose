@@ -7,6 +7,8 @@
 
 #include "sys_create.h"
 
+#include "simterpose.h"
+
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles creat syscall at the entrance and the exit
@@ -37,4 +39,7 @@ void syscall_creat_post(reg_s * reg, process_descriptor_t * proc)
     process_descriptor_set_fd(proc, (int) reg->ret, file_desc);
     file_desc->refcount++;
   }
+
+ if (strace_option)
+   fprintf(stderr, "[%d] create(%d, %d) = %d \n", proc->pid, (int) reg->arg[0], (int) reg->arg[1], (int) reg->ret);
 }
