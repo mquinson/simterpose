@@ -44,21 +44,11 @@ void process_lseek_call(reg_s * reg, process_descriptor_t * proc){
 
   /* Retrieve the arguments */
   int fd = (int) reg->arg[0];
-  off_t cur_off = (off_t) reg->arg[1];
-  int whence = (int) reg->arg[2];
   off_t ret_off = (off_t) reg->ret;
 
 fd_descriptor_t * file_fd = process_descriptor_get_fd(proc, fd);
- 
-#ifndef address_translation
-  /* TODO */
-    ptrace_neutralize_syscall(proc->pid);
-    ptrace_restore_syscall(proc->pid, SYS_lseek, reg->ret);
-    proc_outside(proc);
-#else
   if (ret_off >= 0 )
     file_fd->offset = ret_off;
   else
     XBT_WARN("Error on lseek");
-#endif
 }

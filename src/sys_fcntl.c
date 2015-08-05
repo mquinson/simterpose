@@ -80,11 +80,6 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
   switch (cmd) {
 
   case F_DUPFD: 
-#ifndef address_translation
-    /* TODO: full mediation */
-    /* Find the lowest free fd and realize the syscall*/
-    /*reg->ret =*/ /*fd find*/
-#endif
     file_desc_dup->type = arg_fdesc->type;
     file_desc_dup->proc = proc;
     file_desc_dup->fd = (int) reg->ret;
@@ -107,11 +102,6 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break; 
 
   case F_DUPFD_CLOEXEC:
-#ifndef address_translation
-    /* TODO: full mediation */
-    /* Find the lowest free fd and realize the syscall don't forget to add the O_CLOEXEC flag */
-    /*reg->ret =*/ /*fd find */
-#endif
     file_desc_dup_cloexec->type = arg_fdesc->type;
     file_desc_dup_cloexec->proc = proc;
     file_desc_dup_cloexec->fd = (int) reg->ret;
@@ -124,17 +114,9 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break; 
 
   case F_GETFD:
-#ifndef address_translation
-    reg->ret = arg_fdesc->flags;
-#endif
     break;
 
   case F_SETFD:
-#ifndef address_translation
-    /* TODO : full mediation */
-    /* Change the flags in the memory of the file */
-    reg->ret = 0;
-#endif
     if (cmd_arg == FD_CLOEXEC)
       arg_fdesc->flags |= (int) cmd_arg;
     else 
@@ -142,21 +124,9 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break;
 
   case F_GETFL:
-#ifndef address_translation
-    reg->ret = socket_get_flags(proc, (int) reg->arg[0], cmd_arg);
-
-    /* TODO: full mediation */
-    /* If the fd is not a socket: */
-    /* reg->ret = process_descriptor_get_fd(proc, (int) reg->arg[0])->flags; */
-#endif
     break;
 
   case F_SETFL:
-#ifndef address_translation
-    /* TODO: full mediation */
-    /* Change manually the state and mode flags in memory of the file */
-    reg->ret = 0;
-#endif
     /* printf("Flags before %d \n", arg_fdesc->flags); */
 
     if ((cmd_arg == O_APPEND) || (cmd_arg == O_ASYNC) || (cmd_arg == O_NONBLOCK) /*  || (cmd_arg == O_DIRECT) || (cmd_arg == O_NOATIME) */){
@@ -170,10 +140,6 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break;
 
   case F_GETLK:
-#ifndef address_trasnlation
-    /* TODO: full mediation */
-#endif
-    
     if (lock->l_type == F_UNLCK) {
     /* printf("you can place a lock\n"); */
     arg_fdesc->ltype = F_UNLCK;
@@ -206,19 +172,6 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break;
 
   case F_SETLK:
-#ifndef address_translation
-    int lock_bit;
-    /* TODO: full mediation */
-    /* Realize the syscall */
-    /* lock = 0 ou 1 */
-    if (!lock_bit){
-    reg->ret = -1;
-    /*Put errno to the right value*/
-  }
-    else
-      reg->ret = 0;
-#endif
-
     if (reg->ret == 0){
     if ((lock->l_type == F_RDLCK) || (lock->l_type == F_WRLCK)){
     arg_fdesc->lock = 1;
@@ -254,19 +207,6 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break;
 
   case F_SETLKW:
-#ifndef address_translation
-    int lock_bit;
-    /* TODO: full mediation */
-    /* Realize the syscall */
-    /* lock = 0 ou 1 */
-    if (!lock_bit){
-    reg->ret = -1;
-    /*Put errno to the right value*/
-  }
-    else
-      reg->ret = 0;
-#endif
-
     if (reg->ret == 0){
     arg_fdesc->lock = 1;
     arg_fdesc->proc_locker = lock->l_pid;
@@ -300,9 +240,6 @@ void process_fcntl_call(reg_s * reg, process_descriptor_t * proc)
     break;
 
   case F_SETOWN:
-#ifndef address_trasnlation
-    /* TODO: full mediation */
-#endif
     if (reg->arg[2] < 0)
       arg_fdesc->sig_group_id = fabs(reg->arg[2]);
     else
