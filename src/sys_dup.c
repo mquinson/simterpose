@@ -1,46 +1,41 @@
-/* sys_dup2 -- Handles dup2 syscall */
+/* sys_dup -- Handles dup syscall */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "sys_dup2.h"
+#include "sys_dup.h"
 
 #include "simterpose.h"
 #include "syscall_process.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
-/** @brief handles dup2 syscall at the entrance and the exit */
-void syscall_dup2(reg_s * reg, process_descriptor_t * proc){
+/** @brief handles dup syscall at the entrance and the exit */
+void syscall_dup(reg_s * reg, process_descriptor_t * proc){
 
   if (proc_entering(proc))
     proc_inside(proc);
   else
-    syscall_dup2_post(reg, proc);
+    syscall_dup_post(reg, proc);
 
 }
 
-/** @brief handles dup2 at the exit
+/** @brief handles dup at the exit
     Update the table of file descriptors, and also the pipe objects if needed */
-void syscall_dup2_post(reg_s * reg, process_descriptor_t * proc)
+void syscall_dup_post(reg_s * reg, process_descriptor_t * proc)
 {
   proc_outside(proc);
   unsigned int oldfd = (int) reg->arg[0];
-  unsigned int newfd = (int) reg->arg[1];
+  unsigned int newfd = (int) reg->ret;
 
   fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, oldfd);
   file_desc->refcount++;
-  fd_descriptor_t *file_desc_new = process_descriptor_get_fd(proc, newfd);
-  if (file_desc_new != NULL){
-    file_desc_new->refcount--;
-    process_close_call(proc, newfd);
-  }
   process_descriptor_set_fd(proc, newfd, file_desc);
 
   if (strace_option)
-    fprintf(stderr, "[%d] dup2(%d, %d) = %d \n", proc->pid, oldfd, newfd, (int) reg->ret);
+    fprintf(stderr, "[%d] dup(%d, %d) = %d \n", proc->pid, oldfd, newfd, (int) reg->ret);
 
   if (file_desc->type == FD_PIPE) {
     pipe_t *pipe = file_desc->pipe;

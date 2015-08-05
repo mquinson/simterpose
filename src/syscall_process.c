@@ -93,8 +93,13 @@ int process_handle(process_descriptor_t * proc)
 	return ret;
       break;
 
+    case SYS_dup:
+      syscall_dup(&arg, proc);
+      break;
+
     case SYS_dup2:
       syscall_dup2(&arg, proc);
+      break;
 
     case SYS_fcntl:
       syscall_fcntl(&arg, proc);

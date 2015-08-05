@@ -15,6 +15,7 @@ add_executable(simterpose
   sys_close.c
   sys_connect.c
   sys_create.c
+  sys_dup.c
   sys_dup2.c
   sys_execve.c
   sys_exit.c
@@ -55,6 +56,7 @@ add_executable(simterpose
   include/sys_connect.h
   include/sys_create.h
   include/sysdep.h
+  include/sys_dup.h
   include/sys_dup2.h
   include/sys_execve.h
   include/sys_exit.h
