@@ -28,8 +28,9 @@ void syscall_open(reg_s * reg, process_descriptor_t * proc)
       file_desc->proc = proc;
       file_desc->type = FD_CLASSIC;
       file_desc->flags = (int) reg->arg[1];
-      file_desc->mode = reg->arg[2];
+      file_desc->mode = (int) reg->arg[2];
       file_desc->offset = 0;
+      file_desc->lock = 0;
       process_descriptor_set_fd(proc, reg->ret, file_desc);
       file_desc->refcount++;
    

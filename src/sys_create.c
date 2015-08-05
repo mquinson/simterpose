@@ -30,6 +30,10 @@ void syscall_creat_post(reg_s * reg, process_descriptor_t * proc)
     file_desc->fd = (int) reg->ret;
     file_desc->proc = proc;
     file_desc->type = FD_CLASSIC;
+    file_desc->flags = O_CREAT|O_WRONLY|O_TRUNC;
+    file_desc->mode = (int) reg->arg[1];
+    file_desc->offset = 0;
+    file_desc->lock = 0;
     process_descriptor_set_fd(proc, (int) reg->ret, file_desc);
     file_desc->refcount++;
   }
