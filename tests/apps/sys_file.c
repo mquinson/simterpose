@@ -17,7 +17,16 @@
 
 int main()
 {
-  int fd = open("apps/test_little.txt", O_RDWR);
+  struct timeval * ti = (struct timeval * ) malloc(sizeof(struct timeval));
+  gettimeofday(ti, NULL);
+  printf("Time with gettimeofday: %lld %lld\n", (long long) ti->tv_sec,  (long long) ti->tv_usec);
+  char * ti_s = (char *) malloc(sizeof(char));
+  ti_s = ctime(&ti->tv_sec);
+  char * ti_us = (char *) malloc(sizeof(char));
+  ti_us = ctime(&ti->tv_usec);
+  printf("Time with gettimeofday in char: %s %s\n", ti_s, ti_us);
+
+  int fd = open("apps/toto", O_RDWR);
   printf("return open %d\n", fd);
     
   int flags;
@@ -85,6 +94,15 @@ int main()
   printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd);
 
   printf("----------------------------------------\n");
+  ret = write(fd, "abcdefge", 8);
+  printf("ret %d\n", ret);
+  char * buf = (char *) malloc(8*sizeof(char));
+  ret = lseek(fd, 0, SEEK_SET);
+  printf("return lseek %d \n", ret);
+  read(fd, buf, 8);
+  printf("read %s\n", buf);
+
+  printf("----------------------------------------\n");
   ret = lseek(fd, 150, SEEK_CUR);
   printf("return lseek %d \n", ret);
 
@@ -92,6 +110,13 @@ int main()
   printf("return close %d\n", ret);
   ret = close(fd_dup);
   printf("return close %d\n", ret);
-  
+
+  gettimeofday(ti, NULL);
+  printf("Time with gettimeofday: %lld %lld\n", (long long) ti->tv_sec,  (long long) ti->tv_usec);
+
+  ti_s = ctime(&ti->tv_sec);
+  ti_us = ctime(&ti->tv_usec);
+  printf("Time with gettimeofday in char: %s %s\n", ti_s, ti_us);
+
   return 0;
 }
