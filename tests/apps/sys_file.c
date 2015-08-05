@@ -28,7 +28,11 @@ int main()
 
   int fd = open("apps/toto", O_RDWR);
   printf("return open %d\n", fd);
-    
+  int fd_creat = creat("apps/test.txt", S_IRWXU);
+  printf("return create %d\n", fd_creat);
+  /* dup2(fd, 15); */
+  dup(fd);
+
   int flags;
   flags = fcntl(fd, F_GETFD);
   printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd);
@@ -56,6 +60,14 @@ int main()
   printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd_dup);
   printf("----------------------------------------\n");
 
+  int ret;
+  /* int fd_dup_sys = dup(fd); */
+  /* printf("fd_dup %d\n", fd_dup_sys); */
+  ret = dup2(fd, fd_dup);
+  printf("ret dup %d\n", ret);
+  /* ret = dup2(fd, fd_dup_sys); */
+  /* printf("ret dup %d\n", ret); */
+
   int status_flags;
   status_flags =  fcntl(fd, F_GETFL);
   printf("F_GETFL: Value of status flags %d for fd %d\n", status_flags, fd);
@@ -74,7 +86,7 @@ int main()
   lock->l_len = 15;
   lock->l_pid = getpid();
 
-  int ret;
+  /* int ret; */
   ret = fcntl(fd, F_GETLK, lock);
   printf("F_GETLK: Return value %d for fd %d \n", ret, fd);
   lock->l_type = F_RDLCK;
