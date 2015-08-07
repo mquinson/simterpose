@@ -5,6 +5,8 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
+#include <string.h>
+
 #include "sys_recvmsg.h"
 
 #include "data_utils.h"
@@ -38,14 +40,15 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
   void * data;
   size_t len = 0;
   struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
-  ptrace_cpy(pid, (void *) msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
-
+  ptrace_cpy(pid, msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
+  
   int i;
   for (i = 0; i < msg->msg_iovlen; ++i) {
     struct iovec temp;
     ptrace_cpy(pid, &temp, msg->msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
     len += temp.iov_len;
   }
+
   if ( reg->ret > 0) {
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
     file_desc->refcount++;
@@ -65,7 +68,6 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
 
         reg->ret = (ssize_t) MSG_task_get_bytes_amount(task);
         data = MSG_task_get_data(task);
-
         if (err != MSG_OK) {
           struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);
           int sock_status = socket_get_state(is);
@@ -101,7 +103,7 @@ void syscall_recvmsg_post(pid_t pid, reg_s * reg, process_descriptor_t * proc)
   XBT_DEBUG("recvmsg_post");
 
  struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
-  ptrace_cpy(pid, (void *) msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
+  ptrace_cpy(pid, msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
   size_t len = 0;
   int i;
   for (i = 0; i < msg->msg_iovlen; ++i) {
@@ -119,25 +121,23 @@ void syscall_recvmsg_post(pid_t pid, reg_s * reg, process_descriptor_t * proc)
 void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, void * data, struct msghdr * msg)
 {
   pid_t pid = proc->pid;
-  ptrace_restore_syscall(pid, SYS_recvmsg, (ssize_t) reg->ret);
-
   int length = (ssize_t) reg->ret;
-  int global_size = 0;
+  ssize_t bytes_read = 0;
+  int global_size = 0; /* TODO: What is this */
   int i;
  for (i = 0; i < msg->msg_iovlen; ++i) {
-    if (length < 0)
-      break;
-
-    struct iovec temp;
+   
+   struct iovec temp;
     ptrace_cpy(pid, &temp, msg->msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
 
-    if (length < temp.iov_len)
-      temp.iov_len = length;
-
+    if (temp.iov_len < 0)
+      break;
+    
+    bytes_read += strlen(data);
+    
     ptrace_poke(pid, msg->msg_iov + i * sizeof(struct iovec), &temp, sizeof(struct iovec));
-
     ptrace_poke(pid, temp.iov_base, (char *) data + global_size, temp.iov_len);
 
   }
-  /* free(arg->data); */
+ ptrace_restore_syscall(pid, SYS_recvmsg, bytes_read);
 }

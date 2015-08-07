@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/timeb.h>
+#include <sys/time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,18 +29,22 @@ int main(int argc, char **argv)
   u_short port = atoi(argv[1]);
   int msg_count = atoi(argv[2]);
   int buffer_size = atoi(argv[3]);
-
-  struct timespec tvcl;
-  clock_gettime(CLOCK_REALTIME, &tvcl);
-  fprintf(stderr, "msg_server starting on port %d: #msg: %d;(time: %d; clock_gettime: %f)\n",
-          port, msg_count, (int)time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
-
+  
+  fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", port, msg_count, buffer_size);
+  struct timeval * ti = (struct timeval * ) malloc(sizeof(struct timeval));
+  gettimeofday(ti, NULL);
+  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
+  char * ti_s = (char *) malloc(sizeof(char));
+  ti_s = ctime(&ti->tv_sec);
+  char * ti_us = (char *) malloc(sizeof(char));
+  ti_us = ctime(&ti->tv_usec);
+  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
 
   int serverSocket;
   char *buff = malloc(buffer_size);
   int res;
   int client_socket;
-
+  
   if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("Server: error socket");
     exit(1);
@@ -72,17 +76,14 @@ int main(int argc, char **argv)
   int clilen = sizeof(struct sockaddr_in);
   struct sockaddr_in *cli_addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
 
-
   if ((client_socket = accept(serverSocket, (struct sockaddr *) cli_addr, (socklen_t *) & clilen)) < 0) {
     perror("Server: error accepting real connection");
     exit(1);
   }
   struct iovec iov[1];
   struct msghdr msg;
-
   int msg_number = 0;
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
-
     iov[0].iov_base = buff;
     iov[0].iov_len = buffer_size;
 
@@ -90,7 +91,6 @@ int main(int argc, char **argv)
     msg.msg_iovlen = 1;
     msg.msg_name = NULL;
     msg.msg_namelen = 0;
-
 
     res = recvmsg(client_socket, &msg, 0);
     if (res == -1) {
@@ -103,10 +103,12 @@ int main(int argc, char **argv)
   shutdown(client_socket, 2);
   close(client_socket);
 
-  struct timespec end_tvcl;
-  clock_gettime(CLOCK_REALTIME, &end_tvcl);
-  fprintf(stderr, "OK: Server exiting after %d messages (time: %d; clock_gettime: %f)\n",
-          msg_count, (int)time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
-
+  gettimeofday(ti, NULL);
+  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
+  ti_s = ctime(&ti->tv_sec);
+  ti_us = ctime(&ti->tv_usec);
+  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
+  fprintf(stderr, "Server exiting after %d msgs\n", msg_count);
+  
   return 0;
 }

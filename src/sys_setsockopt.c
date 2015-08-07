@@ -9,6 +9,7 @@
 
 #include "print_syscall.h"
 #include "simterpose.h"
+#include "sockets.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
@@ -23,19 +24,22 @@ void syscall_setsockopt(reg_s * reg, process_descriptor_t * proc){
 }
 
 /** @brief handles setsockopt syscall at the entrance if in full mediation */
+/* We consider that optval is uselly an int */
 void syscall_setsockopt_pre(reg_s * reg, process_descriptor_t * proc)
 {
   proc_inside(proc);
 #ifndef address_translation
   pid_t pid = proc->pid;
-  //TODO really handles setsockopt that currently raise a warning
-  reg->ret = 0;
-  
-  if (arg->optname == SO_REUSEADDR)
-    socket_set_option(proc, (int) reg->arg[0], SOCK_OPT_REUSEADDR, *(int *) reg->arg[3]);
-  else
+  if ( (int) reg->arg[2] == SO_REUSEADDR){
+    int * optval = xbt_malloc(sizeof(int));
+    ptrace_cpy(proc->pid, optval, (void *) reg->arg[3], sizeof(int), "setsockopt");
+    socket_set_option(proc, (int) reg->arg[0], SOCK_OPT_REUSEADDR, *optval);
+    reg->ret = 0;
+  }
+  else{
     XBT_WARN("Option non supported by Simterpose.");
-  
+    reg->ret = -1;
+  }
   ptrace_neutralize_syscall(pid);
   ptrace_restore_syscall(pid, SYS_setsockopt, (int) reg->ret);
 

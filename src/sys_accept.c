@@ -29,7 +29,6 @@ void syscall_accept(reg_s * reg, process_descriptor_t * proc)
   
   int domain = get_domain_socket(proc, sockfd);
   pid_t pid = proc->pid;
-    
   if (proc_entering(proc)) {
     XBT_DEBUG("syscall_accept_pre");
     proc_inside(proc);
@@ -46,15 +45,15 @@ void syscall_accept(reg_s * reg, process_descriptor_t * proc)
     stream->to_server = MSG_host_get_name(MSG_host_self());
 
     XBT_DEBUG("Socket for accepting %lu", reg->arg[0]);
+    
+    if (domain == 2)              // PF_INET
+      ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
+    if (domain == 1)              // PF_UINX
+      ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "accept");
+    if (domain == 16)             // PF_NETLINK
+      ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "accept");
 
-  if (domain == 2)              // PF_INET
-    ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
-  if (domain == 1)              // PF_UINX
-    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
-  if (domain == 16)             // PF_NETLINK
-    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "accept");
-
-  ptrace_cpy(pid, &addrlen, (void *) reg->arg[2], sizeof(socklen_t), "accept");
+    ptrace_cpy(pid, &addrlen, (void *) reg->arg[2], sizeof(socklen_t), "accept");
 
     file_desc->stream = stream;
     XBT_DEBUG("accept_in: trying to take server semaphore ...");
@@ -73,7 +72,7 @@ void syscall_accept(reg_s * reg, process_descriptor_t * proc)
       ptrace_resume_process(conn_proc->pid);
 #else
       comm_accept_connect(get_infos_socket(proc, sockfd), &in);
-      arg->sai = in;
+      sai = in;
 #endif
 
 #ifndef address_translation
@@ -85,14 +84,14 @@ void syscall_accept(reg_s * reg, process_descriptor_t * proc)
       ptrace_neutralize_syscall(pid);
       proc_outside(proc);
       
-      ptrace_restore_syscall(pid, SYS_accept, reg->ret);
+      ptrace_restore_syscall(pid, SYS_accept, (int) reg->ret);
 
       ptrace_poke(pid, addr, &sai, sizeof(struct sockaddr_in));
 
       process_accept_out_call(reg, proc);
 
       if (strace_option)
-	print_accept_syscall(reg, proc);
+      	print_accept_syscall(reg, proc);
 
       XBT_DEBUG("accept_in: did the accept_out, before I go on I'm trying to take server semaphore ...");
       MSG_sem_acquire(file_desc->stream->sem_server);

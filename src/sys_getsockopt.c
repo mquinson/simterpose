@@ -9,6 +9,7 @@
 
 #include "print_syscall.h"
 #include "simterpose.h"
+#include "sockets.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
@@ -66,8 +67,8 @@ void syscall_getsockopt_post(reg_s * reg, process_descriptor_t * proc)
 {
   proc_outside(proc);
 #ifndef address_translation
-  arg->optval = xbt_new0(char, arg->optlen);
- ptrace_cpy(proc->pid, arg->optval, (void *) arg->dest, arg->optlen, "setsockopt");
+  void * optval = xbt_new0(char, (socklen_t) reg->arg[4]);
+  ptrace_cpy(proc->pid, optval, (void *) reg->arg[3], (socklen_t) reg->arg[4], "setsockopt");
 #endif
 
   if (strace_option)

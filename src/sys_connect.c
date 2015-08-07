@@ -45,9 +45,9 @@ int syscall_connect_pre(reg_s * reg, process_descriptor_t * proc)
   if (domain == 2)              // PF_INET
     ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
   if (domain == 1)              // PF_UNIX
-    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "connect");
   if (domain == 16)             // PF_NETLINK
-    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "connect");
 
 
   if (process_connect_in_call(reg, proc)) {
@@ -97,9 +97,9 @@ void syscall_connect_post(reg_s * reg, process_descriptor_t * proc)
   if (domain == 2)              // PF_INET
     ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
   if (domain == 1)              // PF_UNIX
-    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "connect");
   if (domain == 16)             // PF_NETLINK
-    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "connect");
   
 #ifdef address_translation
   domain = get_domain_socket(proc, sockfd);

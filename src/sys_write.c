@@ -35,7 +35,7 @@ int syscall_write(reg_s * reg, process_descriptor_t * proc)
   pid_t pid = proc->pid;
   if (socket_registered(proc, fd)) {
     if (socket_network(proc, fd)) {
-      data = xbt_new0(char, arg->count);
+      data = xbt_new0(char, (size_t) reg->arg[2]);
       ptrace_cpy(pid, data, (void *) reg->arg[1], count, "write");
     }
   }

@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/timeb.h>
+#include <sys/time.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,11 +31,15 @@ int main(int argc, char **argv) {
   int msg_count = atoi(argv[3]);
   int msg_size = atoi(argv[4]);
 
-  struct timespec tvcl;
-  clock_gettime(CLOCK_REALTIME, &tvcl);
   fprintf(stderr, "Client starting: #msg: %d; size:%d (the server is on %s:%d) \n", msg_count, msg_size, IP, server_port);
-  //fprintf(stderr, "(Client, time: %d; clock_gettime: %f)\n", time(NULL), tvcl.tv_sec + tvcl.tv_nsec / 1000000000.0);
-
+  struct timeval * ti = (struct timeval * ) malloc(sizeof(struct timeval));
+  gettimeofday(ti, NULL);
+  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
+  char * ti_s = (char *) malloc(sizeof(char));
+  ti_s = ctime(&ti->tv_sec);
+  char * ti_us = (char *) malloc(sizeof(char));
+  ti_us = ctime(&ti->tv_usec);
+  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
 
   int clientSocket;
   int res;
@@ -90,11 +94,12 @@ int main(int argc, char **argv) {
   shutdown(clientSocket, 2);
   close(clientSocket);
 
-  struct timespec end_tvcl;
-  clock_gettime(CLOCK_REALTIME, &end_tvcl);
+  gettimeofday(ti, NULL);
+  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
+  ti_s = ctime(&ti->tv_sec);
+  ti_us = ctime(&ti->tv_usec);
+  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
   fprintf(stderr, "Client exiting after %d msgs \n", msg_count);
-  //fprintf(stderr, "(Client, time: %d; clock_gettime: %f)\n", time(NULL), end_tvcl.tv_sec + end_tvcl.tv_nsec / 1000000000.0);
-  //fprintf(stderr, "(Client, Elapsed clock_gettime: %f)\n", (end_tvcl.tv_sec - tvcl.tv_sec) + (end_tvcl.tv_nsec - tvcl.tv_nsec)/ 1000000000.0);
 
   return 0;
 }

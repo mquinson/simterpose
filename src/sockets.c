@@ -120,7 +120,6 @@ int socket_get_option(process_descriptor_t * proc, int fd, int option)
 void socket_set_option(process_descriptor_t * proc, int fd, int option, int value)
 {
   struct infos_socket *is = get_infos_socket(proc, fd);
-
   if (is == NULL)
     return;
   if (value)

@@ -216,10 +216,10 @@ void print_accept_syscall(reg_s * reg, process_descriptor_t * proc)
     fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai.sin_port),
 	    inet_ntoa(sai.sin_addr));
   } else if (domain == 1) {     //PF_UNIX
-    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau.sun_path);
   } else if (domain == 16) {    //PF_NETLINK
-     ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+     ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl.nl_pid, snl.nl_groups);
   } else {
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
@@ -247,10 +247,10 @@ void print_connect_syscall(reg_s * reg, process_descriptor_t * proc)
     fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai.sin_port),
 	    inet_ntoa(sai.sin_addr));
   } else if (domain == 1) {     //PF_UNIX
-     ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+     ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau.sun_path);
   } else if (domain == 16) {    //PF_NETLINK
-     ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+     ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl.nl_pid, snl.nl_groups);
   } else {
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
@@ -276,10 +276,10 @@ void print_bind_syscall(reg_s * reg, process_descriptor_t * proc)
     fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai.sin_port),
 	    inet_ntoa(sai.sin_addr));
   } else if (domain == 1) {     //PF_UNIX
-    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "bind");
+    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "bind");
     fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau.sun_path);
   } else if (domain == 16) {    //PF_NETLINK
-    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "bind");
+    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "bind");
     fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl.nl_pid, snl.nl_groups);
   } else {
     fprintf(proc->strace_out, "{sockaddr unknown}, ");

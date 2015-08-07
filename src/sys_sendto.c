@@ -58,9 +58,9 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, stru
     if (domain == 2)            // PF_INET
       ptrace_cpy(pid, &sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
     if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
+      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "sendto");
     if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
+      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "sendto");
   } else
     is_addr = 0;
 
@@ -116,9 +116,9 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, process_descriptor_t * proc, str
     if (domain == 2)            // PF_INET
       ptrace_cpy(pid, &sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
     if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
+      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "sendto");
     if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
+      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "sendto");
   } else
     is_addr = 0;
 

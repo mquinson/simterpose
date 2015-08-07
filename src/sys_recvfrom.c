@@ -56,9 +56,9 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
     if (domain == 2)            // PF_INET
       ptrace_cpy(pid, &sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
     if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
+      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "recvfrom");
     if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
+      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "recvfrom");
   } else
     is_addr = 0;
 
@@ -142,9 +142,9 @@ void syscall_recvfrom_post(reg_s * reg, process_descriptor_t * proc, void * data
     if (domain == 2)            // PF_INET
       ptrace_cpy(pid, &sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
     if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
+      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "recvfrom");
     if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
+      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "recvfrom");
   } else
     is_addr = 0;
 

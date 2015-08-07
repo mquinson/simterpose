@@ -27,15 +27,16 @@ int syscall_sendmsg(reg_s * reg, process_descriptor_t * proc)
 {
   void * data = NULL;
   pid_t pid = proc->pid;
-  struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
+  struct msghdr * msg = (struct msghdr *) xbt_malloc0(sizeof(struct msghdr));
   size_t len = 0; 
 
   ptrace_cpy(pid, msg, (void *) reg->arg[1], sizeof(struct msghdr), "sendmsg");
 #ifndef address_translation
   int i;
+  struct iovec * temp = (struct iovec *) xbt_malloc0(sizeof(struct iovec));
+ 
   for (i = 0; i < msg->msg_iovlen; ++i) {
-    struct iovec * temp;
-    ptrace_cpy(pid, &temp, msg->msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "sendmsg");
+    ptrace_cpy(pid, temp, msg->msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "sendmsg");
     data = realloc(data, len + temp->iov_len);
     ptrace_cpy(pid, (char *) data + len, temp->iov_base, temp->iov_len, "sendmsg");
     len += temp->iov_len;

@@ -16,8 +16,8 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 /** @brief handles bind syscall at the entrance and the exit */
 void syscall_bind(reg_s * reg, process_descriptor_t * proc){
 
-  if (proc_entering(proc))
-    syscall_bind_pre(reg, proc);
+  if (proc_entering(proc)){
+    syscall_bind_pre(reg, proc);}
   else
     syscall_bind_post(reg, proc);
 }
@@ -41,9 +41,9 @@ void syscall_bind_pre(reg_s * reg, process_descriptor_t * proc)
   if (domain == 2)              // PF_INET
     ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "bind");
   if (domain == 1)              // PF_UNIX
-    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_in), "bind");
+    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "bind");
   if (domain == 16)             // PF_NETLINK
-    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_in), "bind");
+    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "bind");
 
   if (socket_registered(proc, sockfd)) {
     if (socket_network(proc, sockfd)) {
@@ -78,6 +78,7 @@ void syscall_bind_pre(reg_s * reg, process_descriptor_t * proc)
         return;
 #endif
       } else {
+	printf("coucou je bind en pas translation\n");
 	XBT_DEBUG("Port %d isn't free", ntohs(sai.sin_port));
         reg->ret = -EADDRINUSE; /* EADDRINUSE 98 Address already in use */
 
