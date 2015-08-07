@@ -28,9 +28,8 @@ int main()
   printf("Time with gettimeofday in char: %s %s\n", ti_s, ti_us);
 
   int fd = open("apps/toto", O_RDWR);
-  printf("return open %d\n", fd);
     
-    int flags;
+  int flags;
   flags = fcntl(fd, F_GETFD);
   printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd);
   flags = fcntl(fd, F_SETFD, FD_CLOEXEC);

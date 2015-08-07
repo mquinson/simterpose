@@ -8,6 +8,7 @@
 #include "sys_open.h"
 
 #include "print_syscall.h"
+#include "ptrace_utils.h"
 #include "simterpose.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
@@ -21,6 +22,9 @@ void syscall_open(reg_s * reg, process_descriptor_t * proc)
   } else {
     proc_outside(proc);
 
+    char * pathname = (char *) xbt_malloc(200*sizeof(char));
+    ptrace_cpy(proc->pid, pathname, (void *) reg->arg[0], 200*sizeof(char), "open");
+  
     if (((int) reg->ret) >= 0) {
       fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
       file_desc->refcount = 0;
@@ -42,7 +46,7 @@ void syscall_open(reg_s * reg, process_descriptor_t * proc)
     /* if (strace_option) */
     /*   print_open_syscall(reg, proc); */
     if (strace_option){
-      fprintf(stderr, "[%d] open(%d, %d", proc->pid, (int) reg->arg[0], (int) reg->arg[1]);
+      fprintf(stderr, "[%d] open(%s, %d", proc->pid, pathname, (int) reg->arg[1]);
       if ((reg->arg[1] & O_CREAT) == O_CREAT)
 	fprintf(stderr, ", %d", (int) reg->arg[2]);
       fprintf(stderr, ") = %d\n", (int) reg->ret);

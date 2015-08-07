@@ -14,7 +14,7 @@ add_executable(simterpose
   sys_clone.c
   sys_close.c
   sys_connect.c
-  sys_create.c
+  sys_creat.c
   sys_dup.c
   sys_dup2.c
   sys_execve.c
@@ -54,7 +54,7 @@ add_executable(simterpose
   include/sys_clone.h
   include/sys_close.h
   include/sys_connect.h
-  include/sys_create.h
+  include/sys_creat.h
   include/sysdep.h
   include/sys_dup.h
   include/sys_dup2.h

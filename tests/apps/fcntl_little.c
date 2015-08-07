@@ -28,7 +28,6 @@ int main()
   printf("Time with gettimeofday in char: %s %s\n", ti_s, ti_us);
 
   int fd = open("apps/test_little.txt", O_RDWR);
-  printf("return open %d\n", fd);
     
   int flags;
   flags = fcntl(fd, F_GETFD);

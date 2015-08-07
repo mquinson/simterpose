@@ -5,8 +5,9 @@
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
 
-#include "sys_create.h"
+#include "sys_creat.h"
 
+#include "ptrace_utils.h"
 #include "simterpose.h"
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
@@ -26,6 +27,10 @@ void syscall_creat(reg_s * reg, process_descriptor_t * proc){
 void syscall_creat_post(reg_s * reg, process_descriptor_t * proc)
 {
   proc_outside(proc);
+  char * pathname = (char *) xbt_malloc(200*sizeof(char));
+  ptrace_cpy(proc->pid, pathname, (void *) reg->arg[0], 200*sizeof(char), "open");
+    
+  
   if ((int) reg->ret >= 0) {
     fd_descriptor_t *file_desc = xbt_malloc0(sizeof(fd_descriptor_t));
     file_desc->refcount = 0;
@@ -41,5 +46,5 @@ void syscall_creat_post(reg_s * reg, process_descriptor_t * proc)
   }
 
  if (strace_option)
-   fprintf(stderr, "[%d] create(%d, %d) = %d \n", proc->pid, (int) reg->arg[0], (int) reg->arg[1], (int) reg->ret);
+   fprintf(stderr, "[%d] create(%s, %d) = %d \n", proc->pid, pathname, (int) reg->arg[1], (int) reg->ret);
 }
