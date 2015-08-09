@@ -1,3 +1,11 @@
+/* sendto_server -- A server listening to sendto_client using sendto/recvfrom   */
+/*           Its only merit is to constitute a test case for simterpose         */
+
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU GPLv2) which comes with this package. */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -28,64 +36,63 @@ int main()
   if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("error socket");
     exit(1);
-  } else {
+  } 
 
-    struct sockaddr_in *serv_addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
-    memset((char *) serv_addr, (char) 0, sizeof(struct sockaddr_in));
-
-
-    port = SERV_PORT;
-    serv_addr->sin_family = AF_INET;
-    serv_addr->sin_port = htons(port);
-    serv_addr->sin_addr.s_addr = INADDR_ANY;
+  struct sockaddr_in *serv_addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
+  memset((char *) serv_addr, (char) 0, sizeof(struct sockaddr_in));
 
 
-    int on = 1;
-    if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-      perror("error setsockopt");
-      exit(1);
-    }
+  port = SERV_PORT;
+  serv_addr->sin_family = AF_INET;
+  serv_addr->sin_port = htons(port);
+  serv_addr->sin_addr.s_addr = INADDR_ANY;
 
 
-    if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
-      perror("error getsockopt");
-      exit(1);
-    }
-
-    if (bind(serverSocket, (struct sockaddr *) serv_addr, sizeof(struct sockaddr_in)) < 0) {
-      perror("error bind");
-      exit(1);
-    } else {
-      if (listen(serverSocket, SOMAXCONN) < 0) {
-        perror("error listen");
-        exit(1);
-      } else {
-        fprintf(stderr, "Attente demande de connexion\n");
-        socklen_t clilen = sizeof(struct sockaddr_in);
-        struct sockaddr_in cli_addr;
-
-        if ((client_socket = accept(serverSocket, (struct sockaddr *) &cli_addr, (socklen_t *) & clilen)) < 0) {
-          perror("error accept");
-          exit(1);
-        } else {
-          struct in_addr in = { cli_addr.sin_addr.s_addr };
-          fprintf(stderr, "Here %d %s\n", cli_addr.sin_addr.s_addr, inet_ntoa(in));
-          fprintf(stderr, "Connect to client  %s:%d\n", inet_ntoa(in), ntohs(cli_addr.sin_port));
-
-          int ia = 0;
-          for (ia = 0; ia < 1000; ++ia) {
-            res = recvfrom(client_socket, buff, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, (socklen_t *) & clilen);
-            if (res == -1) {
-              perror("erreur réception server");
-              exit(1);
-            }
-            fprintf(stderr, "Message reçu du client %s\n", buff);
-          }
-
-        }
-      }
-    }
+  int on = 1;
+  if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
+    perror("error setsockopt");
+    exit(1);
   }
+
+
+  if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
+    perror("error getsockopt");
+    exit(1);
+  }
+
+  if (bind(serverSocket, (struct sockaddr *) serv_addr, sizeof(struct sockaddr_in)) < 0) {
+    perror("error bind");
+    exit(1);
+  }
+  
+  if (listen(serverSocket, SOMAXCONN) < 0) {
+    perror("error listen");
+    exit(1);
+  }
+  fprintf(stderr, "Attente demande de connexion\n");
+  
+  socklen_t clilen = sizeof(struct sockaddr_in);
+  struct sockaddr_in cli_addr;
+
+  if ((client_socket = accept(serverSocket, (struct sockaddr *) &cli_addr, (socklen_t *) &clilen)) < 0) {
+    perror("error accept");
+    exit(1);
+  }
+  
+  struct in_addr in = { cli_addr.sin_addr.s_addr };
+  fprintf(stderr, "Here %d %s\n", cli_addr.sin_addr.s_addr, inet_ntoa(in));
+  fprintf(stderr, "Connect to client  %s:%d\n", inet_ntoa(in), ntohs(cli_addr.sin_port));
+
+  int ia;
+  for (ia = 0; ia < 10; ++ia){
+    res = recvfrom(client_socket, buff, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, (socklen_t *) & clilen);
+    if (res == -1) {
+      perror("erreur réception server");
+      exit(1);
+    }
+    fprintf(stderr, "Message reçu du client %s\n", buff);
+  }
+  printf("[%d] coucou\n", getpid());
 
   return 0;
 }

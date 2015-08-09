@@ -4,10 +4,14 @@ provided scripts start the simulation with all the needed parameters.
  apps/                  The little applications used in tests
 
  send_clientserver.sh:  Client/server app using send / recv       (works)
+ 			Useless because send and recv syscalls are not yet
+			implemented
  msg_clientserver.sh:   Client/server app using sendmsg / recvmsg (works)
- fcntl_little.sh: 	Fcntl syscall test file (works except the two last tests)
+ fcntl_little.sh: 	Fcntl syscall test file
+ 			(works except the two last tests)
  fcntl_big.sh:		Idem
-
+ sys_file.sh		Test file system syscalls
+ 			(read/write, open/close, creat, fcntl, lseek, dup/dup2)
 
  allpairs.sh:           Simterpose test using allpair, but it's not working yet
  allpair/               Usecase of allpair

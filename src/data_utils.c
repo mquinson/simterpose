@@ -325,7 +325,6 @@ translate_desc_t *get_translation(int real_port)
   XBT_DEBUG("Get translation for port %d", real_port);
   char buff[6];
   sprintf(buff, "%d", real_port);
-
   return xbt_dict_get_or_null(global_data->list_translate, buff);
 }
 

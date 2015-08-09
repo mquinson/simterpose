@@ -19,9 +19,9 @@ void syscall_recvfrom(reg_s * reg, process_descriptor_t * proc){
   
   void * data;
   void * dest;
-  struct sockaddr_in * sai;
-  struct sockaddr_un * sau;
-  struct sockaddr_nl * snl;
+  struct sockaddr_in * sai = (struct sockaddr_in *) xbt_malloc0(sizeof(struct sockaddr_in));
+  struct sockaddr_un * sau = (struct sockaddr_un *) xbt_malloc0(sizeof(struct sockaddr_un));
+  struct sockaddr_nl * snl = (struct sockaddr_nl *) xbt_malloc0(sizeof(struct sockaddr_nl));
   
   if (proc_entering(proc))
     syscall_recvfrom_pre(reg, proc, data, dest, sai, sau, snl);
@@ -45,20 +45,21 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
   socklen_t len;
   socklen_t addrlen;
   int is_addr;
-
+  printf("[%d] je suis dedans\n", pid);
   proc_inside(proc);
   // XBT_DEBUG("[%d] RECVFROM_pre", pid);
   XBT_DEBUG("RECVFROM_pre");
 
   int domain = get_domain_socket(proc, (int) reg->arg[0]);
-  if ( (int) reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
+    printf("[%d] domaine %d\n", pid, domain);
+  if ((int) reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     is_addr = 1;
     if (domain == 2)            // PF_INET
-      ptrace_cpy(pid, &sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
+      ptrace_cpy(pid, sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
     if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "recvfrom");
+      ptrace_cpy(pid, sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "recvfrom");
     if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "recvfrom");
+      ptrace_cpy(pid, snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "recvfrom");
   } else
     is_addr = 0;
 
@@ -72,13 +73,16 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
 
 #ifdef address_translation
   if (socket_registered(proc, (int) reg->arg[0]) != -1) {
+    
     if (socket_network(proc, (int) reg->arg[0])) {
       sys_translate_recvfrom_out(reg, proc, sai);
+printf("coucou je sors du ifdefr\n");
     }
   }
 #endif
-
+  printf("je suis toujours là %lu\n", reg->ret);
   if ( reg->ret > 0) {
+    
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
     file_desc->refcount++;
 
@@ -91,10 +95,10 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
           mailbox = file_desc->stream->to_server;
         else
           THROW_IMPOSSIBLE;
-
+	printf("hello %p %s\n", mailbox, mailbox);
         msg_task_t task = NULL;
         msg_error_t err = MSG_task_receive(&task, mailbox);
-
+	printf("hello\n");
         reg->ret = (ssize_t) MSG_task_get_bytes_amount(task);
         data = MSG_task_get_data(task);
 
@@ -122,6 +126,7 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
       }
     }
   }
+  printf("[%d] finir le pre\n", proc->pid);
   XBT_DEBUG("recvfrom_pre");
 }
 
@@ -187,12 +192,14 @@ void process_recvfrom_out_call(reg_s * reg, process_descriptor_t * proc, void * 
 void sys_translate_recvfrom_out(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai)
 {
   pid_t pid = proc->pid;
-
   if ( (int) reg->arg[4] == 0)
     return;
 
+  printf("[%d] addr sai %p\n", proc->pid, sai);
   translate_desc_t *td = get_translation(ntohs(sai->sin_port));
   sai->sin_port = htons(td->port_num);
   sai->sin_addr.s_addr = td->ip;
+  printf("I ll try to poke\n");
   ptrace_poke(pid, (void *) reg->arg[4], &sai, sizeof(struct sockaddr_in));
+  printf("i poked\n");
 }

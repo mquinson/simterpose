@@ -19,10 +19,10 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 int syscall_sendto(pid_t pid, reg_s * reg, process_descriptor_t * proc){
 
   int ret;
-  struct sockaddr_in * sai;
-  struct sockaddr_un * sau;
-  struct sockaddr_nl * snl;
-
+  struct sockaddr_in * sai = (struct sockaddr_in *) xbt_malloc0(sizeof(struct sockaddr_in));
+  struct sockaddr_un * sau = (struct sockaddr_un *) xbt_malloc0(sizeof(struct sockaddr_un));
+  struct sockaddr_nl * snl = (struct sockaddr_nl *) xbt_malloc0(sizeof(struct sockaddr_nl));
+  
   if (proc_entering(proc))
     ret = syscall_sendto_pre(pid, reg, proc, sai, sau, snl);
   else
@@ -45,7 +45,8 @@ int syscall_sendto(pid_t pid, reg_s * reg, process_descriptor_t * proc){
 int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
   proc_inside(proc);
-#ifndef address_translation
+  printf("[%d] je suis dedans\n", pid);
+
   //  XBT_DEBUG("[%d] sendto_pre", pid);
   XBT_DEBUG("sendto_pre");
   void * data;
@@ -53,14 +54,15 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, stru
   int is_addr;
 
   int domain = get_domain_socket(proc, (int) reg->arg[0]);
+  printf("[%d] domaine %d\n", pid, domain);
   if ( (int) reg->arg[4] != 0) {         // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     is_addr = 1;
     if (domain == 2)            // PF_INET
-      ptrace_cpy(pid, &sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
+      ptrace_cpy(pid, sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "sendto");
     if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, &sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "sendto");
+      ptrace_cpy(pid, sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "sendto");
     if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, &snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "sendto");
+      ptrace_cpy(pid, snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "sendto");
   } else
     is_addr = 0;
 
@@ -69,11 +71,12 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, stru
   ptrace_cpy(pid, data, (void *) reg->arg[1], (size_t) reg->arg[2], "sendto");
 #endif
 
-     if ( (int) reg->arg[4] != 0) {   // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
+  if ( (int) reg->arg[4] != 0) {   // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     addrlen = (socklen_t) reg->arg[5];
   } else
     addrlen = 0;
-
+  
+#ifndef address_translation
   process_descriptor_t remote_proc;
   if (process_send_call(reg, proc, &remote_proc, data)) {
     ptrace_neutralize_syscall(pid);
@@ -86,11 +89,13 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, stru
     return PROCESS_TASK_FOUND;
   }
 #else
+  printf("[%d] pas full mediation\n", pid);
   if (socket_registered(proc, (int) reg->arg[0]) != -1) {
     if (socket_network(proc, (int) reg->arg[0]))
       sys_translate_sendto_in(reg, proc, sai, sau, snl);
   }
 #endif
+  printf("je sors du pré\n");
   return PROCESS_CONTINUE;
 }
 
@@ -127,7 +132,7 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, process_descriptor_t * proc, str
   ptrace_cpy(pid, data, (void *) reg->arg[1], (size_t) reg->arg[2], "sendto");
 #endif
 
-     if ( (int) reg->arg[4] != 0) {   // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
+  if ( (int) reg->arg[4] != 0) {   // syscall "send" doesn't exist on x86_64, it's sendto with struct sockaddr=NULL and addrlen=0
     addrlen = (socklen_t) reg->arg[5];
   } else
     addrlen = 0;
@@ -167,9 +172,19 @@ void sys_translate_sendto_in(reg_s * reg, process_descriptor_t * proc, struct so
   XBT_DEBUG("Translate address %s:%d", inet_ntoa(in), ntohs(sai->sin_port));
 
   struct sockaddr_in * temp = sai;
+  printf("[%d] i want real ports\n", proc->pid);
+  printf("[%d] %p %p\n", proc->pid, temp, sai);
+  printf("[%d] port to get %d \n", proc->pid, sai->sin_port);
+  printf("[%d] port to get %d \n", proc->pid, temp->sin_port);
+  ntohs(temp->sin_port);
+  printf("blabla\n");
+  printf("[%d] %p %p\n", proc->pid, &temp->sin_addr, &sai->sin_addr);
+    printf("blabla\n");
   int port = get_real_port(proc, temp->sin_addr.s_addr, ntohs(temp->sin_port));
+  printf("[%d] i get real ports\n", proc->pid);
   temp->sin_addr.s_addr = inet_addr("127.0.0.1");
   temp->sin_port = htons(port);
+  printf("[%d] i get real ports\n", proc->pid);
   ptrace_poke(pid, (void *) reg->arg[4], &temp, sizeof(struct sockaddr_in));
   XBT_DEBUG("Using 127.0.0.1:%d", port);
 }
@@ -183,7 +198,7 @@ void sys_translate_sendto_in(reg_s * reg, process_descriptor_t * proc, struct so
  */
 void sys_translate_sendto_out(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
-   pid_t pid = proc->pid;
+  pid_t pid = proc->pid;
 
   if ( (int) reg->arg[4] == 0)
     return;
