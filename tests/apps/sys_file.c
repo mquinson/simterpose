@@ -1,4 +1,4 @@
-/* fcntl syscall test over little file */
+/* sysfile syscall test */
 /* Some weird things occur with the two last series of test*/
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
