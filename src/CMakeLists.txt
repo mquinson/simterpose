@@ -85,3 +85,7 @@ set_target_properties(simterpose
   PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/src"
 )
+
+add_library(sgtime SHARED lib_time.c)
+target_link_libraries(sgtime m dl ${SIMGRID_LIBRARIES})
+

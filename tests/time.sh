@@ -18,4 +18,4 @@ LD_LIBRARY_PATH=$sim_dir/lib/
 LD_LIBRARY_PATH=../src/lib_time.so:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH
 # export LD_PRELOAD=../src/lib_time.so
-sudo LD_PRELOAD=../src/lib_time.so $runner ../src/simterpose -s multicore_machine.xml time.xml
+sudo LD_PRELOAD=../src/libsgtime.so $runner ../src/simterpose -s multicore_machine.xml time.xml
