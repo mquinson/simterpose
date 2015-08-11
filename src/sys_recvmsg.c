@@ -48,8 +48,9 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
     ptrace_cpy(pid, &temp, msg->msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
     len += temp.iov_len;
   }
-
+#ifdef address_translation
   if ( reg->ret > 0) {
+#endif
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
     file_desc->refcount++;
 
@@ -91,7 +92,9 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
     }
     file_desc->refcount--;
     file_desc = NULL;
+#ifdef address_translation
   }
+#endif
   XBT_DEBUG("recvmsg_pre");
 }
 
@@ -102,7 +105,7 @@ void syscall_recvmsg_post(pid_t pid, reg_s * reg, process_descriptor_t * proc)
   // XBT_DEBUG("[%d] recvmsg_out", pid);
   XBT_DEBUG("recvmsg_post");
 
- struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
+  struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
   ptrace_cpy(pid, msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
   size_t len = 0;
   int i;
@@ -125,9 +128,9 @@ void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, void * data, st
   ssize_t bytes_read = 0;
   int global_size = 0; /* TODO: What is this */
   int i;
- for (i = 0; i < msg->msg_iovlen; ++i) {
+  for (i = 0; i < msg->msg_iovlen; ++i) {
    
-   struct iovec temp;
+    struct iovec temp;
     ptrace_cpy(pid, &temp, msg->msg_iov + i * sizeof(struct iovec), sizeof(struct iovec), "recvmsg");
 
     if (temp.iov_len < 0)
@@ -139,5 +142,5 @@ void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, void * data, st
     ptrace_poke(pid, temp.iov_base, (char *) data + global_size, temp.iov_len);
 
   }
- ptrace_restore_syscall(pid, SYS_recvmsg, bytes_read);
+  ptrace_restore_syscall(pid, SYS_recvmsg, bytes_read);
 }
