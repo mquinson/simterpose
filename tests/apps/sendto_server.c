@@ -28,7 +28,7 @@
 int main()
 {
   int serverSocket;
-  char *buff = malloc(BUFFER_SIZE);
+  char *buff = (char *) malloc(BUFFER_SIZE);
   u_short port;
   int res;
   int client_socket;

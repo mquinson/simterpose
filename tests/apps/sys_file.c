@@ -125,5 +125,9 @@ int main()
   ti_us = ctime(&ti->tv_usec);
   printf("Time with gettimeofday in char: %s %s\n", ti_s, ti_us);
 
+  struct timespec *tp = (struct timespec *) malloc(sizeof(struct timespec));
+  clock_gettime(CLOCK_REALTIME, tp);
+  printf("Time with clock_gettime: %d %ld\n", tp->tv_sec, tp->tv_nsec);
+  
   return 0;
 }

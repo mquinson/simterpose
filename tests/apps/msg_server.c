@@ -41,7 +41,7 @@ int main(int argc, char **argv)
   printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
 
   int serverSocket;
-  char *buff = malloc(buffer_size);
+  char *buff = (char *) malloc(buffer_size);
   int res;
   int client_socket;
   

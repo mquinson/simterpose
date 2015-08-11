@@ -27,8 +27,6 @@ void LogWrap(char *mess){
 int ftime(struct timeb *tp){
   LogWrap("ftime call\n");
   double sec = MSG_get_clock();
-  /* double sec = 10.15; */
-  double time = floor(sec);
   tp->time = floor(sec);
   tp->millitm = (sec - floor(sec)) * 1000;
   tp->timezone = 0;
@@ -39,12 +37,17 @@ int ftime(struct timeb *tp){
 
 time_t time(time_t *t){
   LogWrap("time call\n");
-  /* double sec = MSG_get_clock(); */
-  double sec = 12.10;
+  double sec = MSG_get_clock();
   if ( t != NULL)
     *t = (time_t) sec;
   LogWrap("time call done \n");  
   return (time_t) sec;    
+}
+
+int gettimeofday(struct timeval *restrict tp, void *restrict tzp){
+  LogWrap("gettimeofday call\n");
+  printf("This function is obsolescent, call clock_gettime()\n");
+  LogWrap("gettimeofday done call\n");
 }
 
 struct tm * localtime(const time_t *timep){
@@ -63,7 +66,23 @@ int clock_getres(clockid_t clk_id, struct timespec *res){
 }
 
 int clock_gettime(clockid_t clk_id, struct timespec *tp){
-  printf("[%d] [clock_gettime] Unhandled function\n",getpid());
+  LogWrap("clock_gettime call\n");
+  if (clk_id == CLOCK_REALTIME){
+    double sec = MSG_get_clock();
+    tp->tv_sec = floor(sec);
+    tp->tv_nsec = (sec - floor(sec))*pow(10,9);
+    printf("%d %ld\n", tp->tv_sec, tp->tv_nsec);
+  }
+
+  if ((clk_id == CLOCK_MONOTONIC) ||
+      (clk_id == CLOCK_PROCESS_CPUTIME_ID) ||
+      (clk_id == CLOCK_THREAD_CPUTIME_ID))
+    printf("[%d] [clock_gettime] Unhandled clock\n",getpid());
+  else
+    printf("[%d] [clock_gettime] This clock does not exist\n",getpid());
+
+  LogWrap("clock_gettime done call\n");
+    
   return 0;
 }
 

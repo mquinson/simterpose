@@ -12,7 +12,7 @@
 
 int main(){
 
-  struct timeb * tp = malloc (sizeof(struct timeb));
+  struct timeb * tp = (struct timeb *) malloc (sizeof(struct timeb));
   ftime(tp);
   printf("tp->time = %d\n", tp->time);
   printf("tp->time = %d\n", tp->millitm);
@@ -23,7 +23,7 @@ int main(){
   const time_t *timep = NULL;
   localtime(timep);
   
-  struct tm *tm = malloc(sizeof(struct tm));
+  struct tm *tm = (struct tm *) malloc(sizeof(struct tm));
   mktime(NULL);
   
   clock_getres(0, NULL);

@@ -17,4 +17,5 @@ runner=$2
 LD_LIBRARY_PATH=$sim_dir/lib/
 export LD_LIBRARY_PATH
 
-sudo $runner ../src/simterpose -s multicore_machine.xml sys_file.xml
+# sudo $runner ../src/simterpose -s multicore_machine.xml sys_file.xml
+sudo LD_PRELOAD=../src/libsgtime.so  $runner ../src/simterpose -s multicore_machine.xml sys_file.xml
