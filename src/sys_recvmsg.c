@@ -37,7 +37,7 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
   //  XBT_DEBUG("[%d] recvmsg_in", pid);
   XBT_DEBUG("recvmsg_pre");
   
-  void * data;
+  void * data = NULL;
   size_t len = 0;
   struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
   ptrace_cpy(pid, msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");

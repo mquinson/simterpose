@@ -45,8 +45,7 @@ int syscall_sendto(pid_t pid, reg_s * reg, process_descriptor_t * proc){
 int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
   proc_inside(proc);
-  printf("[%d] sendto je suis dedans\n", pid);
-
+  
   //  XBT_DEBUG("[%d] sendto_pre", pid);
   XBT_DEBUG("sendto_pre");
   void * data = NULL;
@@ -91,18 +90,14 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, stru
     return PROCESS_TASK_FOUND;
   }
 #else
-  printf("[%d] snedto pas full mediation\n", pid);
   if (socket_registered(proc, (int) reg->arg[0]) != -1) {
-    printf("sendto 1if\n");
     if (socket_network(proc, (int) reg->arg[0])){
-      printf("sendto 2 if\n");
       if((get_type_socket(proc, (int) reg->arg[0]) != SOCK_STREAM)
 	 && (get_type_socket(proc, (int) reg->arg[0]) != SOCK_SEQPACKET))
 	sys_translate_sendto_in(reg, proc, sai, sau, snl);
     }
   }
 #endif
-  printf(" sendto je sors du pré\n");
   return PROCESS_CONTINUE;
 }
 
@@ -121,8 +116,7 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, process_descriptor_t * proc, str
   void * data = NULL;
   socklen_t addrlen = 0;
   int is_addr = 0;  
-  printf("[%d] sendto begin post\n", pid);
-
+  
   if((get_type_socket(proc, (int) reg->arg[0]) != SOCK_STREAM)
      && (get_type_socket(proc, (int) reg->arg[0]) != SOCK_SEQPACKET))
     {      
