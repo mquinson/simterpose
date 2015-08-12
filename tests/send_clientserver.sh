@@ -16,6 +16,6 @@ runner=$2
 
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$sim_dir/lib/
 export LD_LIBRARY_PATH
-
+rm -f *.log
 sudo $runner ../src/simterpose -s platform.xml send_clientserver.xml
 #--log=simterpose.:debug #--log=simix_synchro.:debug  --log=msg.:debug #--log=root.fmt:"'%l: [%c/%p]: %m%n'" #--log=simix.:debug

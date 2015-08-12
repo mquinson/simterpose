@@ -53,7 +53,6 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
     file_desc->refcount++;
 
-    printf("enter recvfrom\n");
     if (socket_registered(proc, (int) reg->arg[0]) != -1) {
       if (!socket_netlink(proc, (int) reg->arg[0])) {
         const char *mailbox = NULL;
@@ -81,9 +80,9 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
           proc_outside(proc);
           process_recvfrom_out_call(reg, proc, data, dest, sai, sau, snl, is_addr, addrlen);
         } else {
-	  process_recvfrom_out_call(reg, proc, data, dest, sai, sau, snl, is_addr, addrlen);
 	  ptrace_neutralize_syscall(proc->pid);
 	  proc_outside(proc);
+	  process_recvfrom_out_call(reg, proc, data, dest, sai, sau, snl, is_addr, addrlen);
 #endif
         }
         MSG_task_destroy(task);
@@ -136,10 +135,9 @@ void process_recvfrom_out_call(reg_s * reg, process_descriptor_t * proc, void * 
   }
     
   len_data = strlen((char *) data) + 1;
-  ptrace_cpy(pid, &len_buf, (void *) reg->arg[2], sizeof(size_t), "recvfrom");
-    
+  len_buf = (size_t) reg->arg[2];
   if (len_buf >= len_data){
-    ptrace_poke(pid, (void *) reg->arg[1], data, (ssize_t) reg->ret);
+    ptrace_poke(pid, (void *) reg->arg[1], data, len_data);
     reg->ret = len_data;
   }
   else{
@@ -150,6 +148,7 @@ void process_recvfrom_out_call(reg_s * reg, process_descriptor_t * proc, void * 
   
   if (strace_option)
     print_recvfrom_syscall(reg, proc, data, sai, sau, snl, is_addr, addrlen);
+
 
 }
 

@@ -24,12 +24,11 @@
 
 int main()
 {
-  printf("hello client\n");
   int clientSocket;
   u_short port;
   int res;
   char buff[BUFFER_SIZE];
-  strcpy(buff, "Message from client \n ");
+  strcpy(buff, "Message from client");
   int server_socket;
   long host_addr;
   struct hostent *serverHostEnt;
@@ -47,7 +46,7 @@ int main()
   port = SERV_PORT;
   cli_addr.sin_family = AF_INET;
   cli_addr.sin_port = htons(port);
-  printf("hello server\n");
+  
   if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
     fprintf(stderr, "Connection demand failed\n");
     exit(0);
@@ -58,7 +57,8 @@ int main()
   int ia;
   
   for (ia = 0; ia < 5; ++ia) {
-    res = sendto(clientSocket, buff, strlen(buff) + 1, 0, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in));
+    size_t len = strlen(buff) + 1;
+    res = sendto(clientSocket, buff, len, 0, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in));
 
     if (res == -1) {
       perror("Error send client");

@@ -53,14 +53,14 @@ int main()
     exit(1);
   }
 
-  printf("hello server\n");
 
-  if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
-    perror("Error getsockopt");
-    exit(1);
-  }
 
-  printf("hello server\n");
+  /* if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) { */
+  /*   perror("Error getsockopt"); */
+  /*   exit(1); */
+  /* } */
+
+
   
   if (bind(serverSocket, (struct sockaddr *) serv_addr, sizeof(struct sockaddr_in)) < 0) {
     perror("Error bind");
@@ -92,7 +92,7 @@ int main()
       perror("Error server reception");
       exit(1);
     }
-    fprintf(stderr, "Receive message #%d from client %s\n", ia, buff);
+    fprintf(stderr, "Receive message #%d from client: \"%s\"\n", ia, buff);
   }
 
   shutdown(client_socket, SHUT_RDWR);
