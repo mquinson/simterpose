@@ -5,6 +5,8 @@
 
 set -e # fail fast
 
+rm -f *.log
+make -C ../src/ clean
 make -C ../src/ simterpose
 make -C apps/   sendto_server sendto_client
 

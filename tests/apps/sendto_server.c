@@ -27,11 +27,11 @@
 
 int main()
 {
-  int serverSocket = 0;
+  int serverSocket;
   char *buff = (char *) malloc(BUFFER_SIZE);
-  u_short port = 0;
-  int res = 0;
-  int client_socket = 0;
+  u_short port;
+  int res;
+  int client_socket;
 
   if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("Error socket");
@@ -93,5 +93,8 @@ int main()
     fprintf(stderr, "Receive message #%d from client %s\n", ia, buff);
   }
 
+  shutdown(client_socket, SHUT_RDWR);
+   close(client_socket);
+  
   return 0;
 }

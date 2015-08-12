@@ -88,10 +88,10 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
 #endif
         }
         MSG_task_destroy(task);
-        file_desc->refcount--;
-        file_desc = NULL;
       }
     }
+    file_desc->refcount--;
+    file_desc = NULL;
 #ifdef address_translation
   }
 #endif
