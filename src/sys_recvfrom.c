@@ -171,17 +171,24 @@ void process_recvfrom_out_call(reg_s * reg, process_descriptor_t * proc, void * 
 void sys_translate_recvfrom_out(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, socklen_t len, socklen_t len_buf)
 {
   pid_t pid = proc->pid;
+  struct sockaddr * sockaddr;
+  
   if ((struct sockaddr *) reg->arg[4] == NULL)
-    return;
-
-  translate_desc_t *td = get_translation(ntohs(sai->sin_port));
-  sai->sin_port = htons(td->port_num);
-  sai->sin_addr.s_addr = td->ip;
-
-  if (len <= len_buf)
-    ptrace_poke(pid, (void *) reg->arg[4], &sai, len);
+    exit;
   else{
-    XBT_DEBUG("recvfrom traduction buffer too small");
-    ptrace_poke(pid, (void *) reg->arg[4], &sai, len_buf);
+    ptrace_cpy(proc->pid, sockaddr, (void *) reg->arg[4], sizeof(sockaddr), "recvfrom");
+    ptrace_cpy(proc->pid, &len_buf, (void *) reg->arg[5], sizeof(socklen_t), "recvfrom");  
+  }
+
+  if (len_buf > sizeof(sockaddr))
+    XBT_DEBUG("recvfrom traduction buffer was too small, the address is truncated \n No traduction available \n");
+  else {
+    sai = (struct sockaddr_in *) sockaddr;
+    translate_desc_t *td = get_translation(ntohs(sai->sin_port));
+    sai->sin_port = htons(td->port_num);
+    sai->sin_addr.s_addr = td->ip;
+    ptrace_poke(proc->pid, (void *) reg->arg[4], sai, sizeof(sai));
+    len_buf = sizeof(sai);
+    ptrace_poke(proc->pid, (void *) reg->arg[5], &len_buf, sizeof(socklen_t)); 
   }
 }
