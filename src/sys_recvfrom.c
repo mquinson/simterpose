@@ -41,8 +41,6 @@ void syscall_recvfrom(reg_s * reg, process_descriptor_t * proc){
  */
 void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data, void * dest, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
-  pid_t pid = proc->pid;
-  socklen_t len = 0;
   socklen_t addrlen = 0;
   int is_addr = 0;
   proc_inside(proc);
@@ -104,43 +102,43 @@ void syscall_recvfrom_post(reg_s * reg, process_descriptor_t * proc, void * data
   proc_outside(proc);
   // XBT_DEBUG("[%d] recvfrom_out", pid);
   XBT_DEBUG("recvfrom_post");
-  pid_t pid = proc->pid;
-  socklen_t len = 0;
+  /* pid_t pid = proc->pid; */
+  /* socklen_t len = 0; */
   socklen_t addrlen = 0;
   int is_addr = 0;
-  int domain = get_domain_socket(proc, (int) reg->arg[0]);
-  
+  /* int domain = get_domain_socket(proc, (int) reg->arg[0]); */
+
   if ((struct sockaddr *) reg->arg[4] != NULL) {
-    is_addr = 1;
-    ptrace_cpy(pid, &len, (void *) reg->arg[5], sizeof(socklen_t), "recvfrom");
-    addrlen = len;
-    if (domain == 2)            // PF_INET
-      ptrace_cpy(pid, sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom");
-    if (domain == 1)            // PF_UNIX
-      ptrace_cpy(pid, sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "recvfrom");
-    if (domain == 16)           // PF_NETLINK
-      ptrace_cpy(pid, snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "recvfrom");
-  } else
-    is_addr = 0;
+    /*  is_addr = 1; */
+    /*   ptrace_cpy(pid, &len, (void *) reg->arg[5], sizeof(socklen_t), "recvfrom"); */
+    /*   addrlen = len; */
+    /*   if (domain == 2)            // PF_INET */
+    /*     ptrace_cpy(pid, sai, (void *) reg->arg[4], sizeof(struct sockaddr_in), "recvfrom"); */
+    /*   if (domain == 1)            // PF_UNIX */
+    /*     ptrace_cpy(pid, sau, (void *) reg->arg[4], sizeof(struct sockaddr_un), "recvfrom"); */
+    /*   if (domain == 16)           // PF_NETLINK */
+    /*     ptrace_cpy(pid, snl, (void *) reg->arg[4], sizeof(struct sockaddr_nl), "recvfrom"); */
+    /* } else */
+    /*   is_addr = 0; */
 
-  if (socket_registered(proc, (int) reg->arg[0]) != -1) {
-    if (socket_network(proc, (int) reg->arg[0])) {
-      switch(domain){
-      case 2:
-	sys_translate_recvfrom_out(reg, proc, sai, sizeof(struct sockaddr_in), addrlen);
-	break;
+    if (socket_registered(proc, (int) reg->arg[0]) != -1) {
+      if (socket_network(proc, (int) reg->arg[0])) {
+	/* switch(domain){ */
+	/* case 2: */
+		sys_translate_recvfrom_out(reg, proc, sai);
+	/* 	break; */
 
-      case 1:
-	sys_translate_recvfrom_out(reg, proc, (struct sockaddr_in *) sau, sizeof(struct sockaddr_un), addrlen);
-	break;
+	/* case 1: */
+	/* 	sys_translate_recvfrom_out(reg, proc, (struct sockaddr_in *) sau, sizeof(struct sockaddr_un), addrlen); */
+	/* 	break; */
 
-      case 16:
-	sys_translate_recvfrom_out(reg, proc, (struct sockaddr_in *) snl, sizeof(struct sockaddr_nl), addrlen);
-	break;
+	/* case 16: */
+	/* sys_translate_recvfrom_out(reg, proc, (struct sockaddr_in *) snl, sizeof(struct sockaddr_nl), addrlen); */
+	/* 	break; */
+	/* } */
       }
     }
   }
-  
   if (strace_option)
     print_recvfrom_syscall(reg, proc, data, sai, sau, snl, is_addr, addrlen);
 }
@@ -168,21 +166,21 @@ void process_recvfrom_out_call(reg_s * reg, process_descriptor_t * proc, void * 
  * into global simulated ones and put the result back in the registers, so
  * that the application gets wronged.
  */
-void sys_translate_recvfrom_out(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, socklen_t len, socklen_t len_buf)
+void sys_translate_recvfrom_out(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai)
 {
-  pid_t pid = proc->pid;
-  struct sockaddr * sockaddr;
-  
+  struct sockaddr * sockaddr = xbt_malloc0(sizeof(struct sockaddr));
+  socklen_t len_buf;
   if ((struct sockaddr *) reg->arg[4] == NULL)
-    exit;
+    return;
   else{
     ptrace_cpy(proc->pid, sockaddr, (void *) reg->arg[4], sizeof(sockaddr), "recvfrom");
     ptrace_cpy(proc->pid, &len_buf, (void *) reg->arg[5], sizeof(socklen_t), "recvfrom");  
   }
 
-  if (len_buf > sizeof(sockaddr))
-    XBT_DEBUG("recvfrom traduction buffer was too small, the address is truncated \n No traduction available \n");
-  else {
+  /* if (len_buf > sizeof(sockaddr)) */
+  /*   ABORT("recvfrom traduction buffer was too small, the address is truncated \n No traduction available"); */
+  /* else { */
+  if (len_buf == sizeof(sockaddr)){
     sai = (struct sockaddr_in *) sockaddr;
     translate_desc_t *td = get_translation(ntohs(sai->sin_port));
     sai->sin_port = htons(td->port_num);
