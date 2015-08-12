@@ -24,6 +24,7 @@
 
 int main()
 {
+  printf("hello client\n");
   int clientSocket;
   u_short port;
   int res;
@@ -46,7 +47,7 @@ int main()
   port = SERV_PORT;
   cli_addr.sin_family = AF_INET;
   cli_addr.sin_port = htons(port);
-
+  printf("hello server\n");
   if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
     fprintf(stderr, "Connection demand failed\n");
     exit(0);

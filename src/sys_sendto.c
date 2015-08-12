@@ -45,10 +45,11 @@ int syscall_sendto(pid_t pid, reg_s * reg, process_descriptor_t * proc){
 int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
   proc_inside(proc);
-  
+      printf("enter sendto\n");
   //  XBT_DEBUG("[%d] sendto_pre", pid);
   XBT_DEBUG("sendto_pre");
   void * data = NULL;
+  size_t len_buf;
   socklen_t addrlen = 0;
   int is_addr = 0;
 
@@ -76,7 +77,8 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, stru
   
 #ifndef address_translation
   data = xbt_new0(char, (size_t) reg->arg[2]);
-  ptrace_cpy(pid, data, (void *) reg->arg[1], (size_t) reg->arg[2], "sendto");
+  ptrace_cpy(pid, &len_buf, (void *) reg->arg[2], sizeof(size_t), "sendto");
+  ptrace_cpy(pid, data, (void *) reg->arg[1], len_buf, "sendto");
 
   process_descriptor_t remote_proc;
   if (process_send_call(reg, proc, &remote_proc, data)) {
@@ -138,14 +140,9 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, process_descriptor_t * proc, str
 	addrlen = 0;
     }
 
-#ifndef address_translation
-  data = xbt_new0(char, (size_t) reg->arg[2]);
-  ptrace_cpy(pid, data, (void *) reg->arg[1], (size_t) reg->arg[2], "sendto");
-#endif
-
   if (strace_option)
     print_sendto_syscall(reg, proc, data, is_addr, addrlen, sai, sau, snl);
-#ifdef address_translation
+
   if (socket_registered(proc, (int) reg->arg[0]) != -1) {
     if (socket_network(proc, (int) reg->arg[0])) {
         if((get_type_socket(proc, (int) reg->arg[0]) != SOCK_STREAM)
@@ -158,7 +155,7 @@ int syscall_sendto_post(pid_t pid, reg_s * reg, process_descriptor_t * proc, str
     if (process_send_call(reg, proc, &remote_proc, data))
       return PROCESS_TASK_FOUND;
   }
-#endif
+  
   return PROCESS_CONTINUE;
 }
 

@@ -27,7 +27,7 @@
 
 int main()
 {
-  int serverSocket;
+   int serverSocket;
   char *buff = (char *) malloc(BUFFER_SIZE);
   u_short port;
   int res;
@@ -47,19 +47,21 @@ int main()
   serv_addr->sin_port = htons(port);
   serv_addr->sin_addr.s_addr = INADDR_ANY;
 
-
   int on = 1;
   if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
     perror("Error setsockopt");
     exit(1);
   }
 
+  printf("hello server\n");
 
   if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
     perror("Error getsockopt");
     exit(1);
   }
 
+  printf("hello server\n");
+  
   if (bind(serverSocket, (struct sockaddr *) serv_addr, sizeof(struct sockaddr_in)) < 0) {
     perror("Error bind");
     exit(1);

@@ -26,23 +26,27 @@ void syscall_getsockopt(reg_s * reg, process_descriptor_t * proc){
 /** @brief handles getsockopt syscall at the entrance if in full mediation */
 void syscall_getsockopt_pre(reg_s * reg, process_descriptor_t * proc)
 {
+  printf("in get\n");
   proc_inside(proc);
 #ifndef address_translation
   pid_t pid = proc->pid;
-
+  int sockfd, optname, optlen;
+  void * optval;
   reg->ret = 0;
 
-  if ((int) reg->arg[2] == SO_REUSEADDR) {
-    *((int *) reg->arg[3]) = socket_get_option(proc, (int) reg->arg[0], SOCK_OPT_REUSEADDR);
+  ptrace_cpy(pid, &sockfd, (void *) reg->arg[0], sizeof(int), "getsockopt");
+  ptrace_cpy(pid, &optname, (void *) reg->arg[2], sizeof(int), "getsockopt");
+  ptrace_cpy(pid, optval, (void *) reg->arg[3], sizeof(int), "getsockopt");
+  
+  if (optname == SO_REUSEADDR) {
+    *((int *)optval) = socket_get_option(proc, sockfd, SOCK_OPT_REUSEADDR);
   } else {
     XBT_WARN("Option non supported by Simterpose.");
-    reg->arg[4] = 0;
-    reg->arg[3];
+    optlen = 0;
+    ptrace_poke(pid, (void *) reg->arg[4], &optlen, sizeof(int));
+    /* reg->arg[4] = 0; */
+    /* reg->arg[3]; */
   }
-
-
-  ptrace_neutralize_syscall(pid);
-  ptrace_restore_syscall(pid, SYS_getsockopt, (int) reg->ret);
 
   /* if (arg->optname == SO_REUSEADDR) { */
   /*   ptrace_poke(pid, (void *) arg->dest, &(arg->optval), sizeof(arg->optlen)); */
@@ -50,15 +54,18 @@ void syscall_getsockopt_pre(reg_s * reg, process_descriptor_t * proc)
   /* } */
   /* TODO */
 
-  if ((int) reg->arg[2] == SO_REUSEADDR) {
+  if (optname == SO_REUSEADDR) {
     /* ptrace_poke(pid, (void *) arg->dest, &(arg->optval), sizeof(arg->optlen)); */
     /* ptrace_poke(pid, (void *) arg->dest_optlen, &(arg->optlen), sizeof(socklen_t)); */
     /* TODO */
   }
 
+  ptrace_neutralize_syscall(pid);
+  ptrace_restore_syscall(pid, SYS_getsockopt, (int) reg->ret);
   proc_outside(proc);
   if (strace_option)
     print_getsockopt_syscall(reg, proc);
+  printf("out get\n");
 #endif
 }
 
