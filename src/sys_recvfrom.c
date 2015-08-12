@@ -57,7 +57,7 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
 
     if (socket_registered(proc, (int) reg->arg[0]) != -1) {
       if (!socket_netlink(proc, (int) reg->arg[0])) {
-        const char *mailbox;
+        const char *mailbox = NULL;
         if (MSG_process_self() == file_desc->stream->client)
           mailbox = file_desc->stream->to_client;
         else if (MSG_process_self() == file_desc->stream->server)
@@ -66,8 +66,7 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
           THROW_IMPOSSIBLE;
         msg_task_t task = NULL;
         msg_error_t err = MSG_task_receive(&task, mailbox);
-	printf("recvfrom hello\n");
-        reg->ret = (ssize_t) MSG_task_get_bytes_amount(task);
+	reg->ret = (ssize_t) MSG_task_get_bytes_amount(task);
         data = MSG_task_get_data(task);
 
         if (err != MSG_OK) {
@@ -108,7 +107,7 @@ void syscall_recvfrom_post(reg_s * reg, process_descriptor_t * proc, void * data
   pid_t pid = proc->pid;
   socklen_t len = 0;
   socklen_t addrlen = 0;
-  int is_addr;
+  int is_addr = 0;
   int domain = get_domain_socket(proc, (int) reg->arg[0]);
   
   if ((struct sockaddr *) reg->arg[4] != NULL) {

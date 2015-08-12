@@ -27,11 +27,11 @@
 
 int main()
 {
-  int serverSocket;
+  int serverSocket = 0;
   char *buff = (char *) malloc(BUFFER_SIZE);
-  u_short port;
-  int res;
-  int client_socket;
+  u_short port = 0;
+  int res = 0;
+  int client_socket = 0;
 
   if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("Error socket");

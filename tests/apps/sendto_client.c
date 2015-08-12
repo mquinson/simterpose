@@ -24,13 +24,13 @@
 
 int main()
 {
-  int clientSocket;
-  u_short port;
-  int res;
-  char buff[BUFFER_SIZE];
+  int clientSocket = 0;
+  u_short port = 0;
+  int res = 0;
+  char buff[BUFFER_SIZE] = {0};
   strcpy(buff, "Message from client \n ");
-  int server_socket;
-  long host_addr;
+  int server_socket = 0;
+  long host_addr = 0;
   struct hostent *serverHostEnt;
 
   if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
