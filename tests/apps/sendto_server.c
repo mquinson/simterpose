@@ -34,7 +34,7 @@ int main()
   int client_socket;
 
   if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("error socket");
+    perror("Error socket");
     exit(1);
   } 
 
@@ -50,32 +50,32 @@ int main()
 
   int on = 1;
   if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
-    perror("error setsockopt");
+    perror("Error setsockopt");
     exit(1);
   }
 
 
   if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
-    perror("error getsockopt");
+    perror("Error getsockopt");
     exit(1);
   }
 
   if (bind(serverSocket, (struct sockaddr *) serv_addr, sizeof(struct sockaddr_in)) < 0) {
-    perror("error bind");
+    perror("Error bind");
     exit(1);
   }
   
   if (listen(serverSocket, SOMAXCONN) < 0) {
-    perror("error listen");
+    perror("Error listen");
     exit(1);
   }
-  fprintf(stderr, "Attente demande de connexion\n");
+  fprintf(stderr, "Waiting for connexion\n");
   
   socklen_t clilen = sizeof(struct sockaddr_in);
   struct sockaddr_in cli_addr;
 
   if ((client_socket = accept(serverSocket, (struct sockaddr *) &cli_addr, (socklen_t *) &clilen)) < 0) {
-    perror("error accept");
+    perror("Error accept");
     exit(1);
   }
   
@@ -84,15 +84,14 @@ int main()
   fprintf(stderr, "Connect to client  %s:%d\n", inet_ntoa(in), ntohs(cli_addr.sin_port));
 
   int ia;
-  for (ia = 0; ia < 10; ++ia){
+  for (ia = 0; ia < 5; ++ia){
     res = recvfrom(client_socket, buff, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, (socklen_t *) & clilen);
     if (res == -1) {
-      perror("erreur réception server");
+      perror("Error server reception");
       exit(1);
     }
-    fprintf(stderr, "Message reçu du client %s\n", buff);
+    fprintf(stderr, "Receive message #%d from client %s\n", ia, buff);
   }
-  printf("[%d] coucou\n", getpid());
 
   return 0;
 }

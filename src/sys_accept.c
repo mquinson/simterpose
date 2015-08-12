@@ -135,8 +135,8 @@ void process_accept_out_call(reg_s * reg, process_descriptor_t * proc)
   if ((int) reg->ret >= 0) {
     int domain = get_domain_socket(proc, (int) reg->arg[0]);
     int protocol = get_protocol_socket(proc, (int) reg->arg[0]);
-
-    struct infos_socket *is = register_socket(proc, (int) reg->ret, domain, protocol);
+    int type = get_type_socket(proc, (int) reg->arg[0]);
+    struct infos_socket *is = register_socket(proc, (int) reg->ret, domain, type, protocol);
 
 #ifdef address_translation
     sys_translate_accept_out(reg, proc);

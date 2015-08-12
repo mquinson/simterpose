@@ -49,7 +49,7 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
     len += temp.iov_len;
   }
 #ifdef address_translation
-  if ( reg->ret > 0) {
+  if (reg->ret > 0) {
 #endif
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
     file_desc->refcount++;

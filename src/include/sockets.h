@@ -46,6 +46,7 @@ struct infos_socket {
   unsigned int ip_local;
   int port_local;
   int flags;
+  int type;
   int option;
   int binded;
   int ref_nb;                   // reference counting
@@ -65,7 +66,7 @@ void handle_new_send(reg_s * reg, struct infos_socket *is, void * data);
 
 int close_all_communication(process_descriptor_t * proc);
 
-struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol);
+struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, int domain, int type, int protocol);
 
 int socket_registered(process_descriptor_t * proc, int fd);
 
@@ -95,4 +96,5 @@ int socket_get_option(process_descriptor_t * proc, int fd, int option);
 
 int socket_get_local_port(process_descriptor_t * proc, int fd);
 
+int get_type_socket(process_descriptor_t * proc, int fd);
 #endif

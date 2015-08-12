@@ -34,7 +34,7 @@ int main()
   struct hostent *serverHostEnt;
 
   if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-    perror("error socket");
+    perror("Error socket");
     exit(1);
   } 
 
@@ -48,22 +48,23 @@ int main()
   cli_addr.sin_port = htons(port);
 
   if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
-    fprintf(stderr, "echec demande de connexion\n");
+    fprintf(stderr, "Connection demand failed\n");
     exit(0);
   }
   
-  fprintf(stderr, "Connexion avec le serveur établie %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
+  fprintf(stderr, "Connect to server %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
   
   int ia;
   
-  for (ia = 0; ia < 10; ++ia) {
+  for (ia = 0; ia < 5; ++ia) {
     res = sendto(clientSocket, buff, strlen(buff) + 1, 0, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in));
 
     if (res == -1) {
-      perror("erreur envoi client");
+      perror("Error send client");
       exit(1);
     }
+    fprintf(stderr, "Message send #%d from client\n", ia, buff);
   }
-  printf("[%d] coucou\n", getpid());
+  
   return 0;
 }

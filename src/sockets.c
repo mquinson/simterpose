@@ -58,7 +58,7 @@ void recv_information_destroy(recv_information * recv)
 }
 
 /** @brief creates infos_socket and put it into the global list */
-static struct infos_socket *confirm_register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
+static struct infos_socket *confirm_register_socket(process_descriptor_t * proc, int sockfd, int domain, int type, int protocol)
 {
 
   struct infos_socket *is = xbt_malloc0(sizeof(struct infos_socket));
@@ -75,6 +75,7 @@ static struct infos_socket *confirm_register_socket(process_descriptor_t * proc,
   is->protocol = protocol;
   is->ip_local = -1;
   is->port_local = 0;
+  is->type = type;
   is->option = 0;
   is->binded = 0;
 
@@ -160,13 +161,13 @@ void socket_close(process_descriptor_t * proc, int fd)
 }
 
 /** @brief register a socket for the given process */
-struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, int domain, int protocol)
+struct infos_socket *register_socket(process_descriptor_t * proc, int sockfd, int domain, int type, int protocol)
 {
   XBT_DEBUG("Registering socket %d for process %d", sockfd, proc->pid);
   if (process_descriptor_get_fd(proc, sockfd) != NULL) {
     xbt_die("Inconsistency found in model. Socket already exist");
   }
-  return confirm_register_socket(proc, sockfd, domain, protocol);
+  return confirm_register_socket(proc, sockfd, domain, type, protocol);
 }
 
 /** @brief set the local ip and local port of the socket */
@@ -419,4 +420,14 @@ int close_all_communication(process_descriptor_t * proc)
 int socket_get_state(struct infos_socket *is)
 {
   return comm_get_socket_state(is);
+}
+
+/** @brief retrieve the type of socket */
+int get_type_socket(process_descriptor_t * proc, int fd)
+{
+  struct infos_socket *is = get_infos_socket(proc, fd);
+
+  if (is != NULL)
+    return is->type;
+  return -1;
 }

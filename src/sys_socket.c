@@ -25,6 +25,6 @@ void syscall_socket(reg_s * reg, process_descriptor_t * proc)
       print_socket_syscall(reg, proc);
 
     if ((int) reg->ret > 0)
-      register_socket(proc, (int) reg->ret, (int) reg->arg[0], (int) reg->arg[2]);
+      register_socket(proc, (int) reg->ret, (int) reg->arg[0], (int) reg->arg[1], (int) reg->arg[2]);
   }
 }
