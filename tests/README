@@ -3,11 +3,10 @@ provided scripts start the simulation with all the needed parameters.
 
 apps/	 	       	   The little applications used in tests
 
-send_clientserver.sh:	   Client/server app using send / recv       (works)
- 		       	   Useless because send and recv syscalls are not yet
-		       	   implemented
-sendto_clientserver.sh:	   Client/server app using sendto / recvfrom
-			   (doesn't work)
+send_clientserver.sh:	   Client/server app using send / recv 
+ 		       	   Can be use only on 32bits architecture
+			   So these syscalls have never been tested 
+sendto_clientserver.sh:	   Client/server app using sendto / recvfrom (works)
 msg_clientserver.sh:	   Client/server app using sendmsg / recvmsg (works)
 
 fcntl_little.sh: 	   Fcntl syscall test file

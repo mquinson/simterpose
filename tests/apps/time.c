@@ -14,11 +14,11 @@ int main(){
 
   struct timeb * tp = (struct timeb *) malloc (sizeof(struct timeb));
   ftime(tp);
-  printf("tp->time = %d\n", tp->time);
+  printf("tp->time = %ld\n", tp->time);
   printf("tp->time = %d\n", tp->millitm);
   
   time_t t = time(NULL);
-  printf("time %d\n", t);
+  printf("time %ld\n", t);
 
   const time_t *timep = NULL;
   localtime(timep);

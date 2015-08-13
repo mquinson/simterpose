@@ -28,9 +28,11 @@ add_executable(simterpose
   sys_pipe.c
   sys_poll.c
   sys_read.c
+  sys_recv.c
   sys_recvfrom.c
   sys_recvmsg.c
   sys_select.c
+  sys_send.c
   sys_sendmsg.c
   sys_sendto.c
   sys_setsockopt.c
@@ -69,9 +71,11 @@ add_executable(simterpose
   include/sys_pipe.h
   include/sys_poll.h
   include/sys_read.h
+  include/sys_recv.h
   include/sys_recvfrom.h
   include/sys_recvmsg.h
   include/sys_select.h
+  include/sys_send.h
   include/sys_sendmsg.h
   include/sys_sendto.h
   include/sys_setsockopt.h

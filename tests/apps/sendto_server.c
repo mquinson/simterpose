@@ -55,10 +55,10 @@ int main()
 
 
 
-  /* if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) { */
-  /*   perror("Error getsockopt"); */
-  /*   exit(1); */
-  /* } */
+  if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
+    perror("Error getsockopt");
+    exit(1);
+  }
 
 
   

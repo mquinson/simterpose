@@ -664,6 +664,66 @@ static void print_flags_recv(process_descriptor_t * proc, int flags)
 }
 
 /** @brief print a strace-like log of sendto syscall */
+void print_send_syscall(reg_s * reg, process_descriptor_t * proc, void * data)
+{
+  // fprintf(proc->strace_out,"[%d] sendto(", pid);
+  fprintf(proc->strace_out, "sendto(");
+#ifndef address_translation
+  char buff[200];
+  if ((size_t) reg->arg[2] < 200) {
+    memcpy(buff, data, (size_t) reg->arg[2]);
+    buff[(int) reg->ret] = '\0';
+    fprintf(proc->strace_out, "%d, \"%s\" , %d, ",(int) reg->arg[0], buff, (int) reg->arg[2]);
+  } else {
+    memcpy(buff, data, 200);
+    buff[199] = '\0';
+    fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", (int) reg->arg[0], buff, (int) reg->arg[2]);
+  }
+#else
+  fprintf(proc->strace_out, "%d, \"...\" , %d, ", (int) reg->arg[0], (int) reg->arg[2]);
+#endif
+  if ((int) reg->arg[3] > 0) {
+    print_flags_send(proc, (int) reg->arg[0]);
+  } else
+    fprintf(proc->strace_out, "0, ");
+
+  fprintf(proc->strace_out, ") = %d\n",  (int) reg->ret);
+}
+
+/** @brief print a strace-like log of recvfrom syscall */
+void print_recvf_syscall(reg_s * reg, process_descriptor_t * proc, void * data)
+{
+  size_t len = (size_t) reg->arg[2];
+
+  fprintf(proc->strace_out, "recvfrom(");
+#ifndef address_translation
+  if ((int) reg->ret) {
+    char buff[500];
+    if ( (int) reg->ret <= 500) {
+      memcpy(buff, data, (int) reg->ret);
+      buff[(int) reg->ret] = '\0';
+      fprintf(proc->strace_out, "%d, \"%s\" , %d, ", (int) reg->arg[0], buff, len);
+    } else {
+      memcpy(buff, data, 500);
+      buff[499] = '\0';
+      fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", (int) reg->arg[0], buff, (int) len);
+    }
+
+    if ((int) reg->arg[3] > 0) {
+      print_flags_send(proc, (int) reg->arg[3]);
+    } else
+      fprintf(proc->strace_out, "0, ");
+  } else
+    fprintf(proc->strace_out, "%d, \"\" , %d, ", (int) reg->arg[0], (int) len);
+#else
+  fprintf(proc->strace_out, "%d, \"...\" , %d, ", (int) reg->arg[0], (int) len);
+#endif
+
+  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
+}
+
+
+/** @brief print a strace-like log of sendto syscall */
 void print_sendto_syscall(reg_s * reg, process_descriptor_t * proc, void * data, int is_addr, socklen_t addrlen, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
   int domain = get_domain_socket(proc, (int) reg->arg[0]);

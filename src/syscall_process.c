@@ -144,6 +144,18 @@ int process_handle(process_descriptor_t * proc)
       syscall_accept(&arg, proc);
       break;
 
+#ifdef arch_32
+    case SYS_send:
+      ret = syscall_send(&arg, proc);
+      if (ret)
+	return ret;
+      break;
+
+    case SYS_recv:
+      syscall_recv(&arg, proc);
+      break;
+#endif
+
     case SYS_sendto:
       ret = syscall_sendto(pid, &arg, proc);
       if (ret)

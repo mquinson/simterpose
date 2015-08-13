@@ -64,7 +64,7 @@ int main()
       perror("Error send client");
       exit(1);
     }
-    fprintf(stderr, "Message send #%d from client\n", ia, buff);
+    fprintf(stderr, "Message send #%d from client <%s>\n", ia, buff);
   }
   shutdown(clientSocket, SHUT_RDWR);
   close(clientSocket);
