@@ -17,56 +17,26 @@
 
 int main()
 {
-  struct timeval * ti = (struct timeval * ) malloc(sizeof(struct timeval));
-  gettimeofday(ti, NULL);
-  printf("Time with gettimeofday: %lld %lld\n", (long long) ti->tv_sec,  (long long) ti->tv_usec);
-
-  char * ti_s = (char *) malloc(sizeof(char));
-  ti_s = ctime(&ti->tv_sec);
-  char * ti_us = (char *) malloc(sizeof(char));
-  ti_us = ctime(&ti->tv_usec);
-  printf("Time with gettimeofday in char: %s %s\n", ti_s, ti_us);
-
   int fd = open("apps/toto", O_RDWR);
     
-  int flags;
-  flags = fcntl(fd, F_GETFD);
-  printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd);
-  flags = fcntl(fd, F_SETFD, FD_CLOEXEC);
-  printf("F_SETFD: Return value %d  for fd %d\n", flags, fd);
-  flags = fcntl(fd, F_GETFD);
-  printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd);
-  printf("----------------------------------------\n");
+  fcntl(fd, F_GETFD);
+  fcntl(fd, F_SETFD, FD_CLOEXEC);
+  fcntl(fd, F_GETFD);
 
   int fd_dup;
   fd_dup = fcntl(fd, F_DUPFD, 10);
-  printf("F_DUPFD: Value of fd_dup %d  for fd %d\n", fd_dup, fd);
-  flags = fcntl(fd_dup, F_GETFD);
-  printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd_dup);
-  flags = fcntl(fd_dup, F_SETFD, FD_CLOEXEC);
-  printf("F_SETFD: Return value %d  for fd %d\n", flags, fd);
-  flags = fcntl(fd_dup, F_GETFD);
-  printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd);
-  printf("----------------------------------------\n");
-
+  fcntl(fd_dup, F_GETFD);
+  fcntl(fd_dup, F_SETFD, FD_CLOEXEC);
+  fcntl(fd_dup, F_GETFD);
 
   fd_dup = fcntl(fd, F_DUPFD_CLOEXEC, 10);
-  printf("F_DUPFD_CLOEXEC: Value of fd_dup %d for fd %d\n", fd_dup, fd);
-  flags = fcntl(fd_dup, F_GETFD);
-  printf("F_GETFD: Value of FD_CLOEXEC %d for fd %d\n", flags, fd_dup);
-  printf("----------------------------------------\n");
+  fcntl(fd_dup, F_GETFD);
 
-  int status_flags;
-  status_flags =  fcntl(fd, F_GETFL);
-  printf("F_GETFL: Value of status flags %d for fd %d\n", status_flags, fd);
-  status_flags = fcntl(fd, F_SETFL, O_RDONLY);
-  printf("F_SETFL: Return value %d  for fd %d\n", status_flags, fd);
-  status_flags = fcntl(fd, F_SETFL, O_APPEND);
-  printf("F_SETFL: Return value %d  for fd %d\n", status_flags, fd);
-  status_flags =  fcntl(fd, F_GETFL);
-  printf("F_GETFL: Value of status flags %d for fd %d\n", status_flags, fd);
-  printf("----------------------------------------\n");
-
+  fcntl(fd, F_GETFL);
+  fcntl(fd, F_SETFL, O_RDONLY);
+  fcntl(fd, F_SETFL, O_APPEND);
+  fcntl(fd, F_GETFL);
+  
   struct flock * lock = (struct flock *) malloc(sizeof(struct flock));
   lock->l_type = F_RDLCK;
   lock->l_whence = SEEK_SET;
@@ -74,35 +44,18 @@ int main()
   lock->l_len = 15;
   lock->l_pid = getpid();
 
-  int ret;
-  ret = fcntl(fd, F_GETLK, lock);
-  printf("F_GETLK: Return value %d for fd %d \n", ret, fd);
+  fcntl(fd, F_GETLK, lock);
   lock->l_type = F_RDLCK;
-  ret = fcntl(fd, F_SETLK, lock);
-  printf("F_SETLK: Return value %d  for fd %d \n", ret, fd);
-  ret = fcntl(fd, F_GETLK, lock);
-  printf("F_GETLK: Return value %d for fd %d \n", ret, fd);
+  fcntl(fd, F_SETLK, lock);
+  fcntl(fd, F_GETLK, lock);
   free(lock);
 
-  printf("----------------------------------------\n");
-  ret = fcntl(fd, F_GETOWN);
-  printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd);
-  ret = fcntl(fd, F_SETOWN, getpid());
-  printf("F_SETOWN: Return value %d for fd %d \n", ret, fd);
-  ret = fcntl(fd, F_GETOWN);
-  printf("F_GETOWN: ID of signals' receptor %d for fd %d \n", ret, fd);
-
-  ret = close(fd);
-  printf("return close %d\n", ret);
-  ret = close(fd_dup);
-  printf("return close %d\n", ret);
-
-  gettimeofday(ti, NULL); 
-  printf("Time with gettimeofday: %lld %lld\n", (long long) ti->tv_sec,  (long long) ti->tv_usec);
-
-  ti_s = ctime(&ti->tv_sec);
-  ti_us = ctime(&ti->tv_usec);
-  printf("Time with gettimeofday in char: %s %s\n", ti_s, ti_us);
-
+  fcntl(fd, F_GETOWN);
+  fcntl(fd, F_SETOWN, getpid());
+  fcntl(fd, F_GETOWN);
+  
+  close(fd);
+  close(fd_dup);
+  
   return 0;
 }

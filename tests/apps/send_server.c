@@ -32,14 +32,6 @@ int main(int argc, char **argv)
   int msg_size = atoi(argv[3]);
 
   fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", server_port, msg_count, msg_size);
-  struct timeval * ti = (struct timeval * ) malloc(sizeof(struct timeval));
-  gettimeofday(ti, NULL);
-  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
-  char * ti_s = (char *) malloc(sizeof(char));
-  ti_s = ctime(&ti->tv_sec);
-  char * ti_us = (char *) malloc(sizeof(char));
-  ti_us = ctime(&ti->tv_usec);
-  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
 
   int serverSocket;
   char *buff = (char *) malloc(msg_size);
@@ -87,6 +79,7 @@ int main(int argc, char **argv)
 
   int msg_number = 0;
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
+    fprintf(stderr, "Server: you will try to use recv/send syscalls, they are only suported on 32bits architectures. It could not work\n");
     sprintf(expected, "This is the message #%d produced on the client.", msg_number);
 
     int length = msg_size;
@@ -114,12 +107,6 @@ int main(int argc, char **argv)
   shutdown(client_socket, 2);
   close(client_socket);
 
-  
-  gettimeofday(ti, NULL);
-  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
-  ti_s = ctime(&ti->tv_sec);
-  ti_us = ctime(&ti->tv_usec);
-  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
   fprintf(stderr, "Server exiting after %d msgs\n", msg_count);
   
   return 0;

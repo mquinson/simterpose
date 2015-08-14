@@ -5,22 +5,20 @@
 
 set -e # fail fast
 
+rm -f simterpose-msg_clientserver.log
 make -C ../src/ simterpose
 make -C apps/   msg_server msg_client
-
-# Allow to use another folder than /opt/Simgrid to execute
-sim_dir=$1
 
 # Allow to run under valgrind or gdb easily
 VALGRIND_OPTS="--verbose --trace-children=no --child-silent-after-fork=yes"
 export VALGRIND_OPTS
 
-runner=$2
+runner=$1
 
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$sim_dir/lib/
 export LD_LIBRARY_PATH
 
-sudo $runner ../src/simterpose -s platform.xml msg_clientserver.xml
+sudo LD_PRELOAD=../src/libsgtime.so $runner ../src/simterpose -s platform.xml msg_clientserver.xml
 #--log=simterpose.:debug
 #--log=msg.:debug
 # --log=simix_synchro.:debug

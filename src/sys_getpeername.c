@@ -28,7 +28,8 @@ void syscall_getpeername_pre(reg_s * reg, process_descriptor_t * proc)
 {
   proc_inside(proc);
   pid_t pid = proc->pid;
-
+  struct infos_socket *is = NULL;
+  struct sockaddr * in = NULL;
   socklen_t len = (socklen_t ) reg->arg[2];
   
   /* TODO */
@@ -36,8 +37,7 @@ void syscall_getpeername_pre(reg_s * reg, process_descriptor_t * proc)
 
  if (socket_registered(proc, (int) reg->arg[0])) {
     if (socket_network(proc, (int) reg->arg[0])) {
-      struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);
-      struct sockaddr * in;
+      is = get_infos_socket(proc, (int) reg->arg[0]);
       socklen_t size = 0;
      
       if (!comm_getpeername(is, in, &size)) {

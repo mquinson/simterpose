@@ -21,13 +21,9 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 void syscall_read(reg_s * reg, process_descriptor_t * proc)
 {
   int fd = (int) reg->arg[0];
-  
-#ifndef address_translation
-  void * dest = (void *) reg->arg[1];
-#endif
-  void * data = (void*) reg->arg[1];
+ 
+  void * data = NULL;
   ssize_t ret = (ssize_t) reg->ret;
-  ssize_t count = (size_t) reg->arg[2];
 
   if (proc_entering(proc)) {
     proc_inside(proc);
@@ -56,17 +52,17 @@ void syscall_read(reg_s * reg, process_descriptor_t * proc)
         int sock_status = socket_get_state(is);
 #ifdef address_translation
         if (sock_status & SOCKET_CLOSED)
-          process_read_out_call(reg, proc);
+          process_read_out_call(reg, proc, data);
 #else
         if (sock_status & SOCKET_CLOSED)
           ret = 0;
         ptrace_neutralize_syscall(proc->pid);
         proc_outside(proc);
-        process_read_out_call(reg, proc);
+        process_read_out_call(reg, proc, data);
       } else {
         ptrace_neutralize_syscall(proc->pid);
         proc_outside(proc);
-        process_read_out_call(reg, proc);
+        process_read_out_call(reg, proc, data);
 #endif
       }
       MSG_task_destroy(task);
@@ -107,11 +103,11 @@ void syscall_read(reg_s * reg, process_descriptor_t * proc)
  *
  *  We restore the syscall registers with the right return value
  */
-void process_read_out_call(reg_s * reg, process_descriptor_t * proc)
+void process_read_out_call(reg_s * reg, process_descriptor_t * proc, void * data)
 {
   XBT_DEBUG("Entering process_read_out_call");
   ptrace_restore_syscall(proc->pid, SYS_read, (int) reg->ret);
   if ((int) reg->ret > 0) {
-    ptrace_poke(proc->pid, (void *) reg->arg[1], (void *) reg->arg[1], (int) reg->ret);
+    ptrace_poke(proc->pid, (void *) reg->arg[1], data, (int) reg->ret);
   }
 }

@@ -34,14 +34,6 @@ int main(int argc, char **argv)
   int buffer_size = atoi(argv[4]);
 
   fprintf(stderr, "Client starting: #msg: %d; size:%d (the server is on %s:%d) \n", msg_count, buffer_size, IP, port);
- struct timeval * ti = (struct timeval * ) malloc(sizeof(struct timeval));
-  gettimeofday(ti, NULL);
-  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
-  char * ti_s = (char *) malloc(sizeof(char));
-  ti_s = ctime(&ti->tv_sec);
-  char * ti_us = (char *) malloc(sizeof(char));
-  ti_us = ctime(&ti->tv_usec);
-  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
   
   int clientSocket;
   int res;
@@ -61,11 +53,11 @@ int main(int argc, char **argv)
   cli_addr.sin_port = htons(port);
   
   if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
-    printf("msg_client: cannot connect to the server: %s\n", strerror(errno));
+    perror("Client cannot connect to the server\n");
     exit(1);
   }
 
-  fprintf(stderr, "msg_client: connected to the server %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
+  fprintf(stderr, "Connected to the server %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
   struct iovec iov[1];
   struct msghdr msg;
 
@@ -87,18 +79,13 @@ int main(int argc, char **argv)
       perror("erreur envoi client");
       exit(1);
     }
-    fprintf(stderr, "Client: sent message #%d\n", msg_number);
+    fprintf(stderr, "Client: Message send #%d\n", msg_number);
 
   }
+  
   shutdown(clientSocket, 2);
-
   close(clientSocket);
-  gettimeofday(ti, NULL);
-  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
-
-  ti_s = ctime(&ti->tv_sec);
-  ti_us = ctime(&ti->tv_usec);
-  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
+ 
   fprintf(stderr, "Client exiting after %d msgs \n", msg_count);
   
   return 0;

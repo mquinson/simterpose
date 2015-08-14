@@ -33,7 +33,6 @@ int syscall_connect_pre(reg_s * reg, process_descriptor_t * proc)
 
   pid_t pid = proc->pid;
   int sockfd = (int) reg->arg[0];
-  socklen_t addrlen = (socklen_t) reg->arg[2];
   int domain = get_domain_socket(proc, sockfd);
   struct sockaddr_in sai; 
   struct sockaddr_un sau;
@@ -85,7 +84,6 @@ void syscall_connect_post(reg_s * reg, process_descriptor_t * proc)
   XBT_DEBUG("connect_post");
   pid_t pid = proc->pid;
   int sockfd = (int) reg->arg[0];
-  socklen_t addrlen = (socklen_t) reg->arg[2];
   int domain = get_domain_socket(proc, sockfd);
   struct sockaddr_in sai; 
   struct sockaddr_un sau;

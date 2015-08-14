@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 #include <linux/sched.h>   /* For clone flags */
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <xbt.h>
 
@@ -206,20 +208,19 @@ void print_accept_syscall(reg_s * reg, process_descriptor_t * proc)
   struct sockaddr_un sau;
   struct sockaddr_nl snl;
   int domain = get_domain_socket(proc, (int) reg->arg[0]);
-  // fprintf(proc->strace_out,"[%d] accept(", pid);
-  fprintf(proc->strace_out, "accept(");
+  fprintf(proc->strace_out,"[%d] accept(", pid);
 
   fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 
   if (domain == 2) {            // PF_INET
-     ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
+    ptrace_cpy(pid, &sai, (void *) reg->arg[1], sizeof(struct sockaddr_in), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai.sin_port),
 	    inet_ntoa(sai.sin_addr));
   } else if (domain == 1) {     //PF_UNIX
     ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau.sun_path);
   } else if (domain == 16) {    //PF_NETLINK
-     ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "connect");
+    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl.nl_pid, snl.nl_groups);
   } else {
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
@@ -238,8 +239,7 @@ void print_connect_syscall(reg_s * reg, process_descriptor_t * proc)
   struct sockaddr_un sau;
   struct sockaddr_nl snl;
   
-  // fprintf(proc->strace_out,"[%d] connect(", pid);
-  fprintf(proc->strace_out, "connect(");
+  fprintf(proc->strace_out,"[%d] connect(", pid);
   fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 
   if (domain == 2) {
@@ -247,10 +247,10 @@ void print_connect_syscall(reg_s * reg, process_descriptor_t * proc)
     fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai.sin_port),
 	    inet_ntoa(sai.sin_addr));
   } else if (domain == 1) {     //PF_UNIX
-     ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "connect");
+    ptrace_cpy(pid, &sau, (void *) reg->arg[1], sizeof(struct sockaddr_un), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau.sun_path);
   } else if (domain == 16) {    //PF_NETLINK
-     ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "connect");
+    ptrace_cpy(pid, &snl, (void *) reg->arg[1], sizeof(struct sockaddr_nl), "connect");
     fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl.nl_pid, snl.nl_groups);
   } else {
     fprintf(proc->strace_out, "{sockaddr unknown}, ");
@@ -267,8 +267,8 @@ void print_bind_syscall(reg_s * reg, process_descriptor_t * proc)
   struct sockaddr_in sai;
   struct sockaddr_un sau;
   struct sockaddr_nl snl;
-  // fprintf(proc->strace_out,"[%d] bind(", pid);
-  fprintf(proc->strace_out, "bind(");
+
+  fprintf(proc->strace_out,"[%d] bind(", pid);
   fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 
   if (domain == 2) {
@@ -291,8 +291,7 @@ void print_bind_syscall(reg_s * reg, process_descriptor_t * proc)
 /** @brief print a strace-like log of socket syscall */
 void print_socket_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  // fprintf(proc->strace_out,"[%d] socket(",pid);
-  fprintf(proc->strace_out, "socket(");
+  fprintf(proc->strace_out,"[%d] socket(", proc->pid);
   switch ((int) reg->arg[0]) {
   case 0:
     fprintf(proc->strace_out, "PF_UNSPEC, ");
@@ -418,8 +417,7 @@ void print_socket_syscall(reg_s * reg, process_descriptor_t * proc)
 /** @brief print a strace-like log of getsockopt syscall */
 void print_getsockopt_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  // fprintf(proc->strace_out,"[%d] getsockopt(", pid);
-  fprintf(proc->strace_out, "getsockopt(");
+  fprintf(proc->strace_out,"[%d] getsockopt(", proc->pid);
   fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 
   /* switch (arg->level) { */
@@ -519,8 +517,7 @@ void print_getsockopt_syscall(reg_s * reg, process_descriptor_t * proc)
 /** @brief print a strace-like log of setsockopt syscall */
 void print_setsockopt_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  // fprintf(proc->strace_out,"[%d] setsockopt(", pid);
-  fprintf(proc->strace_out, "setsockopt(");
+  fprintf(proc->strace_out,"[%d] setsockopt(", proc->pid);
   fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
 
   switch ((int) reg->arg[1]) {
@@ -619,7 +616,7 @@ void print_setsockopt_syscall(reg_s * reg, process_descriptor_t * proc)
 /** @brief print a strace-like log of listen syscall */
 void print_listen_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  fprintf(proc->strace_out, "listen(");
+  fprintf(proc->strace_out, "[%d] listen(", proc->pid);
   fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
   fprintf(proc->strace_out, "%d ", (int) reg->arg[1]);
   fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
@@ -663,63 +660,68 @@ static void print_flags_recv(process_descriptor_t * proc, int flags)
   fprintf(proc->strace_out, ", ");
 }
 
-/** @brief print a strace-like log of sendto syscall */
+/** @brief print a strace-like log of send syscall */
 void print_send_syscall(reg_s * reg, process_descriptor_t * proc, void * data)
 {
-  // fprintf(proc->strace_out,"[%d] sendto(", pid);
-  fprintf(proc->strace_out, "sendto(");
+  fprintf(proc->strace_out,"[%d] sendto(", proc->pid);
+
 #ifndef address_translation
   char buff[200];
   if ((size_t) reg->arg[2] < 200) {
     memcpy(buff, data, (size_t) reg->arg[2]);
-    buff[(int) reg->ret] = '\0';
-    fprintf(proc->strace_out, "%d, \"%s\" , %d, ",(int) reg->arg[0], buff, (int) reg->arg[2]);
+    buff[(ssize_t) reg->ret] = '\0';
+    fprintf(proc->strace_out, "%d, \"%s\" , %zu, ",(int) reg->arg[0], buff, (size_t) reg->arg[2]);
   } else {
     memcpy(buff, data, 200);
     buff[199] = '\0';
-    fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", (int) reg->arg[0], buff, (int) reg->arg[2]);
+    fprintf(proc->strace_out, "%d, \"%s...\" , %zu, ", (int) reg->arg[0], buff, (size_t) reg->arg[2]);
   }
 #else
-  fprintf(proc->strace_out, "%d, \"...\" , %d, ", (int) reg->arg[0], (int) reg->arg[2]);
+  fprintf(proc->strace_out, "%d, \"%s\" , %zu, ", (int) reg->arg[0], (char *) data, (size_t) reg->arg[2]);
 #endif
+
   if ((int) reg->arg[3] > 0) {
-    print_flags_send(proc, (int) reg->arg[0]);
+    print_flags_send(proc, (ssize_t) reg->arg[0]);
   } else
     fprintf(proc->strace_out, "0, ");
 
-  fprintf(proc->strace_out, ") = %d\n",  (int) reg->ret);
+  fprintf(proc->strace_out, ") = %zd\n",  (ssize_t) reg->ret);
 }
 
-/** @brief print a strace-like log of recvfrom syscall */
-void print_recvf_syscall(reg_s * reg, process_descriptor_t * proc, void * data)
+/** @brief print a strace-like log of recv syscall */
+void print_recv_syscall(reg_s * reg, process_descriptor_t * proc, void * data)
 {
   size_t len = (size_t) reg->arg[2];
 
-  fprintf(proc->strace_out, "recvfrom(");
+  fprintf(proc->strace_out, "[%d] recvfrom(", proc->pid);
 #ifndef address_translation
-  if ((int) reg->ret) {
+  if ((ssize_t) reg->ret) {
     char buff[500];
-    if ( (int) reg->ret <= 500) {
+    if ((ssize_t) reg->ret <= 500) {
       memcpy(buff, data, (int) reg->ret);
-      buff[(int) reg->ret] = '\0';
-      fprintf(proc->strace_out, "%d, \"%s\" , %d, ", (int) reg->arg[0], buff, len);
+      buff[(ssize_t) reg->ret] = '\0';
+      fprintf(proc->strace_out, "%d, \"%s\" , %zu, ", (int) reg->arg[0], buff, len);
     } else {
       memcpy(buff, data, 500);
       buff[499] = '\0';
-      fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", (int) reg->arg[0], buff, (int) len);
+      fprintf(proc->strace_out, "%d, \"%s...\" , %zu, ", (int) reg->arg[0], buff, len);
     }
-
-    if ((int) reg->arg[3] > 0) {
+    if ((int) reg->arg[3] > 0)
       print_flags_send(proc, (int) reg->arg[3]);
-    } else
+     else
       fprintf(proc->strace_out, "0, ");
   } else
-    fprintf(proc->strace_out, "%d, \"\" , %d, ", (int) reg->arg[0], (int) len);
+    fprintf(proc->strace_out, "%d, \"\" , %zu, ", (int) reg->arg[0], len);
 #else
-  fprintf(proc->strace_out, "%d, \"...\" , %d, ", (int) reg->arg[0], (int) len);
+    fprintf(proc->strace_out, "%d, \"%s\" , %zu, ", (int) reg->arg[0], (char *) data, len);
+
+    if ((int) reg->arg[3] > 0)
+     print_flags_send(proc, (int) reg->arg[3]);
+   else
+       fprintf(proc->strace_out, "0, ");
 #endif
 
-  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
+  fprintf(proc->strace_out, ") = %zd\n", (ssize_t) reg->ret);
 }
 
 
@@ -728,22 +730,23 @@ void print_sendto_syscall(reg_s * reg, process_descriptor_t * proc, void * data,
 {
   int domain = get_domain_socket(proc, (int) reg->arg[0]);
 
-  // fprintf(proc->strace_out,"[%d] sendto(", pid);
-  fprintf(proc->strace_out, "sendto(");
+  fprintf(proc->strace_out,"[%d] sendto(", proc->pid);
+ 
 #ifndef address_translation
   char buff[200];
   if ((size_t) reg->arg[2] < 200) {
     memcpy(buff, data, (size_t) reg->arg[2]);
-    buff[(int) reg->ret] = '\0';
-    fprintf(proc->strace_out, "%d, \"%s\" , %d, ",(int) reg->arg[0], buff, (int) reg->arg[2]);
+    buff[(ssize_t) reg->ret] = '\0';
+    fprintf(proc->strace_out, "%d, \"%s\" , %zu, ",(int) reg->arg[0], buff, (size_t) reg->arg[2]);
   } else {
     memcpy(buff, data, 200);
     buff[199] = '\0';
-    fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", (int) reg->arg[0], buff, (int) reg->arg[2]);
+    fprintf(proc->strace_out, "%d, \"%s...\" , %zu, ", (int) reg->arg[0], buff, (size_t) reg->arg[2]);
   }
 #else
-  fprintf(proc->strace_out, "%d, \"...\" , %d, ", (int) reg->arg[0], (int) reg->arg[2]);
+  fprintf(proc->strace_out, "%d, \"%s\" , %zu, ", (int) reg->arg[0], (char *) data, (size_t) reg->arg[2]);
 #endif
+
   if ((int) reg->arg[3] > 0) {
     print_flags_send(proc, (int) reg->arg[0]);
   } else
@@ -772,91 +775,78 @@ void print_sendto_syscall(reg_s * reg, process_descriptor_t * proc, void * data,
 
   fprintf(proc->strace_out, "%u", addrlen);
 
-  fprintf(proc->strace_out, ") = %d\n",  (int) reg->ret);
+  fprintf(proc->strace_out, ") = %zd\n",  (ssize_t) reg->ret);
 }
 
 /** @brief print a strace-like log of recvfrom syscall */
 void print_recvfrom_syscall(reg_s * reg, process_descriptor_t * proc, void * data, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl, int is_addr, socklen_t addrlen)
 {
-  /* size_t len = (size_t) reg->arg[2]; */
-/*   int domain = get_domain_socket(proc, (int) reg->arg[0]); */
+  size_t len = (size_t) reg->arg[2];
+  int domain = get_domain_socket(proc, (int) reg->arg[0]);
 
-/*   // fprintf(proc->strace_out,"[%d] recvfrom(", pid); */
-/*   fprintf(proc->strace_out, "recvfrom("); */
-/* #ifndef address_translation */
-/*   if ((int) reg->ret) { */
-/*     char buff[500]; */
-/*     if ( (int) reg->ret <= 500) { */
-/*       memcpy(buff, data, (int) reg->ret); */
-/*       buff[(int) reg->ret] = '\0'; */
-/*       fprintf(proc->strace_out, "%d, \"%s\" , %d, ", (int) reg->arg[0], buff, len); */
-/*     } else { */
-/*       memcpy(buff, data, 500); */
-/*       buff[499] = '\0'; */
-/*       fprintf(proc->strace_out, "%d, \"%s...\" , %d, ", (int) reg->arg[0], buff, (int) len); */
-/*     } */
+  fprintf(proc->strace_out,"[%d] recvfrom(", proc->pid);
+ 
+#ifndef address_translation
+  if ((ssize_t) reg->ret) {
+    char buff[500];
+    if ((ssize_t) reg->ret <= 500) {
+      memcpy(buff, data, (int) reg->ret);
+      buff[(ssize_t) reg->ret] = '\0';
+      fprintf(proc->strace_out, "%d, \"%s\" , %zu, ", (int) reg->arg[0], buff, len);
+    } else {
+      memcpy(buff, data, 500);
+      buff[499] = '\0';
+      fprintf(proc->strace_out, "%d, \"%s...\" , %zu, ", (int) reg->arg[0], buff, len);
+    }
 
-/*     if ((int) reg->arg[3] > 0) { */
-/*       print_flags_send(proc, (int) reg->arg[3]); */
-/*     } else */
-/*       fprintf(proc->strace_out, "0, "); */
-/*   } else */
-/*     fprintf(proc->strace_out, "%d, \"\" , %d, ", (int) reg->arg[0], (int) len); */
-/* #else */
-/*   fprintf(proc->strace_out, "%d, \"...\" , %d, ", (int) reg->arg[0], (int) len); */
-/* #endif */
-
-/*   if (domain == 2) {            // PF_INET */
-/*     if (is_addr) { */
-/*       fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai->sin_port), */
-/* 	      inet_ntoa(sai->sin_addr)); */
-/*     } else */
-/*       fprintf(proc->strace_out, "NULL, "); */
-/*   } else if (domain == 1) {     //PF_UNIX */
-/*     if (is_addr) { */
-/*       fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau->sun_path); */
-/*     } else */
-/*       fprintf(proc->strace_out, "NULL, "); */
-
-/*   } else if (domain == 16) {    //PF_NETLINK */
-/*     if (is_addr) { */
-/*       fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl->nl_pid, snl->nl_groups); */
-/*     } else */
-/*       fprintf(proc->strace_out, "NULL, "); */
-/*   } else { */
-/*     fprintf(proc->strace_out, "{sockaddr unknown}, "); */
-/*   } */
-
-/*   fprintf(proc->strace_out, "%u", addrlen); */
-
-/*   fprintf(proc->strace_out, ") = %d\n", (int) reg->ret); */
-}
-
-/** @brief print a strace-like log of recvmsg syscall */
-void print_recvmsg_syscall(reg_s * reg, process_descriptor_t * proc, struct msghdr * msg)
-{
-  //  fprintf(proc->strace_out,"[%d] recvmsg(", pid);
-  fprintf(proc->strace_out, "recvmsg(");
-  fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
-
-  fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ", (int) msg->msg_namelen,
-	  (int) msg->msg_iovlen, (int) msg->msg_controllen, msg->msg_flags);
-
-  if ((int) reg->arg[2] > 0) {
-    print_flags_recv(proc, (int) reg->arg[2]);
+   if ((int) reg->arg[3] > 0) {
+      print_flags_send(proc, (int) reg->arg[3]);
+    } else
+      fprintf(proc->strace_out, "0, ");
   } else
-    fprintf(proc->strace_out, "0 ");
+    fprintf(proc->strace_out, "%d, \"\" , %zu, ", (int) reg->arg[0], len);
+#else
+    fprintf(proc->strace_out, "%d, \"%s\" , %zu, ", (int) reg->arg[0], (char *) data, len);
 
-  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
+  if ((int) reg->arg[3] > 0) {
+      print_flags_send(proc, (int) reg->arg[3]);
+    } else
+      fprintf(proc->strace_out, "0, ");
+#endif
+
+  if (domain == 2) {            // PF_INET
+    if (is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", ntohs(sai->sin_port),
+	      inet_ntoa(sai->sin_addr));
+    } else
+      fprintf(proc->strace_out, "NULL, ");
+  } else if (domain == 1) {     //PF_UNIX
+    if (is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_UNIX, sun_path=\"%s\"}, ", sau->sun_path);
+    } else
+      fprintf(proc->strace_out, "NULL, ");
+
+  } else if (domain == 16) {    //PF_NETLINK
+    if (is_addr) {
+      fprintf(proc->strace_out, "{sa_family=AF_NETLINK, pid=%d, groups=%u}, ", snl->nl_pid, snl->nl_groups);
+    } else
+      fprintf(proc->strace_out, "NULL, ");
+  } else {
+    fprintf(proc->strace_out, "{sockaddr unknown}, ");
+  }
+
+  fprintf(proc->strace_out, "%u", addrlen);
+
+  fprintf(proc->strace_out, ") = %zd\n", (ssize_t) reg->ret);
 }
 
 /** @brief print a strace-like log of sendmsg syscall */
 void print_sendmsg_syscall(reg_s * reg, process_descriptor_t * proc, int len, void * data, 
-  struct msghdr * msg)
+			   struct msghdr * msg)
 {
-  //  fprintf(proc->strace_out,"[%d] sendmsg(", pid);
-  fprintf(proc->strace_out, "sendmsg(");
+  fprintf(proc->strace_out,"[%d] sendmsg(", proc->pid);
   fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
+
 #ifndef address_translation
   char buff[20];
   if (len < 20) {
@@ -873,8 +863,8 @@ void print_sendmsg_syscall(reg_s * reg, process_descriptor_t * proc, int len, vo
 	    msg->msg_flags);
   }
 #else
-  fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, \"...\", msg_controllen=%d, msg_flags=%d}, ",
-	  (int) msg->msg_namelen, (int) msg->msg_iovlen, (int) msg->msg_controllen, msg->msg_flags);
+  fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, \"%s\", msg_controllen=%d, msg_flags=%d}, ",
+	  (int) msg->msg_namelen, (int) msg->msg_iovlen, (char *) data, (int) msg->msg_controllen, msg->msg_flags);
 #endif
 
   if ((int) reg->arg[2] > 0) {
@@ -882,7 +872,25 @@ void print_sendmsg_syscall(reg_s * reg, process_descriptor_t * proc, int len, vo
   } else
     fprintf(proc->strace_out, "0 ");
 
-  fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
+  fprintf(proc->strace_out, ") = %zd\n", (ssize_t) reg->ret);
+}
+
+/** @brief print a strace-like log of recvmsg syscall */
+void print_recvmsg_syscall(reg_s * reg, process_descriptor_t * proc, struct msghdr * msg)
+{
+  fprintf(proc->strace_out,"[%d] recvmsg(", proc->pid);
+    
+  fprintf(proc->strace_out, "%d, ", (int) reg->arg[0]);
+    
+  fprintf(proc->strace_out, ", {msg_namelen=%d, msg_iovlen=%d, msg_controllen=%d, msg_flags=%d}, ", (int) msg->msg_namelen,
+	  (int) msg->msg_iovlen, (int) msg->msg_controllen, msg->msg_flags);
+    
+  if ((int) reg->arg[2] > 0) {
+    print_flags_recv(proc, (int) reg->arg[2]);
+  } else
+    fprintf(proc->strace_out, "0 ");
+    
+  fprintf(proc->strace_out, ") = %zd\n", (ssize_t) reg->ret);
 }
 
 /** @brief helper function to print the events flags of poll syscall */
@@ -971,10 +979,10 @@ static void disp_selectfd(process_descriptor_t * proc, fd_set * fd)
 /** @brief print a strace-like log of select syscall */
 void print_select_syscall(reg_s * reg, process_descriptor_t * proc, int fd_state)
 {
-  fprintf(proc->strace_out, "select(%d,", (int) reg->arg[0]);
+  fprintf(proc->strace_out, "[%d] select(%d,", proc->pid, (int) reg->arg[0]);
 
   fd_set fd_read, fd_write, fd_exec;
- 
+
   ptrace_cpy(proc->pid, &fd_read, (void *) reg->arg[1], sizeof(fd_set), "select");
   ptrace_cpy(proc->pid, &fd_write, (void *) reg->arg[2], sizeof(fd_set), "select");
   ptrace_cpy(proc->pid, &fd_exec, (void *) reg->arg[3], sizeof(fd_set), "select");
@@ -1002,8 +1010,9 @@ void print_select_syscall(reg_s * reg, process_descriptor_t * proc, int fd_state
 /** @brief print a strace-like log of fcntl syscall */
 void print_fcntl_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  //  fprintf(proc->strace_out,"[%d] fcntl( %d, ", pid, arg->fd);
-  fprintf(proc->strace_out, "fcntl(%d, ", (int) reg->arg[0]);
+  fprintf(proc->strace_out,"[%d] fcntl( %d, ", proc->pid, (int) reg->arg[0]);
+  struct flock * lock = xbt_malloc(sizeof(struct flock));
+
   switch ((int) reg->arg[1]) {
   case F_DUPFD:
     fprintf(proc->strace_out, "F_DUPFD");
@@ -1031,18 +1040,42 @@ void print_fcntl_syscall(reg_s * reg, process_descriptor_t * proc)
 
   case F_SETFL:
     fprintf(proc->strace_out, "F_SETFL");
+    fprintf(proc->strace_out, ", %li", (long) reg->arg[2]);
     break;
 
   case F_SETLK:
     fprintf(proc->strace_out, "F_SETLK");
+    ptrace_cpy(proc->pid, lock, (void *) reg->arg[2], sizeof(struct flock), "fcntl");
+    fprintf(proc->strace_out, ", %d", lock->l_type);
+    fprintf(proc->strace_out, ", %d", lock->l_whence);
+    fprintf(proc->strace_out, ", %jd", lock->l_start);
+    fprintf(proc->strace_out, ", %jd", lock->l_len);
     break;
 
   case F_SETLKW:
     fprintf(proc->strace_out, "F_SETLKW");
+    ptrace_cpy(proc->pid, lock, (void *) reg->arg[2], sizeof(struct flock), "fcntl");
+    fprintf(proc->strace_out, ", %d", lock->l_type);
+    fprintf(proc->strace_out, ", %d", lock->l_whence);
+    fprintf(proc->strace_out, ", %jd", lock->l_start);
+    fprintf(proc->strace_out, ", %jd", lock->l_len);
     break;
 
   case F_GETLK:
     fprintf(proc->strace_out, "F_GETLK");
+    ptrace_cpy(proc->pid, lock, (void *) reg->arg[2], sizeof(struct flock), "fcntl");
+    fprintf(proc->strace_out, ", %d", lock->l_type);
+    fprintf(proc->strace_out, ", %d", lock->l_whence);
+    fprintf(proc->strace_out, ", %jd", lock->l_start);
+    fprintf(proc->strace_out, ", %jd", lock->l_len);
+    break;
+
+  case F_GETOWN:
+    fprintf(proc->strace_out, "F_GETOWN");
+    break;
+
+  case F_SETOWN:
+    fprintf(proc->strace_out, "F_SETOWN");
     break;
 
   default:
@@ -1062,13 +1095,21 @@ void print_lseek_syscall(reg_s * reg, process_descriptor_t * proc){
 /** @brief print a strace-like log of read syscall */
 void print_read_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  fprintf(proc->strace_out, "[%d] read(%d, \"...\", %zu) = %zd\n", proc->pid, (int) reg->arg[0] , (size_t) reg->arg[2], (ssize_t) reg->ret);
+
+  char * data = xbt_malloc0((size_t) reg->ret);
+  ptrace_cpy(proc->pid, data, (void *) reg->arg[1], (size_t) reg->ret, "read");
+
+  fprintf(proc->strace_out, "[%d] read(%d, \"%s\", %zu) = %zd\n", proc->pid, (int) reg->arg[0], data, (size_t) reg->arg[2], (ssize_t) reg->ret);
 }
 
 /** @brief print a strace-like log of write syscall */
 void print_write_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  fprintf(proc->strace_out, "[%d] write(%d, \"...\", %zu) = %zd\n", proc->pid, (int) reg->arg[0] , (size_t) reg->arg[2], (ssize_t) reg->ret);
+
+  char * data = xbt_malloc0((size_t) reg->ret);
+  ptrace_cpy(proc->pid, data, (void *) reg->arg[1], (size_t) reg->ret, "write");
+
+  fprintf(proc->strace_out, "[%d] write(%d, \"%s\", %zu) = %zd\n", proc->pid, (int) reg->arg[0], data, (size_t) reg->arg[2], (ssize_t) reg->ret);
 }
 
 /** @brief helper function to print options of shutdown syscall */
@@ -1090,7 +1131,7 @@ static void print_shutdown_option(process_descriptor_t * proc, int how)
 /** @brief print a strace-like log of shutdown syscall */
 void print_shutdown_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  fprintf(proc->strace_out, "shutdown (%d, ", (int) reg->arg[0]);
+  fprintf(proc->strace_out, "[%d] shutdown (%d, ", proc->pid, (int) reg->arg[0]);
   print_shutdown_option(proc, (int) reg->arg[1]);
   fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
 }
@@ -1099,27 +1140,12 @@ void print_shutdown_syscall(reg_s * reg, process_descriptor_t * proc)
 /** @brief print a strace-like log of getpeername syscall */
 void print_getpeername_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-/* TODO */
-/* fprintf(proc->strace_out, "getpeername (%d, ", (int) reg->arg[0]); */
-/*  struct sockaddr *sock = (struct sockaddr *) reg->arg[1];  */
-/*  fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", sock.sin_port, */
-/* 	 inet_ntoa((sock.sin_addr))); */
-/*   fprintf(proc->strace_out, "%u ) = %d\n", (socklen_t *) reg->arg[2],  (int) reg->ret); */
-}
+  fprintf(proc->strace_out, "[%d] getpeername (%d, ", proc->pid, (int) reg->arg[0]);
+  struct sockaddr_in *sock = xbt_malloc0(sizeof(struct sockaddr_in));
+  ptrace_cpy(proc->pid, sock, (void *) reg->arg[1], sizeof(struct sockaddr_in), "getpeername");
 
-/** @brief print a strace-like log of time syscall */
-void print_time_syscall(reg_s * reg, process_descriptor_t * proc)
-{
-  //fprintf(proc->strace_out,"[%d] time = %ld\n", pid, arg->ret);
-  fprintf(proc->strace_out, "time = %lu\n", reg->ret);
-}
-
-/** @brief print a strace-like log of gettimeofday syscall */
-void print_gettimeofday_syscall(reg_s * reg, process_descriptor_t * proc)
-{
-  /* TODO */
-  /* fprintf(proc->strace_out, "gettimeofday, tv = %lu\n", reg.arg[0]->tv_sec); */
-
+  fprintf(proc->strace_out, "{sa_family=AF_INET, sin_port=htons(%d), sin_addr=inet_addr(\"%s\")}, ", sock->sin_port, inet_ntoa((sock->sin_addr)));
+  fprintf(proc->strace_out, "%u ) = %d\n", *((socklen_t *) reg->arg[2]),  (int) reg->ret);
 }
 
 /** @brief helper function to print the flags of clone syscall */
@@ -1177,10 +1203,10 @@ static void print_flags_clone(process_descriptor_t * proc, int flags)
 /** @brief print a strace-like log of clone syscall */
 void print_clone_syscall(reg_s * reg, process_descriptor_t * proc)
 {
-  fprintf(proc->strace_out, "clone(child_stack=%ld, flags=", reg->arg[1]);
+  fprintf(proc->strace_out, "[%d] clone(child_stack=%ld, flags=", proc->pid, reg->arg[1]);
 
   print_flags_clone(proc, reg->arg[0]);
-  fprintf(proc->strace_out, "child_tidptr=0x%lx) = %d \n", (long int) reg->arg[3], (int) reg->ret);
+  fprintf(proc->strace_out, "child_tidptr = %d) = %ld \n", (pid_t) reg->arg[3], (long int) reg->ret);
 }
 
 /** @brief helper function to retrieve the information of execve syscall */
@@ -1213,7 +1239,7 @@ void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc)
   long filename, argv;
 
   filename = reg->arg[0];
-  fprintf(proc->strace_out, "execve(");
+  fprintf(proc->strace_out, "[%d] execve(", proc->pid);
   if (filename) {
     get_string(pid, filename, bufstr, sizeof(bufstr));
     fprintf(proc->strace_out, "\"%s\", [", bufstr);
@@ -1239,13 +1265,13 @@ void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc)
       fprintf(proc->strace_out, ", \"%s\"", bufstr);
     }
   }
-  fprintf(proc->strace_out, ") = ");
+  fprintf(proc->strace_out, ")");
 }
 
 /** @brief print the return of execve syscall */
 void print_execve_syscall_post(reg_s * reg, process_descriptor_t * proc)
 {
-  fprintf(proc->strace_out, "%d\n", (int) reg->ret);
+  fprintf(proc->strace_out, " = %d\n", (int) reg->ret);
 }
 
 /** @brief print open syscall */
@@ -1256,7 +1282,7 @@ void print_open_syscall(reg_s * reg, process_descriptor_t * proc)
   long ptr_filename;
 
   ptr_filename = reg->arg[0];
-  fprintf(proc->strace_out, "open(");
+  fprintf(proc->strace_out, "[%d] open(", proc->pid);
   if (ptr_filename) {
     get_string(pid, ptr_filename, bufstr, sizeof(bufstr));
     fprintf(proc->strace_out, "\"%s\"", bufstr);
@@ -1275,6 +1301,17 @@ void print_open_syscall(reg_s * reg, process_descriptor_t * proc)
   } else {
     fprintf(proc->strace_out, ") = %d\n", (int) reg->ret);
   }
+}
+
+void print_creat_syscall(reg_s * reg, process_descriptor_t * proc){
+  char * pathname = (char *) xbt_malloc(200*sizeof(char));
+  
+  ptrace_cpy(proc->pid, pathname, (void *) reg->arg[0], 200*sizeof(char), "creat");
+  fprintf(stderr, "[%d] creat(%s, %d) = %d \n", proc->pid, pathname, (int) reg->arg[1], (int) reg->ret);
+}
+
+void print_close_syscall(reg_s * reg, process_descriptor_t * proc){
+  fprintf(stderr, "[%d] close(%d) = %d \n", proc->pid, (int) reg->arg[0], (int) reg->ret);
 }
 
 /* These functions are highly inspirated from the strace source code.

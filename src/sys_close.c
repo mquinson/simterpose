@@ -7,6 +7,7 @@
 
 #include "sys_close.h"
 
+#include "print_syscall.h"
 #include "simterpose.h"
 #include "syscall_process.h"
 
@@ -32,6 +33,6 @@ void syscall_close(reg_s * reg, process_descriptor_t * proc)
     }
     
     if (strace_option)
-      fprintf(stderr, "[%d] close(%d) = %d \n", proc->pid, (int) reg->arg[0], (int) reg->ret);
+      print_close_syscall(reg, proc);
   }
 }

@@ -47,20 +47,16 @@ int main()
   serv_addr->sin_port = htons(port);
   serv_addr->sin_addr.s_addr = INADDR_ANY;
 
-  int on = 1;
+  socklen_t on = 1;
   if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0) {
     perror("Error setsockopt");
     exit(1);
   }
 
-
-
   if (getsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &on, &on) < 0) {
     perror("Error getsockopt");
     exit(1);
   }
-
-
   
   if (bind(serverSocket, (struct sockaddr *) serv_addr, sizeof(struct sockaddr_in)) < 0) {
     perror("Error bind");
@@ -92,7 +88,7 @@ int main()
       perror("Error server reception");
       exit(1);
     }
-    fprintf(stderr, "Receive message #%d from client: \"%s\"\n", ia, buff);
+    fprintf(stderr, "Receive message #%d of %d bytes: \"%s\"\n", ia, res, buff);
   }
 
   shutdown(client_socket, SHUT_RDWR);

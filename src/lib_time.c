@@ -15,8 +15,10 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "include/simterpose.h"
+
 /* Function allowing to log every wrapped functions */
-void LogWrap(char *mess){
+static void LogWrap(const char *mess){
   FILE *file_log = fopen("../file_log", "a");
   fprintf(file_log, "%s", mess);
   fclose(file_log);
@@ -44,49 +46,46 @@ time_t time(time_t *t){
   return (time_t) sec;    
 }
 
-int gettimeofday(struct timeval *restrict tp, void *restrict tzp){
-  LogWrap("gettimeofday call\n");
-  printf("This function is obsolescent, call clock_gettime()\n");
-  LogWrap("gettimeofday done call\n");
+int gettimeofday (struct timeval *__restrict __tv, __timezone_ptr_t __tz){
+  ABORT("This function is obsolescent, call clock_gettime().");
+  return 0;
 }
 
 struct tm * localtime(const time_t *timep){
-  printf("[%d] [localtime] Unhandled function\n",getpid());
+  ABORT("localtime: Unhandled function.");
   return NULL;
 }
 
 time_t mktime(struct tm *tm){
-  printf("[%d] [mktime] Unhandled function\n",getpid());
+  ABORT("mktime: Unhandled function.");
   return 0;
 }
 
 int clock_getres(clockid_t clk_id, struct timespec *res){
-  printf("[%d] [clock_getres] Unhandled function\n",getpid());
+  ABORT("clock_getres: Unhandled function.");
   return 0;
 }
 
 int clock_gettime(clockid_t clk_id, struct timespec *tp){
-  LogWrap("clock_gettime call\n");
-  if (clk_id == CLOCK_REALTIME){
-    double sec = MSG_get_clock();
-    tp->tv_sec = floor(sec);
-    tp->tv_nsec = (sec - floor(sec))*pow(10,9);
-    printf("%d %ld\n", tp->tv_sec, tp->tv_nsec);
-  }
-
   if ((clk_id == CLOCK_MONOTONIC) ||
       (clk_id == CLOCK_PROCESS_CPUTIME_ID) ||
       (clk_id == CLOCK_THREAD_CPUTIME_ID))
-    printf("[%d] [clock_gettime] Unhandled clock\n",getpid());
+     ABORT("clock_gettime: Unhandled clock.");
   else
-    printf("[%d] [clock_gettime] This clock does not exist\n",getpid());
+     ABORT("clock_gettime: This clock does not exist.");
 
+  LogWrap("clock_gettime call\n");
+  if (clk_id == CLOCK_REALTIME){
+    double sec = MSG_get_clock();
+    tp->tv_sec = (time_t) floor(sec);
+    tp->tv_nsec = (sec - floor(sec))*pow(10,9);
+  }
   LogWrap("clock_gettime done call\n");
     
   return 0;
 }
 
 int clock_settime(clockid_t clk_id, const struct timespec *tp){
-  printf("[%d] [clock_settime] Unhandled function\n",getpid());
+   ABORT("clock_settime: Unhandled function.");
   return 0;
 }

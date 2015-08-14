@@ -56,7 +56,7 @@ void syscall_recv_pre(reg_s * reg, process_descriptor_t * proc, void * data)
         else if (MSG_process_self() == file_desc->stream->server)
           mailbox = file_desc->stream->to_server;
         else
-          ABORT("SYS_recv: No mailbox available\n");;
+          ABORT("SYS_recv: No mailbox available.");
         msg_task_t task = NULL;
         msg_error_t err = MSG_task_receive(&task, mailbox);
 	reg->ret = (ssize_t) MSG_task_get_bytes_amount(task);
@@ -67,7 +67,7 @@ void syscall_recv_pre(reg_s * reg, process_descriptor_t * proc, void * data)
           int sock_status = socket_get_state(is);
 #ifdef address_translation
           if (sock_status & SOCKET_CLOSED)
-            process_recv_out_call(reg, proc, data);
+	    ABORT("SYS_recv: Socket status closed.");
 #else
           if (sock_status & SOCKET_CLOSED)
 	    reg->ret = -1;
@@ -97,6 +97,7 @@ void syscall_recv_post(reg_s * reg, process_descriptor_t * proc, void * data)
   proc_outside(proc);
   // XBT_DEBUG("[%d] recv_out", pid);
   XBT_DEBUG("recv_post");
+  ptrace_cpy(proc->pid, data, (void *) reg->arg[1], (size_t) reg->arg[2], "recv");
 
   if (strace_option)
     print_recv_syscall(reg, proc, data);
@@ -115,6 +116,7 @@ void process_recv_out_call(reg_s * reg, process_descriptor_t * proc, void * data
 
   len_data = strlen((char *) data) + 1;
   len_buf = (size_t) reg->arg[2];
+
   if (len_buf >= len_data){
     ptrace_poke(pid, (void *) reg->arg[1], data, len_data);
     reg->ret = len_data;

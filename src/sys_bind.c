@@ -33,7 +33,6 @@ void syscall_bind_pre(reg_s * reg, process_descriptor_t * proc)
   pid_t pid = proc->pid;
   int sockfd =  (int) reg->arg[0];
   int domain = get_domain_socket(proc, sockfd);
-  socklen_t addrlen = (socklen_t) reg->arg[2];
   struct sockaddr_in sai;
   struct sockaddr_un sau;
   struct sockaddr_nl snl;

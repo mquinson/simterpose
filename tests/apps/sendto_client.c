@@ -28,9 +28,8 @@ int main()
   u_short port;
   int res;
   char buff[BUFFER_SIZE];
+  /* long host_addr; */
   strcpy(buff, "Message from client");
-  int server_socket;
-  long host_addr;
   struct hostent *serverHostEnt;
 
   if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -40,7 +39,7 @@ int main()
 
   struct sockaddr_in cli_addr;
   memset(&cli_addr, 0, sizeof(struct sockaddr_in));
-  host_addr = inet_addr("162.32.43.1");       /*162.32.43.1 */
+  /* host_addr = inet_addr("162.32.43.1"); */       /*162.32.43.1 */
   serverHostEnt = gethostbyname("162.32.43.1");
   memcpy(&(cli_addr.sin_addr), serverHostEnt->h_addr, serverHostEnt->h_length);
   port = SERV_PORT;
@@ -64,7 +63,7 @@ int main()
       perror("Error send client");
       exit(1);
     }
-    fprintf(stderr, "Message send #%d from client <%s>\n", ia, buff);
+    fprintf(stderr, "Client: Message send #%d \"%s\"\n", ia, buff);
   }
   shutdown(clientSocket, SHUT_RDWR);
   close(clientSocket);

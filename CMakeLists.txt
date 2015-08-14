@@ -14,7 +14,7 @@ include_directories(${SIMGRID_INCLUDE_DIRS})
 include_directories(src/include)
 
 if(WARN_ERRORS)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wmissing-prototypes -Wmissing-declarations")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wpointer-arith -Wwrite-strings")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wunused -Wno-unused-function -Wno-unused-parameter")

@@ -2,17 +2,15 @@
 
 set -e # fail fast
 
+rm -f simterpose-send_clientserver.log
 make -C ../src/ simterpose
 make -C apps/   send_server send_client
-
-# Allow to use another folder thant /opt/Simgrid to execute
-sim_dir=$1
 
 # Allow to run under valgrind or gdb easily
 VALGRIND_OPTS="--verbose --trace-children=no --child-silent-after-fork=yes"
 export VALGRIND_OPTS
 
-runner=$2
+runner=$1
 
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$sim_dir/lib/
 export LD_LIBRARY_PATH

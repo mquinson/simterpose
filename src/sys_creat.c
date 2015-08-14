@@ -7,6 +7,7 @@
 
 #include "sys_creat.h"
 
+#include "print_syscall.h"
 #include "ptrace_utils.h"
 #include "simterpose.h"
 
@@ -28,7 +29,7 @@ void syscall_creat_post(reg_s * reg, process_descriptor_t * proc)
 {
   proc_outside(proc);
   char * pathname = (char *) xbt_malloc(200*sizeof(char));
-  ptrace_cpy(proc->pid, pathname, (void *) reg->arg[0], 200*sizeof(char), "open");
+  ptrace_cpy(proc->pid, pathname, (void *) reg->arg[0], 200*sizeof(char), "creat");
     
   
   if ((int) reg->ret >= 0) {
@@ -46,5 +47,5 @@ void syscall_creat_post(reg_s * reg, process_descriptor_t * proc)
   }
 
  if (strace_option)
-   fprintf(stderr, "[%d] create(%s, %d) = %d \n", proc->pid, pathname, (int) reg->arg[1], (int) reg->ret);
+   print_creat_syscall(reg, proc);
 }

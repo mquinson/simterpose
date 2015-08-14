@@ -63,10 +63,6 @@ void print_shutdown_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_getpeername_syscall(reg_s * reg, process_descriptor_t * proc);
 
-void print_time_syscall(reg_s * reg, process_descriptor_t * proc);
-
-void print_gettimeofday_syscall(reg_s * reg, process_descriptor_t * proc);
-
 void print_clone_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc);
@@ -74,6 +70,10 @@ void print_execve_syscall_pre(reg_s * reg, process_descriptor_t * proc);
 void print_execve_syscall_post(reg_s * reg, process_descriptor_t * proc);
 
 void print_open_syscall(reg_s * reg, process_descriptor_t * proc);
+
+void print_creat_syscall(reg_s * reg, process_descriptor_t * proc);
+
+void print_close_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void stprintf(process_descriptor_t * proc, const char*fmt, ...);
 void stprintf_tabto(process_descriptor_t * proc);

@@ -16,7 +16,7 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles sendto syscall at the entrance and the exit */
-int syscall_sendto(pid_t pid, reg_s * reg, process_descriptor_t * proc){
+int syscall_sendto(reg_s * reg, process_descriptor_t * proc){
 
   int ret = 0;
   struct sockaddr_in * sai = (struct sockaddr_in *) xbt_malloc0(sizeof(struct sockaddr_in));
@@ -24,9 +24,9 @@ int syscall_sendto(pid_t pid, reg_s * reg, process_descriptor_t * proc){
   struct sockaddr_nl * snl = (struct sockaddr_nl *) xbt_malloc0(sizeof(struct sockaddr_nl));
   
   if (proc_entering(proc))
-    ret = syscall_sendto_pre(pid, reg, proc, sai, sau, snl);
+    ret = syscall_sendto_pre(reg, proc, sai, sau, snl);
   else
-    ret = syscall_sendto_post(pid, reg, proc, sai, sau, snl);
+    ret = syscall_sendto_post(reg, proc, sai, sau, snl);
   if (ret)
     return ret;
 
@@ -42,20 +42,20 @@ int syscall_sendto(pid_t pid, reg_s * reg, process_descriptor_t * proc){
  * In case of address translation we translate the arguments (from a global
  * simulated address to a real local one) to let the kernel run the syscall
  */
-int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
+int syscall_sendto_pre(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
   proc_inside(proc);
   //  XBT_DEBUG("[%d] sendto_pre", pid);
   XBT_DEBUG("sendto_pre");
-  void * data = NULL;
-  size_t len_buf;
-  socklen_t addrlen = 0;
-  int is_addr = 0;
+  pid_t pid = proc->pid;
+  socklen_t addrlen __attribute__((unused));
+  int is_addr __attribute__((unused));
+  int domain;
 
   if((get_type_socket(proc, (int) reg->arg[0]) != SOCK_STREAM)
      && (get_type_socket(proc, (int) reg->arg[0]) != SOCK_SEQPACKET))
     {
-      int domain = get_domain_socket(proc, (int) reg->arg[0]);
+      domain = get_domain_socket(proc, (int) reg->arg[0]);
       if ( (int) reg->arg[4] != 0) {  
 	is_addr = 1;
 	if (domain == 2)            // PF_INET
@@ -75,6 +75,7 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, stru
     }
   
 #ifndef address_translation
+  void * data = NULL;
   data = xbt_new0(char, (size_t) reg->arg[2]);
   ptrace_cpy(pid, data, (void *) reg->arg[1],  (size_t) reg->arg[2], "sendto");
 
@@ -108,15 +109,19 @@ int syscall_sendto_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc, stru
  * We also send the MSG task in order to return control to the MSG process
  * receiving the message
  */
-int syscall_sendto_post(pid_t pid, reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
+int syscall_sendto_post(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
   proc_outside(proc);
   // XBT_DEBUG("[%d] sendto_out", pid);
   XBT_DEBUG("sendto_post");
+  pid_t pid = proc->pid;
   void * data = NULL;
   socklen_t addrlen = 0;
   int is_addr = 0;  
-  
+
+  data = xbt_new0(char, (size_t) reg->arg[2]);  
+  ptrace_cpy(pid, data, (void *) reg->arg[1],  (size_t) reg->arg[2], "sendto");
+
   if((get_type_socket(proc, (int) reg->arg[0]) != SOCK_STREAM)
      && (get_type_socket(proc, (int) reg->arg[0]) != SOCK_SEQPACKET))
     {      
@@ -175,7 +180,7 @@ void sys_translate_sendto_in(reg_s * reg, process_descriptor_t * proc, struct so
   XBT_DEBUG("Translate address %s:%d", inet_ntoa(in), ntohs(sai->sin_port));
 
   struct sockaddr_in * temp = sai;
-  ntohs(temp->sin_port);
+  /* ntohs(temp->sin_port); */
   int port = get_real_port(proc, temp->sin_addr.s_addr, ntohs(temp->sin_port));
   temp->sin_addr.s_addr = inet_addr("127.0.0.1");
   temp->sin_port = htons(port);

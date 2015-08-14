@@ -17,12 +17,12 @@
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
 /** @brief handles recvmsg syscall at the entrance and the exit */
-void syscall_recvmsg(pid_t pid, reg_s * reg, process_descriptor_t * proc){
+void syscall_recvmsg(reg_s * reg, process_descriptor_t * proc){
 
   if (proc_entering(proc))
-    syscall_recvmsg_pre(pid, reg, proc);
+    syscall_recvmsg_pre(reg, proc);
   else
-    syscall_recvmsg_post(pid, reg, proc);
+    syscall_recvmsg_post(reg, proc);
 
 }
 
@@ -31,12 +31,13 @@ void syscall_recvmsg(pid_t pid, reg_s * reg, process_descriptor_t * proc){
  * We receive the MSG task and in case of full mediation we neutralize the
  * real syscall and don't go to syscall_recvmsg_post afterwards.
  */
-void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
+void syscall_recvmsg_pre(reg_s * reg, process_descriptor_t * proc)
 {
   proc_inside(proc);
   //  XBT_DEBUG("[%d] recvmsg_in", pid);
   XBT_DEBUG("recvmsg_pre");
   
+  pid_t pid = proc->pid;
   void * data = NULL;
   size_t len = 0;
   struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
@@ -99,12 +100,13 @@ void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc)
 }
 
 /** @brief print recvmsg syscall at the exit */
-void syscall_recvmsg_post(pid_t pid, reg_s * reg, process_descriptor_t * proc)
+void syscall_recvmsg_post(reg_s * reg, process_descriptor_t * proc)
 {
   proc_outside(proc);
   // XBT_DEBUG("[%d] recvmsg_out", pid);
   XBT_DEBUG("recvmsg_post");
 
+  pid_t pid = proc->pid;
   struct msghdr * msg = xbt_malloc0(sizeof(struct msghdr));
   ptrace_cpy(pid, msg, (void *) reg->arg[1], sizeof(struct msghdr), "recvmsg");
   size_t len = 0;
@@ -124,7 +126,6 @@ void syscall_recvmsg_post(pid_t pid, reg_s * reg, process_descriptor_t * proc)
 void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, void * data, struct msghdr * msg)
 {
   pid_t pid = proc->pid;
-  int length = (ssize_t) reg->ret;
   ssize_t bytes_read = 0;
   int global_size = 0; /* TODO: What is this */
   int i;

@@ -157,7 +157,7 @@ int process_handle(process_descriptor_t * proc)
 #endif
 
     case SYS_sendto:
-      ret = syscall_sendto(pid, &arg, proc);
+      ret = syscall_sendto(&arg, proc);
       if (ret)
         return ret;
       break;
@@ -172,7 +172,7 @@ int process_handle(process_descriptor_t * proc)
       break;
 
     case SYS_recvmsg:
-      syscall_recvmsg(pid, &arg, proc);
+      syscall_recvmsg(&arg, proc);
       break;
 
     case SYS_shutdown:
@@ -201,12 +201,16 @@ int process_handle(process_descriptor_t * proc)
 
     case SYS_exit:
       XBT_DEBUG("exit(%ld) called", arg.arg[0]);
-      return syscall_exit(pid, &arg, proc);
+      return syscall_exit(&arg, proc);
       break;
 
     case SYS_exit_group:
       XBT_DEBUG("exit_group(%ld) called", arg.arg[0]);
-      return syscall_exit(pid, &arg, proc);
+      return syscall_exit(&arg, proc);
+      break;
+
+    case SYS_getpid:
+      syscall_getpid(&arg, proc);
       break;
 
     default:

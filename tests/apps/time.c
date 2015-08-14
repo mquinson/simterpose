@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/time.h>
 #include <sys/timeb.h>
 #include <time.h>
 
@@ -23,12 +24,16 @@ int main(){
   const time_t *timep = NULL;
   localtime(timep);
   
-  struct tm *tm = (struct tm *) malloc(sizeof(struct tm));
   mktime(NULL);
   
+  struct timeval * tval = (struct timeval *) malloc(sizeof(struct timeval));
+  __timezone_ptr_t tz = 0;
+  gettimeofday(tval, tz);
+
   clock_getres(0, NULL);
 
-  clock_gettime(0, NULL);
+  struct timespec *tl = (struct timespec *) malloc(sizeof(struct timespec));
+  clock_gettime(0, tl);
 
   clock_settime(0, NULL);
     

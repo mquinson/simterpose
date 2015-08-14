@@ -65,9 +65,9 @@ pit_d pid = proc->pid;
   }
 #else
   if (socket_registered(proc, (int) reg->arg[0]) == -1) 
-    ABORT("SYS_send: Socket not registred\n");
+    ABORT("SYS_send: Socket not registred.");
   if (!socket_network(proc, (int) reg->arg[0]))
-    ABORT("SYS_send: The socket is not a network socket\n");
+    ABORT("SYS_send: The socket is not a network socket.");
   return PROCESS_CONTINUE;
 #endif
 }
@@ -84,6 +84,7 @@ int syscall_send_post(reg_s * reg, process_descriptor_t * proc)
   proc_outside(proc);
   XBT_DEBUG("send_post");
   void * data = NULL;
+  ptrace_cpy(proc->pid, data, (void *) reg->arg[1], (size_t) reg->arg[2], "send");
   
   if (strace_option)
     print_send_syscall(reg, proc, data);
@@ -94,7 +95,7 @@ int syscall_send_post(reg_s * reg, process_descriptor_t * proc)
       return PROCESS_TASK_FOUND;
   }
   else
-    ABORT("SYS_send: Error syscall retur\n");
+    ABORT("SYS_send: Error syscall return.");
   return PROCESS_CONTINUE;
 }
 #endif

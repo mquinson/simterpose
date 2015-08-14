@@ -22,7 +22,7 @@
 int main(int argc, char **argv) {
 
   if (argc < 5) {
-    fprintf(stderr, "usage: %s IP port msg_count msg_size \n", argv[0]);
+    fprintf(stderr, "Usage: %s IP port msg_count msg_size \n", argv[0]);
     return EXIT_FAILURE;
   }
 
@@ -32,14 +32,6 @@ int main(int argc, char **argv) {
   int msg_size = atoi(argv[4]);
 
   fprintf(stderr, "Client starting: #msg: %d; size:%d (the server is on %s:%d) \n", msg_count, msg_size, IP, server_port);
-  struct timeval * ti = (struct timeval * ) malloc(sizeof(struct timeval));
-  gettimeofday(ti, NULL);
-  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
-  char * ti_s = (char *) malloc(sizeof(char));
-  ti_s = ctime(&ti->tv_sec);
-  char * ti_us = (char *) malloc(sizeof(char));
-  ti_us = ctime(&ti->tv_usec);
-  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
 
   int clientSocket;
   int res;
@@ -67,6 +59,7 @@ int main(int argc, char **argv) {
   int msg_number = 0;
 
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
+    fprintf(stderr, "Client: you will try to use recv/send syscalls, they are only suported on 32bits architectures. It could not work\n");
     sprintf(buff, "This is the message #%d produced on the client.", msg_number);
     res = send(clientSocket, buff, msg_size, 0);
     if (res == -1) {
@@ -94,11 +87,6 @@ int main(int argc, char **argv) {
   shutdown(clientSocket, 2);
   close(clientSocket);
 
-  gettimeofday(ti, NULL);
-  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
-  ti_s = ctime(&ti->tv_sec);
-  ti_us = ctime(&ti->tv_usec);
-  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
   fprintf(stderr, "Client exiting after %d msgs \n", msg_count);
 
   return 0;

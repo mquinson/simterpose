@@ -29,7 +29,7 @@ int strace_option = 0;
 
 static void usage(char *progName, int retcode)
 {
-  printf("usage : %s  [-s] [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
+  fprintf(stderr, "usage : %s  [-s] [-p flops_power] platform_file.xml deployment_file.xml\n", progName);
   exit(retcode);
 }
 

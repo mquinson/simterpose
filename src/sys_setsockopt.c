@@ -30,7 +30,7 @@ void syscall_setsockopt_pre(reg_s * reg, process_descriptor_t * proc)
   proc_inside(proc);
 #ifndef address_translation
   pid_t pid = proc->pid;
-  if ( (int) reg->arg[2] == SO_REUSEADDR){
+  if ((int) reg->arg[2] == SO_REUSEADDR){
     int * optval = xbt_malloc(sizeof(int));
     ptrace_cpy(proc->pid, optval, (void *) reg->arg[3], sizeof(int), "setsockopt");
     socket_set_option(proc, (int) reg->arg[0], SOCK_OPT_REUSEADDR, *optval);

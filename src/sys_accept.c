@@ -20,9 +20,7 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 void syscall_accept(reg_s * reg, process_descriptor_t * proc)
 {
   int sockfd = (int) reg->arg[0];
-  void * addr = (void *) reg->arg[1];
   void * addrlen = (void *) reg->arg[2];
-  int ret = (int) reg->ret;
   struct sockaddr_in sai;
   struct sockaddr_un sau;
   struct sockaddr_nl snl;
@@ -79,6 +77,7 @@ void syscall_accept(reg_s * reg, process_descriptor_t * proc)
       pid_t pid = proc->pid;
       //Now we rebuild the syscall.
       int new_fd = ptrace_record_socket(pid);
+      void * addr = (void *) reg->arg[1];
 
       reg->ret = new_fd;
       ptrace_neutralize_syscall(pid);

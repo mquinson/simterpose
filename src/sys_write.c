@@ -27,16 +27,14 @@ int syscall_write(reg_s * reg, process_descriptor_t * proc)
 {
   int fd = (int) reg->arg[0];
   void * data = (void *) reg->arg[1];
-  /* TODO: check this*/
-  /* arg->dest = (void *) reg->arg[1]; */
   ssize_t ret = (ssize_t) reg->ret;
-  ssize_t count = (size_t) reg->arg[2];
+
 #ifndef address_translation
   pid_t pid = proc->pid;
   if (socket_registered(proc, fd)) {
     if (socket_network(proc, fd)) {
       data = xbt_new0(char, (size_t) reg->arg[2]);
-      ptrace_cpy(pid, data, (void *) reg->arg[1], count, "write");
+      ptrace_cpy(pid, data, (void *) reg->arg[1], (size_t) reg->arg[2], "write");
     }
   }
 #endif

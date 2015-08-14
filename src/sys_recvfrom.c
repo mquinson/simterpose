@@ -17,16 +17,14 @@ XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 /** @brief handles recvfrom syscall at the entrance and the exit */
 void syscall_recvfrom(reg_s * reg, process_descriptor_t * proc){
   
-  void * data = NULL;
-  void * dest = NULL;
   struct sockaddr_in * sai = (struct sockaddr_in *) xbt_malloc0(sizeof(struct sockaddr_in));
   struct sockaddr_un * sau = (struct sockaddr_un *) xbt_malloc0(sizeof(struct sockaddr_un));
   struct sockaddr_nl * snl = (struct sockaddr_nl *) xbt_malloc0(sizeof(struct sockaddr_nl));
   
   if (proc_entering(proc))
-    syscall_recvfrom_pre(reg, proc, data, dest, sai, sau, snl);
+    syscall_recvfrom_pre(reg, proc, sai, sau, snl);
   else
-    syscall_recvfrom_post(reg, proc, data, dest, sai, sau, snl);
+    syscall_recvfrom_post(reg, proc, sai, sau, snl);
 
 }
 
@@ -39,7 +37,7 @@ void syscall_recvfrom(reg_s * reg, process_descriptor_t * proc){
  * In case of full mediation we receive the MSG task and we neutralize the
  * real syscall. We don't go to syscall_recvmsg_post afterwards.
  */
-void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data, void * dest, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
+void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
   socklen_t addrlen = 0;
   int is_addr = 0;
@@ -50,6 +48,7 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
 #ifdef address_translation
   if (reg->ret > 0) {
 #endif
+    void * data __attribute__((unused)) = NULL;
     fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, (int) reg->arg[0]);
     file_desc->refcount++;
 
@@ -72,17 +71,17 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
           int sock_status = socket_get_state(is);
 #ifdef address_translation
           if (sock_status & SOCKET_CLOSED)
-            process_recvfrom_out_call(reg, proc, data, dest, sai, sau, snl, is_addr, addrlen);
+            process_recvfrom_out_call(reg, proc, data, sai, sau, snl, is_addr, addrlen);
 #else
           if (sock_status & SOCKET_CLOSED)
 	    reg->ret = 0;
           ptrace_neutralize_syscall(proc->pid);
           proc_outside(proc);
-          process_recvfrom_out_call(reg, proc, data, dest, sai, sau, snl, is_addr, addrlen);
+          process_recvfrom_out_call(reg, proc, data, sai, sau, snl, is_addr, addrlen);
         } else {
 	  ptrace_neutralize_syscall(proc->pid);
 	  proc_outside(proc);
-	  process_recvfrom_out_call(reg, proc, data, dest, sai, sau, snl, is_addr, addrlen);
+	  process_recvfrom_out_call(reg, proc, data, sai, sau, snl, is_addr, addrlen);
 #endif
         }
         MSG_task_destroy(task);
@@ -97,13 +96,16 @@ void syscall_recvfrom_pre(reg_s * reg, process_descriptor_t * proc, void * data,
 }
 
 /** @brief print recvfrom syscall at the exit */
-void syscall_recvfrom_post(reg_s * reg, process_descriptor_t * proc, void * data, void * dest, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
+void syscall_recvfrom_post(reg_s * reg, process_descriptor_t * proc, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl)
 {
   proc_outside(proc);
   // XBT_DEBUG("[%d] recvfrom_out", pid);
   XBT_DEBUG("recvfrom_post");
   socklen_t addrlen = 0;
   int is_addr = 0;
+  char * data = xbt_malloc(sizeof(char) * reg->ret);
+
+  ptrace_cpy(proc->pid, data, (void *) reg->arg[1], reg->ret, "recvfrom");
 
   if ((struct sockaddr *) reg->arg[4] != NULL) {
     if (socket_registered(proc, (int) reg->arg[0]) != -1) {
@@ -120,7 +122,7 @@ void syscall_recvfrom_post(reg_s * reg, process_descriptor_t * proc, void * data
  *
  *  We restore the syscall registers with the right return value
  */
-void process_recvfrom_out_call(reg_s * reg, process_descriptor_t * proc, void * data, void * dest, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl, int is_addr, socklen_t addrlen)
+void process_recvfrom_out_call(reg_s * reg, process_descriptor_t * proc, void * data, struct sockaddr_in * sai, struct sockaddr_un * sau, struct sockaddr_nl * snl, int is_addr, socklen_t addrlen)
 {
   XBT_DEBUG("Entering process_RECVFROM_out_call");
   pid_t pid = proc->pid;

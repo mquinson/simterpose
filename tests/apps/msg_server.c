@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 {
 
   if (argc < 4) {
-    fprintf(stderr, "usage: %s port msg_count msg_size\n", argv[0]);
+    fprintf(stderr, "Usage: %s port msg_count msg_size\n", argv[0]);
     return EXIT_FAILURE;
   }
 
@@ -31,14 +31,6 @@ int main(int argc, char **argv)
   int buffer_size = atoi(argv[3]);
   
   fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", port, msg_count, buffer_size);
-  struct timeval * ti = (struct timeval * ) malloc(sizeof(struct timeval));
-  gettimeofday(ti, NULL);
-  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
-  char * ti_s = (char *) malloc(sizeof(char));
-  ti_s = ctime(&ti->tv_sec);
-  char * ti_us = (char *) malloc(sizeof(char));
-  ti_us = ctime(&ti->tv_usec);
-  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
 
   int serverSocket;
   char *buff = (char *) malloc(buffer_size);
@@ -72,7 +64,8 @@ int main(int argc, char **argv)
     perror("Server: error listen");
     exit(1);
   }
-  printf("Server: Waiting for incoming requests\n");
+  fprintf(stderr, "Server: Waiting for incoming requests\n");
+
   int clilen = sizeof(struct sockaddr_in);
   struct sockaddr_in *cli_addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
 
@@ -94,21 +87,14 @@ int main(int argc, char **argv)
 
     res = recvmsg(client_socket, &msg, 0);
     if (res == -1) {
-      fprintf(stderr, "Server: error while receiving message #%d: %s\n", msg_number, strerror(errno));
+      fprintf(stderr, "Server: error while receiving message #%d \"%s\"\n", msg_number, strerror(errno));
       exit(1);
     }
-    printf("Receive %d bytes: >>%s<<\n", res, buff);
+    fprintf(stderr, "Receive message #%d of %d bytes: \"%s\" \n", msg_number, res, buff);
   }
 
   shutdown(client_socket, 2);
   close(client_socket);
 
-  gettimeofday(ti, NULL);
-  printf("[%d] Time with gettimeofday: %lld %lld\n", getpid(), (long long) ti->tv_sec,  (long long) ti->tv_usec);
-  ti_s = ctime(&ti->tv_sec);
-  ti_us = ctime(&ti->tv_usec);
-  printf("[%d] Time with gettimeofday in char: %s %s\n", getpid(), ti_s, ti_us);
-  fprintf(stderr, "Server exiting after %d msgs\n", msg_count);
-  
   return 0;
 }

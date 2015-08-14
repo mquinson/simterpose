@@ -21,6 +21,7 @@ add_executable(simterpose
   sys_exit.c
   sys_fcntl.c
   sys_getpeername.c
+  sys_getpid.c
   sys_getsockopt.c
   sys_listen.c
   sys_lseek.c
@@ -64,6 +65,7 @@ add_executable(simterpose
   include/sys_exit.h
   include/sys_fcntl.h
   include/sys_getpeername.h
+  include/sys_getpid.h
   include/sys_getsockopt.h
   include/sys_listen.h
   include/sys_lseek.h

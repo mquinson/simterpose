@@ -9,7 +9,6 @@
 
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
-#include "syscall_data.h"
 
 void syscall_fcntl(reg_s * reg, process_descriptor_t * proc);
 void process_fcntl_call(reg_s * reg, process_descriptor_t * proc);

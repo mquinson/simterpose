@@ -12,7 +12,7 @@
 extern int strace_option; // whether we should display strace-like outputs
 
 
-/* #define address_translation */
+#define address_translation
 #define arch_64
 
 #include <sys/types.h>
@@ -25,7 +25,7 @@ extern int strace_option; // whether we should display strace-like outputs
 #define PORT_BIND       0x1
 #define PORT_LOCAL      0x2
 #define PORT_REMOTE     0x4
-#define ABORT(error) do {printf(error); abort();} while(0)
+#define ABORT(error) do {printf(error"\nExit Simterpose.\n"); exit(-1);} while(0)
 
 typedef struct simterpose_host simterpose_host_t;
 typedef struct port_desc port_desc_t;

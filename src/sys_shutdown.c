@@ -32,7 +32,7 @@ void syscall_shutdown_pre(reg_s * reg, process_descriptor_t * proc)
 {
   proc_inside(proc);
 #ifndef address_translation
-  XBT_DEBUG(" shutdown_pre");
+  XBT_DEBUG("shutdown_pre");
 
   ptrace_neutralize_syscall(proc->pid);
   reg->ret = 0;
@@ -46,7 +46,7 @@ void syscall_shutdown_pre(reg_s * reg, process_descriptor_t * proc)
 /** @brief handles shutdown syscall at the exit in case of address translation */
 void syscall_shutdown_post(reg_s * reg, process_descriptor_t * proc)
 {
-  XBT_DEBUG(" shutdown_post");
+  XBT_DEBUG("shutdown_post");
   proc_outside(proc);
 
   struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);

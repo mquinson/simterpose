@@ -9,8 +9,8 @@
 #include "syscall_data.h"
 #include "process_descriptor.h"
 
-void syscall_recvmsg(pid_t pid, reg_s * reg, process_descriptor_t * proc);
-void syscall_recvmsg_pre(pid_t pid, reg_s * reg, process_descriptor_t * proc);
-void syscall_recvmsg_post(pid_t pid, reg_s * reg, process_descriptor_t * proc);
+void syscall_recvmsg(reg_s * reg, process_descriptor_t * proc);
+void syscall_recvmsg_pre(reg_s * reg, process_descriptor_t * proc);
+void syscall_recvmsg_post(reg_s * reg, process_descriptor_t * proc);
 
 void sys_build_recvmsg(reg_s * reg, process_descriptor_t * proc, void * data, struct msghdr * msg);

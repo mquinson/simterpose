@@ -1,4 +1,4 @@
-/* sys_read -- Handlers of read syscall */
+/* sys_fcntl -- Handlers of fcntl syscall */
 
 /* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
@@ -7,7 +7,6 @@
 
 #include "process_descriptor.h"
 #include "ptrace_utils.h"
-#include "syscall_data.h"
 
-void syscall_read(reg_s * reg, process_descriptor_t * proc);
-void process_read_out_call(reg_s * reg, process_descriptor_t * proc, void * data);
+void syscall_getpid(reg_s * reg, process_descriptor_t * proc);
+void sys_getpid_post(reg_s * reg, process_descriptor_t * proc);
