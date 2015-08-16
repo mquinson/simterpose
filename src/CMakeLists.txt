@@ -39,6 +39,7 @@ add_executable(simterpose
   sys_setsockopt.c
   sys_shutdown.c
   sys_socket.c
+  sys_tuxcall.c
   sys_write.c
   xbt_log_strace.c
   include/communication.h
@@ -83,6 +84,7 @@ add_executable(simterpose
   include/sys_setsockopt.h
   include/sys_shutdown.h
   include/sys_socket.h
+  include/sys_tuxcall.h
   include/sys_write.h
 )
 target_link_libraries(simterpose

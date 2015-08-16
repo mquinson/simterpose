@@ -13,15 +13,19 @@ make -C apps/   sendto_server sendto_client
 VALGRIND_OPTS="--verbose --trace-children=no --child-silent-after-fork=yes"
 export VALGRIND_OPTS
 
-runner=$1
+debug=$2
 
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$sim_dir/lib/
 export LD_LIBRARY_PATH
 
-sudo LD_PRELOAD=../src/libsgtime.so $runner ../src/simterpose -s platform.xml sendto_clientserver.xml
+if [ "$1" != "LD_PRELOAD" ]; then 
+sudo $debug ../src/simterpose -s platform.xml sendto_clientserver.xml
 #--log=simterpose.:debug
 #--log=msg.:debug
 # --log=simix_synchro.:debug
 # --log=simix.:debug
 #--log=root.fmt:"'%l: [%c/%p]: %m%n'"
 #--log=xbt_dyn.:debug
+else
+sudo LD_PRELOAD=../src/libsgtime.so $debug ../src/simterpose -s platform.xml sendto_clientserver.xml
+fi

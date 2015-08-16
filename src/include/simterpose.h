@@ -12,7 +12,7 @@
 extern int strace_option; // whether we should display strace-like outputs
 
 
-#define address_translation
+/* #define address_translation */
 #define arch_64
 
 #include <sys/types.h>
@@ -55,4 +55,4 @@ struct simterpose_host {
 int simterpose_process_runner(int argc, char *argv[]);
 int main_loop(int argc, char *argv[]);
 
-#endif
+#endif /*  SIMTERPOSE_H */

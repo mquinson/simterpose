@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
   msg_error_t res = MSG_main();
   const char *interposer_name =
 #ifdef address_translation
-    "Address translation (connect pipes instead of sockets)";
+   "Address translation (connect pipes instead of sockets)";
 #else
   "Full mediation (peek/poke every data)";
 #endif

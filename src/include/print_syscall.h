@@ -75,6 +75,8 @@ void print_creat_syscall(reg_s * reg, process_descriptor_t * proc);
 
 void print_close_syscall(reg_s * reg, process_descriptor_t * proc);
 
+void print_tuxcall_syscall(reg_s * reg, process_descriptor_t * proc);
+
 void stprintf(process_descriptor_t * proc, const char*fmt, ...);
 void stprintf_tabto(process_descriptor_t * proc);
 void stprintf_eol(process_descriptor_t * proc);

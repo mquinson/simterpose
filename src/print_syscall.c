@@ -1303,6 +1303,7 @@ void print_open_syscall(reg_s * reg, process_descriptor_t * proc)
   }
 }
 
+/** @brief print creat syscall */
 void print_creat_syscall(reg_s * reg, process_descriptor_t * proc){
   char * pathname = (char *) xbt_malloc(200*sizeof(char));
   
@@ -1310,8 +1311,18 @@ void print_creat_syscall(reg_s * reg, process_descriptor_t * proc){
   fprintf(stderr, "[%d] creat(%s, %d) = %d \n", proc->pid, pathname, (int) reg->arg[1], (int) reg->ret);
 }
 
+/** @brief print close syscall */
 void print_close_syscall(reg_s * reg, process_descriptor_t * proc){
   fprintf(stderr, "[%d] close(%d) = %d \n", proc->pid, (int) reg->arg[0], (int) reg->ret);
+}
+
+/** @brief print tuxcall syscall */
+void print_tuxcall_syscall(reg_s * reg, process_descriptor_t * proc){
+  
+  double clock;
+  ptrace_cpy(proc->pid, &clock, (void *) reg->arg[1], sizeof(double), "tuxcall");
+  
+  fprintf(stderr, "[%d] syscall(184, %lf)\n", proc->pid, clock);
 }
 
 /* These functions are highly inspirated from the strace source code.

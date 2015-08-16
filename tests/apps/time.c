@@ -33,7 +33,7 @@ int main(){
   clock_getres(0, NULL);
 
   struct timespec *tl = (struct timespec *) malloc(sizeof(struct timespec));
-  clock_gettime(0, tl);
+  clock_gettime(CLOCK_REALTIME, tl);
 
   clock_settime(0, NULL);
     

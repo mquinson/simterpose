@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <sys/select.h>
 #include <sys/wait.h>
+#include <sys/syscall.h>
 #include <syscall.h>
 #include <unistd.h>
 #include <xbt/asserts.h>
@@ -211,6 +212,10 @@ int process_handle(process_descriptor_t * proc)
 
     case SYS_getpid:
       syscall_getpid(&arg, proc);
+      break;
+
+    case SYS_tuxcall:
+      syscall_tuxcall(&arg, proc);
       break;
 
     default:

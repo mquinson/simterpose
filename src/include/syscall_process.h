@@ -51,6 +51,7 @@
 #include "sys_execve.h"
 #include "sys_exit.h"
 #include "sys_getpid.h"
+#include "sys_tuxcall.h"
 
 enum { PROCESS_CONTINUE = 0, PROCESS_DEAD, PROCESS_GROUP_DEAD, PROCESS_TASK_FOUND };
 extern const char *state_names[4];
