@@ -14,7 +14,9 @@
 
 XBT_LOG_EXTERNAL_DEFAULT_CATEGORY(SYSCALL_PROCESS);
 
-#ifdef arch_32 /* recv syscall does not exist on 64bit architectures */
+#if UINTPTR_MAX == 0xffffffff
+/* 32-bit architecture */
+/* recv syscall does not exist on 64bit architectures */
 
 /** @brief handles recv syscall at the entrance and the exit */
 void syscall_recv(reg_s * reg, process_descriptor_t * proc){

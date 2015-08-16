@@ -9,6 +9,7 @@
 #ifndef PTRACE_UTILS_H
 #define PTRACE_UTILS_H
 
+#include <stdint.h>
 #include <sys/types.h>
 
 typedef struct {

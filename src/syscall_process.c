@@ -62,7 +62,7 @@ int process_handle(process_descriptor_t * proc)
     ptrace_get_register(pid, &arg);
     int ret;
     XBT_DEBUG("found syscall: [%d] %s (%ld) = %ld, in_syscall = %d", pid, syscall_list[arg.reg_orig], arg.reg_orig,
-      arg.ret, proc->in_syscall);
+	      arg.ret, proc->in_syscall);
 
     switch (arg.reg_orig) {
     case SYS_creat:
@@ -145,7 +145,8 @@ int process_handle(process_descriptor_t * proc)
       syscall_accept(&arg, proc);
       break;
 
-#ifdef arch_32
+#if UINTPTR_MAX == 0xffffffff
+      /* 32-bit architecture */
     case SYS_send:
       ret = syscall_send(&arg, proc);
       if (ret)
@@ -223,22 +224,22 @@ int process_handle(process_descriptor_t * proc)
       break;
     }
 
-    // Step the traced process
-    ptrace_resume_process(pid);
-    // XBT_DEBUG("process resumed, waitpid");
-    waitpid(pid, &(proc->status), __WALL);
-  }                             // while(1)
+      // Step the traced process
+      ptrace_resume_process(pid);
+      // XBT_DEBUG("process resumed, waitpid");
+      waitpid(pid, &(proc->status), __WALL);
+    }                             // while(1)
 
-  THROW_IMPOSSIBLE;             //There's no way to quit the loop
-  return 0;
-}
+      THROW_IMPOSSIBLE;             //There's no way to quit the loop
+      return 0;
+    }
 
-/** @brief helper function to send task */
-int process_send_call(reg_s * reg, process_descriptor_t * proc, process_descriptor_t * remote_proc, void * data)
-{
-  XBT_DEBUG("Entering process_send_call");
-  if (socket_registered(proc, (int) reg->arg[0]) != -1) { 
-    if (!socket_netlink(proc, (int) reg->arg[0])) {
+      /** @brief helper function to send task */
+      int process_send_call(reg_s * reg, process_descriptor_t * proc, process_descriptor_t * remote_proc, void * data)
+      {
+      XBT_DEBUG("Entering process_send_call");
+      if (socket_registered(proc, (int) reg->arg[0]) != -1) { 
+      if (!socket_netlink(proc, (int) reg->arg[0])) {
       XBT_DEBUG("%d This is not a netlink socket", (int) reg->arg[0]);
       //   compute_computation_time(proc);   // cree la computation task
       struct infos_socket *is = get_infos_socket(proc, (int) reg->arg[0]);
@@ -252,7 +253,7 @@ int process_send_call(reg_s * reg, process_descriptor_t * proc, process_descript
 
       msg_task_t task = create_send_communication_task(proc, is, (int) reg->ret, proc->host, s->fd.proc->host);
       XBT_DEBUG("hosts: %s send to %s (size: %d)", MSG_host_get_name(proc->host), MSG_host_get_name(s->fd.proc->host),
-		(int) reg->ret);
+	(int) reg->ret);
 
 
       MSG_task_set_bytes_amount(task, (int) reg->ret);
@@ -264,65 +265,65 @@ int process_send_call(reg_s * reg, process_descriptor_t * proc, process_descript
       s->ref_nb--;
       return 1;
     }
-    return 0;
-  } else
-    xbt_die("The socket is not registered");
-  return 0;
-}
-
-/** @brief helper function to close a file descriptor */
-void process_close_call(process_descriptor_t * proc, int fd)
-{
-  fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, fd);
-  if (file_desc != NULL) {
-    file_desc->refcount++;
-    if (file_desc->type == FD_SOCKET)
-      socket_close(proc, fd);
-    else {
-      if (file_desc->type == FD_PIPE) {
-        pipe_t *pipe = file_desc->pipe;
-        xbt_assert(pipe != NULL);
-
-        unsigned int cpt_in;
-        pipe_end_t end_in;
-        xbt_dynar_t read_end = pipe->read_end;
-        xbt_dynar_foreach(read_end, cpt_in, end_in) {
-          if (end_in->fd == fd && end_in->proc->pid == proc->pid) {
-            xbt_dynar_remove_at(read_end, cpt_in, NULL);
-            cpt_in--;
-          }
-        }
-
-        unsigned int cpt_out;
-        pipe_end_t end_out;
-        xbt_dynar_t write_end = pipe->write_end;
-        xbt_dynar_foreach(write_end, cpt_out, end_out) {
-          if (end_out->fd == fd && end_out->proc->pid == proc->pid) {
-            xbt_dynar_remove_at(write_end, cpt_out, NULL);
-            cpt_out--;
-          }
-        }
-
-        // if both sides are closed we can free the pipe
-        if (xbt_dynar_is_empty(read_end) && xbt_dynar_is_empty(write_end)) {
-          xbt_dynar_free(&read_end);
-          xbt_dynar_free(&write_end);
-          free(pipe);
-        }
-
-      }
+      return 0;
+    } else
+	xbt_die("The socket is not registered");
+      return 0;
     }
-    file_desc->refcount--;
-    process_descriptor_set_fd(proc, fd, NULL);
-  }
-}
 
-/** @brief Handles syscall that are still not implemented */
-void syscall_default(pid_t pid, reg_s * reg, process_descriptor_t * proc){
-  if (proc_entering(proc))
-    proc_inside(proc);
-  else {
-    fprintf(stderr,"Unhandled syscall: [%d] %s = %ld\n", pid, syscall_list[reg->reg_orig], reg->ret);
-    proc_outside(proc);
-  }
-}
+      /** @brief helper function to close a file descriptor */
+      void process_close_call(process_descriptor_t * proc, int fd)
+      {
+      fd_descriptor_t *file_desc = process_descriptor_get_fd(proc, fd);
+      if (file_desc != NULL) {
+      file_desc->refcount++;
+      if (file_desc->type == FD_SOCKET)
+	socket_close(proc, fd);
+      else {
+      if (file_desc->type == FD_PIPE) {
+      pipe_t *pipe = file_desc->pipe;
+      xbt_assert(pipe != NULL);
+
+      unsigned int cpt_in;
+      pipe_end_t end_in;
+      xbt_dynar_t read_end = pipe->read_end;
+      xbt_dynar_foreach(read_end, cpt_in, end_in) {
+      if (end_in->fd == fd && end_in->proc->pid == proc->pid) {
+      xbt_dynar_remove_at(read_end, cpt_in, NULL);
+      cpt_in--;
+    }
+    }
+
+      unsigned int cpt_out;
+      pipe_end_t end_out;
+      xbt_dynar_t write_end = pipe->write_end;
+      xbt_dynar_foreach(write_end, cpt_out, end_out) {
+      if (end_out->fd == fd && end_out->proc->pid == proc->pid) {
+      xbt_dynar_remove_at(write_end, cpt_out, NULL);
+      cpt_out--;
+    }
+    }
+
+      // if both sides are closed we can free the pipe
+      if (xbt_dynar_is_empty(read_end) && xbt_dynar_is_empty(write_end)) {
+      xbt_dynar_free(&read_end);
+      xbt_dynar_free(&write_end);
+      free(pipe);
+    }
+
+    }
+    }
+      file_desc->refcount--;
+      process_descriptor_set_fd(proc, fd, NULL);
+    }
+    }
+
+      /** @brief Handles syscall that are still not implemented */
+      void syscall_default(pid_t pid, reg_s * reg, process_descriptor_t * proc){
+      if (proc_entering(proc))
+	proc_inside(proc);
+      else {
+      fprintf(stderr,"Unhandled syscall: [%d] %s = %ld\n", pid, syscall_list[reg->reg_orig], reg->ret);
+      proc_outside(proc);
+    }
+    }

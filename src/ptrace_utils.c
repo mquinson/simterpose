@@ -195,19 +195,8 @@ void ptrace_get_register(const pid_t pid, reg_s * arg)
   if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) == -1)
     SYSERROR(" [%d] ptrace getregs %s\n", pid, strerror(errno));
 
-  // TODO: test architecture and use the right registers
-#ifdef arch_64
-  arg->reg_orig = regs.orig_rax;
-  arg->ret = regs.rax;
-  arg->arg[0] = regs.rdi;
-  arg->arg[1] = regs.rsi;
-  arg->arg[2] = regs.rdx;
-  arg->arg[3] = regs.r10;
-  arg->arg[4] = regs.r8;
-  arg->arg[5] = regs.r9;
-#endif
-
-#ifdef arch_32
+#if UINTPTR_MAX == 0xffffffff
+  /* 32-bit architecture */
   arg->reg_orig = regs.orig_eax;
   arg->ret = regs.eax;
   arg->arg[0] = regs.edi;
@@ -216,8 +205,19 @@ void ptrace_get_register(const pid_t pid, reg_s * arg)
   arg->arg[3] = regs.r10d;
   arg->arg[4] = regs.r8d;
   arg->arg[5] = regs.r9d; 
+#elif UINTPTR_MAX == 0xffffffffffffffff
+  /* 64-bit architecture */
+  arg->reg_orig = regs.orig_rax;
+  arg->ret = regs.rax;
+  arg->arg[0] = regs.rdi;
+  arg->arg[1] = regs.rsi;
+  arg->arg[2] = regs.rdx;
+  arg->arg[3] = regs.r10;
+  arg->arg[4] = regs.r8;
+  arg->arg[5] = regs.r9;
+#else
+  ABORT("Unknown architecture type.");
 #endif
-
 }
 
 /** @brief Make sure that the syscall that the tracked process is about to do does nothing
