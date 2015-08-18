@@ -154,6 +154,13 @@ int main(int argc, char *argv[])
   simterpose_globals_exit();
   MSG_process_killall(0);
 
+  struct tms clock_buf;
+  times(&clock_buf);
+  
+  printf("User CPU time %li \n", clock_buf.tms_utime + clock_buf.tms_cutime);
+  printf("System CPU time %li \n", clock_buf.tms_stime + clock_buf.tms_cstime);
+  printf("Total CPU time %li \n", clock_buf.tms_utime + clock_buf.tms_cutime + clock_buf.tms_stime + clock_buf.tms_cstime);
+
   if (res == MSG_OK)
     return 0;
   else

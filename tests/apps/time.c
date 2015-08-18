@@ -21,21 +21,23 @@ int main(){
   time_t t = time(NULL);
   printf("time %ld\n", t);
 
-  const time_t *timep = NULL;
+  const time_t *timep = (const time_t*) malloc(sizeof(const time_t));
   localtime(timep);
   
-  mktime(NULL);
-  
+  struct tm* tm = (struct tm*) malloc(sizeof(struct tm));
+  mktime(tm);
+   
   struct timeval * tval = (struct timeval *) malloc(sizeof(struct timeval));
   __timezone_ptr_t tz = 0;
   gettimeofday(tval, tz);
 
   clock_getres(0, NULL);
 
-  struct timespec *tl = (struct timespec *) malloc(sizeof(struct timespec));
-  clock_gettime(CLOCK_REALTIME, tl);
+  struct timespec *gtspec = (struct timespec *) malloc(sizeof(struct timespec));
+  clock_gettime(CLOCK_REALTIME, gtspec);
 
-  clock_settime(0, NULL);
+  const struct timespec *stspec = (const struct timespec*) malloc(sizeof(const struct timespec));
+  clock_settime(0, stspec);
     
   return 0;
 }
