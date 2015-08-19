@@ -31,14 +31,21 @@ int main(int argc, char **argv)
   char *IP = argv[1];
   u_short port = atoi(argv[2]);
   int msg_count = atoi(argv[3]);
-  int buffer_size = atoi(argv[4]);
-
-  fprintf(stderr, "Client starting: #msg: %d; size:%d (the server is on %s:%d) \n", msg_count, buffer_size, IP, port);
-  
+  int buffer_size;  
   int clientSocket;
   int res;
-  char buff[buffer_size];
-  strcpy(buff, "Message from client ");
+
+  if (atoi(argv[4])>0)
+    buffer_size = atoi(argv[4]);
+  else
+    buffer_size = 128;
+  char* buff = (char*) malloc(buffer_size * sizeof(char));
+  memset(buff, 65, (buffer_size-1)*sizeof(char));
+  buff[buffer_size] = '\0';
+
+  fprintf(stderr, "Client starting: #msg: %d; size:%d (the server is on %s:%d) \n", msg_count, buffer_size, IP, port);
+ 
+  /* strcpy(buff, "Message from client "); */
   struct hostent *serverHostEnt;
  
   if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -65,7 +72,7 @@ int main(int argc, char **argv)
 
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
     memset(&msg, 0, sizeof(struct msghdr));
-    sprintf(buff, "This is the message #%d produced on the client.", msg_number);
+    /* sprintf(buff, "This is the message #%d produced on the client.", msg_number); */
    
     iov[0].iov_base = buff;
     iov[0].iov_len = strlen(buff) + 1;
@@ -79,7 +86,7 @@ int main(int argc, char **argv)
       perror("erreur envoi client");
       exit(1);
     }
-    fprintf(stderr, "Client: Message send #%d\n", msg_number);
+    /* fprintf(stderr, "Client: Message send #%d\n", msg_number); */
 
   }
   

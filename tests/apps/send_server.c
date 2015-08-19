@@ -29,12 +29,18 @@ int main(int argc, char **argv)
 
   int server_port = atoi(argv[1]);
   int msg_count = atoi(argv[2]);
-  int msg_size = atoi(argv[3]);
+  int msg_size;
+
+ if (atoi(argv[3])>0){
+    msg_size = atoi(argv[3]);
+  }
+  else
+    msg_size = 128;
+  char* buff = (char*) malloc(msg_size * sizeof(char));
 
   fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", server_port, msg_count, msg_size);
 
   int serverSocket;
-  char *buff = (char *) malloc(msg_size);
   char *expected = (char *) malloc(msg_size);
   u_short port;
   int res;

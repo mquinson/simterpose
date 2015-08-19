@@ -28,12 +28,18 @@ int main(int argc, char **argv)
 
   u_short port = atoi(argv[1]);
   int msg_count = atoi(argv[2]);
-  int buffer_size = atoi(argv[3]);
-  
-  fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", port, msg_count, buffer_size);
+  int msg_size;
+
+ if (atoi(argv[3])>0){
+    msg_size = atoi(argv[3]);
+  }
+  else
+    msg_size = 128;
+  char* buff = (char*) malloc(msg_size * sizeof(char));
+
+  fprintf(stderr, "Server starting on port %d: #msg: %d; size: %d \n", port, msg_count, msg_size);
 
   int serverSocket;
-  char *buff = (char *) malloc(buffer_size);
   int res;
   int client_socket;
   
@@ -78,7 +84,7 @@ int main(int argc, char **argv)
   int msg_number = 0;
   for (msg_number = 0; msg_number < msg_count; ++msg_number) {
     iov[0].iov_base = buff;
-    iov[0].iov_len = buffer_size;
+    iov[0].iov_len = msg_size;
 
     msg.msg_iov = iov;
     msg.msg_iovlen = 1;
@@ -90,7 +96,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "Server: error while receiving message #%d \"%s\"\n", msg_number, strerror(errno));
       exit(1);
     }
-    fprintf(stderr, "Receive message #%d of %d bytes: \"%s\" \n", msg_number, res, buff);
+    /* fprintf(stderr, "Receive message #%d of %d bytes: \"%s\" \n", msg_number, res, buff); */
   }
 
   shutdown(client_socket, 2);

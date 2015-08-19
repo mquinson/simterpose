@@ -12,7 +12,7 @@
 extern int strace_option; // whether we should display strace-like outputs
 
 
-#define address_translation
+/* #define address_translation */
 
 #include <sys/times.h>
 #include <sys/types.h>

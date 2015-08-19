@@ -20,29 +20,30 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define SERV_PORT 2227
-
-#define BUFFER_SIZE 1024
-
-
-int main()
+int main(int argc, char** argv)
 {
-   int serverSocket;
-  char *buff = (char *) malloc(BUFFER_SIZE);
-  u_short port;
-  int res;
+  int serverSocket;
   int client_socket;
+  u_short port = atoi(argv[1]);
+  int nb_msg = atoi(argv[2]);
+  int buffer_size;
+  if (atoi(argv[3])>0){
+    buffer_size = atoi(argv[3]);
+  }
+  else
+    buffer_size = 128;
+  char* buff = (char*) malloc(buffer_size * sizeof(char));
+  int res;
 
+  
   if ((serverSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("Error socket");
     exit(1);
-  } 
+  }
 
   struct sockaddr_in *serv_addr = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
   memset((char *) serv_addr, (char) 0, sizeof(struct sockaddr_in));
 
-
-  port = SERV_PORT;
   serv_addr->sin_family = AF_INET;
   serv_addr->sin_port = htons(port);
   serv_addr->sin_addr.s_addr = INADDR_ANY;
@@ -81,14 +82,14 @@ int main()
   fprintf(stderr, "Here %d %s\n", cli_addr.sin_addr.s_addr, inet_ntoa(in));
   fprintf(stderr, "Connect to client  %s:%d\n", inet_ntoa(in), ntohs(cli_addr.sin_port));
 
-  int ia;
-  for (ia = 0; ia < 5; ++ia){
-    res = recvfrom(client_socket, buff, BUFFER_SIZE, 0, (struct sockaddr *) &cli_addr, (socklen_t *) & clilen);
+  int msg_count;
+  for (msg_count = 0; msg_count < nb_msg; ++msg_count){
+    res = recvfrom(client_socket, buff, buffer_size, 0, (struct sockaddr *) &cli_addr, (socklen_t *) & clilen);
     if (res == -1) {
       perror("Error server reception");
       exit(1);
     }
-    fprintf(stderr, "Receive message #%d of %d bytes: \"%s\"\n", ia, res, buff);
+    /* fprintf(stderr, "Receive message #%d of %d bytes: \"%s\"\n", msg_count, res, buff); */
   }
 
   shutdown(client_socket, SHUT_RDWR);

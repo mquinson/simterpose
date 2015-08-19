@@ -18,31 +18,37 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#define SERV_PORT 2227
-
-#define BUFFER_SIZE 1024
-
-int main()
+int main(int argc, char** argv)
 {
   int clientSocket;
-  u_short port;
+  u_short port = atoi(argv[2]);
+  int nb_msg = atoi(argv[3]);
+  int buffer_size;
   int res;
-  char buff[BUFFER_SIZE];
+
+  if (atoi(argv[4])>0)
+    buffer_size = atoi(argv[4]);
+  else
+    buffer_size = 128;
+  char* buff = (char*) malloc(buffer_size * sizeof(char));
+  memset(buff, 65, (buffer_size-1)*sizeof(char));
+  buff[buffer_size] = '\0';
+
   /* long host_addr; */
-  strcpy(buff, "Message from client");
+  /* strcpy(buff, "Message from client"); */
   struct hostent *serverHostEnt;
 
   if ((clientSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("Error socket");
     exit(1);
-  } 
+  }
 
   struct sockaddr_in cli_addr;
   memset(&cli_addr, 0, sizeof(struct sockaddr_in));
   /* host_addr = inet_addr("162.32.43.1"); */       /*162.32.43.1 */
   serverHostEnt = gethostbyname("162.32.43.1");
   memcpy(&(cli_addr.sin_addr), serverHostEnt->h_addr, serverHostEnt->h_length);
-  port = SERV_PORT;
+  
   cli_addr.sin_family = AF_INET;
   cli_addr.sin_port = htons(port);
   
@@ -53,9 +59,9 @@ int main()
   
   fprintf(stderr, "Connect to server %s:%d\n", inet_ntoa(cli_addr.sin_addr), ntohs(cli_addr.sin_port));
   
-  int ia;
+  int msg_count;
   
-  for (ia = 0; ia < 5; ++ia) {
+  for (msg_count = 0; msg_count < nb_msg; ++msg_count) {
     size_t len = strlen(buff) + 1;
     res = sendto(clientSocket, buff, len, 0, (struct sockaddr *) &cli_addr, sizeof(struct sockaddr_in));
 
@@ -63,7 +69,7 @@ int main()
       perror("Error send client");
       exit(1);
     }
-    fprintf(stderr, "Client: Message send #%d \"%s\"\n", ia, buff);
+    /* fprintf(stderr, "Client: Message send #%d \"%s\"\n", msg_count, buff); */
   }
   shutdown(clientSocket, SHUT_RDWR);
   close(clientSocket);
