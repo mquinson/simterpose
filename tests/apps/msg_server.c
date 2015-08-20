@@ -96,7 +96,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "Server: error while receiving message #%d \"%s\"\n", msg_number, strerror(errno));
       exit(1);
     }
-    /* fprintf(stderr, "Receive message #%d of %d bytes: \"%s\" \n", msg_number, res, buff); */
+    fprintf(stderr, "Receive message #%d of %d bytes: \"%s\" \n", msg_number, res, buff);
   }
 
   shutdown(client_socket, 2);

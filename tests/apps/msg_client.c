@@ -86,7 +86,7 @@ int main(int argc, char **argv)
       perror("erreur envoi client");
       exit(1);
     }
-    /* fprintf(stderr, "Client: Message send #%d\n", msg_number); */
+    fprintf(stderr, "Client: Message send #%d\n", msg_number);
 
   }
   
