@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/timeb.h>
+#include <sys/times.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,6 +22,7 @@
 int main(int argc, char** argv)
 {
   int clientSocket;
+  char *IP = argv[1];
   u_short port = atoi(argv[2]);
   int nb_msg = atoi(argv[3]);
   int buffer_size;
@@ -45,8 +47,7 @@ int main(int argc, char** argv)
 
   struct sockaddr_in cli_addr;
   memset(&cli_addr, 0, sizeof(struct sockaddr_in));
-  /* host_addr = inet_addr("162.32.43.1"); */       /*162.32.43.1 */
-  serverHostEnt = gethostbyname("162.32.43.1");
+  serverHostEnt = gethostbyname(IP);
   memcpy(&(cli_addr.sin_addr), serverHostEnt->h_addr, serverHostEnt->h_length);
   
   cli_addr.sin_family = AF_INET;

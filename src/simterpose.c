@@ -190,15 +190,16 @@ int simterpose_process_runner(int argc, char *argv[])
     }
 
     // End of cleanups; we are in the child
-    /* if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) { */
-    /*   xbt_die("Error when calling ptrace(TRACEME). Bailing out! (%s)", strerror(errno)); */
-    /* } */
+    if (ptrace(PTRACE_TRACEME, 0, NULL, NULL) == -1) {
+      xbt_die("Error when calling ptrace(TRACEME). Bailing out! (%s)", strerror(errno));
+    }
 
     // Ask Linux to not randomize our stacks
     personality(personality(0xffffffff) | ADDR_NO_RANDOMIZE);
 
     // Wait for master
-    /* kill(getpid(), SIGSTOP); */
+    kill(getpid(), SIGSTOP);
+
     xbt_dynar_t cmdline_dynar = xbt_dynar_new(sizeof(char *), NULL);
     int i;
     for (i = 0; i < argc; i++)
@@ -213,43 +214,40 @@ int simterpose_process_runner(int argc, char *argv[])
 
     xbt_die("Error while starting %s: %s (full cmdline: %s)", cmdline_array[0], strerror(errno), cmdline_str);
   }
-  
   // We are still in simterpose, so we are the thread that is the representative of the external process
   MSG_process_set_data(MSG_process_self(),
     process_descriptor_new(MSG_host_get_name(MSG_host_self()), argv[0], tracked_pid));
 
   // Wait for the traced to start
-  /* int res = waitpid(tracked_pid, &status, __WALL); */
-  /* if (res < 0) */
-  /*   perror("waitpid failed" ); */
- 
+  int res = waitpid(tracked_pid, &status, __WALL);
+  if (res < 0)
+    perror("waitpid failed");
+
   // Trace the child and all upcoming granchilds
-  /* increment_nb_setoptions(); */
-  /* if (ptrace(PTRACE_SETOPTIONS, tracked_pid, NULL, */
-  /*   PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE | PTRACE_O_TRACEEXEC | */
-  /*   PTRACE_O_TRACESYSGOOD) */
-  /*     == -1) { */
-  /*   xbt_die("Error in setoptions, bailing out now. (%s)",strerror(errno)); */
-  /* } */
+  increment_nb_setoptions();
+  if (ptrace(PTRACE_SETOPTIONS, tracked_pid, NULL,
+    PTRACE_O_TRACECLONE | PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACEVFORKDONE | PTRACE_O_TRACEEXEC |
+    PTRACE_O_TRACESYSGOOD)
+      == -1) {
+    xbt_die("Error in setoptions, bailing out now. (%s)",strerror(errno));
+  }
 
   process_descriptor_t *proc = MSG_process_get_data(MSG_process_self());
 
   // Main loop where we track our external process and do the simcall that represent its syscalls
   int proc_next_state = PROCESS_CONTINUE;
-  /* while (proc_next_state != PROCESS_DEAD) { */
-  /*   XBT_DEBUG("Starting treatment"); */
+  while (proc_next_state != PROCESS_DEAD) {
+    XBT_DEBUG("Starting treatment");
 
     pid_t pid = proc->pid;
-    /* ptrace_resume_process(pid); */
-    /* if (waitpid(pid, &(proc->status), __WALL) < 0) */
-    /*   xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno); */
-    /* proc_next_state = process_handle(proc); */
+    ptrace_resume_process(pid);
+    if (waitpid(pid, &(proc->status), __WALL) < 0)
+      xbt_die(" [%d] waitpid %s %d\n", pid, strerror(errno), errno);
+    proc_next_state = process_handle(proc);
 
-  /*   XBT_DEBUG("End of treatment, status = %s ", state_names[proc_next_state]); */
-  /* } */
-
+    XBT_DEBUG("End of treatment, status = %s ", state_names[proc_next_state]);
+  }
   process_die(proc);
-
   return 0;
 }
 

@@ -1,7 +1,7 @@
 /* msg_client -- A simple client talking to msg_server using sendmsg/recvmsg */
 /*                Its only merit is to constitute a test case for simterpose */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
   memcpy(&(cli_addr.sin_addr), serverHostEnt->h_addr, serverHostEnt->h_length);
   cli_addr.sin_family = AF_INET;
   cli_addr.sin_port = htons(port);
-  
+
   if (connect(clientSocket, (struct sockaddr *) &cli_addr, sizeof(cli_addr)) < 0) {
     perror("Client cannot connect to the server\n");
     exit(1);
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
       perror("erreur envoi client");
       exit(1);
     }
-    fprintf(stderr, "Client: Message send #%d\n", msg_number);
+    /* fprintf(stderr, "Client: Message send #%d\n", msg_number); */
 
   }
   

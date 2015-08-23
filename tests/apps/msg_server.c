@@ -1,7 +1,7 @@
 /* msg_server -- A simple server listening to msg_client using sendmsg/recvmsg */
 /*               Its only merit is to constitute a test case for simterpose  */
 
-/* Copyright (c) 2010-2014. The SimGrid Team. All rights reserved.           */
+/* Copyright (c) 2010-2015. The SimGrid Team. All rights reserved.           */
 
 /* This program is free software; you can redistribute it and/or modify it
  * under the terms of the license (GNU GPLv2) which comes with this package. */
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
       fprintf(stderr, "Server: error while receiving message #%d \"%s\"\n", msg_number, strerror(errno));
       exit(1);
     }
-    fprintf(stderr, "Receive message #%d of %d bytes: \"%s\" \n", msg_number, res, buff);
+    /* fprintf(stderr, "Receive message #%d of %d bytes: \"%s\" \n", msg_number, res, buff); */
   }
 
   shutdown(client_socket, 2);
